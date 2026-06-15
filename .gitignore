@@ -1,0 +1,24 @@
+# API 密钥（本地保留，勿提交）
+**/llm_api.env
+.env
+.env.local
+
+# 运行缓存与断点（可重跑生成）
+cache/*
+!cache/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~

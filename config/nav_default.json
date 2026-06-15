@@ -1,0 +1,21 @@
+{
+  "projection_depth": 2,
+  "projection_child_limit": 8,
+  "projection_char_limit": 8000,
+  "summary_chars": 120,
+  "max_steps": 8,
+  "collect_k": 64,
+  "search_k": 40,
+  "expand_top_k": 6,
+  "collect_top_k": 6,
+  "read_score_bonus": 10.0,
+  "policy": "llm",
+  "llm_model_env": "NAV_LLM_MODEL",
+  "llm_temperature": 0.0,
+  "llm_max_tokens": 128,
+  "budget_modes": {
+    "critical_remaining_steps": 1,
+    "tight_remaining_steps": 2
+  }
+}
+
