@@ -1,99 +1,100 @@
-# Hierarchy-as-Harness · RealData balanced60 基线
+# Hierarchy-as-Harness · RealData 公平协议基线（fair_clean）
 
-本仓库包含 **RealData latest-clean** 上的 60 题端到端对比实验：在金标层级（Gold）、扁平检索（Flat）与 [TreeRAG](https://aclanthology.org/2025.findings-acl.20/) 基线之间，评估层级结构对长文档问答的帮助。
+本仓库包含 **RealData latest-clean** 上的端到端对比：Gold（金标层级 Nav Agent）、Flat、 [TreeRAG](https://aclanthology.org/2025.findings-acl.20/) 基线，**在一套完全公平的协议下**评测。
 
-- **任务规模**：60 题（`niche_fact` / `multi_hop` / `scope_collection` 各 20 题）
-- **字符预算**：500（`b500`）
-- **评测口径**：costclean（`BODYRICH_LLM_API_CACHE=0`，不读取 LLM 响应缓存）
-- **详细结果**：[results/summary.md](results/summary.md)
+- **任务**：51 题（niche / multi_hop / scope 各 17，方法无关清洗 + 对称再平衡）
+- **预算**：b500，三方共享同一预算 + 同一 compose + 同一 judge，**无任何按方法的候选上限**
+- **路径泄漏**：已从所有方法的 query 中删除字面层级路径（详见 summary）
+- **结果摘要**：[results/summary.md](results/summary.md)
 
-## 主要结果（score_task_mean）
+> 诚实结论：公平协议下 **Gold（总体）> Flat**，但 **Gold < TreeRAG**。未做分数注水；差距与原因如实记录于 summary。
 
-| 方法 | 总分 | niche_fact | multi_hop | scope_collection |
-|------|-----:|-----------:|----------:|-----------------:|
-| **Gold** | **0.479** | **0.850** | **0.467** | **0.119** |
-| TreeRAG | 0.409 | 0.800 | 0.367 | 0.061 |
-| Flat | 0.305 | 0.450 | 0.367 | 0.098 |
+## Nav 架构（2026-06 起）
 
-Gold 在总分及三类题型上均优于 TreeRAG 和 Flat。层级导航相对 Flat 总分提升约 17 个百分点；niche 题型差距最大，scope 三类方法得分均偏低。
+Gold Nav 采用 **[KnowWhere](https://github.com/Ontos-AI/knowhere)** 风格的三通道 hybrid discovery + LLM rerank：
 
-证据得分（`score_evidence_mean`）：Gold **0.849** > TreeRAG 0.569 > Flat 0.528。
+1. **宽召回**：path BM25 + content BM25 + term 子串匹配 → 加权 RRF（默认 recall ~10 sections）
+2. **LLM rerank**：导航模型从候选中挑选 1–3 个 section，暴露为 **D*** COLLECT 动作
+3. **显式收集**：只有 agent 选择 COLLECT/SEARCH 后 evidence 才进入 pool；**不**做导航后硬注入
+
+`bin/32` 默认 env：
+
+| 变量 | 默认 | 说明 |
+|------|------|------|
+| `NAV_DISCOVERY_SOFT_SIGNAL` | `1` | 开启 hybrid discovery |
+| `NAV_DISCOVERY_RECALL_K` | `10` | 三通道召回候选 section 数 |
+| `NAV_DISCOVERY_PICK_K` | `3` | LLM rerank 最多挑选数（非硬 TOP-K 截断） |
+| `NAV_DISCOVERY_LLM_RERANK` | `1` | LLM 置信度挑选；关则按 hybrid 分排序 |
+
+可选：`pip install rank-bm25`（未安装时退化为 token overlap）
+
+---
+
+## 当前结果（公平协议 · 51 题 · b500）
+
+| 方法 | 总体 | niche | multi | scope |
+|------|-----:|------:|------:|------:|
+| **TreeRAG** | **0.333** | 0.853 | 0.078 | 0.068 |
+| **Gold（nav）** | 0.236 | 0.677 | 0.020 | 0.012 |
+| Flat | 0.194 | 0.424 | 0.059 | 0.100 |
+
+- Gold **> Flat（总体）**，主要来自 niche_fact；但 Gold 在 multi/scope 低于 Flat。
+- Gold **< TreeRAG**（总体与各题型）。差距主因是 compose 环节（证据正确但复述不全），**非检索**；详见 [results/summary.md](results/summary.md)。
+- **成本**：Gold/Flat 在线/离线均远低于 TreeRAG（后者需 ~881s 离线 LLM 切树）。导航后软兜底已改为“原生分数尺度 + 限量”（`NAV_SOFT_SAFETY_MAX_ADD`），修复了海量注入回归（+0.015）。
+
+---
 
 ## 目录结构
 
 ```
 ├── bin/                 # 运行入口
-├── config/              # Nav Agent 配置
-├── data/
-│   ├── corpus/          # latest-clean 语料（195 篇文档）
-│   └── tasks/           # balanced60 任务 + inspect 注册表
-├── results/             # 最终结果 JSON 与中文摘要
-├── cache/               # 断点续跑缓存（本地生成，不入库）
-└── src/
-    ├── realdata/        # Gold/Flat runner、检索、compose/judge
-    ├── nav/             # Nav Agent 与 TreeRAG wrapper
-    └── treerag/         # TreeRAG paper-style adapter
+├── config/              # Nav 配置
+├── data/tasks/          # tasks_realdata_bodyrich_fair_clean*（公平清洗后 51 题）
+├── results/
+│   ├── fair_clean_gold_flat_fair_clean_v1_b500.json   # Gold + Flat（公平）
+│   ├── fair_clean_treerag_fair_clean_v1_b500.json     # TreeRAG（公平，无 cap）
+│   └── task_clean_log.json                            # 清洗/再平衡日志
+├── cache/               # 断点续跑（不入库）
+└── src/{realdata,nav,treerag}/
+    └── nav/
+        ├── knowhere_hybrid.py   # 三通道 RRF（移植自 KnowWhere）
+        └── nav_discovery.py     # hybrid 召回 + LLM rerank
 ```
 
 ## 快速开始
 
-### 1. 克隆与依赖
-
 ```bash
 git clone https://github.com/EricNGOntos/hierarchy-as-harness.git
 cd hierarchy-as-harness
-# 按本地环境安装依赖（torch、sentence-transformers、openai 等）
-```
 
-### 2. 配置 API
-
-```bash
 cp src/realdata/agent_delivery/llm_api.env.example src/realdata/agent_delivery/llm_api.env
-cp src/treerag/agent_delivery/llm_api.env.example src/treerag/agent_delivery/llm_api.env
-# 编辑两处 llm_api.env，填入 OPENAI_API_KEY、OPENAI_BASE_URL 等
-```
+# 填入 OPENAI_API_KEY 等
 
-`llm_api.env` 已在 `.gitignore` 中排除，不会提交到 GitHub。
+# Gold + Flat（KnowWhere hybrid discovery 默认开）
+bash bin/32_run_quality_balanced_gold_flat.sh
 
-### 3. 运行
+# TreeRAG
+bash bin/35_run_quality_balanced60_treerag.sh
 
-```bash
-# 离线对齐检查（无需 API）
-bash bin/11_run_latest_treerag_check.sh
-
-# Gold + Flat 端到端
-BODYRICH_LLM_API_CACHE=0 bash bin/32_run_quality_balanced_gold_flat.sh
-
-# TreeRAG 端到端（compose + judge）
-BODYRICH_LLM_API_CACHE=0 bash bin/35_run_quality_balanced60_treerag.sh
-
-# 三方法对比表（输出到 cache/compare_run_summary.md）
+# 三方法对比
 bash bin/21_compare_realdata_baselines.sh
 ```
 
-中断后重跑同一命令即可从 `cache/` 断点续跑。
-
 ## 实验口径
 
-| 方法 | 检索 | 答题与评分 |
-|------|------|-----------|
-| **Gold** | Nav Agent + 金标层级图 | 共享 compose/judge + Inspect |
-| **Flat** | 扁平 dense 检索 | 同上 |
-| **TreeRAG** | LLM 树分块 + intent + 双向遍历 | 同上（fair cap 与 Gold/Flat 候选数对齐） |
+| 方法 | 检索 | 答题 |
+|------|------|------|
+| **Gold** | LLM Nav Agent（expand/collect/search + hybrid discovery D* + 限量软兜底） | 共享 compose + Inspect judge |
+| **Flat** | flat_react 多轮 dense | 同上 |
+| **TreeRAG** | LLM 建树 + intent + BTR | 同上，**无候选上限**（仅 `TREERAG_FAIR_CAP=1` 可复现旧的截断行为） |
 
-- **语料**：`data/corpus/test_data_full_realdata_clean_latest.jsonl`
-- **任务**：`data/tasks/tasks_realdata_bodyrich_latest_clean_quality_balanced60.jsonl`
-- **结果**：
-  - Gold/Flat：`results/latest_clean_quality_balanced60_gold_flat_quality_balanced60_costclean_v1_b500.json`
-  - TreeRAG：`results/latest_clean_treerag_quality_balanced60_costclean_v1_b500.json`
+三方共享同一 `b500` 预算、同一 `_prepare_compose_evidence_text` compose 流水线、同一 `inspect_scoring`/`compose_llm` judge。
 
-## 脚本说明
+## 脚本
 
 | 脚本 | 用途 |
 |------|------|
-| `bin/11_run_latest_treerag_check.sh` | 任务/语料对齐检查 |
-| `bin/32_run_quality_balanced_gold_flat.sh` | 重跑 Gold + Flat |
-| `bin/35_run_quality_balanced60_treerag.sh` | 重跑 TreeRAG |
-| `bin/21_compare_realdata_baselines.sh` | 生成三方法对比表 |
-| `bin/22_audit_task_quality.py` | 任务质量审计 |
-| `bin/25_check_llm_endpoint.py` | API 连通性检查 |
+| `bin/32_run_quality_balanced_gold_flat.sh` | Gold + Flat（默认指向 fair_clean） |
+| `bin/35_run_quality_balanced60_treerag.sh` | TreeRAG（默认指向 fair_clean，无 cap） |
+| `bin/21_compare_realdata_baselines.sh` | 对比表 |
+| `bin/22_audit_task_quality.py` | 任务审计（`--mode audit`）/ 公平清洗（`--mode clean`） |

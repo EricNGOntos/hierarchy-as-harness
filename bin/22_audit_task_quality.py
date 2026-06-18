@@ -12,6 +12,107 @@ from typing import Any
 _NODE_RE = re.compile(r"^(.+):L(\d+)$")
 _GENERIC_QUERY_RE = re.compile(r"该处明确写出的规定或事实是什么")
 
+# --- hierarchy-path leak stripping (method-agnostic, fairness) ---
+# A leaked path is the literal `层级路径“A / B / C”` marker. The exact, "/"-delimited
+# walkable path + the verbatim gold leaf line are what unfairly favor the hierarchical
+# navigator (it can pattern-match the path to walk straight to the answer). We remove
+# that machine path for ALL methods. niche_fact / scope_collection still carry their
+# real intent (关于“X” / 围绕问题“Q”), so the marker is simply deleted. multi_hop has no
+# other intent, so we replace the pair with a natural prose topic reference built from
+# the section headings (doc name + deepest gold leaf line dropped) so the task stays
+# answerable and non-degenerate while no method receives the literal path string.
+_PATH_MARKER_RE = re.compile(r"层级路径“([^”]*)”")
+_PATH_PAIR_RE = re.compile(r"[：:]\s*层级路径“[^”]*”(?:[与、和]层级路径“[^”]*”)+")
+_PATH_SINGLE_XIA_RE = re.compile(r"层级路径“[^”]*”下")
+_PATH_SINGLE_RE = re.compile(r"[，,]?\s*层级路径“[^”]*”")
+_DOC_SEG_RE = re.compile(r"\.(docx|pdf|doc|xlsx|xls|pptx|txt)$", re.IGNORECASE)
+_TOPIC_SEG_CAP = 40
+
+
+def _topic_label_from_path(path: str) -> str:
+    segs = [s.strip() for s in str(path or "").split("/")]
+    segs = [s for s in segs if s and not _DOC_SEG_RE.search(s)]
+    if len(segs) >= 2:
+        segs = segs[:-1]  # drop deepest segment (the gold leaf line / answer text)
+    segs = [s[:_TOPIC_SEG_CAP] for s in segs]
+    return " - ".join(segs)
+
+
+def _normalize_punct(q: str) -> str:
+    q = re.sub(r"，{2,}", "，", q)
+    q = re.sub(r"，。", "。", q)
+    q = re.sub(r"：，", "：", q)
+    q = re.sub(r"，》", "》", q)
+    return q.strip()
+
+
+def strip_path_leak(query: str) -> str:
+    """Remove the literal `层级路径“…”` leak. multi_hop pairs become a prose topic ref."""
+    q = str(query or "")
+
+    def _pair_sub(m: re.Match) -> str:
+        labels = [_topic_label_from_path(p) for p in _PATH_MARKER_RE.findall(m.group(0))]
+        labels = [l for l in labels if l]
+        if not labels:
+            return ""
+        return "，分别涉及“" + "”与“".join(labels) + "”两处"
+
+    q = _PATH_PAIR_RE.sub(_pair_sub, q)
+    q = _PATH_SINGLE_XIA_RE.sub("", q)
+    q = _PATH_SINGLE_RE.sub("", q)
+    return _normalize_punct(q)
+
+
+def degenerate_scope(task: dict[str, Any]) -> bool:
+    if str(task.get("task_type") or "") != "scope_collection":
+        return False
+    return answer_items_count(parse_gold_answer(task.get("gold_answer"))) < 2
+
+
+def malformed_gold_json(task: dict[str, Any]) -> bool:
+    raw = task.get("gold_answer")
+    if isinstance(raw, dict):
+        return False
+    try:
+        return not isinstance(json.loads(str(raw or "")), dict)
+    except Exception:
+        return True
+
+
+def gold_nodes_absent(task: dict[str, Any], corpus_meta: dict[str, dict[str, Any]]) -> bool:
+    nodes = task.get("gold_nodes") or []
+    if not nodes:
+        return True
+    for n in nodes:
+        nl = node_line(n)
+        if nl is None:
+            return True
+        doc_id, lid = nl
+        text_map = (corpus_meta.get(doc_id, {}) or {}).get("text") or {}
+        if lid not in text_map:
+            return True
+    return False
+
+
+def content_drop_reasons(
+    task: dict[str, Any], corpus_meta: dict[str, dict[str, Any]]
+) -> list[str]:
+    """Method-agnostic, content-based drop reasons only (never 'a method got it wrong')."""
+    reasons: list[str] = []
+    if malformed_gold_json(task):
+        reasons.append("malformed_gold_json")
+    gold_obj = parse_gold_answer(task.get("gold_answer"))
+    ans = str(gold_obj.get("final_answer") or gold_obj.get("answer") or "").strip()
+    if not ans:
+        reasons.append("empty_gold_answer")
+    elif likely_truncated_answer(gold_obj):
+        reasons.append("truncated_gold_answer")
+    if gold_nodes_absent(task, corpus_meta):
+        reasons.append("gold_nodes_absent_from_doc")
+    if degenerate_scope(task):
+        reasons.append("degenerate_scope_lt2_items")
+    return reasons
+
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
@@ -133,17 +234,95 @@ def structural_score(task: dict[str, Any], corpus_meta: dict[str, dict[str, Any]
     return score, reasons
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser(description="Audit RealData task quality and create structural hierarchy-focused candidates.")
-    ap.add_argument("--corpus", type=Path, default=Path("data/corpus/test_data_full_realdata_clean_latest.jsonl"))
-    ap.add_argument("--tasks", type=Path, default=Path("data/tasks/tasks_realdata_bodyrich_latest_clean_quality_balanced60.jsonl"))
-    ap.add_argument("--inspect", type=Path, default=Path("data/tasks/tasks_realdata_bodyrich_latest_clean_quality_balanced60.inspect.jsonl"))
-    ap.add_argument("--out-report", type=Path, default=Path("results/task_quality_audit_latest_clean.json"))
-    ap.add_argument("--out-tasks", type=Path, default=Path("data/tasks/tasks_realdata_bodyrich_latest_clean_hierarchy_candidates.jsonl"))
-    ap.add_argument("--out-inspect", type=Path, default=Path("data/tasks/tasks_realdata_bodyrich_latest_clean_hierarchy_candidates.inspect.jsonl"))
-    ap.add_argument("--min-score", type=int, default=4)
-    args = ap.parse_args()
+def clean_main(args: argparse.Namespace) -> None:
+    corpus_meta = load_corpus_meta(args.corpus)
+    tasks = read_jsonl(args.tasks)
+    inspect_rows = read_jsonl(args.inspect)
+    inspect_by_id = {str(r.get("id")): r for r in inspect_rows}
 
+    drop_log: list[dict[str, Any]] = []
+    kept: list[dict[str, Any]] = []
+
+    # Pass 1: content-based drops + path-leak strip + duplicate detection.
+    seen_norm: dict[str, str] = {}
+    for idx, task in enumerate(tasks, start=1):
+        iid = str(task.get("inspect_id"))
+        reasons = content_drop_reasons(task, corpus_meta)
+        new_query = strip_path_leak(str(task.get("query") or ""))
+        norm = re.sub(r"\s+", "", new_query)
+        if norm in seen_norm:
+            reasons.append(f"duplicate_query(of {seen_norm[norm]})")
+        if reasons:
+            drop_log.append(
+                {"task_idx": idx, "inspect_id": iid, "task_type": task.get("task_type"), "reasons": reasons}
+            )
+            continue
+        seen_norm[norm] = iid
+        task = dict(task)
+        task["query"] = new_query
+        kept.append(task)
+
+    # Pass 2: rebalance symmetrically across task types (keep first N per type by order).
+    by_type: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for t in kept:
+        by_type[str(t.get("task_type"))].append(t)
+    min_count = min((len(v) for v in by_type.values()), default=0)
+    balanced_ids: set[str] = set()
+    rebalanced: list[dict[str, Any]] = []
+    for tt, items in by_type.items():
+        for t in items[:min_count]:
+            balanced_ids.add(str(t.get("inspect_id")))
+            rebalanced.append(t)
+        for t in items[min_count:]:
+            drop_log.append(
+                {
+                    "task_idx": None,
+                    "inspect_id": str(t.get("inspect_id")),
+                    "task_type": tt,
+                    "reasons": [f"rebalance_drop(min_per_type={min_count})"],
+                }
+            )
+    # preserve original ordering
+    order = {str(t.get("inspect_id")): i for i, t in enumerate(tasks)}
+    rebalanced.sort(key=lambda t: order.get(str(t.get("inspect_id")), 1_000_000))
+
+    # Build matching inspect rows with the same query rewrite applied to `input`.
+    out_inspect: list[dict[str, Any]] = []
+    for t in rebalanced:
+        iid = str(t.get("inspect_id"))
+        row = inspect_by_id.get(iid)
+        if row is None:
+            continue
+        row = dict(row)
+        row["input"] = t["query"]
+        out_inspect.append(row)
+
+    write_jsonl(args.out_tasks, rebalanced)
+    write_jsonl(args.out_inspect, out_inspect)
+
+    log = {
+        "n_input": len(tasks),
+        "n_kept": len(rebalanced),
+        "min_per_type": min_count,
+        "kept_type_counts": dict(Counter(str(t.get("task_type")) for t in rebalanced)),
+        "input_type_counts": dict(Counter(str(t.get("task_type")) for t in tasks)),
+        "drop_reason_counts": dict(Counter(r for d in drop_log for r in d["reasons"])),
+        "drops": drop_log,
+        "policy": {
+            "path_leak_strip": "remove literal 层级路径“…” marker for all methods; multi_hop replaced with prose section-topic reference (doc name + gold leaf line dropped)",
+            "drop_rules": "content-based only: malformed/empty/truncated gold, gold nodes absent from doc, degenerate scope (<2 items), duplicate query; then symmetric rebalance per task_type",
+        },
+    }
+    args.out_log.parent.mkdir(parents=True, exist_ok=True)
+    args.out_log.write_text(json.dumps(log, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"clean: kept={len(rebalanced)}/{len(tasks)} per_type={log['kept_type_counts']}")
+    print(f"drop reasons: {log['drop_reason_counts']}")
+    print(f"wrote {args.out_tasks}")
+    print(f"wrote {args.out_inspect}")
+    print(f"wrote {args.out_log}")
+
+
+def audit_main(args: argparse.Namespace) -> None:
     corpus_meta = load_corpus_meta(args.corpus)
     tasks = read_jsonl(args.tasks)
     inspect_rows = read_jsonl(args.inspect)
@@ -190,6 +369,38 @@ def main() -> None:
     print(f"wrote {args.out_report}")
     print(f"wrote {args.out_tasks}")
     print(f"wrote {args.out_inspect}")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(
+        description="Audit RealData task quality, or clean tasks (strip hierarchy-path leak + content-based drops)."
+    )
+    ap.add_argument("--mode", choices=["audit", "clean"], default="audit")
+    ap.add_argument("--corpus", type=Path, default=Path("data/corpus/test_data_full_realdata_clean_latest.jsonl"))
+    ap.add_argument("--tasks", type=Path, default=Path("data/tasks/tasks_realdata_bodyrich_latest_clean_quality_balanced60.jsonl"))
+    ap.add_argument("--inspect", type=Path, default=Path("data/tasks/tasks_realdata_bodyrich_latest_clean_quality_balanced60.inspect.jsonl"))
+    # audit mode outputs
+    ap.add_argument("--out-report", type=Path, default=Path("results/task_quality_audit_latest_clean.json"))
+    ap.add_argument("--min-score", type=int, default=4)
+    # clean mode output
+    ap.add_argument("--out-log", type=Path, default=Path("results/task_clean_log.json"))
+    # shared outputs (defaults chosen per mode below if left unset)
+    ap.add_argument("--out-tasks", type=Path, default=None)
+    ap.add_argument("--out-inspect", type=Path, default=None)
+    args = ap.parse_args()
+
+    if args.mode == "clean":
+        if args.out_tasks is None:
+            args.out_tasks = Path("data/tasks/tasks_realdata_bodyrich_fair_clean.jsonl")
+        if args.out_inspect is None:
+            args.out_inspect = Path("data/tasks/tasks_realdata_bodyrich_fair_clean.inspect.jsonl")
+        clean_main(args)
+    else:
+        if args.out_tasks is None:
+            args.out_tasks = Path("data/tasks/tasks_realdata_bodyrich_latest_clean_hierarchy_candidates.jsonl")
+        if args.out_inspect is None:
+            args.out_inspect = Path("data/tasks/tasks_realdata_bodyrich_latest_clean_hierarchy_candidates.inspect.jsonl")
+        audit_main(args)
 
 
 if __name__ == "__main__":

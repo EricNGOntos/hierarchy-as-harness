@@ -1122,6 +1122,97 @@ def _snapshot_retry_wait_delta(before: Dict[str, Dict[str, Any]], after: Dict[st
     return total
 
 
+def _effective_task_type_for_compose(
+    task: AgentTask, inspect_by_id: Optional[Dict[str, Dict[str, Any]]]
+) -> str:
+    """Mirror Gold/Flat: prefer inspect metadata task_type when the task hits the registry."""
+    base = (task.task_type or "unknown").strip() or "unknown"
+    iid = str(getattr(task, "inspect_id", None) or "").strip()
+    if not (inspect_by_id and iid and iid in inspect_by_id):
+        return base
+    inst = inspect_by_id[iid]
+    md = inst.get("metadata") if isinstance(inst.get("metadata"), dict) else {}
+    it = str(md.get("task_type", "") or "").strip()
+    return it if it else base
+
+
+def _query_tokens_for_compose(query: str) -> List[str]:
+    raw = (query or "").lower()
+    toks = re.findall(r"[a-z0-9_]+|[\u4e00-\u9fff]", raw)
+    return [t for t in toks if t.strip()]
+
+
+def _prepare_compose_evidence_text(
+    query: str,
+    evidence_text: str,
+    *,
+    budget_chars: int,
+    task_type: str,
+) -> str:
+    text = (evidence_text or "").strip()
+    if not text:
+        return ""
+    if os.environ.get("BODYRICH_COMPOSE_CLEAN_EVIDENCE", "1").strip().lower() in {"0", "false", "no"}:
+        return text[: max(1, int(budget_chars))]
+
+    tt = (task_type or "").strip().lower()
+    keep_path = tt == "multi_hop"
+    blocks: List[Tuple[str, str]] = []
+    for raw_block in re.split(r"\n\s*\n(?=\[)", text):
+        block = raw_block.strip()
+        if not block:
+            continue
+        lines = block.splitlines()
+        if not lines:
+            continue
+        header = lines[0].strip()
+        body_lines = list(lines[1:]) if keep_path else [ln for ln in lines[1:] if not ln.strip().startswith("PATH:")]
+        body = "\n".join(body_lines).strip()
+        if not body:
+            continue
+        blocks.append((header, body))
+    if not blocks:
+        cleaned = re.sub(r"(?m)^PATH:.*\n?", "", text).strip()
+        return (cleaned or text)[: max(1, int(budget_chars))]
+
+    rerank = tt in {"scope_collection", "regulatory_coverage"}
+    if rerank:
+        q_toks = _query_tokens_for_compose(query)
+
+        def _score_block(item: Tuple[str, str]) -> Tuple[int, int]:
+            body = item[1].lower()
+            overlap = sum(1 for t in q_toks if t in body)
+            return (overlap, len(body))
+
+        blocks.sort(key=_score_block, reverse=True)
+
+    deduped: List[Tuple[str, str]] = []
+    seen_body: set[str] = set()
+    for h, b in blocks:
+        b_norm = re.sub(r"\s+", " ", b).strip()
+        if not b_norm or b_norm in seen_body:
+            continue
+        seen_body.add(b_norm)
+        deduped.append((h, b))
+
+    out_parts: List[str] = []
+    used = 0
+    for h, b in deduped:
+        piece = f"{h}\n{b}"
+        add_len = len(piece) + (2 if out_parts else 0)
+        if used + add_len <= int(budget_chars):
+            out_parts.append(piece)
+            used += add_len
+            continue
+        remain = int(budget_chars) - used - (2 if out_parts else 0)
+        if remain > 40:
+            out_parts.append(piece[:remain])
+        break
+    if out_parts:
+        return "\n\n".join(out_parts)
+    return text[: max(1, int(budget_chars))]
+
+
 def _score_at_budget(
     task: AgentTask,
     scored: Scored,
@@ -1157,12 +1248,19 @@ def _score_at_budget(
         if not format_constraints:
             format_constraints = inspect_compose_format_block(inspect_task)
 
+    eff_tt = _effective_task_type_for_compose(task, inspect_by_id)
+    compose_evidence = _prepare_compose_evidence_text(
+        task.query,
+        fill.evidence_text or "",
+        budget_chars=int(budget),
+        task_type=eff_tt,
+    )
     compose_usage_before = snapshot_usage()
     compose_t0 = time.time()
     composed = compose_answer_llm(
         task.query,
-        task_type=task.task_type,
-        evidence_text=(fill.evidence_text or "")[: max(1, int(budget))],
+        task_type=eff_tt,
+        evidence_text=compose_evidence,
         max_answer_chars=min(1024, max(256, int(budget))),
         budget_chars=int(budget),
         format_constraints=format_constraints,
@@ -1254,8 +1352,10 @@ def _fmt_delta(v: Any) -> str:
 
 
 def _existing_result_paths() -> List[Path]:
+    # Canonical fair-protocol Gold/Flat result (used for the summary markdown comparison;
+    # also the cap source only if TREERAG_FAIR_CAP=1, which is OFF by default).
     return [
-        PACKAGE_ROOT.parent.parent / "results" / "latest_clean_quality_balanced60_gold_flat_quality_balanced60_costclean_v1_b500.json",
+        PACKAGE_ROOT.parent.parent / "results" / "fair_clean_gold_flat_fair_clean_v1_b500.json",
     ]
 
 
@@ -1528,7 +1628,13 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
             print(f"[treerag] indexed {i}/{len(needed_doc_ids)} docs", file=sys.stderr, flush=True)
     index_seconds = time.time() - t0
 
-    cap_by_task = _existing_cap_by_task(tasks)
+    # Fair protocol: no per-method candidate-count cap. All methods share only the
+    # b500 char budget + identical compose + identical judge. The legacy asymmetric
+    # cap can be re-enabled for reproducibility via TREERAG_FAIR_CAP=1.
+    if os.environ.get("TREERAG_FAIR_CAP", "0").strip().lower() in {"1", "true", "yes"}:
+        cap_by_task = _existing_cap_by_task(tasks)
+    else:
+        cap_by_task = {}
     checkpoint_path = cache_dir / "treerag_task_scores.jsonl"
     checkpoint_signature = _task_checkpoint_signature(args)
     checkpoint_meta = {"kind": "meta", "signature": checkpoint_signature, "created_at": time.time()}

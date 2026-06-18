@@ -7,10 +7,10 @@ cd "$(dirname "$0")/.."
 BUDGETS="${BUDGETS:-500}"
 TREERAG_MODEL="${TREERAG_MODEL:-qwen3.5-flash}"
 EMBEDDING_MODEL="${EMBEDDING_MODEL:-BAAI/bge-m3}"
-RUN_TAG="${RUN_TAG:-quality_balanced60_costclean_v1}"
+RUN_TAG="${RUN_TAG:-fair_clean_v1}"
 
-TASKS="${TASKS:-data/tasks/tasks_realdata_bodyrich_latest_clean_quality_balanced60.jsonl}"
-INSPECT_TASKS="${INSPECT_TASKS:-data/tasks/tasks_realdata_bodyrich_latest_clean_quality_balanced60.inspect.jsonl}"
+TASKS="${TASKS:-data/tasks/tasks_realdata_bodyrich_fair_clean.jsonl}"
+INSPECT_TASKS="${INSPECT_TASKS:-data/tasks/tasks_realdata_bodyrich_fair_clean.inspect.jsonl}"
 
 ARGS=(
   --test-jsonl data/corpus/test_data_full_realdata_clean_latest.jsonl
@@ -18,7 +18,7 @@ ARGS=(
   --budgets "${BUDGETS}"
   --treerag-model "${TREERAG_MODEL}"
   --embedding-model "${EMBEDDING_MODEL}"
-  --out-template "results/latest_clean_treerag_${RUN_TAG}_b{budget}.json"
+  --out-template "results/fair_clean_treerag_${RUN_TAG}_b{budget}.json"
   --summary-md "cache/treerag_${RUN_TAG}/run_summary.md"
   --cache-dir "cache/treerag_${RUN_TAG}"
   --compose-judge

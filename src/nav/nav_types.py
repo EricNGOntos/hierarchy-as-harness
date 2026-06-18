@@ -99,6 +99,10 @@ class NavState:
     scope_stack: List[Optional[str]] = field(default_factory=lambda: [None])
     collected_ids: set[str] = field(default_factory=set)
     collected: List[Tuple[Any, float]] = field(default_factory=list)
+    discovery_scores: Dict[str, float] = field(default_factory=dict)
+    discovery_rerank_meta: Dict[str, Any] = field(default_factory=dict)
+    hybrid_section_candidates: List[Dict[str, Any]] = field(default_factory=list)
+    discovery_picked_ids: List[str] = field(default_factory=list)
     action_history: List[Dict[str, Any]] = field(default_factory=list)
     refusal_events: List[Dict[str, Any]] = field(default_factory=list)
 
@@ -111,4 +115,3 @@ class NavState:
             self.scope_stack.pop()
         self.current_scope = self.scope_stack[-1] if self.scope_stack else None
         return self.current_scope
-

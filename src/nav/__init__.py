@@ -1,2 +1,2 @@
-"""KNOWHERE-lite navigation adapters for RealData hierarchy experiments."""
+"""KNOWHERE-lite navigation: hybrid discovery + LLM rerank for RealData experiments."""
 

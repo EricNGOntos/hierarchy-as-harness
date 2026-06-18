@@ -322,10 +322,22 @@ def default_inspect_task_paths(kit_root: Path) -> List[Path]:
         "delivery_bundle_inspect_tasks/data/tasks_realdata_bodyrich_200_manual_multi_hop_inspect.jsonl",
         "delivery_bundle_inspect_tasks/data/tasks_realdata_bodyrich_200_manual_scope_only_mapped_strict_agent_inspect.jsonl",
     )
+    rels_delivery = (
+        "delivery/inspect_tasks/tasks_realdata_bodyrich_200_manual_niche_fact_inspect.jsonl",
+        "delivery/inspect_tasks/tasks_realdata_bodyrich_200_manual_multi_hop_inspect.jsonl",
+        "delivery/inspect_tasks/tasks_realdata_bodyrich_200_manual_scope_only_mapped_strict_agent_inspect.jsonl",
+    )
     out: List[Path] = []
-    for p, fb in zip(rels_primary, rels_fallback):
+    for p, fb, dp in zip(rels_primary, rels_fallback, rels_delivery):
         p1 = kit_root / p
-        out.append(p1 if p1.exists() else (kit_root / fb))
+        if p1.exists():
+            out.append(p1)
+            continue
+        p2 = kit_root / fb
+        if p2.exists():
+            out.append(p2)
+            continue
+        out.append(kit_root / dp)
     return out
 
 

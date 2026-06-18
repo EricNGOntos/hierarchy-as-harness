@@ -5,15 +5,25 @@ export PYTHONDONTWRITEBYTECODE=1
 cd "$(dirname "$0")/.."
 
 BUDGETS="${BUDGETS:-500}"
-NAV_RUN_TAG="${NAV_RUN_TAG:-quality_balanced60_costclean_v1}"
+NAV_RUN_TAG="${NAV_RUN_TAG:-fair_clean_v1}"
 EMBEDDING_MODEL="${EMBEDDING_MODEL:-BAAI/bge-m3}"
+# Disable discovery: NAV_DISCOVERY_SOFT_SIGNAL=0
+export NAV_DISCOVERY_SOFT_SIGNAL="${NAV_DISCOVERY_SOFT_SIGNAL:-1}"
+export NAV_DISCOVERY_RECALL_K="${NAV_DISCOVERY_RECALL_K:-10}"
+export NAV_DISCOVERY_PICK_K="${NAV_DISCOVERY_PICK_K:-3}"
+# Post-nav soft safety net: hybrid recall + LLM rerank pick, collected on the native
+# dense-similarity scale (so a correct discovery chunk can outrank a wrong navigator
+# chunk) and capped in volume to avoid the v2 mass-inject regression.
+export NAV_SOFT_SAFETY_NET="${NAV_SOFT_SAFETY_NET:-1}"
+export NAV_SOFT_SAFETY_PICK_K="${NAV_SOFT_SAFETY_PICK_K:-3}"
+export NAV_SOFT_SAFETY_MAX_ADD="${NAV_SOFT_SAFETY_MAX_ADD:-8}"
 export NAV_PATH_ANCHOR_TASK_TYPES="${NAV_PATH_ANCHOR_TASK_TYPES:-scope_collection,regulatory_coverage,multi_hop}"
 
-TASKS="data/tasks/tasks_realdata_bodyrich_latest_clean_quality_balanced60.jsonl"
-INSPECT_TASKS="data/tasks/tasks_realdata_bodyrich_latest_clean_quality_balanced60.inspect.jsonl"
+TASKS="${TASKS:-data/tasks/tasks_realdata_bodyrich_fair_clean.jsonl}"
+INSPECT_TASKS="${INSPECT_TASKS:-data/tasks/tasks_realdata_bodyrich_fair_clean.inspect.jsonl}"
 
 if [[ ! -f "${TASKS}" || ! -f "${INSPECT_TASKS}" ]]; then
-  echo "missing canonical balanced60 tasks: ${TASKS}" >&2
+  echo "missing fair-clean tasks: ${TASKS}" >&2
   exit 1
 fi
 
@@ -23,13 +33,13 @@ ARGS=(
   --retrieval dense
   --embedding-model "${EMBEDDING_MODEL}"
   --budget-chars-list "${BUDGETS}"
-  --out-template "results/latest_clean_quality_balanced60_gold_flat_${NAV_RUN_TAG}_b{budget}.json"
+  --out-template "results/fair_clean_gold_flat_${NAV_RUN_TAG}_b{budget}.json"
   --hier-policy "${HIER_POLICY:-nav}"
   --nav-config "${NAV_CONFIG:-config/nav_default.json}"
   --nav-policy "${NAV_POLICY:-llm}"
   --inspect-tasks "${INSPECT_TASKS}"
   --inspect-judge
-  --checkpoint-dir "cache/quality_balanced60_gold_flat_${NAV_RUN_TAG}"
+  --checkpoint-dir "cache/fair_clean_gold_flat_${NAV_RUN_TAG}"
 )
 
 if [[ -n "${MAX_TASKS:-}" ]]; then

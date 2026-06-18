@@ -1,0 +1,3437 @@
+{
+  "summary": {
+    "experiment": "realdata_latest_clean_treerag_baseline",
+    "n_tasks": 51,
+    "config": {
+      "baseline": "treerag",
+      "adapter": "src/treerag/eval_arxiv_treerag.py",
+      "paper": "TreeRAG: Unleashing the Power of Hierarchical Storage for Enhanced Knowledge Retrieval in Long Documents",
+      "paper_url": "https://aclanthology.org/2025.findings-acl.20/",
+      "embedding_model": "BAAI/bge-m3",
+      "embedding_model_load_path": "BAAI/bge-m3",
+      "tree_source": "llm_tree_chunking",
+      "tree_model": "qwen3.5-flash",
+      "intent_model": "qwen3.5-flash",
+      "default_black_box_model": "qwen3.5-flash",
+      "paper_black_box_steps": {
+        "tree_chunking": true,
+        "intent_classification": true
+      },
+      "llm_calls_in_this_adapter": true,
+      "token_usage": {
+        "prompt_tokens": 156765,
+        "completion_tokens": 89141,
+        "total_tokens": 245906,
+        "api_calls": 105,
+        "cache_hits": 0
+      },
+      "token_usage_by_purpose": {
+        "intent_detection": {
+          "prompt_tokens": 9348,
+          "completion_tokens": 255,
+          "total_tokens": 9603,
+          "api_calls": 51,
+          "cache_hits": 0
+        },
+        "tree_chunking": {
+          "prompt_tokens": 147417,
+          "completion_tokens": 88886,
+          "total_tokens": 236303,
+          "api_calls": 54,
+          "cache_hits": 0
+        }
+      },
+      "n_corpus_docs_loaded": 195,
+      "n_docs_indexed_for_tasks": 12,
+      "n_tasks": 51,
+      "doc_index_cache_hits": 0,
+      "llm_cache_hits": 0,
+      "runtime_seconds": 1048.9662590026855,
+      "params": {
+        "intent_mode": "llm",
+        "tree_chunk_prompt_version": "treerag-paper-tree-chunking-qwen-v1",
+        "intent_prompt_version": "treerag-paper-intent-qwen-v1",
+        "tree_lines_per_call": 60,
+        "tree_line_char_limit": 700,
+        "tree_max_level": 4,
+        "tree_max_tokens": 12000,
+        "intent_max_tokens": 64,
+        "initial_top_k": 80,
+        "root_to_leaf_decay": 0.97,
+        "leaf_to_parent_decay": 0.94,
+        "max_traversal_leaves": 0,
+        "path_char_limit": 700,
+        "embedding_batch_size": 64
+      }
+    },
+    "treerag": {
+      "chunk_hit@1_mean": 0.4117647058823529,
+      "mrr_chunks_mean": 0.5279645191409897,
+      "coverage_budget_lenient_mean": 0.5519607843137254,
+      "evidence_chars_actual_mean": 496.70588235294116,
+      "n_chunks_kept_mean": 4.96078431372549,
+      "score_task_mean": 0.3331882352941176,
+      "score_evidence_mean": 0.4839862745098039,
+      "inspect_content_score_mean": 0.3331882352941176,
+      "inspect_evidence_score_mean": 0.4839862745098039
+    },
+    "per_type_treerag": {
+      "niche_fact": {
+        "chunk_hit@1_mean": 0.9411764705882353,
+        "mrr_chunks_mean": 0.9558823529411765,
+        "coverage_budget_lenient_mean": 1.0,
+        "evidence_chars_actual_mean": 497.1764705882353,
+        "n_chunks_kept_mean": 4.647058823529412,
+        "score_task_mean": 0.8529411764705882,
+        "score_evidence_mean": 0.9705882352941176,
+        "inspect_content_score_mean": 0.8529411764705882,
+        "inspect_evidence_score_mean": 0.9705882352941176,
+        "n": 17
+      },
+      "multi_hop": {
+        "chunk_hit@1_mean": 0.0,
+        "mrr_chunks_mean": 0.2603641456582633,
+        "coverage_budget_lenient_mean": 0.35784313725490197,
+        "evidence_chars_actual_mean": 495.47058823529414,
+        "n_chunks_kept_mean": 5.0588235294117645,
+        "score_task_mean": 0.0784235294117647,
+        "score_evidence_mean": 0.3578411764705882,
+        "inspect_content_score_mean": 0.0784235294117647,
+        "inspect_evidence_score_mean": 0.3578411764705882,
+        "n": 17
+      },
+      "scope_collection": {
+        "chunk_hit@1_mean": 0.29411764705882354,
+        "mrr_chunks_mean": 0.36764705882352944,
+        "coverage_budget_lenient_mean": 0.2980392156862745,
+        "evidence_chars_actual_mean": 497.47058823529414,
+        "n_chunks_kept_mean": 5.176470588235294,
+        "score_task_mean": 0.0682,
+        "score_evidence_mean": 0.12352941176470589,
+        "inspect_content_score_mean": 0.0682,
+        "inspect_evidence_score_mean": 0.12352941176470589,
+        "n": 17
+      }
+    }
+  },
+  "rows": [
+    {
+      "task_idx": 1,
+      "query": "在《线上学习平台学习管理方案（修订）.docx》，关于“为进一步深化学习型组织建设，整合学习资源，传播最佳实践”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L2"
+      ],
+      "inspect_id": "q400_niche_0001",
+      "candidate_counts": {
+        "treerag": 53,
+        "treerag_raw": 53,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_2",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_4",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_1",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_13",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_48__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L2",
+          "real_69c6095ed4242eda8c47c5b2:L4",
+          "real_69c6095ed4242eda8c47c5b2:L1",
+          "real_69c6095ed4242eda8c47c5b2:L13"
+        ],
+        "evidence_text": "[real_69c6095ed4242eda8c47c5b2:TREERAG_2]\n为进一步深化学习型组织建设，整合学习资源，传播最佳实践，有效助力员工工作技能提升和绩效改善。为进一步强化学习效果，规范线上学习管理，特制订本方案。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_4]\n线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_1]\n十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订）\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_13]\n1.协同做好线上学习平台的推广、使用和维护等日常管理工作，配合各专家组完成本业务条线培训课程开发、选配工作。\n\n[real_69c6095ed4242ed",
+        "evidence_preview": "[real_69c6095ed4242eda8c47c5b2:TREERAG_2]\n为进一步深化学习型组织建设，整合学习资源，传播最佳实践，有效助力员工工作技能提升和绩效改善。为进一步强化学习效果，规范线上学习管理，特制订本方案。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_4]\n线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_1]\n十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订）\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_13]\n1.协同做好线上学习平台的推广、使用和维护等日常管理工作，配合各专家组完成本业务条线培训课程开发、选配工作。\n\n[real_69c6095ed4242ed",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.25
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"为进一步深化学习型组织建设，整合学习资源，传播最佳实践，有效助力员工工作技能提升和绩效改善。为进一步强化学习效果，规范线上学习管理，特制订本方案。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.6687963008880615,
+        "judge_eval_seconds": 1.5868220329284668,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0001",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 2,
+      "query": "在《线上学习平台学习管理方案（修订）.docx》，关于“线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L4"
+      ],
+      "inspect_id": "q400_niche_0002",
+      "candidate_counts": {
+        "treerag": 53,
+        "treerag_raw": 53,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 4,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_4",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_1",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_7",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_11__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L4",
+          "real_69c6095ed4242eda8c47c5b2:L1",
+          "real_69c6095ed4242eda8c47c5b2:L7",
+          "real_69c6095ed4242eda8c47c5b2:L11"
+        ],
+        "evidence_text": "[real_69c6095ed4242eda8c47c5b2:TREERAG_4]\n线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_1]\n十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订）\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_7]\n（ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_11]\n2.各二级单位平台管理员：负责督促本单位各类课件指定人员在线学习，按时完成学习计划，并向各专家",
+        "evidence_preview": "[real_69c6095ed4242eda8c47c5b2:TREERAG_4]\n线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_1]\n十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订）\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_7]\n（ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_11]\n2.各二级单位平台管理员：负责督促本单位各类课件指定人员在线学习，按时完成学习计划，并向各专家",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.25
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.5453751087188721,
+        "judge_eval_seconds": 0.001069784164428711,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0002",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 3,
+      "query": "在《线上学习平台学习管理方案（修订）.docx》，关于“各专家组平台管理员：负责本专家组课件和考试习题的上传、维护、更新、删除”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L10"
+      ],
+      "inspect_id": "q400_niche_0003",
+      "candidate_counts": {
+        "treerag": 53,
+        "treerag_raw": 53,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_10",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_6",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_29",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_11",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_36__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L10",
+          "real_69c6095ed4242eda8c47c5b2:L6",
+          "real_69c6095ed4242eda8c47c5b2:L29",
+          "real_69c6095ed4242eda8c47c5b2:L11",
+          "real_69c6095ed4242eda8c47c5b2:L36"
+        ],
+        "evidence_text": "[real_69c6095ed4242eda8c47c5b2:TREERAG_10]\n1.各专家组平台管理员：负责本专家组课件和考试习题的上传、维护、更新、删除、学习任务下发和指派相关岗位学习等工作。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_6]\n（ 二）各专家组：负责各领域内员工培训需求征集，教材、课件及习题开发，课件修改、适时更新、审核，业务答疑，题库组建等工作，集团对口业务部门负责人为各专业课程开发责任人，统筹推进本业务系统课程开发工作。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_29]\n1.各专家组平台管理员须按照课程开发计划中明确的必修岗位及时指派学员学习。指派方式根据课程必修对象选\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_11]\n2.各二级单位平台管理员：负责督促本单位各类课件指定人员在线学习，按时完成学习计划，并向各专家组及十一在线平台中心办公室反馈学习情况。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_36]\n3.课件",
+        "evidence_preview": "[real_69c6095ed4242eda8c47c5b2:TREERAG_10]\n1.各专家组平台管理员：负责本专家组课件和考试习题的上传、维护、更新、删除、学习任务下发和指派相关岗位学习等工作。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_6]\n（ 二）各专家组：负责各领域内员工培训需求征集，教材、课件及习题开发，课件修改、适时更新、审核，业务答疑，题库组建等工作，集团对口业务部门负责人为各专业课程开发责任人，统筹推进本业务系统课程开发工作。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_29]\n1.各专家组平台管理员须按照课程开发计划中明确的必修岗位及时指派学员学习。指派方式根据课程必修对象选\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_11]\n2.各二级单位平台管理员：负责督促本单位各类课件指定人员在线学习，按时完成学习计划，并向各专家组及十一在线平台中心办公室反馈学习情况。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_36]\n3.课件",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.2
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"1.各专家组平台管理员：负责本专家组课件和考试习题的上传、维护、更新、删除、学习任务下发和指派相关岗位学习等工作。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.6101510524749756,
+        "judge_eval_seconds": 1.3510770797729492,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0003",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 4,
+      "query": "在《线上学习平台学习管理方案（修订）.docx》，关于“协同做好线上学习平台的推广、使用和维护等日常管理工作”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L13"
+      ],
+      "inspect_id": "q400_niche_0004",
+      "candidate_counts": {
+        "treerag": 53,
+        "treerag_raw": 53,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_13",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_1",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_48",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_0",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_4__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L13",
+          "real_69c6095ed4242eda8c47c5b2:L1",
+          "real_69c6095ed4242eda8c47c5b2:L48",
+          "real_69c6095ed4242eda8c47c5b2:L0",
+          "real_69c6095ed4242eda8c47c5b2:L4"
+        ],
+        "evidence_text": "[real_69c6095ed4242eda8c47c5b2:TREERAG_13]\n1.协同做好线上学习平台的推广、使用和维护等日常管理工作，配合各专家组完成本业务条线培训课程开发、选配工作。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_1]\n十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订）\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_48]\n（ 1）各管理员在线上学习平台创建线下培训时，应结合本公司培训计划和实际业务需求创建，创建过程中，做好签到设置、学员管理和指派设置，根据实际设置培训学时时长。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_0]\n线上学习平台学习管理方案（修订）.docx\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_4]\n线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营",
+        "evidence_preview": "[real_69c6095ed4242eda8c47c5b2:TREERAG_13]\n1.协同做好线上学习平台的推广、使用和维护等日常管理工作，配合各专家组完成本业务条线培训课程开发、选配工作。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_1]\n十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订）\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_48]\n（ 1）各管理员在线上学习平台创建线下培训时，应结合本公司培训计划和实际业务需求创建，创建过程中，做好签到设置、学员管理和指派设置，根据实际设置培训学时时长。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_0]\n线上学习平台学习管理方案（修订）.docx\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_4]\n线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.2
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"协同做好线上学习平台的推广、使用和维护等日常管理工作，配合各专家组完成本业务条线培训课程开发、选配工作。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.6470930576324463,
+        "judge_eval_seconds": 0.0009660720825195312,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0004",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 5,
+      "query": "在《线上学习平台学习管理方案（修订）.docx》，关于“必修课程。必修课程需涵盖各专业系统内所有一般管理岗位。”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L19"
+      ],
+      "inspect_id": "q400_niche_0005",
+      "candidate_counts": {
+        "treerag": 53,
+        "treerag_raw": 53,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_19",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_31",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_29",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_21",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_20__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L19",
+          "real_69c6095ed4242eda8c47c5b2:L31",
+          "real_69c6095ed4242eda8c47c5b2:L29",
+          "real_69c6095ed4242eda8c47c5b2:L21",
+          "real_69c6095ed4242eda8c47c5b2:L20"
+        ],
+        "evidence_text": "[real_69c6095ed4242eda8c47c5b2:TREERAG_19]\n1.必修课程。必修课程需涵盖各专业系统内所有一般管理岗位。 由各专家组主持，根据所辖领域内各岗位职责制定课程开发计划、确定各系统岗位的必修课。课程开发计划需\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_31]\n2.各研修班课程在授课结束后由各研修管理员同步上传线上平台相应课程模块，需要纳入相关岗位必修的，由管理员指派给相关岗位作为必修课程。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_29]\n1.各专家组平台管理员须按照课程开发计划中明确的必修岗位及时指派学员学习。指派方式根据课程必修对象选\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_21]\n必修课程的开发数量各专家组结合业务和岗位需求实际确定，课程包含内部自主开发和外部引进，保证课程内容的实用性和有效性。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_20]\n明确课程名称、课程类别、必修岗位、课程开发负责人等",
+        "evidence_preview": "[real_69c6095ed4242eda8c47c5b2:TREERAG_19]\n1.必修课程。必修课程需涵盖各专业系统内所有一般管理岗位。 由各专家组主持，根据所辖领域内各岗位职责制定课程开发计划、确定各系统岗位的必修课。课程开发计划需\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_31]\n2.各研修班课程在授课结束后由各研修管理员同步上传线上平台相应课程模块，需要纳入相关岗位必修的，由管理员指派给相关岗位作为必修课程。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_29]\n1.各专家组平台管理员须按照课程开发计划中明确的必修岗位及时指派学员学习。指派方式根据课程必修对象选\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_21]\n必修课程的开发数量各专家组结合业务和岗位需求实际确定，课程包含内部自主开发和外部引进，保证课程内容的实用性和有效性。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_20]\n明确课程名称、课程类别、必修岗位、课程开发负责人等",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.2
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"必修课程需涵盖各专业系统内所有一般管理岗位。由各专家组主持，根据所辖领域内各岗位职责制定课程开发计划、确定各系统岗位的必修课。\"}",
+        "score_task": 0.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.6542901992797852,
+        "judge_eval_seconds": 0.0008020401000976562,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0005",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 6,
+      "query": "在《线上学习平台学习管理方案（修订）.docx》，关于“视频类课程。视频类课程上传时须开启“观看监控”设置功能”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L25"
+      ],
+      "inspect_id": "q400_niche_0006",
+      "candidate_counts": {
+        "treerag": 53,
+        "treerag_raw": 53,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 4,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_25",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_26",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_31",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_48__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L25",
+          "real_69c6095ed4242eda8c47c5b2:L26",
+          "real_69c6095ed4242eda8c47c5b2:L31",
+          "real_69c6095ed4242eda8c47c5b2:L48"
+        ],
+        "evidence_text": "[real_69c6095ed4242eda8c47c5b2:TREERAG_25]\n1.视频类课程。视频类课程上传时须开启“观看监控”设置功能，在课程中添加课程观看提示，在相应节点点击“提示”方可继续学习，首次课程播放不允许拖动。所有上传课程需添加随堂小测试，测试通过后该门课程学习完成。 同时为便于学员学习， 内部录制时的PPT 文档（如有）随同视频一并上传。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_26]\n2.文档类课程。纯文档类课程上传时需根据课程内容设置最短学习时间，并添加随堂小测试，达到课程最低学时长且通过随堂小测试，该课程学习完成。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_31]\n2.各研修班课程在授课结束后由各研修管理员同步上传线上平台相应课程模块，需要纳入相关岗位必修的，由管理员指派给相关岗位作为必修课程。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_48]\n（ 1）各管理员在线上学习平台创建线下培训时，应结合本公司培训计划和实际业务需求创建，创建过程中，",
+        "evidence_preview": "[real_69c6095ed4242eda8c47c5b2:TREERAG_25]\n1.视频类课程。视频类课程上传时须开启“观看监控”设置功能，在课程中添加课程观看提示，在相应节点点击“提示”方可继续学习，首次课程播放不允许拖动。所有上传课程需添加随堂小测试，测试通过后该门课程学习完成。 同时为便于学员学习， 内部录制时的PPT 文档（如有）随同视频一并上传。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_26]\n2.文档类课程。纯文档类课程上传时需根据课程内容设置最短学习时间，并添加随堂小测试，达到课程最低学时长且通过随堂小测试，该课程学习完成。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_31]\n2.各研修班课程在授课结束后由各研修管理员同步上传线上平台相应课程模块，需要纳入相关岗位必修的，由管理员指派给相关岗位作为必修课程。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_48]\n（ 1）各管理员在线上学习平台创建线下培训时，应结合本公司培训计划和实际业务需求创建，创建过程中，",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.25
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"视频类课程上传时须开启“观看监控”设置功能，在课程中添加课程观看提示，在相应节点点击“提示”方可继续学习，首次课程播放不允许拖动。所有上传课程需添加随堂小测试，测试通过后该门课程学习完成。同时为便于学员学习，内部录制时的PPT文档（如有）随同视频一并上传。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.9513731002807617,
+        "judge_eval_seconds": 0.0006771087646484375,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0006",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 7,
+      "query": "在《线上学习平台学习管理方案（修订）.docx》，关于“各专家组平台管理员须按照课程开发计划中明确的必修岗位及时指派学员学习。”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L29"
+      ],
+      "inspect_id": "q400_niche_0007",
+      "candidate_counts": {
+        "treerag": 53,
+        "treerag_raw": 53,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_29",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_31",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_19",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_10",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_6__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L29",
+          "real_69c6095ed4242eda8c47c5b2:L31",
+          "real_69c6095ed4242eda8c47c5b2:L19",
+          "real_69c6095ed4242eda8c47c5b2:L10",
+          "real_69c6095ed4242eda8c47c5b2:L6"
+        ],
+        "evidence_text": "[real_69c6095ed4242eda8c47c5b2:TREERAG_29]\n1.各专家组平台管理员须按照课程开发计划中明确的必修岗位及时指派学员学习。指派方式根据课程必修对象选\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_31]\n2.各研修班课程在授课结束后由各研修管理员同步上传线上平台相应课程模块，需要纳入相关岗位必修的，由管理员指派给相关岗位作为必修课程。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_19]\n1.必修课程。必修课程需涵盖各专业系统内所有一般管理岗位。 由各专家组主持，根据所辖领域内各岗位职责制定课程开发计划、确定各系统岗位的必修课。课程开发计划需\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_10]\n1.各专家组平台管理员：负责本专家组课件和考试习题的上传、维护、更新、删除、学习任务下发和指派相关岗位学习等工作。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_6]\n（ 二）各专家组：负责各领域内员工培训需求征集，教材、",
+        "evidence_preview": "[real_69c6095ed4242eda8c47c5b2:TREERAG_29]\n1.各专家组平台管理员须按照课程开发计划中明确的必修岗位及时指派学员学习。指派方式根据课程必修对象选\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_31]\n2.各研修班课程在授课结束后由各研修管理员同步上传线上平台相应课程模块，需要纳入相关岗位必修的，由管理员指派给相关岗位作为必修课程。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_19]\n1.必修课程。必修课程需涵盖各专业系统内所有一般管理岗位。 由各专家组主持，根据所辖领域内各岗位职责制定课程开发计划、确定各系统岗位的必修课。课程开发计划需\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_10]\n1.各专家组平台管理员：负责本专家组课件和考试习题的上传、维护、更新、删除、学习任务下发和指派相关岗位学习等工作。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_6]\n（ 二）各专家组：负责各领域内员工培训需求征集，教材、",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.2
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"各专家组平台管理员须按照课程开发计划中明确的必修岗位及时指派学员学习。\"}",
+        "score_task": 0.5,
+        "score_evidence": 0.5,
+        "compose_seconds": 0.6204338073730469,
+        "judge_eval_seconds": 0.0009188652038574219,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0007",
+        "inspect_evidence_score": 0.5,
+        "inspect_content_score": 0.5,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 8,
+      "query": "在《线上学习平台学习管理方案（修订）.docx》，关于“课程开发。课程开发依托专家组、各业务线要从有利于组织目标达成”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L34"
+      ],
+      "inspect_id": "q400_niche_0008",
+      "candidate_counts": {
+        "treerag": 53,
+        "treerag_raw": 53,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 4,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_34",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_29",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_6",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_48__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L34",
+          "real_69c6095ed4242eda8c47c5b2:L29",
+          "real_69c6095ed4242eda8c47c5b2:L6",
+          "real_69c6095ed4242eda8c47c5b2:L48"
+        ],
+        "evidence_text": "[real_69c6095ed4242eda8c47c5b2:TREERAG_34]\n1.课程开发。课程开发依托专家组、各业务线要从有利于组织目标达成、员工履职能力提升等方面，本着“简单、实用、明了”原则进行课程开发。各专家组、各部门应按年度既定课程开发计划，督促、跟进课程开发负责人按时完成课件开发任务。计划外课程开发须明确开发课程名称、学习对象等，经各专家组审核后开发，并向平台中心办公室备案。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_29]\n1.各专家组平台管理员须按照课程开发计划中明确的必修岗位及时指派学员学习。指派方式根据课程必修对象选\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_6]\n（ 二）各专家组：负责各领域内员工培训需求征集，教材、课件及习题开发，课件修改、适时更新、审核，业务答疑，题库组建等工作，集团对口业务部门负责人为各专业课程开发责任人，统筹推进本业务系统课程开发工作。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_48]\n（ 1）各管理员在线上学习平台创建",
+        "evidence_preview": "[real_69c6095ed4242eda8c47c5b2:TREERAG_34]\n1.课程开发。课程开发依托专家组、各业务线要从有利于组织目标达成、员工履职能力提升等方面，本着“简单、实用、明了”原则进行课程开发。各专家组、各部门应按年度既定课程开发计划，督促、跟进课程开发负责人按时完成课件开发任务。计划外课程开发须明确开发课程名称、学习对象等，经各专家组审核后开发，并向平台中心办公室备案。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_29]\n1.各专家组平台管理员须按照课程开发计划中明确的必修岗位及时指派学员学习。指派方式根据课程必修对象选\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_6]\n（ 二）各专家组：负责各领域内员工培训需求征集，教材、课件及习题开发，课件修改、适时更新、审核，业务答疑，题库组建等工作，集团对口业务部门负责人为各专业课程开发责任人，统筹推进本业务系统课程开发工作。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_48]\n（ 1）各管理员在线上学习平台创建",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.25
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"课程开发依托专家组、各业务线要从有利于组织目标达成、员工履职能力提升等方面，本着“简单、实用、明了”原则进行课程开发。各专家组、各部门应按年度既定课程开发计划，督促、跟进课程开发负责人按时完成课件开发任务。计划外课程开发须明确开发课程名称、学习对象等，经各专家组审核后开发，并向平台中心办公室备案。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 1.023041009902954,
+        "judge_eval_seconds": 1.4466099739074707,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0008",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 9,
+      "query": "在《线上学习平台学习管理方案（修订）.docx》，关于“学员年度学习学时标准为52学时”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L41"
+      ],
+      "inspect_id": "q400_niche_0009",
+      "candidate_counts": {
+        "treerag": 53,
+        "treerag_raw": 53,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 4,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_41",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_44",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_46",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_48__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L41",
+          "real_69c6095ed4242eda8c47c5b2:L44",
+          "real_69c6095ed4242eda8c47c5b2:L46",
+          "real_69c6095ed4242eda8c47c5b2:L48"
+        ],
+        "evidence_text": "[real_69c6095ed4242eda8c47c5b2:TREERAG_41]\n学员年度学习学时标准为52 学时；参加研修班必修岗位的学员以参加研修班的考勤和考核为准，线上学习时长不做硬性要求；对于入职不足1 年的员工，学时考核标准以5学时/月按实际工作月数计算。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_44]\n规定各岗位年度52学时标准，含必修、选修（线上平台）、线下课及取证类学时。明确各类学时的定义与统计依据，如以平台后台数据或考试成绩为准。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_46]\n本年度学员学习学时≥52 学时，年底技能测评成绩为其实际考试成绩；40 学时≤本年度学习学时＜ 52 学时，学员年度技能测评成绩为考试成绩的80%；本年度学习学时<40学时，学员年度技能测评成绩为考试成绩的60%。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_48]\n（ 1）各管理员在线上学习平台创建线下培训时，应结合本公司培训计划和实际业务需求创建，创建过程中，做好签到设置",
+        "evidence_preview": "[real_69c6095ed4242eda8c47c5b2:TREERAG_41]\n学员年度学习学时标准为52 学时；参加研修班必修岗位的学员以参加研修班的考勤和考核为准，线上学习时长不做硬性要求；对于入职不足1 年的员工，学时考核标准以5学时/月按实际工作月数计算。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_44]\n规定各岗位年度52学时标准，含必修、选修（线上平台）、线下课及取证类学时。明确各类学时的定义与统计依据，如以平台后台数据或考试成绩为准。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_46]\n本年度学员学习学时≥52 学时，年底技能测评成绩为其实际考试成绩；40 学时≤本年度学习学时＜ 52 学时，学员年度技能测评成绩为考试成绩的80%；本年度学习学时<40学时，学员年度技能测评成绩为考试成绩的60%。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_48]\n（ 1）各管理员在线上学习平台创建线下培训时，应结合本公司培训计划和实际业务需求创建，创建过程中，做好签到设置",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.25
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"学员年度学习学时标准为52 学时；参加研修班必修岗位的学员以参加研修班的考勤和考核为准，线上学习时长不做硬性要求；对于入职不足1 年的员工，学时考核标准以5学时/月按实际工作月数计算。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.8687779903411865,
+        "judge_eval_seconds": 8.511543273925781e-05,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0009",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 10,
+      "query": "在《附件.docx》，关于“陕西建工第十一建设集团有限公司的公务用车申请单”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c6096dd4242eda8c47c5ed",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c6096dd4242eda8c47c5ed:L7"
+      ],
+      "inspect_id": "q400_niche_0012",
+      "candidate_counts": {
+        "treerag": 16,
+        "treerag_raw": 16,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 481,
+        "n_chunks_kept": 6,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69c6096dd4242eda8c47c5ed:TREERAG_7",
+          "real_69c6096dd4242eda8c47c5ed:TREERAG_9",
+          "real_69c6096dd4242eda8c47c5ed:TREERAG_2",
+          "real_69c6096dd4242eda8c47c5ed:TREERAG_11",
+          "real_69c6096dd4242eda8c47c5ed:TREERAG_14",
+          "real_69c6096dd4242eda8c47c5ed:TREERAG_4"
+        ],
+        "retrieved_nodes": [
+          "real_69c6096dd4242eda8c47c5ed:L7",
+          "real_69c6096dd4242eda8c47c5ed:L9",
+          "real_69c6096dd4242eda8c47c5ed:L2",
+          "real_69c6096dd4242eda8c47c5ed:L11",
+          "real_69c6096dd4242eda8c47c5ed:L14",
+          "real_69c6096dd4242eda8c47c5ed:L4"
+        ],
+        "evidence_text": "[real_69c6096dd4242eda8c47c5ed:TREERAG_7]\n陕西建工第十一建设集团有限公司的公务用车申请单，包含车型、车号、司机、用车单位、联系人、出车时间、路线及里程等详细信息，并设有满意度调查和签字确认栏。\n\n[real_69c6096dd4242eda8c47c5ed:TREERAG_9]\n陕西建工第十一建设集团有限公司的车辆保养/维修申请单，包含申请人、车牌号、送修及取车日期等信息。表格分为保养和维修两部分，分别记录项目、金额及备注，并规定了不同金额的审批流程。\n\n[real_69c6096dd4242eda8c47c5ed:TREERAG_2]\n陕西建工第十一建设集团有限公司\n\n[real_69c6096dd4242eda8c47c5ed:TREERAG_11]\n陕西建工第十一建设集团有限公司\n\n[real_69c6096dd4242eda8c47c5ed:TREERAG_14]\n陕西建工第十一建设集团有限公司\n\n[real_69c6096dd4242eda8c47c5ed:TREERAG_4]\n申请单位（盖章）：",
+        "evidence_preview": "[real_69c6096dd4242eda8c47c5ed:TREERAG_7]\n陕西建工第十一建设集团有限公司的公务用车申请单，包含车型、车号、司机、用车单位、联系人、出车时间、路线及里程等详细信息，并设有满意度调查和签字确认栏。\n\n[real_69c6096dd4242eda8c47c5ed:TREERAG_9]\n陕西建工第十一建设集团有限公司的车辆保养/维修申请单，包含申请人、车牌号、送修及取车日期等信息。表格分为保养和维修两部分，分别记录项目、金额及备注，并规定了不同金额的审批流程。\n\n[real_69c6096dd4242eda8c47c5ed:TREERAG_2]\n陕西建工第十一建设集团有限公司\n\n[real_69c6096dd4242eda8c47c5ed:TREERAG_11]\n陕西建工第十一建设集团有限公司\n\n[real_69c6096dd4242eda8c47c5ed:TREERAG_14]\n陕西建工第十一建设集团有限公司\n\n[real_69c6096dd4242eda8c47c5ed:TREERAG_4]\n申请单位（盖章）：",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 6.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.2
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"陕西建工第十一建设集团有限公司的公务用车申请单，包含车型、车号、司机、用车单位、联系人、出车时间、路线及里程等详细信息，并设有满意度调查和签字确认栏。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.6465859413146973,
+        "judge_eval_seconds": 0.0007522106170654297,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0012",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 11,
+      "query": "在《集团公司对外捐赠管理办法（修订版）.docx》，关于“为进一步规范集团公司对外捐赠行为，加强对外捐赠事项的管理”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c60970d4242eda8c47c5fd",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c60970d4242eda8c47c5fd:L4"
+      ],
+      "inspect_id": "q400_niche_0013",
+      "candidate_counts": {
+        "treerag": 50,
+        "treerag_raw": 50,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60970d4242eda8c47c5fd:TREERAG_4",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_32",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_5",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_0",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_31__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60970d4242eda8c47c5fd:L4",
+          "real_69c60970d4242eda8c47c5fd:L32",
+          "real_69c60970d4242eda8c47c5fd:L5",
+          "real_69c60970d4242eda8c47c5fd:L0",
+          "real_69c60970d4242eda8c47c5fd:L31"
+        ],
+        "evidence_text": "[real_69c60970d4242eda8c47c5fd:TREERAG_4]\n第一条为进一步规范集团公司对外捐赠行为，加强对外捐赠事项的管理，更好地履行社会责任，全面、有效提升和宣传集团公司品牌及企业形象，特制定本办法。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_32]\n（四）程序规范。企业对外捐赠，原则上由集团公司统一管理。凡涉及对外捐赠事项，履行集团公司内部审批程序后，报陕建控股集团审批核准；如有特殊事项需要对外捐赠的，应提前报告集团公司办公室，履行相应程序后办理捐赠手续，未经批准不得擅自对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_5]\n第二条本办法适用于集团公司及所属各单位对外捐赠行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_0]\n集团公司对外捐赠管理办法（修订版）.docx\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_31]\n（三）权责清晰。各单位不得将集团公司拥有的财产以个人名义对外捐赠。且对外捐赠有权要求受",
+        "evidence_preview": "[real_69c60970d4242eda8c47c5fd:TREERAG_4]\n第一条为进一步规范集团公司对外捐赠行为，加强对外捐赠事项的管理，更好地履行社会责任，全面、有效提升和宣传集团公司品牌及企业形象，特制定本办法。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_32]\n（四）程序规范。企业对外捐赠，原则上由集团公司统一管理。凡涉及对外捐赠事项，履行集团公司内部审批程序后，报陕建控股集团审批核准；如有特殊事项需要对外捐赠的，应提前报告集团公司办公室，履行相应程序后办理捐赠手续，未经批准不得擅自对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_5]\n第二条本办法适用于集团公司及所属各单位对外捐赠行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_0]\n集团公司对外捐赠管理办法（修订版）.docx\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_31]\n（三）权责清晰。各单位不得将集团公司拥有的财产以个人名义对外捐赠。且对外捐赠有权要求受",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.2
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"第一条为进一步规范集团公司对外捐赠行为，加强对外捐赠事项的管理，更好地履行社会责任，全面、有效提升和宣传集团公司品牌及企业形象，特制定本办法。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.7313108444213867,
+        "judge_eval_seconds": 0.0009641647338867188,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0013",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 12,
+      "query": "在《集团公司对外捐赠管理办法（修订版）.docx》，关于“本办法所称的“对外捐赠””这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c60970d4242eda8c47c5fd",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c60970d4242eda8c47c5fd:L7"
+      ],
+      "inspect_id": "q400_niche_0014",
+      "candidate_counts": {
+        "treerag": 50,
+        "treerag_raw": 50,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 479,
+        "n_chunks_kept": 4,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69c60970d4242eda8c47c5fd:TREERAG_5",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_4",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_32",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_7"
+        ],
+        "retrieved_nodes": [
+          "real_69c60970d4242eda8c47c5fd:L5",
+          "real_69c60970d4242eda8c47c5fd:L4",
+          "real_69c60970d4242eda8c47c5fd:L32",
+          "real_69c60970d4242eda8c47c5fd:L7"
+        ],
+        "evidence_text": "[real_69c60970d4242eda8c47c5fd:TREERAG_5]\n第二条本办法适用于集团公司及所属各单位对外捐赠行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_4]\n第一条为进一步规范集团公司对外捐赠行为，加强对外捐赠事项的管理，更好地履行社会责任，全面、有效提升和宣传集团公司品牌及企业形象，特制定本办法。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_32]\n（四）程序规范。企业对外捐赠，原则上由集团公司统一管理。凡涉及对外捐赠事项，履行集团公司内部审批程序后，报陕建控股集团审批核准；如有特殊事项需要对外捐赠的，应提前报告集团公司办公室，履行相应程序后办理捐赠手续，未经批准不得擅自对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_7]\n第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。",
+        "evidence_preview": "[real_69c60970d4242eda8c47c5fd:TREERAG_5]\n第二条本办法适用于集团公司及所属各单位对外捐赠行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_4]\n第一条为进一步规范集团公司对外捐赠行为，加强对外捐赠事项的管理，更好地履行社会责任，全面、有效提升和宣传集团公司品牌及企业形象，特制定本办法。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_32]\n（四）程序规范。企业对外捐赠，原则上由集团公司统一管理。凡涉及对外捐赠事项，履行集团公司内部审批程序后，报陕建控股集团审批核准；如有特殊事项需要对外捐赠的，应提前报告集团公司办公室，履行相应程序后办理捐赠手续，未经批准不得擅自对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_7]\n第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.25,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 0.25,
+          "ndcg@10": 0.5,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.25
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.823958158493042,
+        "judge_eval_seconds": 1.540982961654663,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0014",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 13,
+      "query": "在《集团公司对外捐赠管理办法（修订版）.docx》，关于“救济性捐赠，即向受灾地区、扶贫地区或者困难的社会弱势群体的救济性捐赠”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c60970d4242eda8c47c5fd",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c60970d4242eda8c47c5fd:L11"
+      ],
+      "inspect_id": "q400_niche_0015",
+      "candidate_counts": {
+        "treerag": 50,
+        "treerag_raw": 50,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 6,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60970d4242eda8c47c5fd:TREERAG_11",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_5",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_7",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_41",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_31",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_9__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60970d4242eda8c47c5fd:L11",
+          "real_69c60970d4242eda8c47c5fd:L5",
+          "real_69c60970d4242eda8c47c5fd:L7",
+          "real_69c60970d4242eda8c47c5fd:L41",
+          "real_69c60970d4242eda8c47c5fd:L31"
+        ],
+        "evidence_text": "[real_69c60970d4242eda8c47c5fd:TREERAG_11]\n（一）救济性捐赠，即向受灾地区、扶贫地区或者困难的社会弱势群体的救济性捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_5]\n第二条本办法适用于集团公司及所属各单位对外捐赠行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_7]\n第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_41]\n（五）集团公司公益基金对外捐赠按照公益基金相关管理办法执行。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_31]\n（三）权责清晰。各单位不得将集团公司拥有的财产以个人名义对外捐赠。且对外捐赠有权要求受赠人落实捐赠人正当的捐赠意愿，不得将捐赠财产挪作他用。\n\n[real_69c60970d4242eda8c",
+        "evidence_preview": "[real_69c60970d4242eda8c47c5fd:TREERAG_11]\n（一）救济性捐赠，即向受灾地区、扶贫地区或者困难的社会弱势群体的救济性捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_5]\n第二条本办法适用于集团公司及所属各单位对外捐赠行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_7]\n第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_41]\n（五）集团公司公益基金对外捐赠按照公益基金相关管理办法执行。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_31]\n（三）权责清晰。各单位不得将集团公司拥有的财产以个人名义对外捐赠。且对外捐赠有权要求受赠人落实捐赠人正当的捐赠意愿，不得将捐赠财产挪作他用。\n\n[real_69c60970d4242eda8c",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 6.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.2
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"（一）救济性捐赠，即向受灾地区、扶贫地区或者困难的社会弱势群体的救济性捐赠。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.5081958770751953,
+        "judge_eval_seconds": 0.0009829998016357422,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0015",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 14,
+      "query": "在《集团公司对外捐赠管理办法（修订版）.docx》，关于“用于对外捐赠的资产应当权属清晰，应为集团公司有权处分的合法财产”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c60970d4242eda8c47c5fd",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c60970d4242eda8c47c5fd:L16"
+      ],
+      "inspect_id": "q400_niche_0016",
+      "candidate_counts": {
+        "treerag": 50,
+        "treerag_raw": 50,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 499,
+        "n_chunks_kept": 4,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69c60970d4242eda8c47c5fd:TREERAG_16",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_31",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_7",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_32"
+        ],
+        "retrieved_nodes": [
+          "real_69c60970d4242eda8c47c5fd:L16",
+          "real_69c60970d4242eda8c47c5fd:L31",
+          "real_69c60970d4242eda8c47c5fd:L7",
+          "real_69c60970d4242eda8c47c5fd:L32"
+        ],
+        "evidence_text": "[real_69c60970d4242eda8c47c5fd:TREERAG_16]\n用于对外捐赠的资产应当权属清晰，应为集团公司有权处分的合法财产，包括现金资产和实物资产等。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_31]\n（三）权责清晰。各单位不得将集团公司拥有的财产以个人名义对外捐赠。且对外捐赠有权要求受赠人落实捐赠人正当的捐赠意愿，不得将捐赠财产挪作他用。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_7]\n第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_32]\n（四）程序规范。企业对外捐赠，原则上由集团公司统一管理。凡涉及对外捐赠事项，履行集团公司内部审批程序后，报陕建控股集团审批核准；如有特殊事项需要对外捐赠的，应提前报告集团公司办公室，履行相应程序后办理捐赠手续，未经批准不得擅自对外捐赠。",
+        "evidence_preview": "[real_69c60970d4242eda8c47c5fd:TREERAG_16]\n用于对外捐赠的资产应当权属清晰，应为集团公司有权处分的合法财产，包括现金资产和实物资产等。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_31]\n（三）权责清晰。各单位不得将集团公司拥有的财产以个人名义对外捐赠。且对外捐赠有权要求受赠人落实捐赠人正当的捐赠意愿，不得将捐赠财产挪作他用。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_7]\n第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_32]\n（四）程序规范。企业对外捐赠，原则上由集团公司统一管理。凡涉及对外捐赠事项，履行集团公司内部审批程序后，报陕建控股集团审批核准；如有特殊事项需要对外捐赠的，应提前报告集团公司办公室，履行相应程序后办理捐赠手续，未经批准不得擅自对外捐赠。",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.25
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"用于对外捐赠的资产应当权属清晰，应为集团公司有权处分的合法财产，包括现金资产和实物资产等。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.7237629890441895,
+        "judge_eval_seconds": 1.4408032894134521,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0016",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 15,
+      "query": "在《集团公司对外捐赠管理办法（修订版）.docx》，关于“集团公司办公室为对外捐赠管理部门，负责统筹协调对外捐赠各项事宜”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c60970d4242eda8c47c5fd",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c60970d4242eda8c47c5fd:L35"
+      ],
+      "inspect_id": "q400_niche_0018",
+      "candidate_counts": {
+        "treerag": 50,
+        "treerag_raw": 50,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60970d4242eda8c47c5fd:TREERAG_35",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_32",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_5",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_4",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_31__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60970d4242eda8c47c5fd:L35",
+          "real_69c60970d4242eda8c47c5fd:L32",
+          "real_69c60970d4242eda8c47c5fd:L5",
+          "real_69c60970d4242eda8c47c5fd:L4",
+          "real_69c60970d4242eda8c47c5fd:L31"
+        ],
+        "evidence_text": "[real_69c60970d4242eda8c47c5fd:TREERAG_35]\n第七条集团公司办公室为对外捐赠管理部门，负责统筹协调对外捐赠各项事宜。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_32]\n（四）程序规范。企业对外捐赠，原则上由集团公司统一管理。凡涉及对外捐赠事项，履行集团公司内部审批程序后，报陕建控股集团审批核准；如有特殊事项需要对外捐赠的，应提前报告集团公司办公室，履行相应程序后办理捐赠手续，未经批准不得擅自对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_5]\n第二条本办法适用于集团公司及所属各单位对外捐赠行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_4]\n第一条为进一步规范集团公司对外捐赠行为，加强对外捐赠事项的管理，更好地履行社会责任，全面、有效提升和宣传集团公司品牌及企业形象，特制定本办法。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_31]\n（三）权责清晰。各单位不得将集团公司拥有的财产以个人名义对",
+        "evidence_preview": "[real_69c60970d4242eda8c47c5fd:TREERAG_35]\n第七条集团公司办公室为对外捐赠管理部门，负责统筹协调对外捐赠各项事宜。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_32]\n（四）程序规范。企业对外捐赠，原则上由集团公司统一管理。凡涉及对外捐赠事项，履行集团公司内部审批程序后，报陕建控股集团审批核准；如有特殊事项需要对外捐赠的，应提前报告集团公司办公室，履行相应程序后办理捐赠手续，未经批准不得擅自对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_5]\n第二条本办法适用于集团公司及所属各单位对外捐赠行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_4]\n第一条为进一步规范集团公司对外捐赠行为，加强对外捐赠事项的管理，更好地履行社会责任，全面、有效提升和宣传集团公司品牌及企业形象，特制定本办法。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_31]\n（三）权责清晰。各单位不得将集团公司拥有的财产以个人名义对",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.2
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"第七条集团公司办公室为对外捐赠管理部门，负责统筹协调对外捐赠各项事宜。\"}",
+        "score_task": 0.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.5229208469390869,
+        "judge_eval_seconds": 2.0595550537109375,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0018",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 16,
+      "query": "在《集团公司对外捐赠管理办法（修订版）.docx》，关于“集团公司通过纪检监察、内部审计等多种渠道开展监督检查工作”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c60970d4242eda8c47c5fd",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c60970d4242eda8c47c5fd:L44"
+      ],
+      "inspect_id": "q400_niche_0019",
+      "candidate_counts": {
+        "treerag": 50,
+        "treerag_raw": 50,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 4,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60970d4242eda8c47c5fd:TREERAG_44",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_32",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_42",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_4__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60970d4242eda8c47c5fd:L44",
+          "real_69c60970d4242eda8c47c5fd:L32",
+          "real_69c60970d4242eda8c47c5fd:L42",
+          "real_69c60970d4242eda8c47c5fd:L4"
+        ],
+        "evidence_text": "[real_69c60970d4242eda8c47c5fd:TREERAG_44]\n第九条集团公司通过纪检监察、内部审计等多种渠道开展监督检查工作，及时查找在捐赠制度、工作组织、决策程序、财务处理等方面问题，并监督整改。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_32]\n（四）程序规范。企业对外捐赠，原则上由集团公司统一管理。凡涉及对外捐赠事项，履行集团公司内部审批程序后，报陕建控股集团审批核准；如有特殊事项需要对外捐赠的，应提前报告集团公司办公室，履行相应程序后办理捐赠手续，未经批准不得擅自对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_42]\n第八条集团公司在年度终了1个月内，由集团公司财务管理服务中心负责，填报对外捐赠年度支出表；同时，将上年度企业对外捐赠的整体情况（捐赠规模、类型、范围、方式，捐赠预算执行情况以及捐赠项目实施效果等）报告陕建控股集团。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_4]\n第一条为进一步规范集团公司对外捐赠行为，加强对外捐赠事项的管",
+        "evidence_preview": "[real_69c60970d4242eda8c47c5fd:TREERAG_44]\n第九条集团公司通过纪检监察、内部审计等多种渠道开展监督检查工作，及时查找在捐赠制度、工作组织、决策程序、财务处理等方面问题，并监督整改。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_32]\n（四）程序规范。企业对外捐赠，原则上由集团公司统一管理。凡涉及对外捐赠事项，履行集团公司内部审批程序后，报陕建控股集团审批核准；如有特殊事项需要对外捐赠的，应提前报告集团公司办公室，履行相应程序后办理捐赠手续，未经批准不得擅自对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_42]\n第八条集团公司在年度终了1个月内，由集团公司财务管理服务中心负责，填报对外捐赠年度支出表；同时，将上年度企业对外捐赠的整体情况（捐赠规模、类型、范围、方式，捐赠预算执行情况以及捐赠项目实施效果等）报告陕建控股集团。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_4]\n第一条为进一步规范集团公司对外捐赠行为，加强对外捐赠事项的管",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.25
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"第九条集团公司通过纪检监察、内部审计等多种渠道开展监督检查工作，及时查找在捐赠制度、工作组织、决策程序、财务处理等方面问题，并监督整改。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.7127988338470459,
+        "judge_eval_seconds": 0.0008387565612792969,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0019",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 17,
+      "query": "在《集团公司对外捐赠管理办法（修订版）.docx》，关于“未按本办法的规定擅自对外捐赠”这一条的具体规定是什么？请按原文完整复述该条内容，不要扩写相邻条款。",
+      "doc_id": "real_69c60970d4242eda8c47c5fd",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c60970d4242eda8c47c5fd:L46"
+      ],
+      "inspect_id": "q400_niche_0020",
+      "candidate_counts": {
+        "treerag": 50,
+        "treerag_raw": 50,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 493,
+        "n_chunks_kept": 4,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69c60970d4242eda8c47c5fd:TREERAG_46",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_32",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_31",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_5"
+        ],
+        "retrieved_nodes": [
+          "real_69c60970d4242eda8c47c5fd:L46",
+          "real_69c60970d4242eda8c47c5fd:L32",
+          "real_69c60970d4242eda8c47c5fd:L31",
+          "real_69c60970d4242eda8c47c5fd:L5"
+        ],
+        "evidence_text": "[real_69c60970d4242eda8c47c5fd:TREERAG_46]\n第十条未按本办法的规定擅自对外捐赠，或者在对外捐赠过程中存在营私舞弊、滥用职权、转移国有资产等违法违规行为的，按照集团公司违规经营投资责任追究办法及其他有关规定进行责任追究；涉嫌犯罪的，移交司法部门处理。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_32]\n（四）程序规范。企业对外捐赠，原则上由集团公司统一管理。凡涉及对外捐赠事项，履行集团公司内部审批程序后，报陕建控股集团审批核准；如有特殊事项需要对外捐赠的，应提前报告集团公司办公室，履行相应程序后办理捐赠手续，未经批准不得擅自对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_31]\n（三）权责清晰。各单位不得将集团公司拥有的财产以个人名义对外捐赠。且对外捐赠有权要求受赠人落实捐赠人正当的捐赠意愿，不得将捐赠财产挪作他用。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_5]\n第二条本办法适用于集团公司及所属各单位对外捐赠行为。",
+        "evidence_preview": "[real_69c60970d4242eda8c47c5fd:TREERAG_46]\n第十条未按本办法的规定擅自对外捐赠，或者在对外捐赠过程中存在营私舞弊、滥用职权、转移国有资产等违法违规行为的，按照集团公司违规经营投资责任追究办法及其他有关规定进行责任追究；涉嫌犯罪的，移交司法部门处理。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_32]\n（四）程序规范。企业对外捐赠，原则上由集团公司统一管理。凡涉及对外捐赠事项，履行集团公司内部审批程序后，报陕建控股集团审批核准；如有特殊事项需要对外捐赠的，应提前报告集团公司办公室，履行相应程序后办理捐赠手续，未经批准不得擅自对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_31]\n（三）权责清晰。各单位不得将集团公司拥有的财产以个人名义对外捐赠。且对外捐赠有权要求受赠人落实捐赠人正当的捐赠意愿，不得将捐赠财产挪作他用。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_5]\n第二条本办法适用于集团公司及所属各单位对外捐赠行为。",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.25
+        },
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"第十条未按本办法的规定擅自对外捐赠，或者在对外捐赠过程中存在营私舞弊、滥用职权、转移国有资产等违法违规行为的，按照集团公司违规经营投资责任追究办法及其他有关规定进行责任追究；涉嫌犯罪的，移交司法部门处理。\"}",
+        "score_task": 1.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.6573460102081299,
+        "judge_eval_seconds": 0.0010178089141845703,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_niche_0020",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 18,
+      "query": "在《附件_安全管理规定（2020版）.docx》中，请综合两个层级位置的信息，分别涉及“第六章　项目安全管理规定 - 6.10 安全风险预警”与“第四章　安全生产事故应急救援管理规定”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c60974d4242eda8c47c615",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c60974d4242eda8c47c615:L170",
+        "real_69c60974d4242eda8c47c615:L279",
+        "real_69c60974d4242eda8c47c615:L171",
+        "real_69c60974d4242eda8c47c615:L157"
+      ],
+      "inspect_id": "q400_multi_0073",
+      "candidate_counts": {
+        "treerag": 441,
+        "treerag_raw": 441,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 479,
+        "n_chunks_kept": 7,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69c60974d4242eda8c47c615:TREERAG_485",
+          "real_69c60974d4242eda8c47c615:TREERAG_25",
+          "real_69c60974d4242eda8c47c615:TREERAG_551",
+          "real_69c60974d4242eda8c47c615:TREERAG_555",
+          "real_69c60974d4242eda8c47c615:TREERAG_559",
+          "real_69c60974d4242eda8c47c615:TREERAG_546",
+          "real_69c60974d4242eda8c47c615:TREERAG_170"
+        ],
+        "retrieved_nodes": [
+          "real_69c60974d4242eda8c47c615:L485",
+          "real_69c60974d4242eda8c47c615:L25",
+          "real_69c60974d4242eda8c47c615:L551",
+          "real_69c60974d4242eda8c47c615:L555",
+          "real_69c60974d4242eda8c47c615:L559",
+          "real_69c60974d4242eda8c47c615:L546",
+          "real_69c60974d4242eda8c47c615:L170"
+        ],
+        "evidence_text": "[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_25]\n5、预防、减少安全风险以及紧急情况下应急救援的基本措施。\n\n[real_69c60974d4242eda8c47c615:TREERAG_551]\n附表6.6.1-1\n\n[real_69c60974d4242eda8c47c615:TREERAG_555]\n附表6.6.1-2\n\n[real_69c60974d4242eda8c47c615:TREERAG_559]\n附表6.7.3\n\n[real_69c60974d4242eda8c47c615:TREERAG_546]\n附表6.3.5\n\n[real_69c60974d4242eda8c47c615:TREERAG_170]\n4.4.1施工现场一旦发生生产安全事故，项目部应采取措施疏散人员、抢救伤者、控制事故的扩大，并将事故的信息立即向集团公司生产安全事故应急救援总指挥报告。",
+        "evidence_preview": "[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_25]\n5、预防、减少安全风险以及紧急情况下应急救援的基本措施。\n\n[real_69c60974d4242eda8c47c615:TREERAG_551]\n附表6.6.1-1\n\n[real_69c60974d4242eda8c47c615:TREERAG_555]\n附表6.6.1-2\n\n[real_69c60974d4242eda8c47c615:TREERAG_559]\n附表6.7.3\n\n[real_69c60974d4242eda8c47c615:TREERAG_546]\n附表6.3.5\n\n[real_69c60974d4242eda8c47c615:TREERAG_170]\n4.4.1施工现场一旦发生生产安全事故，项目部应采取措施疏散人员、抢救伤者、控制事故的扩大，并将事故的信息立即向集团公司生产安全事故应急救援总指挥报告。",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.14285714285714285,
+          "coverage_budget_lenient": 0.25,
+          "n_chunks_kept": 7.0
+        },
+        "line_retrieval": {
+          "coverage": 0.25,
+          "mrr": 0.14285714285714285,
+          "ndcg@10": 0.1137704181007881,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"4.4.1施工现场一旦发生生产安全事故，项目部应采取措施疏散人员、抢救伤者、控制事故的扩大，并将事故的信息立即向集团公司生产安全事故应急救援总指挥报告。\", \"fact_2\": \"5、预防、减少安全风险以及紧急情况下应急救援的基本措施。\", \"final_answer\": \"在《附件_安全管理规定（2020版）.docx》中，第四章关于安全生产事故应急救援管理规定要求事故发生时项目部需疏散人员、抢救伤者、控制事故扩大并立即上报；第六章关于项目安全管理规定中的安全风险预警涉及预防、减少安全风险及紧急情况下应急救援的基本措施。\"}",
+        "score_task": 0.3333,
+        "score_evidence": 0.25,
+        "compose_seconds": 1.4203698635101318,
+        "judge_eval_seconds": 6.016611099243164,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0073",
+        "inspect_evidence_score": 0.25,
+        "inspect_content_score": 0.3333,
+        "inspect_fact_1_score": 1.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 19,
+      "query": "在《附件_安全管理规定（2020版）.docx》中，请综合两个层级位置的信息，分别涉及“第七章　施工现场消防安全管理暂行规定”与“第七章　施工现场消防安全管理暂行规定 - 7.8 其他防火管理”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c60974d4242eda8c47c615",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c60974d4242eda8c47c615:L478",
+        "real_69c60974d4242eda8c47c615:L432",
+        "real_69c60974d4242eda8c47c615:L479"
+      ],
+      "inspect_id": "q400_multi_0107",
+      "candidate_counts": {
+        "treerag": 182,
+        "treerag_raw": 182,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 4,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60974d4242eda8c47c615:TREERAG_415",
+          "real_69c60974d4242eda8c47c615:TREERAG_417",
+          "real_69c60974d4242eda8c47c615:TREERAG_418",
+          "real_69c60974d4242eda8c47c615:TREERAG_420__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60974d4242eda8c47c615:L415",
+          "real_69c60974d4242eda8c47c615:L417",
+          "real_69c60974d4242eda8c47c615:L418",
+          "real_69c60974d4242eda8c47c615:L420"
+        ],
+        "evidence_text": "[real_69c60974d4242eda8c47c615:TREERAG_415]\n为了加强集团公司在建项目施工现场消防管理，保障施工现场生活区、办公区和施工区施工人员生命安全和财产安全。依据《中华人民共和国消防法》、《建设工程施工现场消防安全技术规范》（GB50720—2011）及其他有关消防法规，结合施工现场实际，特制定《集团公司施工现场消防安全管理暂行规定》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_417]\n7.1.1 本规定适用于集团公司所有在建项目工程施工现场的消防安全管理。\n\n[real_69c60974d4242eda8c47c615:TREERAG_418]\n7.1.2 消防工作贯彻“预防为主、防消结合”的方针，按照集团公司统一领导、责任单位负责、现场施工人员全员参与的原则，实行消防安全责任制，建立集团公司各个项目与施工所在地当地政府消防部门相互联络的消防工作体系。\n\n[real_69c60974d4242eda8c47c615:TREERAG_420]\n7.1.4 防火安全工作实行一票否决制，凡本年度发生火灾的单位和有关人",
+        "evidence_preview": "[real_69c60974d4242eda8c47c615:TREERAG_415]\n为了加强集团公司在建项目施工现场消防管理，保障施工现场生活区、办公区和施工区施工人员生命安全和财产安全。依据《中华人民共和国消防法》、《建设工程施工现场消防安全技术规范》（GB50720—2011）及其他有关消防法规，结合施工现场实际，特制定《集团公司施工现场消防安全管理暂行规定》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_417]\n7.1.1 本规定适用于集团公司所有在建项目工程施工现场的消防安全管理。\n\n[real_69c60974d4242eda8c47c615:TREERAG_418]\n7.1.2 消防工作贯彻“预防为主、防消结合”的方针，按照集团公司统一领导、责任单位负责、现场施工人员全员参与的原则，实行消防安全责任制，建立集团公司各个项目与施工所在地当地政府消防部门相互联络的消防工作体系。\n\n[real_69c60974d4242eda8c47c615:TREERAG_420]\n7.1.4 防火安全工作实行一票否决制，凡本年度发生火灾的单位和有关人",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"7.1.1 本规定适用于集团公司所有在建项目工程施工现场的消防安全管理。\", \"fact_2\": \"7.1.4 防火安全工作实行一票否决制，凡本年度发生火灾的单位和有关人\", \"final_answer\": \"第七章施工现场消防安全管理暂行规定明确其适用于集团公司所有在建项目工程施工现场，且防火安全工作实行一票否决制，凡本年度发生火灾的单位和有关人员将被追责。\"}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 0.9029698371887207,
+        "judge_eval_seconds": 5.9787750244140625,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0107",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 20,
+      "query": "在《附件_安全管理规定（2020版）.docx》中，请综合两个层级位置的信息，分别涉及“第二章　安全检查及隐患排查规定”与“第二章　安全检查及隐患排查规定 - 2.3安全检查及隐患排查的方法”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c60974d4242eda8c47c615",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c60974d4242eda8c47c615:L63",
+        "real_69c60974d4242eda8c47c615:L43",
+        "real_69c60974d4242eda8c47c615:L64",
+        "real_69c60974d4242eda8c47c615:L75"
+      ],
+      "inspect_id": "q400_multi_0054",
+      "candidate_counts": {
+        "treerag": 387,
+        "treerag_raw": 387,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60974d4242eda8c47c615:TREERAG_485",
+          "real_69c60974d4242eda8c47c615:TREERAG_63",
+          "real_69c60974d4242eda8c47c615:TREERAG_41",
+          "real_69c60974d4242eda8c47c615:TREERAG_42",
+          "real_69c60974d4242eda8c47c615:TREERAG_45__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60974d4242eda8c47c615:L485",
+          "real_69c60974d4242eda8c47c615:L63",
+          "real_69c60974d4242eda8c47c615:L41",
+          "real_69c60974d4242eda8c47c615:L42"
+        ],
+        "evidence_text": "[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_63]\n2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。\n\n[real_69c60974d4242eda8c47c615:TREERAG_41]\n2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。\n\n[real_69c60974d4242eda8c47c615:TREERAG_42]\n2.1.2 集团公司各级安全检查、隐患整改、回复销项、安全处罚均采用集团公司企业发展部的统一检查表格。\n\n[real_69c60974d4242eda",
+        "evidence_preview": "[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_63]\n2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。\n\n[real_69c60974d4242eda8c47c615:TREERAG_41]\n2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。\n\n[real_69c60974d4242eda8c47c615:TREERAG_42]\n2.1.2 集团公司各级安全检查、隐患整改、回复销项、安全处罚均采用集团公司企业发展部的统一检查表格。\n\n[real_69c60974d4242eda",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.5,
+          "coverage_budget_lenient": 0.25,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 0.25,
+          "mrr": 0.5,
+          "ndcg@10": 0.31939394323979897,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.25
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。\", \"fact_2\": \"2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。\", \"final_answer\": \"第二章规定旨在规范安全检查及隐患排查治理工作并贯彻安全方针，其具体方法需依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》执行。\"}",
+        "score_task": 0.0,
+        "score_evidence": 0.25,
+        "compose_seconds": 1.830801010131836,
+        "judge_eval_seconds": 6.025712251663208,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0054",
+        "inspect_evidence_score": 0.25,
+        "inspect_content_score": 0.0,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 21,
+      "query": "在《帷幕式注浆土体加固地基施工工法（终版）合并.pdf》中，请综合两个层级位置的信息，分别涉及“5.2.8 封孔”与“7.3 加强施工测量，确保钻杆竖直，位置满足规范要求。”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c6ef484cca74801cb63bb9",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c6ef484cca74801cb63bb9:L112",
+        "real_69c6ef484cca74801cb63bb9:L133"
+      ],
+      "inspect_id": "q400_multi_0005",
+      "candidate_counts": {
+        "treerag": 144,
+        "treerag_raw": 144,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 6,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6ef484cca74801cb63bb9:TREERAG_95",
+          "real_69c6ef484cca74801cb63bb9:TREERAG_90",
+          "real_69c6ef484cca74801cb63bb9:TREERAG_132",
+          "real_69c6ef484cca74801cb63bb9:TREERAG_92",
+          "real_69c6ef484cca74801cb63bb9:TREERAG_130",
+          "real_69c6ef484cca74801cb63bb9:TREERAG_85__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6ef484cca74801cb63bb9:L95",
+          "real_69c6ef484cca74801cb63bb9:L90",
+          "real_69c6ef484cca74801cb63bb9:L132",
+          "real_69c6ef484cca74801cb63bb9:L92",
+          "real_69c6ef484cca74801cb63bb9:L130",
+          "real_69c6ef484cca74801cb63bb9:L85"
+        ],
+        "evidence_text": "[real_69c6ef484cca74801cb63bb9:TREERAG_95]\n- 4、帷幕区注浆孔需穿透填土层，保证注浆料进入黄土层不小于3米。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_90]\n- 1、按照标记的钻孔位置，移动钻机至点位，钻机应稳固，保证钻杆垂直。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_132]\n- 7.5 在钻杆钻进过程中，根据不同土质和覆土厚度，结合监测信息，及时调整推力、 推进速度和注浆量的相互关系，合理控制钻进速度，保证土压平衡。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_92]\n- °。在钻进过程中，采用压浆泵不断的压入少量水泥浆液进行护壁和冲孔。先施工 帷幕，后施工内部，注浆应跳孔注浆。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_130]\n7.3 加强施工测量，确保钻杆竖直，位置满足规范要求。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_85]\n根据设计注浆孔",
+        "evidence_preview": "[real_69c6ef484cca74801cb63bb9:TREERAG_95]\n- 4、帷幕区注浆孔需穿透填土层，保证注浆料进入黄土层不小于3米。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_90]\n- 1、按照标记的钻孔位置，移动钻机至点位，钻机应稳固，保证钻杆垂直。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_132]\n- 7.5 在钻杆钻进过程中，根据不同土质和覆土厚度，结合监测信息，及时调整推力、 推进速度和注浆量的相互关系，合理控制钻进速度，保证土压平衡。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_92]\n- °。在钻进过程中，采用压浆泵不断的压入少量水泥浆液进行护壁和冲孔。先施工 帷幕，后施工内部，注浆应跳孔注浆。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_130]\n7.3 加强施工测量，确保钻杆竖直，位置满足规范要求。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_85]\n根据设计注浆孔",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 6.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"5.2.8 封孔规定：帷幕区注浆孔需穿透填土层，保证注浆料进入黄土层不小于3米。\", \"fact_2\": \"7.3 加强施工测量，确保钻杆竖直，位置满足规范要求。\", \"final_answer\": \"5.2.8 封孔规定为帷幕区注浆孔需穿透填土层，保证注浆料进入黄土层不小于3米；7.3 要求加强施工测量，确保钻杆竖直且位置满足规范要求。\"}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 1.1251139640808105,
+        "judge_eval_seconds": 5.507469177246094e-05,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0005",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 22,
+      "query": "在《陕西省安全生产条例.docx》中，请综合两个层级位置的信息，分别涉及“第三章　从业人员安全生产权利和义务 - 第三十八条　生产经营单位的从业人员享有下列权利：”与“第三章　从业人员安全生产权利和义务 - 第三十九条　生产经营单位的从业人员应当落实岗位安全责任，履行下列义务：”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c6f1d94cca74801cb63e0c",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c6f1d94cca74801cb63e0c:L134",
+        "real_69c6f1d94cca74801cb63e0c:L145"
+      ],
+      "inspect_id": "q400_multi_0008",
+      "candidate_counts": {
+        "treerag": 175,
+        "treerag_raw": 175,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 8,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6f1d94cca74801cb63e0c:TREERAG_141",
+          "real_69c6f1d94cca74801cb63e0c:TREERAG_142",
+          "real_69c6f1d94cca74801cb63e0c:TREERAG_143",
+          "real_69c6f1d94cca74801cb63e0c:TREERAG_144",
+          "real_69c6f1d94cca74801cb63e0c:TREERAG_145",
+          "real_69c6f1d94cca74801cb63e0c:TREERAG_146",
+          "real_69c6f1d94cca74801cb63e0c:TREERAG_130",
+          "real_69c6f1d94cca74801cb63e0c:TREERAG_131__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6f1d94cca74801cb63e0c:L141",
+          "real_69c6f1d94cca74801cb63e0c:L142",
+          "real_69c6f1d94cca74801cb63e0c:L143",
+          "real_69c6f1d94cca74801cb63e0c:L144",
+          "real_69c6f1d94cca74801cb63e0c:L145",
+          "real_69c6f1d94cca74801cb63e0c:L146",
+          "real_69c6f1d94cca74801cb63e0c:L130"
+        ],
+        "evidence_text": "[real_69c6f1d94cca74801cb63e0c:TREERAG_141]\n（一）遵守本单位的安全生产规章制度和操作、作业规程；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_142]\n（二）正确佩戴和使用劳动防护用品；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_143]\n（三）接受安全生产教育和培训；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_144]\n（四）及时报告事故隐患和不安全因素；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_145]\n（五）上岗前进行岗位安全检查，确认安全后开始操作；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_146]\n（六）法律、法规规定的其他义务。\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_130]\n（一）在劳动合同中，载明劳动安全保障、职业危害防护和工伤保险办理等事项；\n\n[real_69c6f1d94cca74801cb",
+        "evidence_preview": "[real_69c6f1d94cca74801cb63e0c:TREERAG_141]\n（一）遵守本单位的安全生产规章制度和操作、作业规程；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_142]\n（二）正确佩戴和使用劳动防护用品；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_143]\n（三）接受安全生产教育和培训；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_144]\n（四）及时报告事故隐患和不安全因素；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_145]\n（五）上岗前进行岗位安全检查，确认安全后开始操作；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_146]\n（六）法律、法规规定的其他义务。\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_130]\n（一）在劳动合同中，载明劳动安全保障、职业危害防护和工伤保险办理等事项；\n\n[real_69c6f1d94cca74801cb",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.2,
+          "coverage_budget_lenient": 0.5,
+          "n_chunks_kept": 8.0
+        },
+        "line_retrieval": {
+          "coverage": 0.5,
+          "mrr": 0.2,
+          "ndcg@10": 0.21533827903669653,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.2
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"第三十八条规定从业人员享有在劳动合同中载明劳动安全保障、职业危害防护和工伤保险办理等事项的权利。\", \"fact_2\": \"第三十九条规定从业人员应当遵守本单位的安全生产规章制度和操作、作业规程，正确佩戴和使用劳动防护用品，接受安全生产教育和培训，及时报告事故隐患和不安全因素，上岗前进行岗位安全检查确认安全后开始操作，以及履行法律、法规规定的其他义务。\", \"final_answer\": \"根据《陕西省安全生产条例》第三章，第三十八条规定从业人员享有在劳动合同中载明劳动安全保障、职业危害防护和工伤保险办理等事项的权利；第三十九条规定从业人员应当遵守本单位的安全生产规章制度和操作、作业规程，正确佩戴和使用劳动防护用品，接受安全生产教育和培训，及时报告事故隐患和不安全因素，上岗前进行岗位安全检查确认安全后开始操作，并履行法律、法规规定的其他义务。\"}",
+        "score_task": 0.3333,
+        "score_evidence": 0.5,
+        "compose_seconds": 1.3898167610168457,
+        "judge_eval_seconds": 6.6188459396362305,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0008",
+        "inspect_evidence_score": 0.5,
+        "inspect_content_score": 0.3333,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 23,
+      "query": "在《陕西建工第十一建集团有限公司生产安全事故综合应急预案（2025版）.docx》中，请综合两个层级位置的信息，分别涉及“1 总则 - 1.2 编制依据”与“1 总则 - 1.4 响应分级”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c6097ad4242eda8c47c62c",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c6097ad4242eda8c47c62c:L17",
+        "real_69c6097ad4242eda8c47c62c:L8",
+        "real_69c6097ad4242eda8c47c62c:L19"
+      ],
+      "inspect_id": "q400_multi_0123",
+      "candidate_counts": {
+        "treerag": 355,
+        "treerag_raw": 355,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 4,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6097ad4242eda8c47c62c:TREERAG_36",
+          "real_69c6097ad4242eda8c47c62c:TREERAG_19",
+          "real_69c6097ad4242eda8c47c62c:TREERAG_20",
+          "real_69c6097ad4242eda8c47c62c:TREERAG_22__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6097ad4242eda8c47c62c:L36",
+          "real_69c6097ad4242eda8c47c62c:L19",
+          "real_69c6097ad4242eda8c47c62c:L20",
+          "real_69c6097ad4242eda8c47c62c:L22"
+        ],
+        "evidence_text": "[real_69c6097ad4242eda8c47c62c:TREERAG_36]\n各二级单位编制专项应急预案时，应按照安全生产事故的性质、严重程度、可控性、影响范围等因素，对安全生产事故进行适当分级。\n\n[real_69c6097ad4242eda8c47c62c:TREERAG_19]\n根据国务院第493 号令《生产安全事故报告和调查处理条例》规定， 结合集团公司实际，按照“企业自救、行业互救、社会联动、逐级响应、分级负责”的原则，建立集团公司、二级单位、项目经理部三级响应的应急救援体系。\n\n[real_69c6097ad4242eda8c47c62c:TREERAG_20]\n按照事故的严重性、可控性、影响范围等因素，结合集团公司应急响应能力，将生产安全事故应急救援响应分为Ⅰ级、Ⅱ级和Ⅲ级。本预案所称的“以上”包括本数，“以下”不包括本数，具体响应级别如下：\n\n[real_69c6097ad4242eda8c47c62c:TREERAG_22]\n（ 1 ）造成3 人及以上死亡，或5 人及以上重伤，或500 万元及以上直接经济损失的各类安全生产事故（较大以上火灾或其他性质特别严重、",
+        "evidence_preview": "[real_69c6097ad4242eda8c47c62c:TREERAG_36]\n各二级单位编制专项应急预案时，应按照安全生产事故的性质、严重程度、可控性、影响范围等因素，对安全生产事故进行适当分级。\n\n[real_69c6097ad4242eda8c47c62c:TREERAG_19]\n根据国务院第493 号令《生产安全事故报告和调查处理条例》规定， 结合集团公司实际，按照“企业自救、行业互救、社会联动、逐级响应、分级负责”的原则，建立集团公司、二级单位、项目经理部三级响应的应急救援体系。\n\n[real_69c6097ad4242eda8c47c62c:TREERAG_20]\n按照事故的严重性、可控性、影响范围等因素，结合集团公司应急响应能力，将生产安全事故应急救援响应分为Ⅰ级、Ⅱ级和Ⅲ级。本预案所称的“以上”包括本数，“以下”不包括本数，具体响应级别如下：\n\n[real_69c6097ad4242eda8c47c62c:TREERAG_22]\n（ 1 ）造成3 人及以上死亡，或5 人及以上重伤，或500 万元及以上直接经济损失的各类安全生产事故（较大以上火灾或其他性质特别严重、",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.5,
+          "coverage_budget_lenient": 0.3333333333333333,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 0.3333333333333333,
+          "mrr": 0.5,
+          "ndcg@10": 0.38009376671593426,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.25
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"各二级单位编制专项应急预案时，应按照安全生产事故的性质、严重程度、可控性、影响范围等因素，对安全生产事故进行适当分级。\", \"fact_2\": \"按照事故的严重性、可控性、影响范围等因素，结合集团公司应急响应能力，将生产安全事故应急救援响应分为Ⅰ级、Ⅱ级和Ⅲ级，其中造成3人及以上死亡，或5人及以上重伤，或500万元及以上直接经济损失的各类安全生产事故为较大以上火灾或其他性质特别严重。\", \"final_answer\": \"在编制依据方面，要求按事故性质、严重程度、可控性及影响范围对事故进行适当分级；在响应分级方面，结合应急响应能力将响应分为Ⅰ级、Ⅱ级和Ⅲ级，并规定造成3人及以上死亡、5人及以上重伤或500万元及以上直接经济损失的事故属于较大以上级别。\"}",
+        "score_task": 0.0,
+        "score_evidence": 0.3333,
+        "compose_seconds": 1.927314043045044,
+        "judge_eval_seconds": 7.631917953491211,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0123",
+        "inspect_evidence_score": 0.3333,
+        "inspect_content_score": 0.0,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 24,
+      "query": "在《陕西省安全生产条例.docx》中，请综合两个层级位置的信息，分别涉及“第四章　安全生产的监督管理 - 第四十四条　负有安全生产监督管理职责的部门应当按照分类分级监督管理的要求，制定安”与“第四章　安全生产的监督管理 - 第四十四条　负有安全生产监督管理职责的部门应当按照分类分级监督管理的要求，制定安”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c6f1d94cca74801cb63e0c",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c6f1d94cca74801cb63e0c:L163",
+        "real_69c6f1d94cca74801cb63e0c:L170"
+      ],
+      "inspect_id": "q400_multi_0009",
+      "candidate_counts": {
+        "treerag": 176,
+        "treerag_raw": 176,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 484,
+        "n_chunks_kept": 5,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69c6f1d94cca74801cb63e0c:TREERAG_162",
+          "real_69c6f1d94cca74801cb63e0c:TREERAG_163",
+          "real_69c6f1d94cca74801cb63e0c:TREERAG_164",
+          "real_69c6f1d94cca74801cb63e0c:TREERAG_165",
+          "real_69c6f1d94cca74801cb63e0c:TREERAG_166"
+        ],
+        "retrieved_nodes": [
+          "real_69c6f1d94cca74801cb63e0c:L162",
+          "real_69c6f1d94cca74801cb63e0c:L163",
+          "real_69c6f1d94cca74801cb63e0c:L164",
+          "real_69c6f1d94cca74801cb63e0c:L165",
+          "real_69c6f1d94cca74801cb63e0c:L166"
+        ],
+        "evidence_text": "[real_69c6f1d94cca74801cb63e0c:TREERAG_162]\n（一）进入生产经营单位进行检查，调阅有关资料，向有关单位和人员了解情况；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_163]\n（二）对检查中发现的安全生产违法行为，当场予以纠正或者要求限期改正；对依法应当给予行政处罚的行为，依照本条例和其他有关法律、法规的规定作出行政处罚决定；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_164]\n（三）对生产经营单位有关全员安全生产责任制、事故隐患排查治理以及重大危险源辨识、评估、监控等制度的建立落实情况进行指导和监督检查；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_165]\n（四）根据检查情况分析生产经营单位的安全生产形势，制定并落实有针对性的监督管理措施；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_166]\n（五）执行重大事故隐患挂牌督办制度，督促生产经营单位及时消除重大事故隐患；",
+        "evidence_preview": "[real_69c6f1d94cca74801cb63e0c:TREERAG_162]\n（一）进入生产经营单位进行检查，调阅有关资料，向有关单位和人员了解情况；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_163]\n（二）对检查中发现的安全生产违法行为，当场予以纠正或者要求限期改正；对依法应当给予行政处罚的行为，依照本条例和其他有关法律、法规的规定作出行政处罚决定；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_164]\n（三）对生产经营单位有关全员安全生产责任制、事故隐患排查治理以及重大危险源辨识、评估、监控等制度的建立落实情况进行指导和监督检查；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_165]\n（四）根据检查情况分析生产经营单位的安全生产形势，制定并落实有针对性的监督管理措施；\n\n[real_69c6f1d94cca74801cb63e0c:TREERAG_166]\n（五）执行重大事故隐患挂牌督办制度，督促生产经营单位及时消除重大事故隐患；",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.5,
+          "coverage_budget_lenient": 0.5,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 0.5,
+          "mrr": 0.5,
+          "ndcg@10": 0.5,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.2
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"（一）进入生产经营单位进行检查，调阅有关资料，向有关单位和人员了解情况；\", \"fact_2\": \"（二）对检查中发现的安全生产违法行为，当场予以纠正或者要求限期改正；对依法应当给予行政处罚的行为，依照本条例和其他有关法律、法规的规定作出行政处罚决定；\", \"final_answer\": \"负有安全生产监督管理职责的部门应当按照分类分级监督管理的要求，制定安全生产监督检查计划，并行使以下职权：一是进入生产经营单位进行检查，调阅有关资料，向有关单位和人员了解情况；二是对检查中发现的安全生产违法行为，当场予以纠正或者要求限期改正；对依法应当给予行政处罚的行为，依照本条例和其他有关法律、法规的规定作出行政处罚决定。\"}",
+        "score_task": 0.0,
+        "score_evidence": 0.5,
+        "compose_seconds": 1.2078769207000732,
+        "judge_eval_seconds": 5.920228958129883,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0009",
+        "inspect_evidence_score": 0.5,
+        "inspect_content_score": 0.0,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 25,
+      "query": "在《帷幕式注浆土体加固地基施工工法（终版）合并.pdf》中，请综合两个层级位置的信息，分别涉及“5.2.7 注浆”与“5.2.8 封孔”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c6ef484cca74801cb63bb9",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c6ef484cca74801cb63bb9:L109",
+        "real_69c6ef484cca74801cb63bb9:L108",
+        "real_69c6ef484cca74801cb63bb9:L110",
+        "real_69c6ef484cca74801cb63bb9:L112"
+      ],
+      "inspect_id": "q400_multi_0002",
+      "candidate_counts": {
+        "treerag": 141,
+        "treerag_raw": 141,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 482,
+        "n_chunks_kept": 4,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69c6ef484cca74801cb63bb9:TREERAG_99",
+          "real_69c6ef484cca74801cb63bb9:TREERAG_95",
+          "real_69c6ef484cca74801cb63bb9:TREERAG_0",
+          "real_69c6ef484cca74801cb63bb9:TREERAG_112"
+        ],
+        "retrieved_nodes": [
+          "real_69c6ef484cca74801cb63bb9:L99",
+          "real_69c6ef484cca74801cb63bb9:L95",
+          "real_69c6ef484cca74801cb63bb9:L0",
+          "real_69c6ef484cca74801cb63bb9:L112"
+        ],
+        "evidence_text": "[real_69c6ef484cca74801cb63bb9:TREERAG_99]\n注浆前，严格按照配方配料。其中帷幕采用AB液作为注浆材料，A液∶B液=1∶1 ，其中A液：水泥：水=0.8∶1；B液：中性水玻璃，水玻璃为波美度25°～30°；帷 幕中心区采用纯水泥浆作为注浆材料，注浆水泥采用强度等级为Po42.5R普通水泥。 施工用水采用自来水。浆液应搅拌均匀，随拌随注，不得长时间存放已拌好的浆液 。封闭泥浆用泵从钻杆自下而上压入孔内，不准从孔口到入。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_95]\n- 4、帷幕区注浆孔需穿透填土层，保证注浆料进入黄土层不小于3米。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_0]\n帷幕式注浆土体加固地基施工工法（终版）合并.pdf\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_112]\n单孔注浆结束后,采用不低于地面混凝强度等级的灌浆料进行孔口封堵，留设封 孔高度5cm，并抹面光滑，保湿养护不少于7天。",
+        "evidence_preview": "[real_69c6ef484cca74801cb63bb9:TREERAG_99]\n注浆前，严格按照配方配料。其中帷幕采用AB液作为注浆材料，A液∶B液=1∶1 ，其中A液：水泥：水=0.8∶1；B液：中性水玻璃，水玻璃为波美度25°～30°；帷 幕中心区采用纯水泥浆作为注浆材料，注浆水泥采用强度等级为Po42.5R普通水泥。 施工用水采用自来水。浆液应搅拌均匀，随拌随注，不得长时间存放已拌好的浆液 。封闭泥浆用泵从钻杆自下而上压入孔内，不准从孔口到入。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_95]\n- 4、帷幕区注浆孔需穿透填土层，保证注浆料进入黄土层不小于3米。\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_0]\n帷幕式注浆土体加固地基施工工法（终版）合并.pdf\n\n[real_69c6ef484cca74801cb63bb9:TREERAG_112]\n单孔注浆结束后,采用不低于地面混凝强度等级的灌浆料进行孔口封堵，留设封 孔高度5cm，并抹面光滑，保湿养护不少于7天。",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.25,
+          "coverage_budget_lenient": 0.25,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 0.25,
+          "mrr": 0.25,
+          "ndcg@10": 0.15969697161989949,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.25
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"帷幕采用AB液作为注浆材料，A液∶B液=1∶1，其中A液：水泥：水=0.8∶1；B液为波美度25°～30°的中性水玻璃，帷幕中心区采用纯水泥浆，浆液应搅拌均匀随拌随注，封闭泥浆用泵从钻杆自下而上压入孔内。\", \"fact_2\": \"单孔注浆结束后，采用不低于地面混凝强度等级的灌浆料进行孔口封堵，留设封孔高度5cm，并抹面光滑，保湿养护不少于7天。\", \"final_answer\": \"5.2.7 注浆规定包括帷幕采用AB液（A液∶B液=1∶1，A液含水泥和水，B液为波美度25°～30°中性水玻璃）或帷幕中心区采用纯水泥浆，浆液需随拌随注且封闭泥浆须自下而上压入；5.2.8 封孔规定要求使用不低于地面混凝强度等级的灌浆料封堵，留设5cm高度并抹面光滑，保湿养护不少于7天。\"}",
+        "score_task": 0.3333,
+        "score_evidence": 0.25,
+        "compose_seconds": 2.573927879333496,
+        "judge_eval_seconds": 1.9458141326904297,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0002",
+        "inspect_evidence_score": 0.25,
+        "inspect_content_score": 0.3333,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 1.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 26,
+      "query": "在《附件_安全管理规定（2020版）.docx》中，请综合两个层级位置的信息，分别涉及“第七章　施工现场消防安全管理暂行规定”与“第七章　施工现场消防安全管理暂行规定 - 7.1 总  则”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c60974d4242eda8c47c615",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c60974d4242eda8c47c615:L415",
+        "real_69c60974d4242eda8c47c615:L414",
+        "real_69c60974d4242eda8c47c615:L417"
+      ],
+      "inspect_id": "q400_multi_0097",
+      "candidate_counts": {
+        "treerag": 193,
+        "treerag_raw": 193,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 4,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60974d4242eda8c47c615:TREERAG_437",
+          "real_69c60974d4242eda8c47c615:TREERAG_415",
+          "real_69c60974d4242eda8c47c615:TREERAG_417",
+          "real_69c60974d4242eda8c47c615:TREERAG_418__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60974d4242eda8c47c615:L437",
+          "real_69c60974d4242eda8c47c615:L415",
+          "real_69c60974d4242eda8c47c615:L417",
+          "real_69c60974d4242eda8c47c615:L418"
+        ],
+        "evidence_text": "[real_69c60974d4242eda8c47c615:TREERAG_437]\n7.5.1 施工现场的消防安全管理由责任单位统一管理，项目部具体负责落实。\n\n[real_69c60974d4242eda8c47c615:TREERAG_415]\n为了加强集团公司在建项目施工现场消防管理，保障施工现场生活区、办公区和施工区施工人员生命安全和财产安全。依据《中华人民共和国消防法》、《建设工程施工现场消防安全技术规范》（GB50720—2011）及其他有关消防法规，结合施工现场实际，特制定《集团公司施工现场消防安全管理暂行规定》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_417]\n7.1.1 本规定适用于集团公司所有在建项目工程施工现场的消防安全管理。\n\n[real_69c60974d4242eda8c47c615:TREERAG_418]\n7.1.2 消防工作贯彻“预防为主、防消结合”的方针，按照集团公司统一领导、责任单位负责、现场施工人员全员参与的原则，实行消防安全责任制，建立集团公司各个项目与施工所在地当地政府消防部门相互联络的消防工作体",
+        "evidence_preview": "[real_69c60974d4242eda8c47c615:TREERAG_437]\n7.5.1 施工现场的消防安全管理由责任单位统一管理，项目部具体负责落实。\n\n[real_69c60974d4242eda8c47c615:TREERAG_415]\n为了加强集团公司在建项目施工现场消防管理，保障施工现场生活区、办公区和施工区施工人员生命安全和财产安全。依据《中华人民共和国消防法》、《建设工程施工现场消防安全技术规范》（GB50720—2011）及其他有关消防法规，结合施工现场实际，特制定《集团公司施工现场消防安全管理暂行规定》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_417]\n7.1.1 本规定适用于集团公司所有在建项目工程施工现场的消防安全管理。\n\n[real_69c60974d4242eda8c47c615:TREERAG_418]\n7.1.2 消防工作贯彻“预防为主、防消结合”的方针，按照集团公司统一领导、责任单位负责、现场施工人员全员参与的原则，实行消防安全责任制，建立集团公司各个项目与施工所在地当地政府消防部门相互联络的消防工作体",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.5,
+          "coverage_budget_lenient": 0.6666666666666666,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 0.6666666666666666,
+          "mrr": 0.5,
+          "ndcg@10": 0.6199062332840657,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.6666666666666666,
+          "precision@5": 0.5
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"7.5.1 施工现场的消防安全管理由责任单位统一管理，项目部具体负责落实。\", \"fact_2\": \"为了加强集团公司在建项目施工现场消防管理，保障施工现场生活区、办公区和施工区施工人员生命安全和财产安全。依据《中华人民共和国消防法》、《建设工程施工现场消防安全技术规范》（GB50720—2011）及其他有关消防法规，结合施工现场实际，特制定《集团公司施工现场消防安全管理暂行规定》。\", \"final_answer\": \"《附件_安全管理规定（2020版）.docx》中“第七章 施工现场消防安全管理暂行规定”第7.5.1条规定施工现场的消防安全管理由责任单位统一管理，项目部具体负责落实；该章7.1总则部分明确制定本规定是为了加强集团公司在建项目施工现场消防管理，保障施工现场生活区、办公区和施工区施工人员生命安全和财产安全，并依据相关法规及规范制定。\"}",
+        "score_task": 0.0,
+        "score_evidence": 0.6667,
+        "compose_seconds": 1.6105210781097412,
+        "judge_eval_seconds": 5.647125005722046,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0097",
+        "inspect_evidence_score": 0.6667,
+        "inspect_content_score": 0.0,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 27,
+      "query": "在《集团公司对外捐赠管理办法（修订版）.docx》中，请综合两个层级位置的信息，分别涉及“陕西建工第十一建设集团有限公司 - 第六章  责任追究”与“陕西建工第十一建设集团有限公司 - 第七章  附则”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c60970d4242eda8c47c5fd",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c60970d4242eda8c47c5fd:L46",
+        "real_69c60970d4242eda8c47c5fd:L48"
+      ],
+      "inspect_id": "q400_multi_0029",
+      "candidate_counts": {
+        "treerag": 40,
+        "treerag_raw": 40,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 497,
+        "n_chunks_kept": 5,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69c60970d4242eda8c47c5fd:TREERAG_9",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_7",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_8",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_11",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_12"
+        ],
+        "retrieved_nodes": [
+          "real_69c60970d4242eda8c47c5fd:L9",
+          "real_69c60970d4242eda8c47c5fd:L7",
+          "real_69c60970d4242eda8c47c5fd:L8",
+          "real_69c60970d4242eda8c47c5fd:L11",
+          "real_69c60970d4242eda8c47c5fd:L12"
+        ],
+        "evidence_text": "[real_69c60970d4242eda8c47c5fd:TREERAG_9]\n对外捐赠原则上以集团公司（陕西建工第十一建设集团有限公司）名义进行捐赠，独立法人单位可根据实际需要以本单位名义进行捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_7]\n第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_8]\n集团公司所属非法人分支机构、项目部不得以分公司、项目部名义对外捐赠，不得将企业拥有的财产以个人名义对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_11]\n（一）救济性捐赠，即向受灾地区、扶贫地区或者困难的社会弱势群体的救济性捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_12]\n（二）公益性捐赠，即向科技文卫事业和环境保护等社会公益事业的公益性捐赠。",
+        "evidence_preview": "[real_69c60970d4242eda8c47c5fd:TREERAG_9]\n对外捐赠原则上以集团公司（陕西建工第十一建设集团有限公司）名义进行捐赠，独立法人单位可根据实际需要以本单位名义进行捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_7]\n第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_8]\n集团公司所属非法人分支机构、项目部不得以分公司、项目部名义对外捐赠，不得将企业拥有的财产以个人名义对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_11]\n（一）救济性捐赠，即向受灾地区、扶贫地区或者困难的社会弱势群体的救济性捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_12]\n（二）公益性捐赠，即向科技文卫事业和环境保护等社会公益事业的公益性捐赠。",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"answer\": \"\"}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 0.5302910804748535,
+        "judge_eval_seconds": 4.0966150760650635,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0029",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 28,
+      "query": "在《附件_安全管理规定（2020版）.docx》中，请综合两个层级位置的信息，分别涉及“第一章　安全教育培训规定 - 1.5 年度继续教育”与“第一章　安全教育培训规定 - 1.6 各类特种作业人员上岗证书的初审、复审培训”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c60974d4242eda8c47c615",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c60974d4242eda8c47c615:L30",
+        "real_69c60974d4242eda8c47c615:L32"
+      ],
+      "inspect_id": "q400_multi_0048",
+      "candidate_counts": {
+        "treerag": 143,
+        "treerag_raw": 143,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 4,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60974d4242eda8c47c615:TREERAG_5",
+          "real_69c60974d4242eda8c47c615:TREERAG_32",
+          "real_69c60974d4242eda8c47c615:TREERAG_6",
+          "real_69c60974d4242eda8c47c615:TREERAG_30__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60974d4242eda8c47c615:L5",
+          "real_69c60974d4242eda8c47c615:L32",
+          "real_69c60974d4242eda8c47c615:L6",
+          "real_69c60974d4242eda8c47c615:L30"
+        ],
+        "evidence_text": "[real_69c60974d4242eda8c47c615:TREERAG_5]\n1.1.1安全教育和培训的类型应包括三级安全教育、岗前教育、日常教育、年度继续教育，以及各类特种作业人员证书的初审、复审培训（附表1.1.1：安全教育记录）。\n\n[real_69c60974d4242eda8c47c615:TREERAG_32]\n建筑施工特种作业人员在通过专业技术培训并取得岗位操作资格后，方可上岗工作。每年仍需接受有针对性的项目安全培训，并每三年参加一次考核发证部门组织的复审考核培训。（建筑施工特种作业包括：建筑电工、建筑架子工、建筑起重信号司索工、建筑起重机械司机、建筑起重机械安装拆卸工、高处作业吊篮安装拆卸工、经省级以上人民政府建设主管部门认定的其他特种作业）\n\n[real_69c60974d4242eda8c47c615:TREERAG_6]\n1.1.2集团公司各级安全教育培训计划、安全教育培训工作按集团公司教育培训制度执行。\n\n[real_69c60974d4242eda8c47c615:TREERAG_30]\n项目经理、专职安全管理人员除按有关规定，取得安全生产考核合格证书并",
+        "evidence_preview": "[real_69c60974d4242eda8c47c615:TREERAG_5]\n1.1.1安全教育和培训的类型应包括三级安全教育、岗前教育、日常教育、年度继续教育，以及各类特种作业人员证书的初审、复审培训（附表1.1.1：安全教育记录）。\n\n[real_69c60974d4242eda8c47c615:TREERAG_32]\n建筑施工特种作业人员在通过专业技术培训并取得岗位操作资格后，方可上岗工作。每年仍需接受有针对性的项目安全培训，并每三年参加一次考核发证部门组织的复审考核培训。（建筑施工特种作业包括：建筑电工、建筑架子工、建筑起重信号司索工、建筑起重机械司机、建筑起重机械安装拆卸工、高处作业吊篮安装拆卸工、经省级以上人民政府建设主管部门认定的其他特种作业）\n\n[real_69c60974d4242eda8c47c615:TREERAG_6]\n1.1.2集团公司各级安全教育培训计划、安全教育培训工作按集团公司教育培训制度执行。\n\n[real_69c60974d4242eda8c47c615:TREERAG_30]\n项目经理、专职安全管理人员除按有关规定，取得安全生产考核合格证书并",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.5,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 0.5,
+          "ndcg@10": 0.75,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.5
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"安全教育和培训的类型应包括三级安全教育、岗前教育、日常教育、年度继续教育，以及各类特种作业人员证书的初审、复审培训。\", \"fact_2\": \"建筑施工特种作业人员在通过专业技术培训并取得岗位操作资格后，方可上岗工作，每年仍需接受有针对性的项目安全培训，并每三年参加一次考核发证部门组织的复审考核培训。\", \"final_answer\": \"年度继续教育属于安全教育培训类型之一；各类特种作业人员上岗证书需经初审和复审培训，其中建筑施工特种作业人员取得资格后方可上岗，每年接受针对性项目安全培训，且每三年参加一次复审考核培训。\"}",
+        "score_task": 0.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 1.4268312454223633,
+        "judge_eval_seconds": 6.118086814880371,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0048",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 0.0,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 29,
+      "query": "在《附件_安全管理规定（2020版）.docx》中，请综合两个层级位置的信息，分别涉及“2.3安全检查及隐患排查的方法 - 2.3.4 专项安全检查”与“第二章　安全检查及隐患排查规定 - 2.3安全检查及隐患排查的方法”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c60974d4242eda8c47c615",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c60974d4242eda8c47c615:L72",
+        "real_69c60974d4242eda8c47c615:L73",
+        "real_69c60974d4242eda8c47c615:L71"
+      ],
+      "inspect_id": "q400_multi_0056",
+      "candidate_counts": {
+        "treerag": 387,
+        "treerag_raw": 387,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 484,
+        "n_chunks_kept": 4,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69c60974d4242eda8c47c615:TREERAG_485",
+          "real_69c60974d4242eda8c47c615:TREERAG_63",
+          "real_69c60974d4242eda8c47c615:TREERAG_41",
+          "real_69c60974d4242eda8c47c615:TREERAG_64"
+        ],
+        "retrieved_nodes": [
+          "real_69c60974d4242eda8c47c615:L485",
+          "real_69c60974d4242eda8c47c615:L63",
+          "real_69c60974d4242eda8c47c615:L41",
+          "real_69c60974d4242eda8c47c615:L64"
+        ],
+        "evidence_text": "[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_63]\n2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。\n\n[real_69c60974d4242eda8c47c615:TREERAG_41]\n2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。\n\n[real_69c60974d4242eda8c47c615:TREERAG_64]\n2.3.2集团公司安全检查及隐患排查的方式包括定期安全检查、专项安全检查、季节性安全检查、日常安全巡查、不定期抽查等。",
+        "evidence_preview": "[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_63]\n2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。\n\n[real_69c60974d4242eda8c47c615:TREERAG_41]\n2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。\n\n[real_69c60974d4242eda8c47c615:TREERAG_64]\n2.3.2集团公司安全检查及隐患排查的方式包括定期安全检查、专项安全检查、季节性安全检查、日常安全巡查、不定期抽查等。",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"2.3.4 专项安全检查属于集团公司安全检查及隐患排查的方式之一，该方式包括定期安全检查、专项安全检查、季节性安全检查、日常安全巡查、不定期抽查等。\", \"fact_2\": \"2.3 安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。\", \"final_answer\": \"在《附件_安全管理规定（2020版）.docx》中，2.3.4 专项安全检查是集团公司安全检查及隐患排查的多种方式之一（含定期、专项、季节性、日常巡查及不定期抽查），而 2.3 章节规定所有检查及隐患排查工作需依据《建筑施工安全检查标准》JGJ59-2011、现行规范标准及集团考核评分标准等相关管理规定执行。\"}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 1.8212299346923828,
+        "judge_eval_seconds": 5.082937002182007,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0056",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 30,
+      "query": "在《附件_安全管理规定（2020版）.docx》中，请综合两个层级位置的信息，分别涉及“第六章　项目安全管理规定”与“第六章　项目安全管理规定 - 6.9 安全设施、安全防护用品管理”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c60974d4242eda8c47c615",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c60974d4242eda8c47c615:L384",
+        "real_69c60974d4242eda8c47c615:L383",
+        "real_69c60974d4242eda8c47c615:L385"
+      ],
+      "inspect_id": "q400_multi_0094",
+      "candidate_counts": {
+        "treerag": 442,
+        "treerag_raw": 442,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 7,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60974d4242eda8c47c615:TREERAG_485",
+          "real_69c60974d4242eda8c47c615:TREERAG_384",
+          "real_69c60974d4242eda8c47c615:TREERAG_551",
+          "real_69c60974d4242eda8c47c615:TREERAG_555",
+          "real_69c60974d4242eda8c47c615:TREERAG_264",
+          "real_69c60974d4242eda8c47c615:TREERAG_559",
+          "real_69c60974d4242eda8c47c615:TREERAG_546__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60974d4242eda8c47c615:L485",
+          "real_69c60974d4242eda8c47c615:L384",
+          "real_69c60974d4242eda8c47c615:L551",
+          "real_69c60974d4242eda8c47c615:L555",
+          "real_69c60974d4242eda8c47c615:L264",
+          "real_69c60974d4242eda8c47c615:L559"
+        ],
+        "evidence_text": "[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_384]\n6.9.1 项目部材料组负责安全设施、安全防护用品的采购、进场验收、保管、发放、更新、报废等的管理；项目部专职安全管理人员负责劳动防护用品使用过程的指导、监督和管理。\n\n[real_69c60974d4242eda8c47c615:TREERAG_551]\n附表6.6.1-1\n\n[real_69c60974d4242eda8c47c615:TREERAG_555]\n附表6.6.1-2\n\n[real_69c60974d4242eda8c47c615:TREERAG_264]\n6.1.1 为了规范集团公司项目安全管理，明确项目安全管理责任，预防和减少生产安全事故，促进企业稳定发展，制定本规定。\n\n[real_69c60974d4242eda8c47c615:TREERAG_559]\n附表6.7.3\n\n[real_69c60974d4242eda8c47c615:TR",
+        "evidence_preview": "[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_384]\n6.9.1 项目部材料组负责安全设施、安全防护用品的采购、进场验收、保管、发放、更新、报废等的管理；项目部专职安全管理人员负责劳动防护用品使用过程的指导、监督和管理。\n\n[real_69c60974d4242eda8c47c615:TREERAG_551]\n附表6.6.1-1\n\n[real_69c60974d4242eda8c47c615:TREERAG_555]\n附表6.6.1-2\n\n[real_69c60974d4242eda8c47c615:TREERAG_264]\n6.1.1 为了规范集团公司项目安全管理，明确项目安全管理责任，预防和减少生产安全事故，促进企业稳定发展，制定本规定。\n\n[real_69c60974d4242eda8c47c615:TREERAG_559]\n附表6.7.3\n\n[real_69c60974d4242eda8c47c615:TR",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.5,
+          "coverage_budget_lenient": 0.3333333333333333,
+          "n_chunks_kept": 7.0
+        },
+        "line_retrieval": {
+          "coverage": 0.3333333333333333,
+          "mrr": 0.5,
+          "ndcg@10": 0.38009376671593426,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.2
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"6.9.1 项目部材料组负责安全设施、安全防护用品的采购、进场验收、保管、发放、更新、报废等的管理；项目部专职安全管理人员负责劳动防护用品使用过程的指导、监督和管理。\", \"fact_2\": \"8.3 本规定所有附表另见《安全管理规定附表》。\", \"final_answer\": \"在《附件_安全管理规定（2020版）.docx》第六章中，关于项目安全管理规定的具体条款包括：6.9.1明确项目部材料组负责安全设施及防护用品的全流程管理，专职安全管理人员负责使用过程的指导与监督；同时规定所有相关附表需另行查阅《安全管理规定附表》。\"}",
+        "score_task": 0.3333,
+        "score_evidence": 0.3333,
+        "compose_seconds": 1.4986748695373535,
+        "judge_eval_seconds": 5.60119891166687,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0094",
+        "inspect_evidence_score": 0.3333,
+        "inspect_content_score": 0.3333,
+        "inspect_fact_1_score": 1.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 31,
+      "query": "在《集团公司对外捐赠管理办法（修订版）.docx》中，请综合两个层级位置的信息，分别涉及“陕西建工第十一建设集团有限公司 - 第二章  对外捐赠的范围及类型”与“陕西建工第十一建设集团有限公司 - 第二章  对外捐赠的范围及类型”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c60970d4242eda8c47c5fd",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c60970d4242eda8c47c5fd:L7",
+        "real_69c60970d4242eda8c47c5fd:L8"
+      ],
+      "inspect_id": "q400_multi_0023",
+      "candidate_counts": {
+        "treerag": 40,
+        "treerag_raw": 40,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 497,
+        "n_chunks_kept": 5,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69c60970d4242eda8c47c5fd:TREERAG_9",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_7",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_8",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_11",
+          "real_69c60970d4242eda8c47c5fd:TREERAG_12"
+        ],
+        "retrieved_nodes": [
+          "real_69c60970d4242eda8c47c5fd:L9",
+          "real_69c60970d4242eda8c47c5fd:L7",
+          "real_69c60970d4242eda8c47c5fd:L8",
+          "real_69c60970d4242eda8c47c5fd:L11",
+          "real_69c60970d4242eda8c47c5fd:L12"
+        ],
+        "evidence_text": "[real_69c60970d4242eda8c47c5fd:TREERAG_9]\n对外捐赠原则上以集团公司（陕西建工第十一建设集团有限公司）名义进行捐赠，独立法人单位可根据实际需要以本单位名义进行捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_7]\n第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_8]\n集团公司所属非法人分支机构、项目部不得以分公司、项目部名义对外捐赠，不得将企业拥有的财产以个人名义对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_11]\n（一）救济性捐赠，即向受灾地区、扶贫地区或者困难的社会弱势群体的救济性捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_12]\n（二）公益性捐赠，即向科技文卫事业和环境保护等社会公益事业的公益性捐赠。",
+        "evidence_preview": "[real_69c60970d4242eda8c47c5fd:TREERAG_9]\n对外捐赠原则上以集团公司（陕西建工第十一建设集团有限公司）名义进行捐赠，独立法人单位可根据实际需要以本单位名义进行捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_7]\n第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_8]\n集团公司所属非法人分支机构、项目部不得以分公司、项目部名义对外捐赠，不得将企业拥有的财产以个人名义对外捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_11]\n（一）救济性捐赠，即向受灾地区、扶贫地区或者困难的社会弱势群体的救济性捐赠。\n\n[real_69c60970d4242eda8c47c5fd:TREERAG_12]\n（二）公益性捐赠，即向科技文卫事业和环境保护等社会公益事业的公益性捐赠。",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.5,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 0.5,
+          "ndcg@10": 0.8154648767857288,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.6666666666666666,
+          "precision@5": 0.4
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"对外捐赠原则上以集团公司（陕西建工第十一建设集团有限公司）名义进行捐赠，独立法人单位可根据实际需要以本单位名义进行捐赠。\", \"fact_2\": \"本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。\", \"final_answer\": \"对外捐赠原则上以集团公司名义进行，独立法人单位可按需以本单位名义进行；其定义为集团公司及所属各单位自愿将合法财产无偿赠送给合法受赠人用于无直接关系公益事业的行為，且非法人分支机构、项目部不得以自身或项目名义捐赠，也不得将企业财产以个人名义捐赠。\"}",
+        "score_task": 0.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 1.245119333267212,
+        "judge_eval_seconds": 6.191283226013184,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0023",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 0.0,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 32,
+      "query": "在《陕西建工第十一建设集团有限公司印章管理办法（2020版）.docx》中，请综合两个层级位置的信息，分别涉及“第六章 印章封口、停用与缴销”与“第六章 印章封口、停用与缴销”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c60971d4242eda8c47c605",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c60971d4242eda8c47c605:L103",
+        "real_69c60971d4242eda8c47c605:L104"
+      ],
+      "inspect_id": "q400_multi_0041",
+      "candidate_counts": {
+        "treerag": 113,
+        "treerag_raw": 113,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60971d4242eda8c47c605:TREERAG_107",
+          "real_69c60971d4242eda8c47c605:TREERAG_109",
+          "real_69c60971d4242eda8c47c605:TREERAG_103",
+          "real_69c60971d4242eda8c47c605:TREERAG_104",
+          "real_69c60971d4242eda8c47c605:TREERAG_105__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60971d4242eda8c47c605:L107",
+          "real_69c60971d4242eda8c47c605:L109",
+          "real_69c60971d4242eda8c47c605:L103",
+          "real_69c60971d4242eda8c47c605:L104",
+          "real_69c60971d4242eda8c47c605:L105"
+        ],
+        "evidence_text": "[real_69c60971d4242eda8c47c605:TREERAG_107]\n上缴的各类印章，应按要求办理缴销手续，留下印模。印章由集团公司办公室统一封存、销毁。\n\n[real_69c60971d4242eda8c47c605:TREERAG_109]\n印章停用、变更后，相关单位应根据需要及时通知有关业务往来单位，并标明停用、变更印章时间、印模。印章回收时，印章登记薄同步回收。\n\n[real_69c60971d4242eda8c47c605:TREERAG_103]\n（一）在集团公司生产管理部发布的“封口闭合启动令”60日内上交集团公司办公室封存；项目印章回收后不得外借，期间如需要使用印章由原项目经理申请，责任管理单位批准后，在集团公司办公室登记用印。\n\n[real_69c60971d4242eda8c47c605:TREERAG_104]\n（二）以其他单位名称承揽项目的项目印章回收，按照集团公司印章回收程序办理移交，再由集团公司移交回印章刻制单位。\n\n[real_69c60971d4242eda8c47c605:TREERAG_105]\n（三）印章收回时，用印登记本一并收回",
+        "evidence_preview": "[real_69c60971d4242eda8c47c605:TREERAG_107]\n上缴的各类印章，应按要求办理缴销手续，留下印模。印章由集团公司办公室统一封存、销毁。\n\n[real_69c60971d4242eda8c47c605:TREERAG_109]\n印章停用、变更后，相关单位应根据需要及时通知有关业务往来单位，并标明停用、变更印章时间、印模。印章回收时，印章登记薄同步回收。\n\n[real_69c60971d4242eda8c47c605:TREERAG_103]\n（一）在集团公司生产管理部发布的“封口闭合启动令”60日内上交集团公司办公室封存；项目印章回收后不得外借，期间如需要使用印章由原项目经理申请，责任管理单位批准后，在集团公司办公室登记用印。\n\n[real_69c60971d4242eda8c47c605:TREERAG_104]\n（二）以其他单位名称承揽项目的项目印章回收，按照集团公司印章回收程序办理移交，再由集团公司移交回印章刻制单位。\n\n[real_69c60971d4242eda8c47c605:TREERAG_105]\n（三）印章收回时，用印登记本一并收回",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.3333333333333333,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 0.3333333333333333,
+          "ndcg@10": 0.5654648767857288,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.4
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"上缴的各类印章，应按要求办理缴销手续，留下印模。印章由集团公司办公室统一封存、销毁。\", \"fact_2\": \"印章停用、变更后，相关单位应根据需要及时通知有关业务往来单位，并标明停用、变更印章时间、印模。印章回收时，印章登记薄同步回收。\", \"final_answer\": \"上缴的印章需办理缴销手续并留印模，由集团办公室统一封存销毁；印章停用或变更后需及时通知业务单位并标明时间及印模，回收时同步回收印章登记簿。\"}",
+        "score_task": 0.0,
+        "score_evidence": 1.0,
+        "compose_seconds": 1.2774760723114014,
+        "judge_eval_seconds": 1.9728927612304688,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0041",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 0.0,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 33,
+      "query": "在《陕西建工第十一建设集团有限公司印章管理办法（2020版）.docx》中，请综合两个层级位置的信息，分别涉及“第七章\t责任追究”与“第七章\t责任追究”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c60971d4242eda8c47c605",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c60971d4242eda8c47c605:L111",
+        "real_69c60971d4242eda8c47c605:L112"
+      ],
+      "inspect_id": "q400_multi_0042",
+      "candidate_counts": {
+        "treerag": 113,
+        "treerag_raw": 113,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 4,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60971d4242eda8c47c605:TREERAG_117",
+          "real_69c60971d4242eda8c47c605:TREERAG_114",
+          "real_69c60971d4242eda8c47c605:TREERAG_116",
+          "real_69c60971d4242eda8c47c605:TREERAG_113__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60971d4242eda8c47c605:L117",
+          "real_69c60971d4242eda8c47c605:L114",
+          "real_69c60971d4242eda8c47c605:L116",
+          "real_69c60971d4242eda8c47c605:L113"
+        ],
+        "evidence_text": "[real_69c60971d4242eda8c47c605:TREERAG_117]\n第四十二条印章责任管理单位、监管部门未认真履行印章管理、检查监督、封口管理等职责，发生伪造、私刻印章等情节严重，或造成经济损失及不良影响的，对管理责任人按集团公司《管理人员责任追究暂行规定》追究相关责任。\n\n[real_69c60971d4242eda8c47c605:TREERAG_114]\n第三十九条印章第一管理责任人违反本办法相关条款，由上级主管单位予以通报批评，责令整改，并不得评选或考核为A级；造成经济损失及不良后果的，将追究其相关管理责任。\n\n[real_69c60971d4242eda8c47c605:TREERAG_116]\n第四十一条有印章使用审批权限的其他管理人员，超越审批权限使用印章，造成经济损失及不良后果的，由集团公司党委组织部、监察审计部按《管理人员责任追究暂行规定》追究其相关责任。\n\n[real_69c60971d4242eda8c47c605:TREERAG_113]\n第三十八条印章保管人未认真履行印章管理职责的，由责任管理单位或部门酌情进行批评教育、警告，并不得评选或考",
+        "evidence_preview": "[real_69c60971d4242eda8c47c605:TREERAG_117]\n第四十二条印章责任管理单位、监管部门未认真履行印章管理、检查监督、封口管理等职责，发生伪造、私刻印章等情节严重，或造成经济损失及不良影响的，对管理责任人按集团公司《管理人员责任追究暂行规定》追究相关责任。\n\n[real_69c60971d4242eda8c47c605:TREERAG_114]\n第三十九条印章第一管理责任人违反本办法相关条款，由上级主管单位予以通报批评，责令整改，并不得评选或考核为A级；造成经济损失及不良后果的，将追究其相关管理责任。\n\n[real_69c60971d4242eda8c47c605:TREERAG_116]\n第四十一条有印章使用审批权限的其他管理人员，超越审批权限使用印章，造成经济损失及不良后果的，由集团公司党委组织部、监察审计部按《管理人员责任追究暂行规定》追究其相关责任。\n\n[real_69c60971d4242eda8c47c605:TREERAG_113]\n第三十八条印章保管人未认真履行印章管理职责的，由责任管理单位或部门酌情进行批评教育、警告，并不得评选或考",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"第三十九条规定印章第一管理责任人违反本办法相关条款，由上级主管单位予以通报批评，责令整改，并不得评选或考核为A级；造成经济损失及不良后果的，将追究其相关管理责任。\", \"fact_2\": \"第四十二条规定印章责任管理单位、监管部门未认真履行印章管理、检查监督、封口管理等职责，发生伪造、私刻印章等情节严重，或造成经济损失及不良影响的，对管理责任人按集团公司《管理人员责任追究暂行规定》追究相关责任。\", \"final_answer\": \"针对印章第一管理责任人违规，规定由上级主管单位通报批评、责令整改、取消A级评优资格，造成损失则追责；针对印章责任管理单位及监管部门失职导致伪造私刻或造成损失，规定按集团公司《管理人员责任追究暂行规定》追究管理责任人责任。\"}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 1.4689197540283203,
+        "judge_eval_seconds": 6.103515625e-05,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0042",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 34,
+      "query": "在《附件_安全管理规定（2020版）.docx》中，请综合两个层级位置的信息，分别涉及“第六章　项目安全管理规定 - 6.10 施工机具管理”与“第六章　项目安全管理规定 - 6.10 施工机具管理”两处。请分别回答这两个位置对应的具体规定，并给出一个合并后的最终答案。",
+      "doc_id": "real_69c60974d4242eda8c47c615",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c60974d4242eda8c47c615:L391",
+        "real_69c60974d4242eda8c47c615:L392"
+      ],
+      "inspect_id": "q400_multi_0095",
+      "candidate_counts": {
+        "treerag": 245,
+        "treerag_raw": 245,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60974d4242eda8c47c615:TREERAG_396",
+          "real_69c60974d4242eda8c47c615:TREERAG_393",
+          "real_69c60974d4242eda8c47c615:TREERAG_395",
+          "real_69c60974d4242eda8c47c615:TREERAG_394",
+          "real_69c60974d4242eda8c47c615:TREERAG_551__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60974d4242eda8c47c615:L396",
+          "real_69c60974d4242eda8c47c615:L393",
+          "real_69c60974d4242eda8c47c615:L395",
+          "real_69c60974d4242eda8c47c615:L394"
+        ],
+        "evidence_text": "[real_69c60974d4242eda8c47c615:TREERAG_396]\n6.10.6 施工机具的现场工作环境必须符合要求，禁止在不适宜的工作环境下使用施工机具。\n\n[real_69c60974d4242eda8c47c615:TREERAG_393]\n6.10.3 项目部材料动力组负责施工机具的安装调试，施工机具安装完毕后由项目部组织按规定履行验收程序验收（总包方、分包方、租赁方、安装方、监理方），并应经责任人签字确认。\n\n[real_69c60974d4242eda8c47c615:TREERAG_395]\n6.10.5 施工机具的各种检测仪表及安全装置必须齐全有效，严禁使用安全装置不齐全有效、超过使用年限或技术性能落后耗能高、效率低的施工机具。\n\n[real_69c60974d4242eda8c47c615:TREERAG_394]\n6.10.4 项目部自有或租赁的施工机具，负有使用、维护、保养管理工作的义务。但劳务分包，专业分包或租赁的施工机具，合同及安全管理协议书必须明确使用、维护、保养管理工作的责任方。\n\n[real_69c60974d4242eda8c47c",
+        "evidence_preview": "[real_69c60974d4242eda8c47c615:TREERAG_396]\n6.10.6 施工机具的现场工作环境必须符合要求，禁止在不适宜的工作环境下使用施工机具。\n\n[real_69c60974d4242eda8c47c615:TREERAG_393]\n6.10.3 项目部材料动力组负责施工机具的安装调试，施工机具安装完毕后由项目部组织按规定履行验收程序验收（总包方、分包方、租赁方、安装方、监理方），并应经责任人签字确认。\n\n[real_69c60974d4242eda8c47c615:TREERAG_395]\n6.10.5 施工机具的各种检测仪表及安全装置必须齐全有效，严禁使用安全装置不齐全有效、超过使用年限或技术性能落后耗能高、效率低的施工机具。\n\n[real_69c60974d4242eda8c47c615:TREERAG_394]\n6.10.4 项目部自有或租赁的施工机具，负有使用、维护、保养管理工作的义务。但劳务分包，专业分包或租赁的施工机具，合同及安全管理协议书必须明确使用、维护、保养管理工作的责任方。\n\n[real_69c60974d4242eda8c47c",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"6.10.3 项目部材料动力组负责施工机具的安装调试，施工机具安装完毕后由项目部组织按规定履行验收程序验收（总包方、分包方、租赁方、安装方、监理方），并应经责任人签字确认。\", \"fact_2\": \"6.10.4 项目部自有或租赁的施工机具，负有使用、维护、保养管理工作的义务。但劳务分包，专业分包或租赁的施工机具，合同及安全管理协议书必须明确使用、维护、保养管理工作的责任方。\", \"final_answer\": \"施工机具安装完毕后需由项目部组织多方验收并经责任人签字确认；项目部对自有或租赁机具负有使用维护保养义务，而劳务、专业分包或租赁的机具则需在合同及安全协议中明确相关责任方。\"}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 1.7552649974822998,
+        "judge_eval_seconds": 5.684738636016846,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_multi_0095",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "inspect_fact_1_score": 0.0,
+        "inspect_fact_2_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 35,
+      "query": "在《附件_安全管理规定（2020版）.docx》，围绕问题“列举文档中定义的事故隐患分类及其具体含义”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c60974d4242eda8c47c615",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c60974d4242eda8c47c615:L83",
+        "real_69c60974d4242eda8c47c615:L84"
+      ],
+      "inspect_id": "q400_scope_0001",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 6,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60974d4242eda8c47c615:TREERAG_82",
+          "real_69c60974d4242eda8c47c615:TREERAG_83",
+          "real_69c60974d4242eda8c47c615:TREERAG_0",
+          "real_69c60974d4242eda8c47c615:TREERAG_485",
+          "real_69c60974d4242eda8c47c615:TREERAG_84",
+          "real_69c60974d4242eda8c47c615:TREERAG_102__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60974d4242eda8c47c615:L82",
+          "real_69c60974d4242eda8c47c615:L83",
+          "real_69c60974d4242eda8c47c615:L0",
+          "real_69c60974d4242eda8c47c615:L485",
+          "real_69c60974d4242eda8c47c615:L84",
+          "real_69c60974d4242eda8c47c615:L102"
+        ],
+        "evidence_text": "[real_69c60974d4242eda8c47c615:TREERAG_82]\n2.4.1 事故隐患分为一般事故隐患和重大事故隐患。\n\n[real_69c60974d4242eda8c47c615:TREERAG_83]\n1、一般事故隐患，是指危害和整改难度较小，发现后能够立即整改排除的隐患；\n\n[real_69c60974d4242eda8c47c615:TREERAG_0]\n附件_安全管理规定（2020版）.docx\n\n[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_84]\n2、重大事故隐患，是指危害和整改难度较大，应当全部或者局部停产停业，并经过一定时间整改治理方能排除的隐患，或者因外部因素影响致使生产经营单位自身难以排除的隐患。\n\n[real_69c60974d4242eda8c47c615:TREERAG_102]\n2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐",
+        "evidence_preview": "[real_69c60974d4242eda8c47c615:TREERAG_82]\n2.4.1 事故隐患分为一般事故隐患和重大事故隐患。\n\n[real_69c60974d4242eda8c47c615:TREERAG_83]\n1、一般事故隐患，是指危害和整改难度较小，发现后能够立即整改排除的隐患；\n\n[real_69c60974d4242eda8c47c615:TREERAG_0]\n附件_安全管理规定（2020版）.docx\n\n[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_84]\n2、重大事故隐患，是指危害和整改难度较大，应当全部或者局部停产停业，并经过一定时间整改治理方能排除的隐患，或者因外部因素影响致使生产经营单位自身难以排除的隐患。\n\n[real_69c60974d4242eda8c47c615:TREERAG_102]\n2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.5,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 6.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 0.5,
+          "ndcg@10": 0.7153382790366966,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.4
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"一般事故隐患，是指危害和整改难度较小，发现后能够立即整改排除的隐患；\", \"重大事故隐患，是指危害和整改难度较大，应当全部或者局部停产停业，并经过一定时间整改治理方能排除的隐患，或者因外部因素影响致使生产经营单位自身难以排除的隐患。\"]}",
+        "score_task": 0.1364,
+        "score_evidence": 1.0,
+        "compose_seconds": 0.9743857383728027,
+        "judge_eval_seconds": 0.0014557838439941406,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0001",
+        "inspect_evidence_score": 1.0,
+        "inspect_content_score": 0.1364,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 36,
+      "query": "在《附件_安全管理规定（2020版）.docx》，围绕问题“列出重大事故隐患治理方案必须包含的所有内容要素”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c60974d4242eda8c47c615",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c60974d4242eda8c47c615:L94",
+        "real_69c60974d4242eda8c47c615:L95",
+        "real_69c60974d4242eda8c47c615:L96",
+        "real_69c60974d4242eda8c47c615:L97",
+        "real_69c60974d4242eda8c47c615:L98",
+        "real_69c60974d4242eda8c47c615:L99"
+      ],
+      "inspect_id": "q400_scope_0002",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60974d4242eda8c47c615:TREERAG_0",
+          "real_69c60974d4242eda8c47c615:TREERAG_93",
+          "real_69c60974d4242eda8c47c615:TREERAG_90",
+          "real_69c60974d4242eda8c47c615:TREERAG_485",
+          "real_69c60974d4242eda8c47c615:TREERAG_102__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60974d4242eda8c47c615:L0",
+          "real_69c60974d4242eda8c47c615:L93",
+          "real_69c60974d4242eda8c47c615:L90",
+          "real_69c60974d4242eda8c47c615:L485",
+          "real_69c60974d4242eda8c47c615:L102"
+        ],
+        "evidence_text": "[real_69c60974d4242eda8c47c615:TREERAG_0]\n附件_安全管理规定（2020版）.docx\n\n[real_69c60974d4242eda8c47c615:TREERAG_93]\n对重大事故隐患，由被检查项目负责整改，整改应制定事故隐患治理方案，该方案由项目经理组织制定和实施。方案包括以下内容：\n\n[real_69c60974d4242eda8c47c615:TREERAG_90]\n1、一般事故隐患的治理由各项目部根据事故隐患的实际情况，制定针对性的治理措施，落实相关责任人，限期进行整改；\n\n[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_102]\n2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐患排除前或者排除过程中无法保证安全的，应当从危险区域内撤出作业人员，并疏散可能危及的其他人员，设置警戒标志，暂时停工；对暂时难以停工或者停止使用的相关",
+        "evidence_preview": "[real_69c60974d4242eda8c47c615:TREERAG_0]\n附件_安全管理规定（2020版）.docx\n\n[real_69c60974d4242eda8c47c615:TREERAG_93]\n对重大事故隐患，由被检查项目负责整改，整改应制定事故隐患治理方案，该方案由项目经理组织制定和实施。方案包括以下内容：\n\n[real_69c60974d4242eda8c47c615:TREERAG_90]\n1、一般事故隐患的治理由各项目部根据事故隐患的实际情况，制定针对性的治理措施，落实相关责任人，限期进行整改；\n\n[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_102]\n2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐患排除前或者排除过程中无法保证安全的，应当从危险区域内撤出作业人员，并疏散可能危及的其他人员，设置警戒标志，暂时停工；对暂时难以停工或者停止使用的相关",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"由项目经理组织制定和实施\"]}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 0.5638070106506348,
+        "judge_eval_seconds": 0.0001327991485595703,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0002",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 37,
+      "query": "在《附件_安全管理规定（2020版）.docx》，围绕问题“请列出隐患整改（控制或变更降低安全风险）措施的优先顺序及其具体内容”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c60974d4242eda8c47c615",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c60974d4242eda8c47c615:L105",
+        "real_69c60974d4242eda8c47c615:L106",
+        "real_69c60974d4242eda8c47c615:L107",
+        "real_69c60974d4242eda8c47c615:L108",
+        "real_69c60974d4242eda8c47c615:L109",
+        "real_69c60974d4242eda8c47c615:L110"
+      ],
+      "inspect_id": "q400_scope_0003",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60974d4242eda8c47c615:TREERAG_104",
+          "real_69c60974d4242eda8c47c615:TREERAG_485",
+          "real_69c60974d4242eda8c47c615:TREERAG_0",
+          "real_69c60974d4242eda8c47c615:TREERAG_90",
+          "real_69c60974d4242eda8c47c615:TREERAG_102__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60974d4242eda8c47c615:L104",
+          "real_69c60974d4242eda8c47c615:L485",
+          "real_69c60974d4242eda8c47c615:L0",
+          "real_69c60974d4242eda8c47c615:L90",
+          "real_69c60974d4242eda8c47c615:L102"
+        ],
+        "evidence_text": "[real_69c60974d4242eda8c47c615:TREERAG_104]\n2.4.7 隐患整改（控制或变更降低安全风险）措施的优先顺序：\n\n[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_0]\n附件_安全管理规定（2020版）.docx\n\n[real_69c60974d4242eda8c47c615:TREERAG_90]\n1、一般事故隐患的治理由各项目部根据事故隐患的实际情况，制定针对性的治理措施，落实相关责任人，限期进行整改；\n\n[real_69c60974d4242eda8c47c615:TREERAG_102]\n2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐患排除前或者排除过程中无法保证安全的，应当从危险区域内撤出作业人员，并疏散可能危及的其他人员，设置警戒标志，暂时停工；对暂时难以停工或者停止使用的相关生产储存装置、设施、设备，应当加强维护和保养，防止事",
+        "evidence_preview": "[real_69c60974d4242eda8c47c615:TREERAG_104]\n2.4.7 隐患整改（控制或变更降低安全风险）措施的优先顺序：\n\n[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:TREERAG_0]\n附件_安全管理规定（2020版）.docx\n\n[real_69c60974d4242eda8c47c615:TREERAG_90]\n1、一般事故隐患的治理由各项目部根据事故隐患的实际情况，制定针对性的治理措施，落实相关责任人，限期进行整改；\n\n[real_69c60974d4242eda8c47c615:TREERAG_102]\n2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐患排除前或者排除过程中无法保证安全的，应当从危险区域内撤出作业人员，并疏散可能危及的其他人员，设置警戒标志，暂时停工；对暂时难以停工或者停止使用的相关生产储存装置、设施、设备，应当加强维护和保养，防止事",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"隐患整改（控制或变更降低安全风险）措施的优先顺序\"]}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 0.5217571258544922,
+        "judge_eval_seconds": 0.00014495849609375,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0003",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 38,
+      "query": "在《附件_安全管理规定（2020版）.docx》，围绕问题“列出生产安全事故报告必须包含的所有内容项”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c60974d4242eda8c47c615",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c60974d4242eda8c47c615:L120",
+        "real_69c60974d4242eda8c47c615:L121",
+        "real_69c60974d4242eda8c47c615:L122",
+        "real_69c60974d4242eda8c47c615:L123",
+        "real_69c60974d4242eda8c47c615:L124",
+        "real_69c60974d4242eda8c47c615:L125"
+      ],
+      "inspect_id": "q400_scope_0004",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 8,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c60974d4242eda8c47c615:TREERAG_118",
+          "real_69c60974d4242eda8c47c615:TREERAG_0",
+          "real_69c60974d4242eda8c47c615:TREERAG_126",
+          "real_69c60974d4242eda8c47c615:TREERAG_119",
+          "real_69c60974d4242eda8c47c615:TREERAG_492",
+          "real_69c60974d4242eda8c47c615:TREERAG_535",
+          "real_69c60974d4242eda8c47c615:TREERAG_485",
+          "real_69c60974d4242eda8c47c615:TREERAG_115__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c60974d4242eda8c47c615:L118",
+          "real_69c60974d4242eda8c47c615:L0",
+          "real_69c60974d4242eda8c47c615:L126",
+          "real_69c60974d4242eda8c47c615:L119",
+          "real_69c60974d4242eda8c47c615:L492",
+          "real_69c60974d4242eda8c47c615:L535",
+          "real_69c60974d4242eda8c47c615:L485"
+        ],
+        "evidence_text": "[real_69c60974d4242eda8c47c615:TREERAG_118]\n在报告的同时，应当及时编制《生产安全事故快报表》（见附表3.2）报陕建集团总公司安全监管部门。\n\n[real_69c60974d4242eda8c47c615:TREERAG_0]\n附件_安全管理规定（2020版）.docx\n\n[real_69c60974d4242eda8c47c615:TREERAG_126]\n生产安全事故报告后出现新情况的，应及时补报。\n\n[real_69c60974d4242eda8c47c615:TREERAG_119]\n生产安全事故报告的内容应包括：\n\n[real_69c60974d4242eda8c47c615:TREERAG_492]\n3.2 生产安全事故快报\n\n[real_69c60974d4242eda8c47c615:TREERAG_535]\n生产安全事故快报\n\n[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:",
+        "evidence_preview": "[real_69c60974d4242eda8c47c615:TREERAG_118]\n在报告的同时，应当及时编制《生产安全事故快报表》（见附表3.2）报陕建集团总公司安全监管部门。\n\n[real_69c60974d4242eda8c47c615:TREERAG_0]\n附件_安全管理规定（2020版）.docx\n\n[real_69c60974d4242eda8c47c615:TREERAG_126]\n生产安全事故报告后出现新情况的，应及时补报。\n\n[real_69c60974d4242eda8c47c615:TREERAG_119]\n生产安全事故报告的内容应包括：\n\n[real_69c60974d4242eda8c47c615:TREERAG_492]\n3.2 生产安全事故快报\n\n[real_69c60974d4242eda8c47c615:TREERAG_535]\n生产安全事故快报\n\n[real_69c60974d4242eda8c47c615:TREERAG_485]\n8.3 本规定所有附表另见《安全管理规定附表》。\n\n[real_69c60974d4242eda8c47c615:",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 8.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"生产安全事故报告的内容\"]}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 0.43503713607788086,
+        "judge_eval_seconds": 0.00013518333435058594,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0004",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 39,
+      "query": "在《2.工法内容材料（已完）.pdf》，围绕问题“列出文档中提到的所有竖向钢立柱安装的具体步骤及技术要求”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c6ef4e4cca74801cb63bc6",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c6ef4e4cca74801cb63bc6:L63",
+        "real_69c6ef4e4cca74801cb63bc6:L62",
+        "real_69c6ef4e4cca74801cb63bc6:L66"
+      ],
+      "inspect_id": "q400_scope_0005",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 6,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_63",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_69",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_68",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_74",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_62",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_99__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6ef4e4cca74801cb63bc6:L63",
+          "real_69c6ef4e4cca74801cb63bc6:L69",
+          "real_69c6ef4e4cca74801cb63bc6:L68",
+          "real_69c6ef4e4cca74801cb63bc6:L74",
+          "real_69c6ef4e4cca74801cb63bc6:L62"
+        ],
+        "evidence_text": "[real_69c6ef4e4cca74801cb63bc6:TREERAG_63]\n（1）、竖向钢立柱安装时，应先将立柱与转接件连接，立柱应带 有活动接头，接头通过芯套连接上下柱，芯套与立柱紧密相接。上 下柱用螺栓固定，上下柱之间留有20mm 的空隙。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_69]\n（1）、横向龙骨（钢托板）安装时，应先在立柱上准确标出横梁 的精确位置，钻出孔位，在角钢上打出连接点的孔位，用角码及螺 栓将角钢横梁与立柱连接在一起，并紧固螺栓。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_68]\n5.2.5 横向龙骨（钢托板）安装与调整\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_74]\n- （3）、 横向龙骨（钢托板）应该随陶土砖的砌筑进度同步安装， 不可超前施工 。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_62]\n- 5.2.4 竖向龙骨安装与调整\n\n[real_69c6ef4e4cca74801cb63bc6:T",
+        "evidence_preview": "[real_69c6ef4e4cca74801cb63bc6:TREERAG_63]\n（1）、竖向钢立柱安装时，应先将立柱与转接件连接，立柱应带 有活动接头，接头通过芯套连接上下柱，芯套与立柱紧密相接。上 下柱用螺栓固定，上下柱之间留有20mm 的空隙。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_69]\n（1）、横向龙骨（钢托板）安装时，应先在立柱上准确标出横梁 的精确位置，钻出孔位，在角钢上打出连接点的孔位，用角码及螺 栓将角钢横梁与立柱连接在一起，并紧固螺栓。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_68]\n5.2.5 横向龙骨（钢托板）安装与调整\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_74]\n- （3）、 横向龙骨（钢托板）应该随陶土砖的砌筑进度同步安装， 不可超前施工 。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_62]\n- 5.2.4 竖向龙骨安装与调整\n\n[real_69c6ef4e4cca74801cb63bc6:T",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 0.6666666666666666,
+          "n_chunks_kept": 6.0
+        },
+        "line_retrieval": {
+          "coverage": 0.6666666666666666,
+          "mrr": 1.0,
+          "ndcg@10": 0.543791241910304,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.3333333333333333,
+          "precision@5": 0.4
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"竖向钢立柱安装时，应先将立柱与转接件连接\", \"立柱应带有活动接头，接头通过芯套连接上下柱\", \"芯套与立柱紧密相接\", \"上下柱用螺栓固定\", \"上下柱之间留有20mm的空隙\"]}",
+        "score_task": 0.0952,
+        "score_evidence": 0.0,
+        "compose_seconds": 0.8937878608703613,
+        "judge_eval_seconds": 0.00015783309936523438,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0005",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0952,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 40,
+      "query": "在《2.工法内容材料（已完）.pdf》，围绕问题“列举横向龙骨（钢托板）安装与调整过程中的所有关键操作要点”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c6ef4e4cca74801cb63bc6",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c6ef4e4cca74801cb63bc6:L69",
+        "real_69c6ef4e4cca74801cb63bc6:L68"
+      ],
+      "inspect_id": "q400_scope_0006",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 487,
+        "n_chunks_kept": 6,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_69",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_74",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_68",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_62",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_71",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_99"
+        ],
+        "retrieved_nodes": [
+          "real_69c6ef4e4cca74801cb63bc6:L69",
+          "real_69c6ef4e4cca74801cb63bc6:L74",
+          "real_69c6ef4e4cca74801cb63bc6:L68",
+          "real_69c6ef4e4cca74801cb63bc6:L62",
+          "real_69c6ef4e4cca74801cb63bc6:L71",
+          "real_69c6ef4e4cca74801cb63bc6:L99"
+        ],
+        "evidence_text": "[real_69c6ef4e4cca74801cb63bc6:TREERAG_69]\n（1）、横向龙骨（钢托板）安装时，应先在立柱上准确标出横梁 的精确位置，钻出孔位，在角钢上打出连接点的孔位，用角码及螺 栓将角钢横梁与立柱连接在一起，并紧固螺栓。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_74]\n- （3）、 横向龙骨（钢托板）应该随陶土砖的砌筑进度同步安装， 不可超前施工 。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_68]\n5.2.5 横向龙骨（钢托板）安装与调整\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_62]\n- 5.2.4 竖向龙骨安装与调整\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_71]\n图 **5-2-5-2** 横向龙骨（钢托板）现场安装图\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_99]\n- 2、按图纸要求敷设铝单板安装龙骨架，确保铝单板水平，竖直度；",
+        "evidence_preview": "[real_69c6ef4e4cca74801cb63bc6:TREERAG_69]\n（1）、横向龙骨（钢托板）安装时，应先在立柱上准确标出横梁 的精确位置，钻出孔位，在角钢上打出连接点的孔位，用角码及螺 栓将角钢横梁与立柱连接在一起，并紧固螺栓。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_74]\n- （3）、 横向龙骨（钢托板）应该随陶土砖的砌筑进度同步安装， 不可超前施工 。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_68]\n5.2.5 横向龙骨（钢托板）安装与调整\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_62]\n- 5.2.4 竖向龙骨安装与调整\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_71]\n图 **5-2-5-2** 横向龙骨（钢托板）现场安装图\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_99]\n- 2、按图纸要求敷设铝单板安装龙骨架，确保铝单板水平，竖直度；",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 1.0,
+          "n_chunks_kept": 6.0
+        },
+        "line_retrieval": {
+          "coverage": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 0.8154648767857288,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.6666666666666666,
+          "precision@5": 0.4
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"先在立柱上准确标出横梁的精确位置，钻出孔位，在角钢上打出连接点的孔位\", \"用角码及螺栓将角钢横梁与立柱连接在一起，并紧固螺栓\", \"横向龙骨（钢托板）应该随陶土砖的砌筑进度同步安装，不可超前施工\"]}",
+        "score_task": 0.0952,
+        "score_evidence": 0.0,
+        "compose_seconds": 0.9063560962677002,
+        "judge_eval_seconds": 0.0001308917999267578,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0006",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0952,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 41,
+      "query": "在《2.工法内容材料（已完）.pdf》，围绕问题“列出摞底排砖、挂线砌筑阶段涉及的所有具体施工工艺要求”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c6ef4e4cca74801cb63bc6",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c6ef4e4cca74801cb63bc6:L78",
+        "real_69c6ef4e4cca74801cb63bc6:L81",
+        "real_69c6ef4e4cca74801cb63bc6:L77",
+        "real_69c6ef4e4cca74801cb63bc6:L83",
+        "real_69c6ef4e4cca74801cb63bc6:L85",
+        "real_69c6ef4e4cca74801cb63bc6:L87"
+      ],
+      "inspect_id": "q400_scope_0007",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_77",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_105",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_83",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_81",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_99__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6ef4e4cca74801cb63bc6:L77",
+          "real_69c6ef4e4cca74801cb63bc6:L105",
+          "real_69c6ef4e4cca74801cb63bc6:L83",
+          "real_69c6ef4e4cca74801cb63bc6:L81",
+          "real_69c6ef4e4cca74801cb63bc6:L99"
+        ],
+        "evidence_text": "[real_69c6ef4e4cca74801cb63bc6:TREERAG_77]\n5.2.6 摞底排砖、挂线砌筑\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_105]\n砌筑过程中，每日收工前所有灰缝均应勾缝。施工完后直接用清水 清洗；局部耐候胶污染采用棉布蘸二甲苯溶剂清洗。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_83]\n3、挂线、立批数杆，开始砌筑。砌筑过程控制线，水平线长度不 宜超过12 米，以防线绳自重下垂影响水平，且墙面长度超过12m 时， 应设置10mm 宽的马牙槎形垂直变形缝，变形缝内采用防水密封胶处 理；考虑一砖一缝，理论尺寸为75mm/250mm，砌筑过程中应先盘头 4/8 层，根据准确盘头放线砌筑，任意4 批砖高度应为300mm。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_81]\n- 2、根据排砖位置焊接竖向拉结筋，确保自陶土砖孔穿出。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_99]\n- 2、按图纸要求敷设铝单板",
+        "evidence_preview": "[real_69c6ef4e4cca74801cb63bc6:TREERAG_77]\n5.2.6 摞底排砖、挂线砌筑\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_105]\n砌筑过程中，每日收工前所有灰缝均应勾缝。施工完后直接用清水 清洗；局部耐候胶污染采用棉布蘸二甲苯溶剂清洗。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_83]\n3、挂线、立批数杆，开始砌筑。砌筑过程控制线，水平线长度不 宜超过12 米，以防线绳自重下垂影响水平，且墙面长度超过12m 时， 应设置10mm 宽的马牙槎形垂直变形缝，变形缝内采用防水密封胶处 理；考虑一砖一缝，理论尺寸为75mm/250mm，砌筑过程中应先盘头 4/8 层，根据准确盘头放线砌筑，任意4 批砖高度应为300mm。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_81]\n- 2、根据排砖位置焊接竖向拉结筋，确保自陶土砖孔穿出。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_99]\n- 2、按图纸要求敷设铝单板",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 0.5,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 0.5,
+          "mrr": 1.0,
+          "ndcg@10": 0.539686416754958,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.6666666666666666,
+          "precision@5": 0.6
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"根据排砖位置焊接竖向拉结筋，确保自陶土砖孔穿出\", \"挂线、立批数杆，开始砌筑\", \"砌筑过程控制线水平线长度不宜超过12米\", \"墙面长度超过12m时设置10mm宽的马牙槎形垂直变形缝\", \"变形缝内采用防水密封胶处理\", \"考虑一砖一缝理论尺寸为75mm/250mm\", \"砌筑过程中应先盘头4/8层\", \"根据准确盘头放线砌筑\", \"任意4批砖高度应为300mm\"]}",
+        "score_task": 0.0526,
+        "score_evidence": 0.2,
+        "compose_seconds": 1.484342098236084,
+        "judge_eval_seconds": 0.0002009868621826172,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0007",
+        "inspect_evidence_score": 0.2,
+        "inspect_content_score": 0.0526,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 42,
+      "query": "在《2.工法内容材料（已完）.pdf》，围绕问题“列举文档中提到的所有施工验收标准名称及其对应的国家标准编号”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c6ef4e4cca74801cb63bc6",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c6ef4e4cca74801cb63bc6:L121",
+        "real_69c6ef4e4cca74801cb63bc6:L122",
+        "real_69c6ef4e4cca74801cb63bc6:L123",
+        "real_69c6ef4e4cca74801cb63bc6:L124",
+        "real_69c6ef4e4cca74801cb63bc6:L125",
+        "real_69c6ef4e4cca74801cb63bc6:L126"
+      ],
+      "inspect_id": "q400_scope_0008",
+      "candidate_counts": {
+        "treerag": 96,
+        "treerag_raw": 96,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 485,
+        "n_chunks_kept": 7,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_0",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_152",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_106",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_122",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_121",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_123",
+          "real_69c6ef4e4cca74801cb63bc6:TREERAG_124"
+        ],
+        "retrieved_nodes": [
+          "real_69c6ef4e4cca74801cb63bc6:L0",
+          "real_69c6ef4e4cca74801cb63bc6:L152",
+          "real_69c6ef4e4cca74801cb63bc6:L106",
+          "real_69c6ef4e4cca74801cb63bc6:L122",
+          "real_69c6ef4e4cca74801cb63bc6:L121",
+          "real_69c6ef4e4cca74801cb63bc6:L123",
+          "real_69c6ef4e4cca74801cb63bc6:L124"
+        ],
+        "evidence_text": "[real_69c6ef4e4cca74801cb63bc6:TREERAG_0]\n2.工法内容材料（已完）.pdf\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_152]\n- （3）、每项工序完成后要做到工完场清，建筑垃圾分类管理。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_106]\n图 **5-2-8** 勾缝、清理\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_122]\n- 2、《建筑装饰装修工程质量验收标准》GB50210\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_121]\n- 1、《砌体结构工程施工质量验收规范》GB50203\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_123]\n- 3、《建筑节能工程施工质量验收标准》GB50411\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_124]\n- 4、《烧结多孔砖和多孔砌块》GB13544",
+        "evidence_preview": "[real_69c6ef4e4cca74801cb63bc6:TREERAG_0]\n2.工法内容材料（已完）.pdf\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_152]\n- （3）、每项工序完成后要做到工完场清，建筑垃圾分类管理。\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_106]\n图 **5-2-8** 勾缝、清理\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_122]\n- 2、《建筑装饰装修工程质量验收标准》GB50210\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_121]\n- 1、《砌体结构工程施工质量验收规范》GB50203\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_123]\n- 3、《建筑节能工程施工质量验收标准》GB50411\n\n[real_69c6ef4e4cca74801cb63bc6:TREERAG_124]\n- 4、《烧结多孔砖和多孔砌块》GB13544",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.25,
+          "coverage_budget_lenient": 0.6666666666666666,
+          "n_chunks_kept": 7.0
+        },
+        "line_retrieval": {
+          "coverage": 0.6666666666666666,
+          "mrr": 0.25,
+          "ndcg@10": 0.42389613315560376,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.4
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"《砌体结构工程施工质量验收规范》GB50203\", \"《建筑装饰装修工程质量验收标准》GB50210\", \"《建筑节能工程施工质量验收标准》GB50411\", \"《烧结多孔砖和多孔砌块》GB13544\"]}",
+        "score_task": 0.0789,
+        "score_evidence": 0.0,
+        "compose_seconds": 0.874683141708374,
+        "judge_eval_seconds": 0.00012969970703125,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0008",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0789,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 43,
+      "query": "在《最高人民法院关于审理建设工程施工合同纠纷案件适用法律问题的解释（一）.docx》，围绕问题“请列举文档第九条规定的当事人对建设工程实际竣工日期有争议时，法院应予认定的所有情形”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c6f1d84cca74801cb63e02",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c6f1d84cca74801cb63e02:L26",
+        "real_69c6f1d84cca74801cb63e02:L27",
+        "real_69c6f1d84cca74801cb63e02:L28"
+      ],
+      "inspect_id": "q400_scope_0009",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 489,
+        "n_chunks_kept": 5,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69c6f1d84cca74801cb63e02:TREERAG_25",
+          "real_69c6f1d84cca74801cb63e02:TREERAG_21",
+          "real_69c6f1d84cca74801cb63e02:TREERAG_0",
+          "real_69c6f1d84cca74801cb63e02:TREERAG_1",
+          "real_69c6f1d84cca74801cb63e02:TREERAG_6"
+        ],
+        "retrieved_nodes": [
+          "real_69c6f1d84cca74801cb63e02:L25",
+          "real_69c6f1d84cca74801cb63e02:L21",
+          "real_69c6f1d84cca74801cb63e02:L0",
+          "real_69c6f1d84cca74801cb63e02:L1",
+          "real_69c6f1d84cca74801cb63e02:L6"
+        ],
+        "evidence_text": "[real_69c6f1d84cca74801cb63e02:TREERAG_25]\n第九条 当事人对建设工程实际竣工日期有争议的，人民法院应当分别按照以下情形予以认定：\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_21]\n第八条 当事人对建设工程开工日期有争议的，人民法院应当分别按照以下情形予以认定：\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_0]\n最高人民法院关于审理建设工程施工合同纠纷案件适用法律问题的解释（一）.docx\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_1]\n最高人民法院关于\n审理建设工程施工合同纠纷案件\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_6]\n为正确审理建设工程施工合同纠纷案件，依法保护当事人合法权益，维护建筑市场秩序，促进建筑市场健康发展，根据《中华人民共和国民法典》《中华人民共和国建筑法》《中华人民共和国招标投标法》《中华人民共和国民事诉讼法》等相关法律规定，结合审判实践，制定本解释。",
+        "evidence_preview": "[real_69c6f1d84cca74801cb63e02:TREERAG_25]\n第九条 当事人对建设工程实际竣工日期有争议的，人民法院应当分别按照以下情形予以认定：\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_21]\n第八条 当事人对建设工程开工日期有争议的，人民法院应当分别按照以下情形予以认定：\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_0]\n最高人民法院关于审理建设工程施工合同纠纷案件适用法律问题的解释（一）.docx\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_1]\n最高人民法院关于\n审理建设工程施工合同纠纷案件\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_6]\n为正确审理建设工程施工合同纠纷案件，依法保护当事人合法权益，维护建筑市场秩序，促进建筑市场健康发展，根据《中华人民共和国民法典》《中华人民共和国建筑法》《中华人民共和国招标投标法》《中华人民共和国民事诉讼法》等相关法律规定，结合审判实践，制定本解释。",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"建设工程经竣工验收合格的，以竣工验收合格之日为竣工日期\", \"承包人已经提交竣工验收报告，发包人拖延验收的，以承包人提交验收报告之日为竣工日期\", \"建设工程未经竣工验收，发包人擅自使用的，以转移占有建设工程之日为竣工日期\"]}",
+        "score_task": 0.2,
+        "score_evidence": 0.0,
+        "compose_seconds": 0.8895890712738037,
+        "judge_eval_seconds": 0.00011396408081054688,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0009",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.2,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 44,
+      "query": "在《最高人民法院关于审理建设工程施工合同纠纷案件适用法律问题的解释（一）.docx》，围绕问题“列出文档第十三条中发包人造成建设工程质量缺陷应当承担过错责任的所有具体情形”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c6f1d84cca74801cb63e02",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c6f1d84cca74801cb63e02:L34",
+        "real_69c6f1d84cca74801cb63e02:L35",
+        "real_69c6f1d84cca74801cb63e02:L32",
+        "real_69c6f1d84cca74801cb63e02:L36"
+      ],
+      "inspect_id": "q400_scope_0010",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6f1d84cca74801cb63e02:TREERAG_33",
+          "real_69c6f1d84cca74801cb63e02:TREERAG_40",
+          "real_69c6f1d84cca74801cb63e02:TREERAG_39",
+          "real_69c6f1d84cca74801cb63e02:TREERAG_38",
+          "real_69c6f1d84cca74801cb63e02:TREERAG_0__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6f1d84cca74801cb63e02:L33",
+          "real_69c6f1d84cca74801cb63e02:L40",
+          "real_69c6f1d84cca74801cb63e02:L39",
+          "real_69c6f1d84cca74801cb63e02:L38",
+          "real_69c6f1d84cca74801cb63e02:L0"
+        ],
+        "evidence_text": "[real_69c6f1d84cca74801cb63e02:TREERAG_33]\n第十三条 发包人具有下列情形之一，造成建设工程质量缺陷，应当承担过错责任：\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_40]\n第十六条发包人在承包人提起的建设工程施工合同纠纷案件中，以建设工程质量不符合合同约定或者法律规定为由，就承包人支付违约金或者赔偿修理、返工、改建的合理费用等损失提出反诉的，人民法院可以合并审理。\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_39]\n第十五条因建设工程质量发生争议的，发包人可以以总承包人、分包人和实际施工人为共同被告提起诉讼。\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_38]\n第十四条建设工程未经竣工验收，发包人擅自使用后，又以使用部分质量不符合约定为由主张权利的，人民法院不予支持；但是承包人应当在建设工程的合理使用寿命内对地基基础工程和主体结构质量承担民事责任。\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_0]\n最高",
+        "evidence_preview": "[real_69c6f1d84cca74801cb63e02:TREERAG_33]\n第十三条 发包人具有下列情形之一，造成建设工程质量缺陷，应当承担过错责任：\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_40]\n第十六条发包人在承包人提起的建设工程施工合同纠纷案件中，以建设工程质量不符合合同约定或者法律规定为由，就承包人支付违约金或者赔偿修理、返工、改建的合理费用等损失提出反诉的，人民法院可以合并审理。\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_39]\n第十五条因建设工程质量发生争议的，发包人可以以总承包人、分包人和实际施工人为共同被告提起诉讼。\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_38]\n第十四条建设工程未经竣工验收，发包人擅自使用后，又以使用部分质量不符合约定为由主张权利的，人民法院不予支持；但是承包人应当在建设工程的合理使用寿命内对地基基础工程和主体结构质量承担民事责任。\n\n[real_69c6f1d84cca74801cb63e02:TREERAG_0]\n最高",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": []}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 0.5675311088562012,
+        "judge_eval_seconds": 0.00014090538024902344,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0010",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 45,
+      "query": "在《中华人民共和国立法法(2023修正).docx》，围绕问题“列举行政法规可以作出规定的所有事项范围”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c6f4854cca74801cb63f43",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c6f4854cca74801cb63f43:L147",
+        "real_69c6f4854cca74801cb63f43:L148"
+      ],
+      "inspect_id": "q400_scope_0011",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 4,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6f4854cca74801cb63f43:TREERAG_118",
+          "real_69c6f4854cca74801cb63f43:TREERAG_0",
+          "real_69c6f4854cca74801cb63f43:TREERAG_117",
+          "real_69c6f4854cca74801cb63f43:TREERAG_9__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6f4854cca74801cb63f43:L118",
+          "real_69c6f4854cca74801cb63f43:L0",
+          "real_69c6f4854cca74801cb63f43:L117",
+          "real_69c6f4854cca74801cb63f43:L9"
+        ],
+        "evidence_text": "[real_69c6f4854cca74801cb63f43:TREERAG_118]\n第五十六条全国人民代表大会常务委员会通过立法规划和年度立法计划、专项立法计划等形式，加强对立法工作的统筹安排。编制立法规划和立法计划，应当认真研究代表议案和建议，广泛征集意见，科学论证评估，根据经济社会发展和民主法治建设的需要，按照加强重点领域、新兴领域、涉外领域立法的要求，确定立法项目。立法规划和立法计划由委员长会议通过并向社会公布。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_0]\n中华人民共和国立法法(2023修正).docx\n\n[real_69c6f4854cca74801cb63f43:TREERAG_117]\n第五十五条全国人民代表大会及其常务委员会坚持科学立法、民主立法、依法立法，通过制定、修改、废止、解释法律和编纂法典等多种形式，增强立法的系统性、整体性、协同性、时效性。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_9]\n【本法变迁史】 中华人民共和国立法法[20000315] 全国人民代表大会关于修改《中华人民",
+        "evidence_preview": "[real_69c6f4854cca74801cb63f43:TREERAG_118]\n第五十六条全国人民代表大会常务委员会通过立法规划和年度立法计划、专项立法计划等形式，加强对立法工作的统筹安排。编制立法规划和立法计划，应当认真研究代表议案和建议，广泛征集意见，科学论证评估，根据经济社会发展和民主法治建设的需要，按照加强重点领域、新兴领域、涉外领域立法的要求，确定立法项目。立法规划和立法计划由委员长会议通过并向社会公布。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_0]\n中华人民共和国立法法(2023修正).docx\n\n[real_69c6f4854cca74801cb63f43:TREERAG_117]\n第五十五条全国人民代表大会及其常务委员会坚持科学立法、民主立法、依法立法，通过制定、修改、废止、解释法律和编纂法典等多种形式，增强立法的系统性、整体性、协同性、时效性。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_9]\n【本法变迁史】 中华人民共和国立法法[20000315] 全国人民代表大会关于修改《中华人民",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 4.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"涉及国家主权的事项\", \"各级人民代表大会、人民政府、人民法院和人民检察院的产生、组织和职权\", \"民族区域自治制度、特别行政区制度、基层群众自治制度\", \"犯罪和刑罚\", \"对公民政治权利的剥夺、限制人身自由的强制措施和处罚\", \"税种的设立、税率的确定和税收征收管理等税收基本制度\", \"对非国有财产的征收、征用\", \"民事基本制度\", \"基本经济制度以及财政、海关、金融和外贸的基本制度\", \"诉讼和仲裁制度\", \"必须由全国人民代表大会及其常务委员会制定法律的其他事项\"]}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 1.2218430042266846,
+        "judge_eval_seconds": 0.00011181831359863281,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0011",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 46,
+      "query": "在《中华人民共和国立法法(2023修正).docx》，围绕问题“列出地方性法规可以作出规定的所有事项类型”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c6f4854cca74801cb63f43",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c6f4854cca74801cb63f43:L171",
+        "real_69c6f4854cca74801cb63f43:L173",
+        "real_69c6f4854cca74801cb63f43:L172"
+      ],
+      "inspect_id": "q400_scope_0012",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6f4854cca74801cb63f43:TREERAG_170",
+          "real_69c6f4854cca74801cb63f43:TREERAG_175",
+          "real_69c6f4854cca74801cb63f43:TREERAG_174",
+          "real_69c6f4854cca74801cb63f43:TREERAG_176",
+          "real_69c6f4854cca74801cb63f43:TREERAG_228__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6f4854cca74801cb63f43:L170",
+          "real_69c6f4854cca74801cb63f43:L175",
+          "real_69c6f4854cca74801cb63f43:L174",
+          "real_69c6f4854cca74801cb63f43:L176",
+          "real_69c6f4854cca74801cb63f43:L228"
+        ],
+        "evidence_text": "[real_69c6f4854cca74801cb63f43:TREERAG_170]\n第八十二条地方性法规可以就下列事项作出规定：\n\n[real_69c6f4854cca74801cb63f43:TREERAG_175]\n制定地方性法规，对上位法已经明确规定的内容，一般不作重复性规定。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_174]\n设区的市、自治州根据本条第一款、第二款制定地方性法规，限于本法第八十一条第一款规定的事项。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_176]\n第八十三条省、自治区、直辖市和设区的市、自治州的人民代表大会及其常务委员会根据区域协调发展的需要，可以协同制定地方性法规，在本行政区域或者有关区域内实施。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_228]\n（二）地方性法规与部门规章之间对同一事项的规定不一致，不能确定如何适用时，由国务院提出意见，国务院认为应当适用地方性法规的，应当决定在该地方适用地方性法规的规定；认为应当适用部门规章的，应当提",
+        "evidence_preview": "[real_69c6f4854cca74801cb63f43:TREERAG_170]\n第八十二条地方性法规可以就下列事项作出规定：\n\n[real_69c6f4854cca74801cb63f43:TREERAG_175]\n制定地方性法规，对上位法已经明确规定的内容，一般不作重复性规定。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_174]\n设区的市、自治州根据本条第一款、第二款制定地方性法规，限于本法第八十一条第一款规定的事项。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_176]\n第八十三条省、自治区、直辖市和设区的市、自治州的人民代表大会及其常务委员会根据区域协调发展的需要，可以协同制定地方性法规，在本行政区域或者有关区域内实施。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_228]\n（二）地方性法规与部门规章之间对同一事项的规定不一致，不能确定如何适用时，由国务院提出意见，国务院认为应当适用地方性法规的，应当决定在该地方适用地方性法规的规定；认为应当适用部门规章的，应当提",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"地方性法规可以就下列事项作出规定\"]}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 0.4843771457672119,
+        "judge_eval_seconds": 0.00012087821960449219,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0012",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 47,
+      "query": "在《中华人民共和国立法法(2023修正).docx》，围绕问题“列举地方政府规章可以作出规定的所有事项类别”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c6f4854cca74801cb63f43",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c6f4854cca74801cb63f43:L199",
+        "real_69c6f4854cca74801cb63f43:L195",
+        "real_69c6f4854cca74801cb63f43:L202",
+        "real_69c6f4854cca74801cb63f43:L200"
+      ],
+      "inspect_id": "q400_scope_0013",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6f4854cca74801cb63f43:TREERAG_198",
+          "real_69c6f4854cca74801cb63f43:TREERAG_197",
+          "real_69c6f4854cca74801cb63f43:TREERAG_201",
+          "real_69c6f4854cca74801cb63f43:TREERAG_207",
+          "real_69c6f4854cca74801cb63f43:TREERAG_228__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6f4854cca74801cb63f43:L198",
+          "real_69c6f4854cca74801cb63f43:L197",
+          "real_69c6f4854cca74801cb63f43:L201",
+          "real_69c6f4854cca74801cb63f43:L207",
+          "real_69c6f4854cca74801cb63f43:L228"
+        ],
+        "evidence_text": "[real_69c6f4854cca74801cb63f43:TREERAG_198]\n地方政府规章可以就下列事项作出规定：\n\n[real_69c6f4854cca74801cb63f43:TREERAG_197]\n第九十三条省、自治区、直辖市和设区的市、自治州的人民政府，可以根据法律、行政法规和本省、自治区、直辖市的地方性法规，制定规章。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_201]\n设区的市、自治州的人民政府根据本条第一款、第二款制定地方政府规章，限于城乡建设与管理、生态文明建设、历史文化保护、基层治理等方面的事项。已经制定的地方政府规章，涉及上述事项范围以外的，继续有效。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_207]\n地方政府规章应当经政府常务会议或者全体会议决定。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_228]\n（二）地方性法规与部门规章之间对同一事项的规定不一致，不能确定如何适用时，由国务院提出意见，国务院认为应当适用地方性法规的，应当决定在该地方",
+        "evidence_preview": "[real_69c6f4854cca74801cb63f43:TREERAG_198]\n地方政府规章可以就下列事项作出规定：\n\n[real_69c6f4854cca74801cb63f43:TREERAG_197]\n第九十三条省、自治区、直辖市和设区的市、自治州的人民政府，可以根据法律、行政法规和本省、自治区、直辖市的地方性法规，制定规章。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_201]\n设区的市、自治州的人民政府根据本条第一款、第二款制定地方政府规章，限于城乡建设与管理、生态文明建设、历史文化保护、基层治理等方面的事项。已经制定的地方政府规章，涉及上述事项范围以外的，继续有效。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_207]\n地方政府规章应当经政府常务会议或者全体会议决定。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_228]\n（二）地方性法规与部门规章之间对同一事项的规定不一致，不能确定如何适用时，由国务院提出意见，国务院认为应当适用地方性法规的，应当决定在该地方",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"城乡建设与管理\", \"生态文明建设\", \"历史文化保护\", \"基层治理\"]}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 0.49662184715270996,
+        "judge_eval_seconds": 9.799003601074219e-05,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0013",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 48,
+      "query": "在《中华人民共和国立法法(2023修正).docx》，围绕问题“列出文档中提到的所有法律效力层级关系（即谁高于谁）”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c6f4854cca74801cb63f43",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c6f4854cca74801cb63f43:L214",
+        "real_69c6f4854cca74801cb63f43:L215",
+        "real_69c6f4854cca74801cb63f43:L216",
+        "real_69c6f4854cca74801cb63f43:L217",
+        "real_69c6f4854cca74801cb63f43:L218"
+      ],
+      "inspect_id": "q400_scope_0014",
+      "candidate_counts": {
+        "treerag": 247,
+        "treerag_raw": 247,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 6,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6f4854cca74801cb63f43:TREERAG_215",
+          "real_69c6f4854cca74801cb63f43:TREERAG_214",
+          "real_69c6f4854cca74801cb63f43:TREERAG_228",
+          "real_69c6f4854cca74801cb63f43:TREERAG_114",
+          "real_69c6f4854cca74801cb63f43:TREERAG_0",
+          "real_69c6f4854cca74801cb63f43:TREERAG_216__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6f4854cca74801cb63f43:L215",
+          "real_69c6f4854cca74801cb63f43:L214",
+          "real_69c6f4854cca74801cb63f43:L228",
+          "real_69c6f4854cca74801cb63f43:L114",
+          "real_69c6f4854cca74801cb63f43:L0"
+        ],
+        "evidence_text": "[real_69c6f4854cca74801cb63f43:TREERAG_215]\n第九十九条法律的效力高于行政法规、地方性法规、规章。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_214]\n第九十八条宪法具有最高的法律效力，一切法律、行政法规、地方性法规、自治条例和单行条例、规章都不得同宪法相抵触。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_228]\n（二）地方性法规与部门规章之间对同一事项的规定不一致，不能确定如何适用时，由国务院提出意见，国务院认为应当适用地方性法规的，应当决定在该地方适用地方性法规的规定；认为应当适用部门规章的，应当提请全国人民代表大会常务委员会裁决；\n\n[real_69c6f4854cca74801cb63f43:TREERAG_114]\n第五十三条全国人民代表大会常务委员会的法律解释同法律具有同等效力。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_0]\n中华人民共和国立法法(2023修正).docx\n\n[real_69c6f4854cca7480",
+        "evidence_preview": "[real_69c6f4854cca74801cb63f43:TREERAG_215]\n第九十九条法律的效力高于行政法规、地方性法规、规章。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_214]\n第九十八条宪法具有最高的法律效力，一切法律、行政法规、地方性法规、自治条例和单行条例、规章都不得同宪法相抵触。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_228]\n（二）地方性法规与部门规章之间对同一事项的规定不一致，不能确定如何适用时，由国务院提出意见，国务院认为应当适用地方性法规的，应当决定在该地方适用地方性法规的规定；认为应当适用部门规章的，应当提请全国人民代表大会常务委员会裁决；\n\n[real_69c6f4854cca74801cb63f43:TREERAG_114]\n第五十三条全国人民代表大会常务委员会的法律解释同法律具有同等效力。\n\n[real_69c6f4854cca74801cb63f43:TREERAG_0]\n中华人民共和国立法法(2023修正).docx\n\n[real_69c6f4854cca7480",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 0.4,
+          "n_chunks_kept": 6.0
+        },
+        "line_retrieval": {
+          "coverage": 0.4,
+          "mrr": 1.0,
+          "ndcg@10": 0.5615443777322888,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 0.6666666666666666,
+          "precision@5": 0.4
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"宪法具有最高的法律效力，一切法律、行政法规、地方性法规、自治条例和单行条例、规章都不得同宪法相抵触。\", \"法律的效力高于行政法规、地方性法规、规章。\", \"全国人民代表大会常务委员会的法律解释同法律具有同等效力。\"]}",
+        "score_task": 0.0714,
+        "score_evidence": 0.4,
+        "compose_seconds": 0.767064094543457,
+        "judge_eval_seconds": 0.0001239776611328125,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0014",
+        "inspect_evidence_score": 0.4,
+        "inspect_content_score": 0.0714,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 49,
+      "query": "在《SJSYJ-MS208-2023 标准化手册-财务管理（税务）.pdf》，围绕问题“列举收取进项税发票时，关于“票面信息完整性”的具体核查要求”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69cb12d0919452cda2225a0b",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69cb12d0919452cda2225a0b:L57",
+        "real_69cb12d0919452cda2225a0b:L59",
+        "real_69cb12d0919452cda2225a0b:L55",
+        "real_69cb12d0919452cda2225a0b:L58",
+        "real_69cb12d0919452cda2225a0b:L61",
+        "real_69cb12d0919452cda2225a0b:L56"
+      ],
+      "inspect_id": "q400_scope_0015",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 2,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69cb12d0919452cda2225a0b:TREERAG_57",
+          "real_69cb12d0919452cda2225a0b:TREERAG_59__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69cb12d0919452cda2225a0b:L57",
+          "real_69cb12d0919452cda2225a0b:L59"
+        ],
+        "evidence_text": "[real_69cb12d0919452cda2225a0b:TREERAG_57]\n收取进项发票，应核实业务的真实性、票面信息完整性。业务真实性指此笔业务是 否真实发生，确保“货物、劳务及服务流”、“资金流”、“发票流”、“合同流”保 持四流一致。票面信息完整性指发票购买方信息应与集团开票信息一致；发票内容完整、 发票备注栏注明项目名称以及建筑服务发生地所在省、市、区（县）；发票内容清晰可 辨；发票正反两面干净整洁，不允许出现脏、乱及签字的痕迹；发票抵扣联不可折叠， 不能污损，密码区不能出格压线；发票专用章内容应与票面销售方信息一致，不得压盖 发票金额。\n\n[real_69cb12d0919452cda2225a0b:TREERAG_59]\n传递进项税发票时，应登记进项税发票传递单（SJSYJ-CWGL-FJ-001），传递单内 应按照集团公司统一格式要求，内容包括所属公司、项目名称、是否勾选、发票代码、 发票号码、开票日期、税额、有效抵扣税额、销方名称、销方税号、金额、用途、发票 类型，确保当月所有入账的进项税发票与台账中列明的进项税发票以及进项税发票抵扣 联金额、份数相一致后，于",
+        "evidence_preview": "[real_69cb12d0919452cda2225a0b:TREERAG_57]\n收取进项发票，应核实业务的真实性、票面信息完整性。业务真实性指此笔业务是 否真实发生，确保“货物、劳务及服务流”、“资金流”、“发票流”、“合同流”保 持四流一致。票面信息完整性指发票购买方信息应与集团开票信息一致；发票内容完整、 发票备注栏注明项目名称以及建筑服务发生地所在省、市、区（县）；发票内容清晰可 辨；发票正反两面干净整洁，不允许出现脏、乱及签字的痕迹；发票抵扣联不可折叠， 不能污损，密码区不能出格压线；发票专用章内容应与票面销售方信息一致，不得压盖 发票金额。\n\n[real_69cb12d0919452cda2225a0b:TREERAG_59]\n传递进项税发票时，应登记进项税发票传递单（SJSYJ-CWGL-FJ-001），传递单内 应按照集团公司统一格式要求，内容包括所属公司、项目名称、是否勾选、发票代码、 发票号码、开票日期、税额、有效抵扣税额、销方名称、销方税号、金额、用途、发票 类型，确保当月所有入账的进项税发票与台账中列明的进项税发票以及进项税发票抵扣 联金额、份数相一致后，于",
+        "budget": {
+          "chunk_hit@1": 1.0,
+          "mrr_chunks": 1.0,
+          "coverage_budget_lenient": 0.3333333333333333,
+          "n_chunks_kept": 2.0
+        },
+        "line_retrieval": {
+          "coverage": 0.3333333333333333,
+          "mrr": 1.0,
+          "ndcg@10": 0.5065267082131061,
+          "hit@5": 1.0,
+          "precision@1": 1.0,
+          "precision@3": 1.0,
+          "precision@5": 1.0
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"发票购买方信息应与集团开票信息一致\", \"发票内容完整\", \"发票备注栏注明项目名称以及建筑服务发生地所在省、市、区（县）\", \"发票内容清晰可辨\", \"发票正反两面干净整洁，不允许出现脏、乱及签字的痕迹\", \"发票抵扣联不可折叠，不能污损\", \"密码区不能出格压线\", \"发票专用章内容应与票面销售方信息一致\", \"发票专用章不得压盖发票金额\"]}",
+        "score_task": 0.2449,
+        "score_evidence": 0.0,
+        "compose_seconds": 0.9749698638916016,
+        "judge_eval_seconds": 0.000125885009765625,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0015",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.2449,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 50,
+      "query": "在《SJSYJ-MS208-2023 标准化手册-财务管理（税务）.pdf》，围绕问题“列出办理《跨区域涉税事项备案》时需注意的所有事项要点”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69cb12d0919452cda2225a0b",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69cb12d0919452cda2225a0b:L129",
+        "real_69cb12d0919452cda2225a0b:L130",
+        "real_69cb12d0919452cda2225a0b:L132",
+        "real_69cb12d0919452cda2225a0b:L133",
+        "real_69cb12d0919452cda2225a0b:L135",
+        "real_69cb12d0919452cda2225a0b:L136"
+      ],
+      "inspect_id": "q400_scope_0016",
+      "candidate_counts": {
+        "treerag": 80,
+        "treerag_raw": 80,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": false,
+      "treerag": {
+        "evidence_chars_actual": 496,
+        "n_chunks_kept": 3,
+        "truncated_last": false,
+        "kept_chunk_ids": [
+          "real_69cb12d0919452cda2225a0b:TREERAG_549",
+          "real_69cb12d0919452cda2225a0b:TREERAG_157",
+          "real_69cb12d0919452cda2225a0b:TREERAG_127"
+        ],
+        "retrieved_nodes": [
+          "real_69cb12d0919452cda2225a0b:L549",
+          "real_69cb12d0919452cda2225a0b:L157",
+          "real_69cb12d0919452cda2225a0b:L127"
+        ],
+        "evidence_text": "[real_69cb12d0919452cda2225a0b:TREERAG_549]\n项目会计应按要求登记《跨区域涉税事项备案台账》（SJSYJ-CWGL-FJ-005），月 末对次月将要到期的跨区域涉税事项进行梳理，在到期前十日内办理核销或续办。\n\n[real_69cb12d0919452cda2225a0b:TREERAG_157]\n项目部办理完跨区域涉税事项备案之后，应当留存电子版备案表，并建立《跨区域 涉税事项备案台账》（SJSYJ-CWGL-FJ-005），台账应包括建设单位名称、项目名称、 合同金额、开具日期、到期日期、编号、责任人、核销时间、核销金额，以及已交增值 税、企业所得税、城建税、教育费、地方教育费、水利基金、印花税金额。\n\n[real_69cb12d0919452cda2225a0b:TREERAG_127]\n《跨区域涉税事项报告》的办理由项目部财务人员发起申请，将所需办理备案项目 的合同扫描件或原件提供至税务业务岗，由税务业务岗在国家税务总局陕西省电子税务 局上进行办理，严格按照合同内容，提交办理《跨区域涉税事项报告》，办理时限不得 超过两个工作日。",
+        "evidence_preview": "[real_69cb12d0919452cda2225a0b:TREERAG_549]\n项目会计应按要求登记《跨区域涉税事项备案台账》（SJSYJ-CWGL-FJ-005），月 末对次月将要到期的跨区域涉税事项进行梳理，在到期前十日内办理核销或续办。\n\n[real_69cb12d0919452cda2225a0b:TREERAG_157]\n项目部办理完跨区域涉税事项备案之后，应当留存电子版备案表，并建立《跨区域 涉税事项备案台账》（SJSYJ-CWGL-FJ-005），台账应包括建设单位名称、项目名称、 合同金额、开具日期、到期日期、编号、责任人、核销时间、核销金额，以及已交增值 税、企业所得税、城建税、教育费、地方教育费、水利基金、印花税金额。\n\n[real_69cb12d0919452cda2225a0b:TREERAG_127]\n《跨区域涉税事项报告》的办理由项目部财务人员发起申请，将所需办理备案项目 的合同扫描件或原件提供至税务业务岗，由税务业务岗在国家税务总局陕西省电子税务 局上进行办理，严格按照合同内容，提交办理《跨区域涉税事项报告》，办理时限不得 超过两个工作日。",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.0,
+          "coverage_budget_lenient": 0.0,
+          "n_chunks_kept": 3.0
+        },
+        "line_retrieval": {
+          "coverage": 0.0,
+          "mrr": 0.0,
+          "ndcg@10": 0.0,
+          "hit@5": 0.0,
+          "precision@1": 0.0,
+          "precision@3": 0.0,
+          "precision@5": 0.0
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"由项目部财务人员发起申请\", \"提供合同扫描件或原件至税务业务岗\", \"在国家税务总局陕西省电子税务局上办理\", \"严格按照合同内容提交\", \"办理时限不得超过两个工作日\", \"登记《跨区域涉税事项备案台账》（SJSYJ-CWGL-FJ-005）\", \"月末梳理次月即将到期事项\", \"到期前十日内办理核销或续办\", \"留存电子版备案表\", \"建立包含建设单位名称、项目名称、合同金额、开具日期、到期日期、编号、责任人、核销时间、核销金额及各项税费金额的台账\"]}",
+        "score_task": 0.0,
+        "score_evidence": 0.0,
+        "compose_seconds": 1.1359279155731201,
+        "judge_eval_seconds": 0.00015306472778320312,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0016",
+        "inspect_evidence_score": 0.0,
+        "inspect_content_score": 0.0,
+        "score_cache_hit": false
+      }
+    },
+    {
+      "task_idx": 51,
+      "query": "在《线上学习平台学习管理方案（修订）.docx》，围绕问题“列举《线上学习平台学习管理方案（修订）》中“十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订）”部分的主要条目”，列出直接对应的全部条目；不要回答相邻章节内容。",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L2",
+        "real_69c6095ed4242eda8c47c5b2:L4",
+        "real_69c6095ed4242eda8c47c5b2:L5",
+        "real_69c6095ed4242eda8c47c5b2:L6",
+        "real_69c6095ed4242eda8c47c5b2:L7",
+        "real_69c6095ed4242eda8c47c5b2:L8"
+      ],
+      "inspect_id": "q400_scope_0017",
+      "candidate_counts": {
+        "treerag": 36,
+        "treerag_raw": 36,
+        "fair_candidate_cap": 0
+      },
+      "treerag_btr_used": true,
+      "treerag": {
+        "evidence_chars_actual": 500,
+        "n_chunks_kept": 5,
+        "truncated_last": true,
+        "kept_chunk_ids": [
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_1",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_5",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_6",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_7",
+          "real_69c6095ed4242eda8c47c5b2:TREERAG_8__partial"
+        ],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L1",
+          "real_69c6095ed4242eda8c47c5b2:L5",
+          "real_69c6095ed4242eda8c47c5b2:L6",
+          "real_69c6095ed4242eda8c47c5b2:L7"
+        ],
+        "evidence_text": "[real_69c6095ed4242eda8c47c5b2:TREERAG_1]\n十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订）\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_5]\n（ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_6]\n（ 二）各专家组：负责各领域内员工培训需求征集，教材、课件及习题开发，课件修改、适时更新、审核，业务答疑，题库组建等工作，集团对口业务部门负责人为各专业课程开发责任人，统筹推进本业务系统课程开发工作。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_7]\n（ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟\n\n[real_69c6095ed4242eda8c47c5b2:TREER",
+        "evidence_preview": "[real_69c6095ed4242eda8c47c5b2:TREERAG_1]\n十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订）\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_5]\n（ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_6]\n（ 二）各专家组：负责各领域内员工培训需求征集，教材、课件及习题开发，课件修改、适时更新、审核，业务答疑，题库组建等工作，集团对口业务部门负责人为各专业课程开发责任人，统筹推进本业务系统课程开发工作。\n\n[real_69c6095ed4242eda8c47c5b2:TREERAG_7]\n（ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟\n\n[real_69c6095ed4242eda8c47c5b2:TREER",
+        "budget": {
+          "chunk_hit@1": 0.0,
+          "mrr_chunks": 0.5,
+          "coverage_budget_lenient": 0.5,
+          "n_chunks_kept": 5.0
+        },
+        "line_retrieval": {
+          "coverage": 0.5,
+          "mrr": 0.5,
+          "ndcg@10": 0.539686416754958,
+          "hit@5": 1.0,
+          "precision@1": 0.0,
+          "precision@3": 0.6666666666666666,
+          "precision@5": 0.75
+        },
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"（一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。\", \"（二）各专家组：负责各领域内员工培训需求征集，教材、课件及习题开发，课件修改、适时更新、审核，业务答疑，题库组建等工作，集团对口业务部门负责人为各专业课程开发责任人，统筹推进本业务系统课程开发工作。\", \"（三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟\"]}",
+        "score_task": 0.1848,
+        "score_evidence": 0.5,
+        "compose_seconds": 1.5333268642425537,
+        "judge_eval_seconds": 0.00020599365234375,
+        "retry_wait_seconds": 0.0,
+        "inspect_judge_used": true,
+        "inspect_id": "q400_scope_0017",
+        "inspect_evidence_score": 0.5,
+        "inspect_content_score": 0.1848,
+        "score_cache_hit": false
+      }
+    }
+  ]
+}

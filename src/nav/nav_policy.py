@@ -80,6 +80,19 @@ def _extract_action_id_fallback(text: str) -> str:
     return ""
 
 
+def _compatible_discovery_action_id(aid: str, actions: List[LegalAction]) -> str:
+    """Map habitual Cn collect IDs to Dn when only discovery collect choices exist."""
+    normalized = (aid or "").strip().upper()
+    m = re.fullmatch(r"C(\d+)", normalized)
+    if not m:
+        return normalized
+    wanted = f"D{m.group(1)}"
+    legal = {a.action_id.upper() for a in actions}
+    if normalized not in legal and wanted in legal:
+        return wanted
+    return normalized
+
+
 def choose_llm_action(
     state: NavState,
     projection: Projection,
@@ -105,7 +118,9 @@ def choose_llm_action(
     system = (
         "You are a constrained document navigation policy. "
         "Return one JSON object only. You must choose exactly one action_id from the legal action list. "
-        "Do not invent paths, tools, or action ids. Keep reason under 12 words."
+        "Do not invent paths, tools, or action ids. "
+        "Discovery collect actions are named D1, D2, etc.; if only D actions are legal, return a D id, not C. "
+        "Keep reason under 12 words."
     )
     user = (
         f"query: {state.query}\n"
@@ -135,6 +150,7 @@ def choose_llm_action(
             aid = str(obj.get("action_id") or obj.get("id") or "").strip().upper()
             if not aid:
                 aid = _extract_action_id_fallback(text)
+            aid = _compatible_discovery_action_id(aid, actions)
             for action in actions:
                 if action.action_id.upper() == aid:
                     return action, {
@@ -142,11 +158,28 @@ def choose_llm_action(
                         "reason": str(obj.get("reason") or "")[:300],
                         "raw": text[:500],
                     }
-            raise RuntimeError(
+            last_error = RuntimeError(
                 "Nav Agent LLM 返回了非法 action_id="
                 f"{aid!r}；合法选项={[a.action_id for a in actions]!r}；raw={text[:500]!r}"
             )
-        except RuntimeError:
+            if attempt < 2:
+                time.sleep(min(2.0, 0.4 * (attempt + 1)))
+                continue
+            fallback = choose_rule_action(
+                state, projection, actions, step_idx=step_idx, config=config
+            )
+            return fallback, {
+                "model": model,
+                "reason": "rule_fallback_illegal_action",
+                "raw": text[:500],
+                "illegal_action_id": aid,
+                "fallback_action_id": fallback.action_id,
+            }
+        except RuntimeError as exc:
+            last_error = exc
+            if attempt < 2:
+                time.sleep(min(2.0, 0.4 * (attempt + 1)))
+                continue
             raise
         except Exception as exc:
             last_error = exc

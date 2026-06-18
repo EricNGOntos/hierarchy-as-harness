@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from nav_projection import top_visible_sections
 from nav_types import ActionKind, LegalAction, NavConfig, NavState, Projection
 
 
@@ -37,29 +36,60 @@ def build_legal_actions(
 
     collect_i = 1
     expand_i = 1
-    for view in top_visible_sections(projection, limit=max(collect_limit, expand_limit)):
-        if view.section_id not in state.collected_ids and collect_i <= collect_limit:
+    discovery_scores = dict(getattr(state, "discovery_scores", {}) or {})
+    visible_all = list(projection.visible_sections)
+    visible_ids = {view.section_id for view in visible_all}
+    # Keep C*/E* tied to projection order (N1 parity). Hybrid discovery only adds D* paths.
+    for view in visible_all[: max(collect_limit, expand_limit)]:
+        adjusted_score = float(view.score)
+        if collect_i <= collect_limit:
             add(
                 ActionKind.COLLECT,
                 "C",
                 collect_i,
                 section_id=view.section_id,
                 label=view.preview[:80],
-                score=view.score,
-                metadata={"n_chunks": view.n_chunks, "n_lines": view.n_lines},
+                score=adjusted_score,
+                metadata={
+                    "n_chunks": view.n_chunks,
+                    "n_lines": view.n_lines,
+                    "base_score": view.score,
+                    "discovery_score": float(discovery_scores.get(view.section_id, 0.0)),
+                },
             )
             collect_i += 1
-        if view.has_children and expand_i <= expand_limit:
+        if view.has_children and view.section_id != state.current_scope and expand_i <= expand_limit:
             add(
                 ActionKind.EXPAND,
                 "E",
                 expand_i,
                 section_id=view.section_id,
                 label=view.preview[:80],
-                score=view.score,
-                metadata={"n_chunks": view.n_chunks, "n_lines": view.n_lines},
+                score=adjusted_score,
+                metadata={
+                    "n_chunks": view.n_chunks,
+                    "n_lines": view.n_lines,
+                    "base_score": view.score,
+                    "discovery_score": float(discovery_scores.get(view.section_id, 0.0)),
+                },
             )
             expand_i += 1
+
+    # Hybrid discovery: expose LLM-reranked D* COLLECT actions only (no auto-inject).
+    d_i = 1
+    for section_id, score in sorted(discovery_scores.items(), key=lambda item: (-item[1], item[0])):
+        if section_id in visible_ids:
+            continue
+        add(
+            ActionKind.COLLECT,
+            "D",
+            d_i,
+            section_id=section_id,
+            label="collect hybrid-discovery section (LLM reranked)",
+            score=float(score),
+            metadata={"discovery_score": float(score), "source": "knowhere_hybrid_rerank"},
+        )
+        d_i += 1
 
     if mode != "critical":
         actions.append(
@@ -100,4 +130,3 @@ def action_by_id(actions: List[LegalAction], action_id: Optional[str]) -> Option
         if a.action_id.upper() == aid:
             return a
     return None
-
