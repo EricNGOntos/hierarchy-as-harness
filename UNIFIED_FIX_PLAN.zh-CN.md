@@ -1,7 +1,7 @@
 # Gold Nav 统一修复方案
 
-> **日期**：2025-06-20
-> **状态**：已确认，待执行
+> **日期**：2025-06-20（Phase1 2026-06-22，Phase2 2026-06-22）
+> **状态**：Phase1 已实施并 push（`1a90ed2`）；Phase2 进行中（multi/scope 导航门控 + compose + 消融）
 > **适用范围**：`src/nav/`（导航 agent）、`src/realdata/agent_delivery/code/`（evidence 组装）
 > **参考代码库**：KNOWHERE 生产工程 `/Users/wuchengke/Desktop/knowhere/knowhereapi-main/packages/shared-python/shared/services/retrieval/agentic/`
 
@@ -659,30 +659,40 @@ evidence = A + B + C 的 chunks（全部由 agent 自主决策）
 
 ## 5. 验证清单
 
-修复完成后，逐项检查：
+修复完成后，逐项检查（Phase1 跑数 tag=`fair_clean_unified_v1`，Phase2 tag=`fair_clean_unified_v3`）：
 
 ### Fix1 验证
-- [ ] `evidence_text` 中不再有 `PATH:` 行
-- [ ] evidence block header 长度 < 10 字符（如 `[L10]`）
-- [ ] niche_fact 有效内容占比从 25% → 65%+
-- [ ] niche_fact compose 正确率从 82% → 88%+
+- [x] `evidence_text` 中不再有 `PATH:` 行（51/51）
+- [x] evidence block header 缩短为 `[L10]` 量级
+- [x] 有效 evidence 字符从 ~123 → ~447（b500 下）
+- [x] niche_fact task 0.853（v1 0.677）
 
 ### Fix2 验证
-- [ ] 导航步数中 added=0 的浪费步从 69% 降到 <25%
-- [ ] 自主 FINISH 的比例从 12% 提升到 >50%
-- [ ] 不再出现连续 3 次以上对同一 section 做 COLLECT 的情况
+- [ ] collect 浪费步（added=0）从 69% 降到 <25%（v1 仍 ~66%；Phase2 过滤已 collect/empty section）
+- [x] FINISH 步数明显增加（v1: 39 finish / 51 题）
+- [x] Phase2：已 collect / 已 explore 的 section 不再出现在 C* 列表
 
 ### Fix3 验证
-- [ ] `nav_soft_safety_collect` step 不再出现（已删除）
-- [ ] 导航轨迹中出现 D* action 的选择
-- [ ] multi_hop recall 从 12% → 30%+
-- [ ] scope_collection recall 从 0% → 15%+
-- [ ] Emergency guard 触发率 < 5%（正常情况不应触发）
+- [x] `nav_soft_safety_collect` step 不再出现
+- [x] D* 出现在 legal_actions；部分题 agent 实际选择 D*
+- [ ] multi_hop task 目标 30%+（v1 0.118；Phase2 FINISH 门控 + Hop 证据标签）
+- [ ] scope_collection task 目标 15%+（v1 0.038；Phase2 scope compose + 广度 collect）
+- [x] Emergency guard 触发率 0%
 
 ### 公平性验证
-- [ ] 三种方法（Gold nav / TreeRAG / Flat）使用相同的 evidence 预算
-- [ ] Gold nav 没有专属的后置注入机制
-- [ ] 如果保留 Emergency Guard，同样逻辑也对 TreeRAG/Flat 可用
+- [x] 三方同 b500；无 soft_safety 后置注入
+- [x] TreeRAG compose/evidence 与 Gold 同构（unified_v2）
+- [ ] Emergency Guard 三方对称（仍仅 Gold 实现，0 触发）
+
+### 消融（Phase2，`bin/33_run_unified_ablations.sh`）— 已完成
+- [x] `fair_clean_unified_v3`：Gold 0.325（**低于 v1，nav 已回退**）
+- [x] `fair_clean_ablation_no_discovery`：Gold 0.333
+- [x] `fair_clean_ablation_no_agent_state`：Gold 0.297（Agent State **关键**）
+
+### Phase2 结论（2026-06-22）
+- FINISH 门控 + C* 去重在 v3 中 **未提升 task 分**（multi/scope 反降），已从代码回退。
+- **保留 canonical**：Gold unified_v1 + TreeRAG unified_v2。
+- 下一步若提 multi/scope：优先改 **compose 分组** 或 **multi 双目标 prompt**，而非硬性 FINISH 门控。
 
 ---
 

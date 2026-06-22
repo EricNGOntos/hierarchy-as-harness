@@ -2,39 +2,39 @@
 
 最后更新：2026-06-22
 
-> 在 fair_clean 51 题协议下，三方共享 b500 + 同一 compose/judge 流水线（TreeRAG 已与 Gold/Flat 同构 evidence header 与 compose 提示）。**Gold 与 TreeRAG 总体持平**（0.336 vs 0.338）；Gold 在 multi 上更好，TreeRAG 在 scope 上更好。
+> **主结果（canonical）**：Gold `unified_v1` **0.336** ≈ TreeRAG `unified_v2` **0.338**；Gold **> Flat**（0.194）。Phase2 导航改动已实验并**回退**（见消融）；compose scope 提示保留。
 
 ## 主表：score_task_mean（51 题，b500）
 
-| 方法 | 总体 | niche_fact | multi_hop | scope_collection | evidence |
-|------|-----:|-----------:|----------:|-----------------:|---------:|
-| **TreeRAG** | **0.338** | 0.853 | 0.098 | **0.063** | 0.484 |
-| **Gold（nav）** | 0.336 | **0.853** | **0.118** | 0.038 | **0.602** |
-| Flat | 0.194 | 0.424 | 0.059 | 0.100 | 0.456 |
+| 方法 | 总体 | niche | multi | scope | evidence |
+|------|-----:|------:|------:|------:|---------:|
+| **TreeRAG（unified_v2）** | **0.338** | 0.853 | 0.098 | **0.063** | 0.484 |
+| **Gold（unified_v1）** | 0.336 | **0.853** | **0.118** | 0.038 | **0.602** |
+| Flat（unified_v1） | 0.194 | 0.424 | 0.059 | 0.100 | 0.456 |
 
-- Gold **> Flat（总体）**：0.336 vs 0.194。
-- Gold **≈ TreeRAG（总体）**；multi 上 Gold 领先，scope 上 TreeRAG 领先。
-- 无 `nav_soft_safety_collect`；无 PATH 泄漏；无按方法的候选上限（`TREERAG_FAIR_CAP=0`）。
+## Phase2 实验（已跑、nav 已回退）
 
-## 公平协议
+| 配置 | Gold 总体 | multi | scope | 说明 |
+|------|----------:|------:|------:|------|
+| unified_v3（FINISH 门控 + 去重 C*） | 0.325 | 0.098 | 0.025 | 相对 v1 **下降**，nav 已 revert |
+| ablation 无 discovery | 0.333 | 0.098 | 0.047 | discovery 贡献约 **+0.003** |
+| ablation 无 agent state | 0.297 | 0.059 | 0.009 | Agent State 贡献约 **+0.039** |
 
-1. 三方共享 b500 字符预算，无按方法候选数截断。
-2. 统一 `_prepare_compose_evidence_text` + `compose_llm` + `inspect_scoring` judge。
-3. 任务 query 已删除字面层级路径；51 题（17/17/17）。日志：`results/task_clean_log.json`。
+Phase2 唯一保留：**collect 浪费步** 66%→43%（效率提升但未转化为 task 分）。
 
-## Gold Nav（Unified Fix）
+## Unified Fix Phase1（已上线）
 
-- **Fix 1**：证据组装去 PATH 重复、短 header `[L10]`。
-- **Fix 2**：Agent State prompt + Observation 增强。
-- **Fix 3**：循环前 discovery rerank；D* 动作；删 soft_safety；Emergency Guard（仅 collected 为空）。
+- Fix1：证据组装（无 PATH、短 header）
+- Fix2：Agent State + Observation
+- Fix3：前置 discovery、D*、删 soft_safety
 
 ## 结果文件
 
 | 配置 | 路径 |
 |------|------|
-| Gold + Flat | `results/fair_clean_gold_flat_fair_clean_unified_v1_b500.json` |
-| TreeRAG（同构 compose/evidence） | `results/fair_clean_treerag_fair_clean_unified_v2_b500.json` |
-| 对比表 | `cache/compare_fair_clean_unified_v2.md` |
-| 任务清洗日志 | `results/task_clean_log.json` |
+| Gold + Flat（canonical） | `results/fair_clean_gold_flat_fair_clean_unified_v1_b500.json` |
+| TreeRAG（canonical） | `results/fair_clean_treerag_fair_clean_unified_v2_b500.json` |
+| 对比表 | `cache/compare_fair_clean_final.md` |
+| 计划与验收（含 Phase2 消融数字） | `UNIFIED_FIX_PLAN.zh-CN.md` |
 
-复跑：`bash bin/32_run_quality_balanced_gold_flat.sh` + `bash bin/35_run_quality_balanced60_treerag.sh` + `bash bin/21_compare_realdata_baselines.sh`。
+复跑：`bash bin/32_run_quality_balanced_gold_flat.sh` · `bash bin/35_run_quality_balanced60_treerag.sh` · 消融 `bash bin/33_run_unified_ablations.sh`（结果不纳入 canonical）

@@ -38,7 +38,8 @@ def _task_type_compose_guidance(task_type: str) -> str:
         )
     if tt in ("scope_collection", "regulatory_coverage"):
         return (
-            "【题型 scope/regulatory】输出 `items` 为非空字符串数组：每一项对应证据中一条独立要点或条款，"
+            "【题型 scope/regulatory】输出 `items` 为非空字符串数组：每一项对应 evidence 中一条独立要点或条款，"
+            "优先保留带编号/条目标记的行（如 1.、（一）、第X条）；不要把多条合并成一条；"
             "去重、简短；尽量覆盖问题所问的全部子项，顺序可与证据不一致。"
         )
     if tt == "niche_fact":
