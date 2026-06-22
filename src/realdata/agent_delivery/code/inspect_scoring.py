@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from difflib import SequenceMatcher
 from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
@@ -131,29 +132,63 @@ def content_score_for_inspect(pred: str, gold: str) -> float:
     return float(max(0.0, min(1.0, sem)))
 
 
-_SCOPE_SEP = re.compile(r"[，,、;；\n]+")
+_SCOPE_TOP_LEVEL_SEP = re.compile(r"[;；\n]+")
+_SCOPE_ITEM_PREFIX = re.compile(r"^\s*(?:[（(]?[一二三四五六七八九十]+[）)]|\d+[.、）)])\s*")
 
 
-def _scope_multiset_recall(pred: str, gold: str) -> float:
-    """
-    金标条目 multiset 上的召回：sum_k min(pred_cnt, gold_cnt) / sum(gold_cnt)，∈[0,1]。
-    分隔与 `scope_regulatory_content_exact` 一致。
-    """
-    g = str(gold or "").strip()
-    p = str(pred or "").strip()
+def _scope_items_from_text(text: str) -> List[str]:
+    return [x.strip() for x in _SCOPE_TOP_LEVEL_SEP.split(str(text or "")) if x.strip()]
+
+
+def _scope_item_norm(text: str) -> str:
+    value = _SCOPE_ITEM_PREFIX.sub("", str(text or "").strip().lower())
+    return re.sub(r"[^0-9a-z\u4e00-\u9fff]+", "", value)
+
+
+def _scope_item_similarity(pred: str, gold: str) -> float:
+    p = _scope_item_norm(pred)
+    g = _scope_item_norm(gold)
     if not g:
         return 1.0 if not p else 0.0
     if not p:
         return 0.0
-    gc = Counter(x.strip() for x in _SCOPE_SEP.split(norm_text(g)) if x.strip())
-    if not gc:
+    # Quantities and standards must preserve the gold numeric sequence.
+    if has_meaningful_numeric_constraint(gold) and extract_numbers(pred) != extract_numbers(gold):
         return 0.0
-    pc = Counter(x.strip() for x in _SCOPE_SEP.split(norm_text(p)) if x.strip())
-    denom = sum(gc.values())
-    if denom <= 0:
+    if p == g or g in p:
+        return 1.0
+    if p in g and len(p) / max(1, len(g)) >= 0.75:
+        return len(p) / len(g)
+    ratio = SequenceMatcher(None, p, g).ratio()
+    return ratio if ratio >= 0.55 else 0.0
+
+
+def scope_collection_items_score(pred_items: Sequence[str], gold_items: Sequence[str]) -> float:
+    """Method-independent item recall with one-to-one fuzzy alignment."""
+    gold = [str(x).strip() for x in gold_items if str(x).strip()]
+    pred = [str(x).strip() for x in pred_items if str(x).strip()]
+    if not gold:
+        return 1.0 if not pred else 0.0
+    if not pred:
         return 0.0
-    hit = sum(min(int(pc.get(k, 0)), int(v)) for k, v in gc.items())
-    return float(hit) / float(denom)
+    pairs = sorted(
+        (
+            (_scope_item_similarity(p, g), pi, gi)
+            for pi, p in enumerate(pred)
+            for gi, g in enumerate(gold)
+        ),
+        reverse=True,
+    )
+    used_pred: set[int] = set()
+    used_gold: set[int] = set()
+    total = 0.0
+    for similarity, pi, gi in pairs:
+        if similarity <= 0.0 or pi in used_pred or gi in used_gold:
+            continue
+        used_pred.add(pi)
+        used_gold.add(gi)
+        total += similarity
+    return float(max(0.0, min(1.0, total / len(gold))))
 
 
 def scope_collection_content_score(pred: str, gold: str) -> float:
@@ -163,7 +198,7 @@ def scope_collection_content_score(pred: str, gold: str) -> float:
     即命中的 gold 条目数 / gold 条目总数。完全匹配自然为 1；
     漏项按比例扣分；多答不额外加分，也不与语义 LLM 或 exact 分数混合。
     """
-    return float(max(0.0, min(1.0, _scope_multiset_recall(pred, gold))))
+    return scope_collection_items_score(_scope_items_from_text(pred), _scope_items_from_text(gold))
 
 
 def scope_regulatory_content_exact(pred: str, gold: str) -> float:
@@ -180,8 +215,8 @@ def scope_regulatory_content_exact(pred: str, gold: str) -> float:
         return 0.0
     if re.sub(r"\s+", "", norm_text(p)) == re.sub(r"\s+", "", norm_text(g)):
         return 1.0
-    pc = Counter(x.strip() for x in _SCOPE_SEP.split(norm_text(p)) if x.strip())
-    gc = Counter(x.strip() for x in _SCOPE_SEP.split(norm_text(g)) if x.strip())
+    pc = Counter(x.strip() for x in _SCOPE_TOP_LEVEL_SEP.split(norm_text(p)) if x.strip())
+    gc = Counter(x.strip() for x in _SCOPE_TOP_LEVEL_SEP.split(norm_text(g)) if x.strip())
     if gc and pc == gc:
         return 1.0
     return 0.0
@@ -454,8 +489,9 @@ def build_inspect_pred_output(
     # scope_collection / regulatory_coverage / 其它：用 items 拼接或 answer
     items = obj.get("items")
     if isinstance(items, list) and items:
-        joined = "、".join(str(x).strip() for x in items if str(x).strip())
-        return {"final_answer": joined, "evidence_line_ids": eids}
+        cleaned_items = [str(x).strip() for x in items if str(x).strip()]
+        joined = "；".join(cleaned_items)
+        return {"items": cleaned_items, "final_answer": joined, "evidence_line_ids": eids}
     return {"final_answer": _composed_answer_text(obj, composed_answer), "evidence_line_ids": eids}
 
 
@@ -538,8 +574,23 @@ def score_sample(task: Dict[str, Any], pred_output: Any) -> Tuple[float, float, 
             c = content_score_for_inspect(str(pred_obj.get("final_answer", "")), str(target))
     elif ttype in ("scope_collection", "regulatory_coverage"):
         p = str(pred_obj.get("final_answer", pred_output if isinstance(pred_output, str) else ""))
-        g = str(target)
-        c = scope_collection_content_score(p, g)
+        pred_items_raw = pred_obj.get("items")
+        pred_items = (
+            [str(x).strip() for x in pred_items_raw if str(x).strip()]
+            if isinstance(pred_items_raw, list)
+            else _scope_items_from_text(p)
+        )
+        if isinstance(target, dict) and isinstance(target.get("table"), list):
+            gold_items = [
+                str(row.get("项", "")).strip()
+                for row in target["table"]
+                if isinstance(row, dict) and str(row.get("项", "")).strip()
+            ]
+        else:
+            gold_text = str(target.get("final_answer", "")) if isinstance(target, dict) else str(target or "")
+            gold_items = _scope_items_from_text(gold_text)
+        c = scope_collection_items_score(pred_items, gold_items)
+        extra["matched_item_recall"] = round(float(c), 4)
     else:
         p = str(pred_obj.get("final_answer", pred_output if isinstance(pred_output, str) else ""))
         g = str(target)

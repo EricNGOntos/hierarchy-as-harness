@@ -1,9 +1,9 @@
-# Hierarchy-as-Harness · RealData 公平协议基线（fair_clean）
+# Hierarchy-as-Harness · RealData 共享输出预算基线（fair_clean）
 
-本仓库包含 **RealData latest-clean** 上的端到端对比：Gold（金标层级 Nav Agent）、Flat、 [TreeRAG](https://aclanthology.org/2025.findings-acl.20/) 基线，**在一套完全公平的协议下**评测。
+本仓库包含 **RealData latest-clean** 上的端到端对比：Gold（金标层级 Nav Agent）、Flat、 [TreeRAG](https://aclanthology.org/2025.findings-acl.20/) 基线。三方采用同一任务集、最终 evidence 字符预算、compose 与 judge；检索过程保留各方法自身的候选策略、工具调用和预处理成本，因此这是**共享输出预算协议**，不是等计算量协议。
 
 - **任务**：51 题（niche / multi_hop / scope 各 17，方法无关清洗 + 对称再平衡）
-- **预算**：b500，三方共享同一预算 + 同一 compose + 同一 judge，**无任何按方法的候选上限**
+- **预算**：b500，三方共享最终 evidence 字符预算 + 方法无关 `[E1]`/`[E2]` header + 同一 compose + 同一 judge；不做跨方法候选数匹配截断，各方法仍使用自身的检索上限
 - **路径泄漏**：已从所有方法的 query 中删除字面层级路径
 - **结果摘要**：[results/summary.md](results/summary.md)
 
@@ -19,15 +19,15 @@ Gold Nav 采用 **[KnowWhere](https://github.com/Ontos-AI/knowhere)** 风格的�
 
 ---
 
-## 当前结果（51 题 · b500 · Unified Fix）
+## 当前结果（51 题 · b500 · scopefix_v2）
 
 | 方法 | 总体 | niche | multi | scope |
 |------|-----:|------:|------:|------:|
-| **TreeRAG** | **0.338** | 0.853 | 0.098 | **0.063** |
-| **Gold（nav）** | 0.336 | **0.853** | **0.118** | 0.038 |
-| Flat | 0.194 | 0.424 | 0.059 | 0.100 |
+| **Gold（nav）** | **0.425** | **0.765** | **0.118** | 0.392 |
+| **TreeRAG** | 0.398 | **0.765** | 0.078 | 0.351 |
+| Flat | 0.360 | 0.424 | 0.078 | **0.578** |
 
-Gold **> Flat**；Gold **≈ TreeRAG**（总体持平，分题型互有胜负）。详见 [results/summary.md](results/summary.md)。
+Gold、TreeRAG、Flat 总体互有胜负，当前样本不足以稳定区分总体优劣。逐题 bootstrap 95% CI：Gold−TreeRAG `[-0.090, 0.148]`，Gold−Flat `[-0.070, 0.203]`，TreeRAG−Flat `[-0.097, 0.175]`。详见 [results/summary.md](results/summary.md)。
 
 ---
 
@@ -38,8 +38,8 @@ Gold **> Flat**；Gold **≈ TreeRAG**（总体持平，分题型互有胜负）
 ├── config/
 ├── data/tasks/          # tasks_realdata_bodyrich_fair_clean*（51 题）
 ├── results/
-│   ├── fair_clean_gold_flat_fair_clean_unified_v1_b500.json
-│   ├── fair_clean_treerag_fair_clean_unified_v2_b500.json
+│   ├── fair_clean_gold_flat_fair_clean_scopefix_v2_b500.json
+│   ├── fair_clean_treerag_fair_clean_scopefix_v2_b500.json
 │   ├── task_clean_log.json
 │   └── summary.md
 ├── cache/               # 断点续跑（不入库）
@@ -63,6 +63,6 @@ bash bin/21_compare_realdata_baselines.sh       # 对比表
 |------|------|------|
 | **Gold** | LLM Nav Agent（expand/collect/search + hybrid discovery D*） | 共享 compose + Inspect judge |
 | **Flat** | flat_react 多轮 dense | 同上 |
-| **TreeRAG** | LLM 建树 + intent + BTR | 同上，无候选上限 |
+| **TreeRAG** | LLM 建树 + intent + BTR（自身 top-k / traversal 配置） | 同上 |
 
-三方共享 b500、同一 evidence 拼装与 judge 流水线。
+三方共享 b500、同一 budget fill / compose / judge 流水线。Gold Nav、Flat-ReAct 与 TreeRAG 的检索轮数、候选上限、LLM 调用和离线建树成本属于方法本身，不强行对齐；成本指标应与质量指标分开解读。

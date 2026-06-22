@@ -5,7 +5,7 @@ export PYTHONDONTWRITEBYTECODE=1
 cd "$(dirname "$0")/.."
 
 BUDGETS="${BUDGETS:-500}"
-NAV_RUN_TAG="${NAV_RUN_TAG:-fair_clean_unified_v1}"
+NAV_RUN_TAG="${NAV_RUN_TAG:-fair_clean_scopefix_v2}"
 EMBEDDING_MODEL="${EMBEDDING_MODEL:-BAAI/bge-m3}"
 # Unified nav fix: hybrid discovery D* before/during nav; post-nav soft_safety removed.
 export NAV_DISCOVERY_SOFT_SIGNAL="${NAV_DISCOVERY_SOFT_SIGNAL:-1}"

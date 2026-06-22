@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 BUDGETS="${BUDGETS:-500}"
 TREERAG_MODEL="${TREERAG_MODEL:-qwen3.5-flash}"
 EMBEDDING_MODEL="${EMBEDDING_MODEL:-BAAI/bge-m3}"
-RUN_TAG="${RUN_TAG:-fair_clean_unified_v2}"
+RUN_TAG="${RUN_TAG:-fair_clean_scopefix_v2}"
 
 TASKS="${TASKS:-data/tasks/tasks_realdata_bodyrich_fair_clean.jsonl}"
 INSPECT_TASKS="${INSPECT_TASKS:-data/tasks/tasks_realdata_bodyrich_fair_clean.inspect.jsonl}"

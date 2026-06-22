@@ -95,7 +95,9 @@ def _usage_excluding(cost: dict[str, Any], excluded: set[str]) -> dict[str, int]
         saw_any = True
         for key in total:
             total[key] += int(block.get(key, 0) or 0)
-    return total if saw_any else _usage(cost)
+    # A real by-purpose map containing only excluded phases means zero tokens
+    # for this view; fallback is only for legacy payloads without such a map.
+    return total if by_purpose else _usage(cost)
 
 
 def _treerag_retrieval_view(payload: Optional[dict[str, Any]]) -> dict[str, Any]:
@@ -179,6 +181,8 @@ def main() -> None:
     lines.append("")
     lines.append("## Time And Token")
     lines.append("")
+    lines.append("> 本表记录本次缓存辅助重跑的实测耗时与增量计费 token；cache hit 的 token 记为 0，不代表无缓存完整运行成本。")
+    lines.append("")
     lines.append("| budget | arm | cold start | retrieval framework | compose | judge | online response | end-to-end eval | prompt | completion | total tokens | API calls | cache hits |")
     lines.append("| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |")
     for budget, gpf, tr, trw in loaded:
@@ -201,7 +205,7 @@ def main() -> None:
         for payload, label in [(retrieval_payload, "TreeRAG retrieval-only"), (trw, "TreeRAG+wrapper")]:
             cost = _treerag_retrieval_view(payload) if label == "TreeRAG retrieval-only" else _treerag_cost(payload)
             usage = _usage_excluding(_treerag_cost(payload), {"compose", "judge"}) if label == "TreeRAG retrieval-only" else _usage(cost)
-            if not any(usage.values()):
+            if not any(usage.values()) and not (_treerag_cost(payload).get("token_usage_by_purpose") or {}):
                 cfg = _treerag_cfg(payload)
                 usage = cfg.get("token_usage") or {}
             lines.append(

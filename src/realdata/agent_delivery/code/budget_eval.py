@@ -46,7 +46,7 @@ class BudgetFillResult:
     """按 score 降序、去重后，实际被写入 evidence 的 chunk 序列；若有字符级截断，最后一项可能是部分文本。"""
 
     evidence_text: str
-    """拼接后的 evidence（[node_id]\\n<text> 组块，以空行分隔），总长 ≤ budget_chars。"""
+    """拼接后的 evidence（[E1]\\n<text> 组块，以空行分隔），总长 ≤ budget_chars。"""
 
     evidence_chars_actual: int
     """`len(evidence_text)`，对应 plan §P6 主表列。"""
@@ -58,23 +58,25 @@ class BudgetFillResult:
     """最后一个 chunk 是否被字符级截断（P2）。"""
 
 
-def _short_chunk_id(node_id: str) -> str:
-    return re.sub(r"^[^:]*:(L\d+)(?:__\w+)?$", r"\1", str(node_id or ""))
+EVIDENCE_HEADER_PROTOCOL = "method_neutral_ordinal_v1"
 
 
-def _block_for(chunk: Chunk) -> str:
-    short_id = _short_chunk_id(chunk.node_id)
-    return f"[{short_id}]\n{chunk.text or ''}"
+def _evidence_header(evidence_index: int) -> str:
+    return f"[E{max(1, int(evidence_index))}]\n"
 
 
-def _partial_chunk_for_block(chunk: Chunk, visible_block: str) -> Chunk:
+def _block_for(chunk: Chunk, evidence_index: int) -> str:
+    return f"{_evidence_header(evidence_index)}{chunk.text or ''}"
+
+
+def _partial_chunk_for_block(chunk: Chunk, visible_block: str, evidence_index: int) -> Chunk:
     """
     为字符级截断后的最后一个 evidence block 生成只含可见前缀行号的 Chunk。
 
     Chunk 当前没有逐行文本 offset 元数据；这里用可见正文长度占比映射到有序 line_ids 前缀。
     对 line chunk 精确等价，对 leaf/path chunk 保守地避免把未进入预算的尾部行号全算进 evidence。
     """
-    header = f"[{_short_chunk_id(chunk.node_id)}]\n"
+    header = _evidence_header(evidence_index)
     text = chunk.text or ""
     if not chunk.line_ids:
         visible_line_ids: Tuple[int, ...] = ()
@@ -143,7 +145,8 @@ def evaluate_at_budget(
 
     if pack_penalty <= 0:
         for c, _score in uniq_ranked:
-            block = _block_for(c)
+            evidence_index = len(parts) + 1
+            block = _block_for(c, evidence_index)
             add_len = len(block) + (sep_len if parts else 0)
             if used + add_len <= budget_chars:
                 parts.append(block)
@@ -156,7 +159,7 @@ def evaluate_at_budget(
             if remain >= min_partial_chars:
                 visible_block = block[:remain]
                 parts.append(visible_block)
-                kept.append(_partial_chunk_for_block(c, visible_block))
+                kept.append(_partial_chunk_for_block(c, visible_block, evidence_index))
                 used = budget_chars
                 truncated_last = True
             break
@@ -164,6 +167,7 @@ def evaluate_at_budget(
         candidates = list(uniq_ranked)
         picked: set = set()
         while used < budget_chars:
+            evidence_index = len(parts) + 1
             best_i: Optional[int] = None
             best_mode: Optional[str] = None
             best_eff = -1e18
@@ -172,7 +176,7 @@ def evaluate_at_budget(
                     continue
                 ov = _max_overlap_to_kept(c, kept)
                 eff = float(s) - pack_penalty * ov
-                block = _block_for(c)
+                block = _block_for(c, evidence_index)
                 add_len = len(block) + (sep_len if parts else 0)
                 if used + add_len <= budget_chars:
                     if eff > best_eff:
@@ -189,7 +193,7 @@ def evaluate_at_budget(
                 break
             c, _s = candidates[best_i]
             picked.add(best_i)
-            block = _block_for(c)
+            block = _block_for(c, evidence_index)
             if best_mode == "full":
                 add_len = len(block) + (sep_len if parts else 0)
                 parts.append(block)
@@ -201,7 +205,7 @@ def evaluate_at_budget(
             remain = budget_chars - used - (sep_len if parts else 0)
             visible_block = block[:remain]
             parts.append(visible_block)
-            kept.append(_partial_chunk_for_block(c, visible_block))
+            kept.append(_partial_chunk_for_block(c, visible_block, evidence_index))
             used = budget_chars
             truncated_last = True
             break

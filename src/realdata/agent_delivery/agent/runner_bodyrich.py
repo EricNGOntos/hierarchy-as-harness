@@ -62,6 +62,7 @@ from .types import AgentStep, AgentTask, EpisodeResult
 from ..code.embedding_backend import DEFAULT_DENSE_EMBEDDING_MODEL, resolve_embedding_model
 from ..code.budget_eval import (
     BudgetFillResult,
+    EVIDENCE_HEADER_PROTOCOL,
     compute_budget_retrieval_metrics,
     evaluate_at_budget,
     gather_flat_candidates,
@@ -271,9 +272,14 @@ def _apply_setup_cost(cost: Dict[str, Any], setup_cost: Dict[str, Dict[str, floa
 def _finalize_cost(cost: Dict[str, Any]) -> None:
     for block in cost.values():
         total = float(block.get("total_seconds", 0.0) or 0.0)
-        online = float(block.get("online_response_seconds", 0.0) or 0.0)
+        # Derive this invariant from its phases so old/resumed checkpoints that
+        # predate explicit online_response_seconds remain cost-compatible.
+        online = float(block.get("retrieval_framework_seconds", 0.0) or 0.0) + float(
+            block.get("compose_seconds", 0.0) or 0.0
+        )
         cold = float(block.get("cold_start_seconds", 0.0) or 0.0)
         judge = max(0.0, total - online)
+        block["online_response_seconds"] = online
         block["judge_eval_seconds"] = judge
         block["warm_end_to_end_eval_seconds"] = total
         block["end_to_end_eval_seconds"] = cold + total
@@ -1545,7 +1551,9 @@ def _checkpoint_signature(
         "judge_model": os.environ.get("JUDGE_MODEL", "").strip(),
         "nav_model": os.environ.get("NAV_LLM_MODEL", "").strip(),
         "pool_mode": _POOL_MODE or "none",
-        "adapter": "gold_pred_flat_task_checkpoint_v1",
+        "evidence_header_protocol": EVIDENCE_HEADER_PROTOCOL,
+        "scope_scoring_protocol": "structured_item_alignment_v2",
+        "adapter": "gold_pred_flat_task_checkpoint_v4",
     }
     return hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
 
@@ -2121,6 +2129,11 @@ def _build_summary(
     summary: Dict[str, Any] = {
         "config": {
             "pool_mode": _POOL_MODE or "none",
+            "evidence_header_protocol": EVIDENCE_HEADER_PROTOCOL,
+            "cost_measurement": {
+                "timing": "observed_cache_assisted_run",
+                "tokens": "billed_incremental_tokens_cache_hits_are_zero",
+            },
         },
         "hierarchical_gold": sum_g,
         "per_type_hierarchical_gold": _per_type_summary(rows, "hierarchical_gold"),

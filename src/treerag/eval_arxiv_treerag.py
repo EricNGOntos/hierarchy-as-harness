@@ -37,13 +37,16 @@ from threading import Lock
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
-CODE_DIR = PACKAGE_ROOT.resolve()
-if str(CODE_DIR) not in sys.path:
-    sys.path.insert(0, str(CODE_DIR))
+# TreeRAG 与 Gold/Flat 共用唯一的 agent_delivery 实现。显式固定路径，避免
+# 直接运行本文件和经 wrapper 运行时因 sys.path 顺序不同而加载不同副本。
+SHARED_AGENT_CODE_DIR = PACKAGE_ROOT.parent / "realdata"
+if str(SHARED_AGENT_CODE_DIR) not in sys.path:
+    sys.path.insert(0, str(SHARED_AGENT_CODE_DIR))
 
 from agent_delivery.agent.tasks_loader import _load_tasks
 from agent_delivery.agent.types import AgentTask
 from agent_delivery.code.budget_eval import (
+    EVIDENCE_HEADER_PROTOCOL,
     _build_retrieval_queries,
     _query_weight,
     compute_budget_retrieval_metrics,
@@ -80,6 +83,33 @@ INTENT_PROMPT_VERSION = "treerag-paper-intent-qwen-v1"
 
 def _adapter_path_label() -> str:
     return "src/treerag/eval_arxiv_treerag.py"
+
+
+def _fairness_control_metadata(args: argparse.Namespace, *, candidate_cap_enabled: bool) -> Dict[str, Any]:
+    """Describe the protocol actually executed; this is metadata-only."""
+    return {
+        "shared_controls": [
+            "task_set",
+            "evidence_character_budget",
+            "budget_fill",
+            "compose",
+            "judge",
+        ],
+        "candidate_count_matching": (
+            "legacy_enabled_from_existing_baseline_results"
+            if candidate_cap_enabled
+            else "disabled"
+        ),
+        "compute_budget_matched": False,
+        "method_specific_retrieval_limits": {
+            "treerag_initial_top_k": int(args.initial_top_k),
+            "treerag_max_traversal_leaves": int(args.max_traversal_leaves),
+        },
+        "note": (
+            "Methods share the final evidence-character budget, not retrieval calls, "
+            "candidate counts, token usage, latency, or offline preprocessing cost."
+        ),
+    }
 
 
 @dataclass
@@ -874,7 +904,9 @@ def _budget_score_signature(args: argparse.Namespace, budget: int, task_checkpoi
         "compose_model": os.environ.get("COMPOSE_MODEL", "").strip(),
         "judge_model": os.environ.get("JUDGE_MODEL", "").strip(),
         "judge_semantic_primary": os.environ.get("JUDGE_SEMANTIC_PRIMARY", "").strip(),
-        "adapter": "treerag_budget_score_cache_v1",
+        "evidence_header_protocol": EVIDENCE_HEADER_PROTOCOL,
+        "scope_scoring_protocol": "structured_item_alignment_v2",
+        "adapter": "treerag_budget_score_cache_v4",
     }
     return hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
 
@@ -1355,7 +1387,7 @@ def _existing_result_paths() -> List[Path]:
     # Canonical fair-protocol Gold/Flat result (used for the summary markdown comparison;
     # also the cap source only if TREERAG_FAIR_CAP=1, which is OFF by default).
     return [
-        PACKAGE_ROOT.parent.parent / "results" / "fair_clean_gold_flat_fair_clean_unified_v1_b500.json",
+        PACKAGE_ROOT.parent.parent / "results" / "fair_clean_gold_flat_fair_clean_scopefix_v2_b500.json",
     ]
 
 
@@ -1667,7 +1699,27 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
         except Exception as e:
             print(f"[treerag] failed to read checkpoint {checkpoint_path}: {e}", file=sys.stderr, flush=True)
     if resumed_by_task:
+        invalidated = 0
+        for task_idx, current_task in enumerate(tasks, start=1):
+            cached = resumed_by_task.get(task_idx)
+            if cached is None:
+                continue
+            cached_task = cached.get("task")
+            retrieval_identity_matches = bool(
+                cached_task is not None
+                and str(cached_task.query) == str(current_task.query)
+                and str(cached_task.doc_id) == str(current_task.doc_id)
+                and str(cached_task.task_type) == str(current_task.task_type)
+            )
+            if retrieval_identity_matches:
+                # Gold answer/nodes may be repaired without changing retrieval.
+                cached["task"] = current_task
+            else:
+                resumed_by_task.pop(task_idx, None)
+                invalidated += 1
         print(f"[treerag] resumed {len(resumed_by_task)}/{len(tasks)} tasks from checkpoint", file=sys.stderr, flush=True)
+        if invalidated:
+            print(f"[treerag] invalidated {invalidated} checkpoint rows after task identity check", file=sys.stderr, flush=True)
     t1 = time.time()
     scored_by_task_map: Dict[int, Dict[str, Any]] = dict(resumed_by_task)
     for ti, task in enumerate(tasks, start=1):
@@ -1814,11 +1866,13 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
         total_completion_tokens = int(token_usage.get("completion_tokens", 0) or 0)
         total_tokens = int(token_usage.get("total_tokens", 0) or 0)
         total_api_calls = int(token_usage.get("api_calls", 0) or 0)
+        total_cache_hits = int(token_usage.get("cache_hits", 0) or 0)
         for block in compose_judge_usage.values():
             total_prompt_tokens += int(block.get("prompt_tokens", 0) or 0)
             total_completion_tokens += int(block.get("completion_tokens", 0) or 0)
             total_tokens += int(block.get("total_tokens", 0) or 0)
             total_api_calls += int(block.get("api_calls", 0) or 0)
+            total_cache_hits += int(block.get("cache_hits", 0) or 0)
         total_retry_wait_seconds = float(token_usage.get("retry_wait_seconds", 0.0) or 0.0)
         for block in compose_judge_usage.values():
             total_retry_wait_seconds += float(block.get("retry_wait_seconds", 0.0) or 0.0)
@@ -1858,6 +1912,7 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
                 "completion_tokens": total_completion_tokens,
                 "total_tokens": total_tokens,
                 "api_calls": total_api_calls,
+                "cache_hits": total_cache_hits,
                 "retry_wait_seconds": total_retry_wait_seconds,
             },
         }
@@ -1892,7 +1947,10 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
                     "leaf_to_parent_decay": float(args.leaf_to_parent_decay),
                     "max_traversal_leaves": int(args.max_traversal_leaves),
                     "path_char_limit": int(args.path_char_limit),
-                    "fairness_control": "TreeRAG truncated per task to existing exact_matched Gold/Pred/Flat candidate count when available",
+                    "evidence_header_protocol": EVIDENCE_HEADER_PROTOCOL,
+                    "fairness_control": _fairness_control_metadata(
+                        args, candidate_cap_enabled=bool(cap_by_task)
+                    ),
                     "llm_tree_chunking_required_by_paper": True,
                     "llm_intent_required_by_paper": True,
                     "llm_calls_in_this_adapter": True,
@@ -1906,6 +1964,7 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
                     "llm_cache_path": str((cache_dir / "llm_cache.jsonl").resolve()),
                     "budget_score_cache_path": str(budget_cache_path.resolve()),
                     "budget_score_cache_hits": sum(1 for row in rows if (row.get("treerag") or {}).get("score_cache_hit")),
+                    "task_checkpoint_hits": len(resumed_by_task),
                     "doc_index_cache_hits": int(cache_hits),
                     "llm_cache_hits": int(token_usage.get("cache_hits", 0)),
                     "n_corpus_docs_loaded": len(bundles),
@@ -1916,6 +1975,10 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
                     "index_seconds": index_seconds,
                     "retrieval_eval_seconds": retrieval_eval_seconds,
                     "runtime_seconds": runtime_seconds,
+                    "cost_measurement": {
+                        "timing": "observed_cache_assisted_run",
+                        "tokens": "billed_incremental_tokens_cache_hits_are_zero",
+                    },
                     "timing_semantics": {
                         "online_response_seconds": "Use this for online latency: retrieval_framework_seconds + compose_seconds.",
                         "judge_eval_seconds": "Report separately as evaluation-only time.",

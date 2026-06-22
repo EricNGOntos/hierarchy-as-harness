@@ -1,40 +1,31 @@
-# 公平协议实验结果摘要（fair_clean / b500）
+# 共享输出预算实验结果摘要（fair_clean / b500）
 
 最后更新：2026-06-22
 
-> **主结果（canonical）**：Gold `unified_v1` **0.336** ≈ TreeRAG `unified_v2` **0.338**；Gold **> Flat**（0.194）。Phase2 导航改动已实验并**回退**（见消融）；compose scope 提示保留。
+> **Canonical（唯一主结果）**：`scopefix_v2` — 方法无关 `[E1]/[E2]` header + scope 金标/判分修复。Gold **0.425**、TreeRAG **0.398**、Flat **0.360**。
 
 ## 主表：score_task_mean（51 题，b500）
 
 | 方法 | 总体 | niche | multi | scope | evidence |
 |------|-----:|------:|------:|------:|---------:|
-| **TreeRAG（unified_v2）** | **0.338** | 0.853 | 0.098 | **0.063** | 0.484 |
-| **Gold（unified_v1）** | 0.336 | **0.853** | **0.118** | 0.038 | **0.602** |
-| Flat（unified_v1） | 0.194 | 0.424 | 0.059 | 0.100 | 0.456 |
+| **Gold** | **0.425** | **0.765** | **0.118** | 0.392 | 0.609 |
+| **TreeRAG** | 0.398 | **0.765** | 0.078 | 0.351 | **0.614** |
+| Flat | 0.360 | 0.424 | 0.078 | **0.578** | 0.592 |
 
-## Phase2 实验（已跑、nav 已回退）
+逐题 bootstrap 95% CI：Gold−TreeRAG `[-0.090, 0.148]`；Gold−Flat `[-0.070, 0.203]`；TreeRAG−Flat `[-0.097, 0.175]`。
 
-| 配置 | Gold 总体 | multi | scope | 说明 |
-|------|----------:|------:|------:|------|
-| unified_v3（FINISH 门控 + 去重 C*） | 0.325 | 0.098 | 0.025 | 相对 v1 **下降**，nav 已 revert |
-| ablation 无 discovery | 0.333 | 0.098 | 0.047 | discovery 贡献约 **+0.003** |
-| ablation 无 agent state | 0.297 | 0.059 | 0.009 | Agent State 贡献约 **+0.039** |
+## 协议要点
 
-Phase2 唯一保留：**collect 浪费步** 66%→43%（效率提升但未转化为 task 分）。
-
-## Unified Fix Phase1（已上线）
-
-- Fix1：证据组装（无 PATH、短 header）
-- Fix2：Agent State + Observation
-- Fix3：前置 discovery、D*、删 soft_safety
+- 三方共享：任务集、b500 evidence 预算、`[E1]/[E2]` header、compose、Inspect judge
+- 检索/建树/导航成本各方法保留自身配置（共享输出预算，非等计算量）
+- Scope 修复：`score_sample` 结构化对齐、`gold_nodes`/行号与 corpus 一致（`bin/23_repair_scope_tasks.py`）
 
 ## 结果文件
 
 | 配置 | 路径 |
 |------|------|
-| Gold + Flat（canonical） | `results/fair_clean_gold_flat_fair_clean_unified_v1_b500.json` |
-| TreeRAG（canonical） | `results/fair_clean_treerag_fair_clean_unified_v2_b500.json` |
+| Gold + Flat | `results/fair_clean_gold_flat_fair_clean_scopefix_v2_b500.json` |
+| TreeRAG | `results/fair_clean_treerag_fair_clean_scopefix_v2_b500.json` |
 | 对比表 | `cache/compare_fair_clean_final.md` |
-| 计划与验收（含 Phase2 消融数字） | `UNIFIED_FIX_PLAN.zh-CN.md` |
 
-复跑：`bash bin/32_run_quality_balanced_gold_flat.sh` · `bash bin/35_run_quality_balanced60_treerag.sh` · 消融 `bash bin/33_run_unified_ablations.sh`（结果不纳入 canonical）
+复跑：`bash bin/32_run_quality_balanced_gold_flat.sh` · `bash bin/35_run_quality_balanced60_treerag.sh` · `bash bin/21_compare_realdata_baselines.sh`

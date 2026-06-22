@@ -19,6 +19,9 @@ class Chunk:
     text: str
     line_ids: Tuple[int, ...]  # 包含的行 id
     section_id: Optional[str] = None  # 命题 B：所属节（level-1 锚点行 id）
+    # 可选：TreeRAG 等多行文本块中，每个文本片段对应的原始 line_ids。
+    # 保留该字段以统一共享 Chunk schema，并兼容既有 TreeRAG checkpoint。
+    text_line_id_groups: Optional[Tuple[Tuple[int, ...], ...]] = None
 
 
 class CorpusIndex:

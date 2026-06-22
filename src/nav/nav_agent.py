@@ -357,5 +357,6 @@ def run_nav_episode(
         phase_timings={
             "retrieval_framework_seconds": retrieval_seconds,
             "compose_seconds": compose_seconds,
+            "online_response_seconds": retrieval_seconds + compose_seconds,
         },
     )

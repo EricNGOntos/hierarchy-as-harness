@@ -1,7 +1,7 @@
 # Gold Nav 统一修复方案
 
-> **日期**：2025-06-20（Phase1 2026-06-22，Phase2 2026-06-22）
-> **状态**：Phase1 已实施并 push（`1a90ed2`）；Phase2 进行中（multi/scope 导航门控 + compose + 消融）
+> **日期**：2025-06-20（Phase1 2026-06-22；canonical **scopefix_v2** 2026-06-22）
+> **状态**：Phase1 已实施；Phase2 nav 门控已回退；**canonical = scopefix_v2**（`[E1]` header + scope 判分/金标修复）
 > **适用范围**：`src/nav/`（导航 agent）、`src/realdata/agent_delivery/code/`（evidence 组装）
 > **参考代码库**：KNOWHERE 生产工程 `/Users/wuchengke/Desktop/knowhere/knowhereapi-main/packages/shared-python/shared/services/retrieval/agentic/`
 
@@ -659,13 +659,13 @@ evidence = A + B + C 的 chunks（全部由 agent 自主决策）
 
 ## 5. 验证清单
 
-修复完成后，逐项检查（Phase1 跑数 tag=`fair_clean_unified_v1`，Phase2 tag=`fair_clean_unified_v3`）：
+修复完成后，逐项检查（canonical tag=`fair_clean_scopefix_v2`；历史 Phase2 tag=`fair_clean_unified_v3`）：
 
 ### Fix1 验证
 - [x] `evidence_text` 中不再有 `PATH:` 行（51/51）
-- [x] evidence block header 缩短为 `[L10]` 量级
-- [x] 有效 evidence 字符从 ~123 → ~447（b500 下）
-- [x] niche_fact task 0.853（v1 0.677）
+- [x] evidence block header 为方法无关 `[E1]`/`[E2]`（`method_neutral_ordinal_v1`）
+- [x] 有效 evidence 字符显著提升（相对 Fix 前 ~123 字）
+- [x] niche_fact task 0.765（scopefix_v2）
 
 ### Fix2 验证
 - [ ] collect 浪费步（added=0）从 69% 降到 <25%（v1 仍 ~66%；Phase2 过滤已 collect/empty section）
@@ -675,24 +675,24 @@ evidence = A + B + C 的 chunks（全部由 agent 自主决策）
 ### Fix3 验证
 - [x] `nav_soft_safety_collect` step 不再出现
 - [x] D* 出现在 legal_actions；部分题 agent 实际选择 D*
-- [ ] multi_hop task 目标 30%+（v1 0.118；Phase2 FINISH 门控 + Hop 证据标签）
-- [ ] scope_collection task 目标 15%+（v1 0.038；Phase2 scope compose + 广度 collect）
+- [ ] multi_hop task 目标 30%+（scopefix_v2 0.118）
+- [ ] scope_collection task 目标 15%+（scopefix_v2 0.392，判分修复后）
 - [x] Emergency guard 触发率 0%
 
 ### 公平性验证
 - [x] 三方同 b500；无 soft_safety 后置注入
-- [x] TreeRAG compose/evidence 与 Gold 同构（unified_v2）
+- [x] TreeRAG compose/evidence 与 Gold 共用 `src/realdata/agent_delivery`
 - [ ] Emergency Guard 三方对称（仍仅 Gold 实现，0 触发）
 
-### 消融（Phase2，`bin/33_run_unified_ablations.sh`）— 已完成
-- [x] `fair_clean_unified_v3`：Gold 0.325（**低于 v1，nav 已回退**）
+### 历史 Phase2 消融（nav 已回退，结果未纳入 canonical）
+- [x] `fair_clean_unified_v3`：Gold 0.325（低于 Phase1 unified header）
 - [x] `fair_clean_ablation_no_discovery`：Gold 0.333
 - [x] `fair_clean_ablation_no_agent_state`：Gold 0.297（Agent State **关键**）
 
-### Phase2 结论（2026-06-22）
-- FINISH 门控 + C* 去重在 v3 中 **未提升 task 分**（multi/scope 反降），已从代码回退。
-- **保留 canonical**：Gold unified_v1 + TreeRAG unified_v2。
-- 下一步若提 multi/scope：优先改 **compose 分组** 或 **multi 双目标 prompt**，而非硬性 FINISH 门控。
+### Canonical 结论（2026-06-22）
+- **唯一主结果**：`fair_clean_scopefix_v2`（Gold 0.425 / TreeRAG 0.398 / Flat 0.360）
+- 旧 tag（`unified_v1/v2`、`header_v1`、`scopefix_v1`）已从仓库移除
+- 下一步若提 multi：优先 compose 分组 / 软导航，勿用 Phase2 FINISH 硬门控
 
 ---
 
