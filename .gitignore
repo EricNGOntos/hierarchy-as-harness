@@ -7,12 +7,6 @@
 cache/*
 !cache/.gitkeep
 
-# 非 canonical 实验产物（本地调试时可生成，不入库）
-results/fair_clean_*_unified_*_b*.json
-results/fair_clean_*_ablation_*_b*.json
-results/fair_clean_*_header_v1_b*.json
-results/fair_clean_*_scopefix_v1_b*.json
-
 # Python
 __pycache__/
 *.py[cod]
