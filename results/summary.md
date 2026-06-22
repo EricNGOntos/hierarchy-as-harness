@@ -1,6 +1,6 @@
 # 共享输出预算实验结果摘要（fair_clean / b500）
 
-最后更新：2026-06-22
+最后更新：2026-06-22（`bin/36 --judge-only` 与当前 scope 金标/判分对齐）
 
 > **Canonical（唯一主结果）**：`scopefix_v2` — 方法无关 `[E1]/[E2]` header + scope 金标/判分修复。Gold **0.425**、TreeRAG **0.398**、Flat **0.360**。
 
@@ -8,9 +8,9 @@
 
 | 方法 | 总体 | niche | multi | scope | evidence |
 |------|-----:|------:|------:|------:|---------:|
-| **Gold** | **0.425** | **0.765** | **0.118** | 0.392 | 0.609 |
+| **Gold** | **0.425** | **0.765** | **0.118** | 0.392 | 0.610 |
 | **TreeRAG** | 0.398 | **0.765** | 0.078 | 0.351 | **0.614** |
-| Flat | 0.360 | 0.424 | 0.078 | **0.578** | 0.592 |
+| Flat | 0.360 | 0.424 | 0.078 | **0.578** | 0.591 |
 
 逐题 bootstrap 95% CI：Gold−TreeRAG `[-0.090, 0.148]`；Gold−Flat `[-0.070, 0.203]`；TreeRAG−Flat `[-0.097, 0.175]`。
 
@@ -28,4 +28,5 @@
 | TreeRAG | `results/fair_clean_treerag_fair_clean_scopefix_v2_b500.json` |
 | 对比表 | `cache/compare_fair_clean_final.md` |
 
-复跑：`bash bin/32_run_quality_balanced_gold_flat.sh` · `bash bin/35_run_quality_balanced60_treerag.sh` · `bash bin/21_compare_realdata_baselines.sh`
+复跑：`bash bin/32_run_quality_balanced_gold_flat.sh` · `bash bin/35_run_quality_balanced60_treerag.sh` · `bash bin/21_compare_realdata_baselines.sh`  
+仅重判分（改 scope 金标/判分后）：`python3 bin/36_recompose_judge.py --judge-only`
