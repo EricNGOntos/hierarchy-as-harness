@@ -28,12 +28,8 @@ def _task_type_compose_guidance(task_type: str) -> str:
     tt = (task_type or "").lower()
     if tt == "multi_hop":
         return (
-            "【题型 multi_hop】Evidence 中 `[E1]`/`[E2]`/`[Hop n | En]` 仅为证据块序号，不是层级编号；"
-            "不要根据 header 推断章节层级。"
-            "必须在 JSON 中给出三个独立短句字段："
-            "\"fact_1\"（对应问题中**第一处/第一个**位置或子问）、\"fact_2\"（**第二处/第二个**），"
-            "\"final_answer\"（综合结论）；"
-            "fact_1 与 fact_2 必须分别来自不同证据块，不得互换或重复同一要点。"
+            "【题型 multi_hop】必须在 JSON 中给出三个独立短句字段："
+            "\"fact_1\"（第一步事实）、\"fact_2\"（第二步事实）、\"final_answer\"（综合结论）；"
             "final_answer 必须综合回答问题中的所有子问，不得为空。"
             "若问题询问多个方面（如功能和设计要求、主体和期限、类型列表），final_answer 必须逐项覆盖；"
             "若证据同一句包含例外、补充条件或后续处置（如“无……则……”“同时……”“并……”），"
@@ -49,7 +45,6 @@ def _task_type_compose_guidance(task_type: str) -> str:
     if tt == "niche_fact":
         return (
             "【题型 niche_fact】`answer` 为一句可核验的结论，严格来自 Evidence。"
-            "`[E1]`/`[E2]` 仅为证据块序号，不是层级或条款编号。"
             "如果问题包含章节/小标题/条款名，优先回答该标题直接对应的那一条规定或事实，"
             "不要概括相邻条款；可保留原文编号和关键措辞。含必要数字与单位。"
         )
@@ -311,8 +306,8 @@ def _evidence_from_chunks(chunks: Sequence[Chunk], max_chars: int) -> str:
     parts: List[str] = []
     used = 0
     sep = "\n\n"
-    for idx, c in enumerate(chunks, start=1):
-        block = f"[E{idx}]\n{(c.text or '').strip()}"
+    for c in chunks:
+        block = f"[{c.node_id}]\n{(c.text or '').strip()}"
         add = len(block) + (len(sep) if parts else 0)
         if used + add > max_chars:
             remain = max_chars - used - (len(sep) if parts else 0)

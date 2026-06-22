@@ -534,16 +534,8 @@ def score_sample(task: Dict[str, Any], pred_output: Any) -> Tuple[float, float, 
                 if (not p1 and not p2) and pf:
                     parts = split_dual_answer(pf)
                     p1, p2 = parts["fact_1"].strip(), parts["fact_2"].strip()
-                g1 = str(target.get("fact_1", ""))
-                g2 = str(target.get("fact_2", ""))
-                s11 = content_score_for_inspect(p1, g1)
-                s22 = content_score_for_inspect(p2, g2)
-                s12 = content_score_for_inspect(p1, g2)
-                s21 = content_score_for_inspect(p2, g1)
-                if (s11 + s22) >= (s12 + s21):
-                    s1, s2 = s11, s22
-                else:
-                    s1, s2 = s12, s21
+                s1 = content_score_for_inspect(p1, str(target.get("fact_1", "")))
+                s2 = content_score_for_inspect(p2, str(target.get("fact_2", "")))
                 sf = content_score_for_inspect(pf or (p1 + "；" + p2), str(target.get("final_answer", "")))
                 c = (s1 + s2 + sf) / 3
                 extra["fact_1_score"] = round(s1, 4)
