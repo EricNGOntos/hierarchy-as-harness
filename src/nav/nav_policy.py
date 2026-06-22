@@ -93,6 +93,47 @@ def _compatible_discovery_action_id(aid: str, actions: List[LegalAction]) -> str
     return normalized
 
 
+def _format_agent_state(state: NavState, step_idx: int, config: NavConfig) -> str:
+    """Agent state block so the nav LLM knows what was already collected."""
+    lines = ["=== Agent State ==="]
+    lines.append(f"Current scope: {state.current_scope or 'document-root'}")
+    lines.append(f"Step: {step_idx + 1} / {config.max_steps}")
+
+    collected_sections: List[str] = []
+    explored_empty: List[str] = []
+    seen: set[str] = set()
+    for h in state.action_history:
+        sid = str(h.get("section_id") or "").strip()
+        if not sid or sid in seen:
+            continue
+        seen.add(sid)
+        if h.get("kind") == "collect" and int(h.get("n_added", 0) or 0) > 0:
+            collected_sections.append(sid)
+        elif h.get("kind") == "collect" and int(h.get("n_added", 0) or 0) == 0:
+            explored_empty.append(sid)
+
+    if collected_sections:
+        lines.append(f"Evidence collected: {len(collected_sections)} section(s)")
+        for sid in collected_sections:
+            lines.append(f'  - "{sid}"')
+    else:
+        lines.append("Evidence collected: none")
+
+    if explored_empty:
+        lines.append(f"Already explored (no new evidence): {len(explored_empty)} section(s)")
+        for sid in explored_empty[:5]:
+            lines.append(f'  - "{sid}"')
+
+    remaining = config.max_steps - step_idx - 1
+    if remaining <= 2:
+        lines.append(
+            f"Only {remaining} step(s) remaining. Consider FINISH if evidence is sufficient."
+        )
+
+    lines.append("=== End Agent State ===")
+    return "\n".join(lines)
+
+
 def choose_llm_action(
     state: NavState,
     projection: Projection,
@@ -110,26 +151,38 @@ def choose_llm_action(
     model = os.environ.get(config.llm_model_env, "").strip() or os.environ.get("COMPOSE_MODEL", "gpt-4o-mini")
     base_url = os.environ.get("OPENAI_BASE_URL", "").strip() or None
     client = make_openai_client(api_key=key, base_url=base_url)
+    agent_state = _format_agent_state(state, step_idx, config)
     action_block = "\n".join(f"- {a.prompt_line()}" for a in actions)
-    history = "\n".join(
-        f"- step={h.get('step_idx')} action={h.get('action_id')} kind={h.get('kind')} section={h.get('section_id')}"
-        for h in state.action_history[-6:]
-    )
+
     system = (
-        "You are a constrained document navigation policy. "
-        "Return one JSON object only. You must choose exactly one action_id from the legal action list. "
-        "Do not invent paths, tools, or action ids. "
-        "Discovery collect actions are named D1, D2, etc.; if only D actions are legal, return a D id, not C. "
-        "Keep reason under 12 words."
+        "You are a document navigation agent running an observe-act loop.\n\n"
+        "Each step chooses exactly ONE action_id from the legal action list.\n\n"
+        "Action semantics:\n"
+        "  - C* (COLLECT): adds a section and all descendant content to evidence.\n"
+        "  - E* (EXPAND): opens a section to see its children in the next step.\n"
+        "  - D* (DISCOVERY COLLECT): collects a section found by bottom-up search.\n"
+        "  - S* (SEARCH): keyword search within the document.\n"
+        "  - B* (BACK): return to parent scope.\n"
+        "  - F* (FINISH): end navigation for this document.\n\n"
+        "Rules:\n"
+        "  - Do NOT re-collect a section already listed in 'Evidence collected'.\n"
+        "  - Do NOT re-explore a section listed in 'Already explored'.\n"
+        "  - For [Leaf] sections, prefer COLLECT over EXPAND.\n"
+        "  - If evidence is sufficient for the query, choose FINISH.\n"
+        "  - When steps remaining <= 2, prioritize COLLECT or FINISH.\n"
+        "  - Do not invent action IDs. Use only IDs from the legal action list.\n\n"
+        'Return ONLY one JSON object: {"action_id":"C1","reason":"short reason"}\n'
+        "Keep reason under 15 words. Reason must be in English."
     )
     user = (
-        f"query: {state.query}\n"
-        f"task_type: {state.task_type}\n"
-        f"current_scope: {state.current_scope or '<document-root>'}\n"
-        f"recent_history:\n{history or '(none)'}\n\n"
-        f"section_projection:\n{projection.text}\n\n"
-        f"legal_actions:\n{action_block}\n\n"
-        'Return: {"action_id":"C1","reason":"short reason"}'
+        f"User query: {state.query}\n"
+        f"Task type: {state.task_type}\n\n"
+        f"{agent_state}\n\n"
+        f"=== Actionable Observation ===\n"
+        f"{projection.text}\n"
+        f"=== End Actionable Observation ===\n\n"
+        f"Legal actions:\n{action_block}\n\n"
+        'Return: {"action_id":"...","reason":"..."}'
     )
 
     last_error: Optional[Exception] = None

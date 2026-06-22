@@ -1355,7 +1355,7 @@ def _existing_result_paths() -> List[Path]:
     # Canonical fair-protocol Gold/Flat result (used for the summary markdown comparison;
     # also the cap source only if TREERAG_FAIR_CAP=1, which is OFF by default).
     return [
-        PACKAGE_ROOT.parent.parent / "results" / "fair_clean_gold_flat_fair_clean_v1_b500.json",
+        PACKAGE_ROOT.parent.parent / "results" / "fair_clean_gold_flat_fair_clean_unified_v1_b500.json",
     ]
 
 

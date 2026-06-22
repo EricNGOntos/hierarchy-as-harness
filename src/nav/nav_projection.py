@@ -113,11 +113,13 @@ def build_projection(
             continue
         visible.append(view)
         indent = "  " * depth
-        marker = "+" if view.has_children else "-"
+        leaf_tag = " [Leaf]" if not view.has_children else ""
+        title = view.preview[:80] if view.preview else view.section_id
         add_line(
-            f"{indent}{marker} {view.section_id} "
-            f"chunks={view.n_chunks} lines={view.n_lines} score={view.score:.4f} :: {view.preview}"
+            f"{indent}[{view.section_id}] {title} ({view.n_chunks} chunks){leaf_tag}"
         )
+        if view.preview:
+            add_line(f"{indent}     Preview: \"{view.preview[:80]}\"")
         if depth + 1 >= max(1, config.projection_depth):
             continue
         child_rows = _children(ts, sid)[: max(0, config.projection_child_limit)]

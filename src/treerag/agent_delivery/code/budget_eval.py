@@ -58,8 +58,13 @@ class BudgetFillResult:
     """最后一个 chunk 是否被字符级截断（P2）。"""
 
 
+def _short_chunk_id(node_id: str) -> str:
+    return re.sub(r"^[^:]*:(L\d+)(?:__\w+)?$", r"\1", str(node_id or ""))
+
+
 def _block_for(chunk: Chunk) -> str:
-    return f"[{chunk.node_id}]\n{chunk.text or ''}"
+    short_id = _short_chunk_id(chunk.node_id)
+    return f"[{short_id}]\n{chunk.text or ''}"
 
 
 def _partial_chunk_for_block(chunk: Chunk, visible_block: str) -> Chunk:
@@ -69,7 +74,7 @@ def _partial_chunk_for_block(chunk: Chunk, visible_block: str) -> Chunk:
     Chunk 当前没有逐行文本 offset 元数据；这里用可见正文长度占比映射到有序 line_ids 前缀。
     对 line chunk 精确等价，对 leaf/path chunk 保守地避免把未进入预算的尾部行号全算进 evidence。
     """
-    header = f"[{chunk.node_id}]\n"
+    header = f"[{_short_chunk_id(chunk.node_id)}]\n"
     text = chunk.text or ""
     if not chunk.line_ids:
         visible_line_ids: Tuple[int, ...] = ()

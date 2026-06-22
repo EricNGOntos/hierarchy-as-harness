@@ -32,6 +32,8 @@ def _task_type_compose_guidance(task_type: str) -> str:
             "\"fact_1\"（第一步事实）、\"fact_2\"（第二步事实）、\"final_answer\"（综合结论）；"
             "final_answer 必须综合回答问题中的所有子问，不得为空。"
             "若问题询问多个方面（如功能和设计要求、主体和期限、类型列表），final_answer 必须逐项覆盖；"
+            "若证据同一句包含例外、补充条件或后续处置（如“无……则……”“同时……”“并……”），"
+            "必须原样覆盖到对应 fact 和 final_answer，不得只写前半句；"
             "不要把 fact_2 或 final_answer 这些键名写进字段值。全部严格来自 Evidence，勿臆造。"
         )
     if tt in ("scope_collection", "regulatory_coverage"):

@@ -13,7 +13,7 @@ from agent_delivery.code.index_retrieval import Chunk
 from agent_delivery.code.tool_space import Refusal, ToolSpace
 
 from nav_actions import build_legal_actions
-from nav_discovery import apply_soft_safety_collect, compute_discovery_scores
+from nav_discovery import compute_discovery_scores
 from nav_policy import choose_llm_action
 from nav_projection import build_projection
 from nav_types import ActionKind, LegalAction, NavConfig, NavState
@@ -170,6 +170,28 @@ def _search_doc(ts: ToolSpace, state: NavState, config: NavConfig) -> List[Tuple
     return [(h.chunk, float(h.score)) for h in hits]
 
 
+def _emergency_guard_collect(ts: ToolSpace, state: NavState) -> int:
+    """Last-resort dense top-k when navigation collected nothing."""
+    if state.collected:
+        return 0
+    pool = ts.leaf_path_search_pool(state.doc_id)
+    if not pool:
+        return 0
+    idx = getattr(ts, "_idx", None)
+    if idx is None:
+        return 0
+    k = min(len(pool), 8)
+    scored = idx.search(state.query, pool, k, doc_id_filter=state.doc_id)
+    added = 0
+    for chunk, score in scored:
+        if chunk.node_id in state.collected_ids:
+            continue
+        state.collected_ids.add(chunk.node_id)
+        state.collected.append((chunk, float(score) * 0.4))
+        added += 1
+    return added
+
+
 def run_nav_episode(
     tools: HierarchicalTools,
     query: str,
@@ -201,9 +223,9 @@ def run_nav_episode(
     state = NavState(doc_id=doc_id, query=query, task_type=task_type)
     steps: List[AgentStep] = []
     section_ids = ts.sections_for_doc(doc_id)
+    state.discovery_scores = compute_discovery_scores(ts, state, cfg)
 
     for step_idx in range(1, max(1, int(cfg.max_steps)) + 1):
-        state.discovery_scores = compute_discovery_scores(ts, state, cfg)
         projection = build_projection(
             ts,
             doc_id=doc_id,
@@ -262,21 +284,16 @@ def run_nav_episode(
             state.action_history.append({**detail, "step_idx": step_idx})
             continue
 
-    added_soft, soft_ids, soft_meta = apply_soft_safety_collect(
-        ts,
-        state,
-        cfg,
-        budget_chars=int(budget_chars),
-        collect_subtree_fn=_collect_subtree,
-        add_scored_fn=_add_scored,
-        dedupe_fn=_dedupe_scored,
-    )
-    if soft_ids:
+    emergency_added = _emergency_guard_collect(ts, state)
+    if emergency_added:
         steps.append(
             AgentStep(
                 step_idx=len(steps) + 1,
-                action="nav_soft_safety_collect",
-                detail=soft_meta,
+                action="nav_emergency_guard",
+                detail={
+                    "reason": "zero_collection_fallback",
+                    "n_added": emergency_added,
+                },
             )
         )
 

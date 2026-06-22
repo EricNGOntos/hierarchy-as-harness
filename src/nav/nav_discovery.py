@@ -47,12 +47,18 @@ def _nearest_scope_node_ids(ts: ToolSpace, doc_id: str, node_id: str) -> List[st
 
 def _split_chunk_text(chunk: Chunk) -> Tuple[str, str]:
     text = str(chunk.text or "")
-    if text.startswith("PATH:"):
-        first, _, rest = text.partition("\n")
-        path_text = first.replace("PATH:", "", 1).strip()
-        body = rest.strip()
-        return path_text, body or text
-    return "", text
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    path_text = ""
+    body_lines: List[str] = []
+    for ln in lines:
+        if ln.startswith("[§"):
+            path_text = ln.strip("[]").replace("§", "", 1).strip()
+        elif ln.startswith("PATH:"):
+            path_text = ln.replace("PATH:", "", 1).strip()
+        else:
+            body_lines.append(ln)
+    body = "\n".join(body_lines).strip()
+    return path_text, body or text
 
 
 def _chunk_to_search_row(chunk: Chunk, ts: ToolSpace) -> dict[str, Any]:
@@ -246,161 +252,6 @@ def _picked_discovery_ids(state: NavState, section_candidates: List[dict[str, An
     return picked_ids
 
 
-def _llm_rerank_safety_sections(
-    state: NavState,
-    candidates: List[dict[str, Any]],
-    config: NavConfig,
-    *,
-    pick_k: int,
-    collected_section_ids: set[str],
-) -> Tuple[List[str], dict[str, Any]]:
-    if not candidates:
-        return [], {}
-    legal_ids = [str(c["section_id"]) for c in candidates if c.get("section_id")]
-    if not legal_ids:
-        return [], {}
-
-    from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
-    from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
-    from agent_delivery.code.llm_usage import record_usage  # type: ignore
-
-    require_llm_env(context="Nav soft safety rerank")
-    key = os.environ.get("OPENAI_API_KEY", "").strip()
-    model = os.environ.get(config.llm_model_env, "").strip() or os.environ.get("NAV_LLM_MODEL", "gpt-4o-mini")
-    client = make_openai_client(api_key=key, base_url=os.environ.get("OPENAI_BASE_URL", "").strip() or None)
-
-    cand_lines = [
-        f"- {c['section_id']} | score={float(c.get('discovery_score', 0.0)):.3f} | {str(c.get('label') or '')[:100]}"
-        for c in candidates
-    ]
-    already = ", ".join(sorted(collected_section_ids)[:12]) or "(none)"
-    system = (
-        "Navigation has finished. Pick sections still needed to answer the query. "
-        f"Return JSON with up to {pick_k} section_ids from the candidate list only."
-    )
-    user = (
-        f"query: {state.query}\n"
-        f"task_type: {state.task_type}\n"
-        f"already_collected_sections: {already}\n\n"
-        "candidates:\n"
-        + "\n".join(cand_lines)
-        + '\n\nReturn: {"section_ids":["..."],"reason":"..."}'
-    )
-    meta: dict[str, Any] = {"model": model}
-    try:
-        cached = cached_chat_completion(
-            client,
-            model=model,
-            messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
-            temperature=float(config.llm_temperature),
-            max_tokens=min(256, int(config.llm_max_tokens)),
-            purpose="nav_soft_safety_rerank",
-        )
-        record_usage("nav_soft_safety_rerank", cached.get("usage"))
-        content = str(cached.get("content") or "")
-        meta["raw"] = content
-        obj = _extract_json_obj(content) or {}
-        picked_raw = obj.get("section_ids") or obj.get("section_id") or []
-        if isinstance(picked_raw, str):
-            picked_raw = [picked_raw]
-        legal = set(legal_ids)
-        picked = [str(s).strip() for s in picked_raw if str(s).strip() in legal]
-        meta["reason"] = str(obj.get("reason") or "")
-        if picked:
-            return picked[:pick_k], meta
-    except Exception as exc:
-        meta["error"] = str(exc)
-    return legal_ids[:pick_k], meta
-
-
-def apply_soft_safety_collect(
-    ts: ToolSpace,
-    state: NavState,
-    config: NavConfig,
-    *,
-    budget_chars: int,
-    collect_subtree_fn,
-    add_scored_fn,
-    dedupe_fn,
-) -> Tuple[int, List[str], dict[str, Any]]:
-    """Post-nav conditional + capped safety net.
-
-    Only fires when the navigator's own evidence does NOT already fill the budget
-    (empty or low-coverage); otherwise it can only displace good evidence, which is
-    what hurt the unconditional v2 variant. Picked sections are collected, capped at
-    NAV_SOFT_SAFETY_MAX_ADD chunks, and demoted BELOW the existing minimum score so
-    they only fill leftover budget instead of evicting navigator evidence.
-    """
-    if os.environ.get("NAV_SOFT_SAFETY_NET", "1").strip().lower() in {"0", "false", "no", "off"}:
-        return 0, [], {}
-    if not _discovery_enabled():
-        return 0, [], {}
-
-    from agent_delivery.code.budget_eval import evaluate_at_budget  # type: ignore
-
-    budget = max(1, int(budget_chars))
-    pre_fill = evaluate_at_budget(dedupe_fn(list(state.collected)), budget_chars=budget)
-    coverage = float(pre_fill.evidence_chars_actual) / float(budget)
-    # Note: we always run the hybrid+LLM-rerank pick. A full budget is NOT a reason to
-    # skip: the navigator can fill the budget with the WRONG leaf (niche_fact), and the
-    # discovery channel is exactly what recovers those cases. The picked chunks are
-    # collected on the SAME dense-similarity scale as navigator evidence (no demotion),
-    # so a high-confidence discovery chunk can outrank a wrong navigator chunk, while the
-    # per-call cap keeps volume in check (the unconditional+mass-inject v2 is avoided by
-    # the cap, not by a coverage gate).
-
-    section_candidates = _hybrid_section_candidates(ts, state, config)
-    if not section_candidates:
-        return 0, [], {"skipped": "no_candidates", "coverage": round(coverage, 3)}
-
-    pick_k = max(1, int(os.environ.get("NAV_SOFT_SAFETY_PICK_K", "3").strip() or "3"))
-    collected_sections = {str(c.section_id) for c, _ in state.collected if getattr(c, "section_id", None)}
-    candidates = [c for c in section_candidates if str(c.get("section_id") or "") not in collected_sections]
-    if not candidates:
-        candidates = list(section_candidates)
-
-    picked_ids, meta = _llm_rerank_safety_sections(
-        state,
-        candidates,
-        config,
-        pick_k=pick_k,
-        collected_section_ids=collected_sections,
-    )
-    if not picked_ids:
-        meta["coverage"] = round(coverage, 3)
-        return 0, [], meta
-
-    from nav_types import ActionKind, LegalAction
-
-    max_add = max(1, int(os.environ.get("NAV_SOFT_SAFETY_MAX_ADD", "8").strip() or "8"))
-
-    added_total = 0
-    hits_total = 0
-    by_id = {str(c["section_id"]): float(c.get("discovery_score", 0.0)) for c in section_candidates}
-    for sid in picked_ids:
-        if added_total >= max_add:
-            break
-        action = LegalAction(
-            action_id="SS",
-            kind=ActionKind.COLLECT,
-            section_id=sid,
-            label="soft safety collect",
-            score=by_id.get(sid, 0.0),
-        )
-        scored = collect_subtree_fn(ts, action, state, config)
-        hits_total += len(scored)
-        # Keep on native dense-similarity scale (no demotion) so a correct discovery
-        # chunk can outrank a wrong navigator chunk; cap volume to avoid mass-inject.
-        scored = sorted(scored, key=lambda x: -float(x[1]))[: max(0, max_add - added_total)]
-        added_total += add_scored_fn(state, scored)
-    meta["n_hits"] = hits_total
-    meta["n_added"] = added_total
-    meta["section_ids"] = list(picked_ids)
-    meta["coverage"] = round(coverage, 3)
-    meta["max_add"] = max_add
-    return added_total, list(picked_ids), meta
-
-
 def compute_discovery_scores(ts: ToolSpace, state: NavState, config: NavConfig) -> Dict[str, float]:
     if not _discovery_enabled():
         return {}
@@ -412,4 +263,11 @@ def compute_discovery_scores(ts: ToolSpace, state: NavState, config: NavConfig) 
     picked_ids = _picked_discovery_ids(state, section_candidates, config)
     by_id = {str(c["section_id"]): float(c["discovery_score"]) for c in section_candidates}
     scale = float(os.environ.get("NAV_DISCOVERY_SCORE_SCALE", "20.0").strip() or "20.0")
-    return {sid: by_id[sid] * scale for sid in picked_ids if sid in by_id}
+    min_score = float(os.environ.get("NAV_DISCOVERY_MIN_SCORE", "0.1").strip() or "0.1")
+    out: Dict[str, float] = {}
+    for sid in picked_ids:
+        raw = by_id.get(sid)
+        if raw is None or raw < min_score:
+            continue
+        out[sid] = raw * scale
+    return out

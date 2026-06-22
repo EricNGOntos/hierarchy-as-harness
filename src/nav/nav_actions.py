@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import List, Optional
 
 from nav_types import ActionKind, LegalAction, NavConfig, NavState, Projection
@@ -37,6 +38,15 @@ def build_legal_actions(
     collect_i = 1
     expand_i = 1
     discovery_scores = dict(getattr(state, "discovery_scores", {}) or {})
+    label_by_id = {
+        str(c.get("section_id") or ""): str(c.get("label") or "")[:100]
+        for c in (getattr(state, "hybrid_section_candidates", None) or [])
+    }
+    collected_sids = {
+        str(h.get("section_id") or "").strip()
+        for h in state.action_history
+        if h.get("kind") == "collect" and int(h.get("n_added", 0) or 0) > 0
+    }
     visible_all = list(projection.visible_sections)
     visible_ids = {view.section_id for view in visible_all}
     # Keep C*/E* tied to projection order (N1 parity). Hybrid discovery only adds D* paths.
@@ -77,15 +87,21 @@ def build_legal_actions(
 
     # Hybrid discovery: expose LLM-reranked D* COLLECT actions only (no auto-inject).
     d_i = 1
+    d_limit = max(1, int(os.environ.get("NAV_DISCOVERY_PICK_K", "5").strip() or "5"))
     for section_id, score in sorted(discovery_scores.items(), key=lambda item: (-item[1], item[0])):
-        if section_id in visible_ids:
+        if d_i > d_limit:
+            break
+        if section_id in visible_ids or section_id in collected_sids:
             continue
+        if any(a.section_id == section_id for a in actions if a.kind == ActionKind.COLLECT):
+            continue
+        label = label_by_id.get(section_id) or "discovery section"
         add(
             ActionKind.COLLECT,
             "D",
             d_i,
             section_id=section_id,
-            label="collect hybrid-discovery section (LLM reranked)",
+            label=f"Discovery collect: {label} (score={float(score):.2f})",
             score=float(score),
             metadata={"discovery_score": float(score), "source": "knowhere_hybrid_rerank"},
         )

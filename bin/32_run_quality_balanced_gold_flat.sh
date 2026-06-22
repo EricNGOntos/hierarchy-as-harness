@@ -5,18 +5,12 @@ export PYTHONDONTWRITEBYTECODE=1
 cd "$(dirname "$0")/.."
 
 BUDGETS="${BUDGETS:-500}"
-NAV_RUN_TAG="${NAV_RUN_TAG:-fair_clean_v1}"
+NAV_RUN_TAG="${NAV_RUN_TAG:-fair_clean_unified_v1}"
 EMBEDDING_MODEL="${EMBEDDING_MODEL:-BAAI/bge-m3}"
-# Disable discovery: NAV_DISCOVERY_SOFT_SIGNAL=0
+# Unified nav fix: hybrid discovery D* before/during nav; post-nav soft_safety removed.
 export NAV_DISCOVERY_SOFT_SIGNAL="${NAV_DISCOVERY_SOFT_SIGNAL:-1}"
 export NAV_DISCOVERY_RECALL_K="${NAV_DISCOVERY_RECALL_K:-10}"
 export NAV_DISCOVERY_PICK_K="${NAV_DISCOVERY_PICK_K:-3}"
-# Post-nav soft safety net: hybrid recall + LLM rerank pick, collected on the native
-# dense-similarity scale (so a correct discovery chunk can outrank a wrong navigator
-# chunk) and capped in volume to avoid the v2 mass-inject regression.
-export NAV_SOFT_SAFETY_NET="${NAV_SOFT_SAFETY_NET:-1}"
-export NAV_SOFT_SAFETY_PICK_K="${NAV_SOFT_SAFETY_PICK_K:-3}"
-export NAV_SOFT_SAFETY_MAX_ADD="${NAV_SOFT_SAFETY_MAX_ADD:-8}"
 export NAV_PATH_ANCHOR_TASK_TYPES="${NAV_PATH_ANCHOR_TASK_TYPES:-scope_collection,regulatory_coverage,multi_hop}"
 
 TASKS="${TASKS:-data/tasks/tasks_realdata_bodyrich_fair_clean.jsonl}"

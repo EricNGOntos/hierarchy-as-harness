@@ -244,10 +244,15 @@ class ToolSpace:
 
             body_indices = list(range(root, root_end))
             text_parts: List[str] = []
-            if path_indices:
-                path = " / ".join((b.lines[i].content or "").strip() for i in path_indices)
-                text_parts.append(f"PATH: {path}")
-            text_parts.extend((b.lines[i].content or "").strip() for i in body_indices)
+            path_only = [i for i in path_indices if i not in set(body_indices)]
+            if path_only:
+                ctx = " / ".join(
+                    (b.lines[i].content or "").strip()[:40] for i in path_only
+                )
+                text_parts.append(f"[§ {ctx}]")
+            text_parts.extend(
+                (b.lines[i].content or "").strip() for i in body_indices
+            )
             line_ids = tuple(
                 b.lines[i].line_id for i in sorted(set(path_indices + body_indices))
             )
