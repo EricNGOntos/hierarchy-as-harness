@@ -542,6 +542,10 @@ def _prepare_compose_evidence_text(
         if not b_norm or b_norm in seen_body:
             continue
         seen_body.add(b_norm)
+        if tt == "multi_hop":
+            m = re.match(r"^\[E(\d+)\]$", h)
+            if m:
+                h = f"[Hop {m.group(1)} | E{m.group(1)}]"
         deduped.append((h, b))
 
     out_parts: List[str] = []
@@ -1553,7 +1557,8 @@ def _checkpoint_signature(
         "pool_mode": _POOL_MODE or "none",
         "evidence_header_protocol": EVIDENCE_HEADER_PROTOCOL,
         "scope_scoring_protocol": "structured_item_alignment_v2",
-        "adapter": "gold_pred_flat_task_checkpoint_v4",
+        "compose_prep_version": "multi_hop_hop_labels_v1",
+        "adapter": "gold_pred_flat_task_checkpoint_v5",
     }
     return hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
 

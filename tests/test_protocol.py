@@ -21,7 +21,7 @@ from agent_delivery.code.inspect_scoring import (  # noqa: E402
     scope_collection_items_score,
     score_sample,
 )
-from agent_delivery.agent.runner_bodyrich import _finalize_cost  # noqa: E402
+from agent_delivery.agent.runner_bodyrich import _finalize_cost, _prepare_compose_evidence_text  # noqa: E402
 
 
 def _load_treerag_module():
@@ -165,6 +165,41 @@ class FairCleanTaskTests(unittest.TestCase):
             self.assertEqual(line_ids, target["evidence_line_ids"])
             self.assertEqual(len(target["table"]), target["summary"]["total_items"])
             self.assertLess(len(target["final_answer"]), 500)
+
+
+    def test_multi_hop_m1_uses_order_invariant_fact_matching(self) -> None:
+        task = {
+            "target": {
+                "fact_1": "封孔高度5cm",
+                "fact_2": "养护7天",
+                "final_answer": "第一处要点：封孔高度5cm 第二处要点：养护7天",
+            },
+            "metadata": {"task_type": "multi_hop", "hop_template": "M1", "gold_line_ids": [1, 2]},
+        }
+        content, _, extra = score_sample(
+            task,
+            {
+                "fact_1": "养护7天",
+                "fact_2": "封孔高度5cm",
+                "final_answer": "综合答案",
+                "evidence_line_ids": [1],
+            },
+        )
+        self.assertEqual(extra.get("fact_1_score"), 1.0)
+        self.assertEqual(extra.get("fact_2_score"), 1.0)
+        self.assertGreater(content, 0.5)
+
+
+    def test_multi_hop_compose_evidence_labels_hops(self) -> None:
+        text = "[E1]\n甲段\n\n[E2]\n乙段"
+        out = _prepare_compose_evidence_text(
+            "请综合两个位置的信息",
+            text,
+            budget_chars=500,
+            task_type="multi_hop",
+        )
+        self.assertIn("[Hop 1 | E1]", out)
+        self.assertIn("[Hop 2 | E2]", out)
 
 
 if __name__ == "__main__":

@@ -377,10 +377,10 @@ def main() -> None:
     )
     ap.add_argument("--mode", choices=["audit", "clean"], default="audit")
     ap.add_argument("--corpus", type=Path, default=Path("data/corpus/test_data_full_realdata_clean_latest.jsonl"))
-    ap.add_argument("--tasks", type=Path, default=Path("data/tasks/tasks_realdata_bodyrich_latest_clean_quality_balanced60.jsonl"))
-    ap.add_argument("--inspect", type=Path, default=Path("data/tasks/tasks_realdata_bodyrich_latest_clean_quality_balanced60.inspect.jsonl"))
+    ap.add_argument("--tasks", type=Path, default=Path("data/tasks/tasks_realdata_bodyrich_fair_clean.jsonl"))
+    ap.add_argument("--inspect", type=Path, default=Path("data/tasks/tasks_realdata_bodyrich_fair_clean.inspect.jsonl"))
     # audit mode outputs
-    ap.add_argument("--out-report", type=Path, default=Path("results/task_quality_audit_latest_clean.json"))
+    ap.add_argument("--out-report", type=Path, default=Path("results/task_quality_audit_fair_clean.json"))
     ap.add_argument("--min-score", type=int, default=4)
     # clean mode output
     ap.add_argument("--out-log", type=Path, default=Path("results/task_clean_log.json"))
@@ -397,9 +397,9 @@ def main() -> None:
         clean_main(args)
     else:
         if args.out_tasks is None:
-            args.out_tasks = Path("data/tasks/tasks_realdata_bodyrich_latest_clean_hierarchy_candidates.jsonl")
+            args.out_tasks = Path("data/tasks/tasks_realdata_bodyrich_fair_clean.jsonl")
         if args.out_inspect is None:
-            args.out_inspect = Path("data/tasks/tasks_realdata_bodyrich_latest_clean_hierarchy_candidates.inspect.jsonl")
+            args.out_inspect = Path("data/tasks/tasks_realdata_bodyrich_fair_clean.inspect.jsonl")
         audit_main(args)
 
 

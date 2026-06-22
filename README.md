@@ -23,9 +23,9 @@ Gold Nav 采用 **[KnowWhere](https://github.com/Ontos-AI/knowhere)** 风格的�
 
 | 方法 | 总体 | niche | multi | scope |
 |------|-----:|------:|------:|------:|
-| **Gold（nav）** | **0.425** | **0.765** | **0.118** | 0.392 |
+| **Gold（nav）** | **0.422** | **0.794** | 0.078 | 0.392 |
 | **TreeRAG** | 0.398 | **0.765** | 0.078 | 0.351 |
-| Flat | 0.360 | 0.424 | 0.078 | **0.578** |
+| Flat | 0.373 | 0.482 | 0.059 | **0.578** |
 
 Gold、TreeRAG、Flat 总体互有胜负，当前样本不足以稳定区分总体优劣。逐题 bootstrap 95% CI：Gold−TreeRAG `[-0.090, 0.148]`，Gold−Flat `[-0.070, 0.203]`，TreeRAG−Flat `[-0.097, 0.175]`。详见 [results/summary.md](results/summary.md)。
 
