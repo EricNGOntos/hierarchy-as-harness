@@ -53,6 +53,36 @@ def _task_type_compose_guidance(task_type: str) -> str:
     return ""
 
 
+def _multi_hop_anchor_guidance(query: str) -> str:
+    if os.environ.get("MULTIHOP_COMPOSE_HOP_ALIGNMENT", "0").strip().lower() in {
+        "0",
+        "false",
+        "no",
+        "off",
+    }:
+        return ""
+    quoted = [
+        (left or right).strip()
+        for left, right in re.findall(r"“([^”]+)”|\"([^\"]+)\"", query or "")
+        if (left or right).strip()
+    ]
+    if len(quoted) < 2:
+        return (
+            "Hop alignment: identify the two requested facts in query order. Map fact_1 to the first "
+            "request and fact_2 to the second; do not substitute neighboring evidence. Preserve every "
+            "condition, exception, number, subject, and required follow-up action present in evidence."
+        )
+    anchor_1, anchor_2 = quoted[-2], quoted[-1]
+    return (
+        "Hop-anchor alignment (query order is binding):\n"
+        f'- fact_1 must answer the first location: "{anchor_1}".\n'
+        f'- fact_2 must answer the second location: "{anchor_2}".\n'
+        "Use the Evidence section path to match each location. Do not replace either fact with a nearby "
+        "section merely because it appears earlier. Preserve every condition, exception, number, subject, "
+        "and required follow-up action supported by the matched evidence. final_answer must retain both facts."
+    )
+
+
 def _norm_ws(s: str) -> str:
     return " ".join((s or "").split())
 
@@ -462,6 +492,10 @@ def compose_answer_llm(
     guide = _task_type_compose_guidance(tt)
     if guide:
         user += guide + "\n\n"
+    if tt == "multi_hop":
+        hop_guide = _multi_hop_anchor_guidance(query)
+        if hop_guide:
+            user += hop_guide + "\n\n"
     user += (
         "Output exactly one JSON object on a single line, no markdown, schema like: "
         f"{schema_hint}"

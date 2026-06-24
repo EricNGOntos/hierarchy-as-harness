@@ -1,6 +1,6 @@
 # fair_clean 共享输出预算协议（canonical）
 
-> **版本**：`fair_clean_scopefix_v2` · b500 · 51 题  
+> **版本**：`fair_clean_goldnav_e2_v1` · b500 · 51 题
 > **状态**：当前唯一主结果与代码基线
 
 ---
@@ -38,22 +38,28 @@
 - 前置 hybrid discovery → D* COLLECT
 - Emergency Guard（collected 为空时，当前 0 触发）
 
+### 2.4 E2 multi-hop evidence allocation
+
+- 从 query 的两个层级锚点对候选证据分组，b500 为每跳保留 180 字上限
+- Gold / Flat / TreeRAG 共用同一 `evaluate_at_budget` 实现；不改 header、compose schema 或 judge
+- 默认复跑脚本开启 `MULTIHOP_EVIDENCE_ALLOCATION=1`
+
 ---
 
 ## 3. 当前主结果（score_task_mean）
 
 | 方法 | 总体 | niche | multi | scope |
 |------|-----:|------:|------:|------:|
-| **Gold** | **0.425** | 0.765 | 0.118 | 0.392 |
-| **TreeRAG** | 0.398 | 0.765 | 0.078 | 0.351 |
-| **Flat** | 0.360 | 0.424 | 0.078 | **0.578** |
+| **Gold** | **0.504** | **0.824** | **0.157** | 0.530 |
+| **TreeRAG** | 0.433 | **0.824** | 0.098 | 0.379 |
+| **Flat** | 0.354 | 0.471 | 0.020 | **0.572** |
 
-逐题 bootstrap 95% CI：Gold−TreeRAG `[-0.090, 0.148]`（暂不能稳定区分总体优劣）。
+逐题 paired bootstrap 95% CI：Gold−TreeRAG `[-0.046, 0.188]`（仍不能声称稳定优于 TreeRAG）；Gold−Flat `[0.027, 0.276]`。
 
 **结果文件**
 
-- `results/fair_clean_gold_flat_fair_clean_scopefix_v2_b500.json`
-- `results/fair_clean_treerag_fair_clean_scopefix_v2_b500.json`
+- `results/fair_clean_gold_flat_fair_clean_goldnav_e2_v1_b500.json`
+- `results/fair_clean_treerag_fair_clean_goldnav_e2_v1_b500.json`
 - 摘要：`results/summary.md`
 
 ---
@@ -61,10 +67,10 @@
 ## 4. 复跑
 
 ```bash
-bash bin/32_run_quality_balanced_gold_flat.sh   # Gold + Flat，默认 tag=scopefix_v2
+bash bin/32_run_quality_balanced_gold_flat.sh   # Gold + Flat，默认 tag=goldnav_e2_v1
 bash bin/35_run_quality_balanced60_treerag.sh   # TreeRAG
-bash bin/21_compare_realdata_baselines.sh       # 对比表 → cache/compare_fair_clean_final.md
-python3 -m unittest tests.test_protocol -q      # 协议单测
+bash bin/21_compare_realdata_baselines.sh       # 对比表 → cache/compare_fair_clean_goldnav_e2_v1.md
+python3 tests/test_protocol.py -q               # 协议单测
 bash bin/36_recompose_judge.sh                  # 重跑 compose+judge（保留 nav/evidence）
 python3 bin/36_recompose_judge.py --judge-only  # 仅重判分（改 scope 金标/判分后）
 ```
@@ -81,11 +87,11 @@ python3 bin/23_repair_scope_tasks.py
 
 | 项 | 现状 |
 |----|------|
-| multi_hop task | 0.118，仍低 |
-| collect 浪费步 | ~66%，未达 <25% 目标 |
-| scope | 判分修对后 Flat > Gold；检索/compose 仍可优化 |
+| multi_hop task | 0.157，已改善但仍是最弱分项 |
+| collect 零增率 | 16.9%，已达 <25% 目标 |
+| scope | Gold 0.530，仍低于 Flat 0.572 |
 
-优先方向：**multi compose 分组**、**软导航提示**；避免硬性 FINISH 门控。
+优先方向：针对无法由层级锚点区分的同章相邻 multi-hop，以及 scope 49 的稳定召回；避免硬性 FINISH 门控。
 
 ---
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import sys
 import unittest
 from collections import Counter
@@ -55,6 +56,56 @@ class BudgetProtocolTests(unittest.TestCase):
         ]
         result = evaluate_at_budget(chunks, budget_chars=100)
         self.assertEqual(result.evidence_text, "[E1]\n甲\n\n[E2]\n乙\n\n[E3]\n丙")
+
+    def test_multi_hop_allocation_is_disabled_by_default(self) -> None:
+        chunks = [
+            (Chunk("doc:L1", "doc", "第二章 高分无关", (1,)), 1.0),
+            (Chunk("doc:L2", "doc", "第一章 甲处规定", (2,)), 0.8),
+            (Chunk("doc:L3", "doc", "第二章 乙处规定", (3,)), 0.7),
+        ]
+        query = "分别涉及“第一章 - 甲处”与“第二章 - 乙处”两处"
+        result = evaluate_at_budget(chunks, 200, query=query, task_type="multi_hop")
+        self.assertEqual(result.kept_chunks[0].node_id, "doc:L1")
+
+    def test_multi_hop_allocation_promotes_both_anchor_groups(self) -> None:
+        old = os.environ.get("MULTIHOP_EVIDENCE_ALLOCATION")
+        os.environ["MULTIHOP_EVIDENCE_ALLOCATION"] = "1"
+        try:
+            chunks = [
+                (Chunk("doc:L1", "doc", "无关的高分证据", (1,)), 1.0),
+                (Chunk("doc:L2", "doc", "[§ 第一章 - 甲处]\n甲处具体规定", (2,)), 0.8),
+                (Chunk("doc:L3", "doc", "[§ 第二章 - 乙处]\n乙处具体规定", (3,)), 0.7),
+            ]
+            query = "分别涉及“第一章 - 甲处”与“第二章 - 乙处”两处"
+            result = evaluate_at_budget(chunks, 200, query=query, task_type="multi_hop")
+            self.assertEqual([c.node_id for c in result.kept_chunks[:2]], ["doc:L2", "doc:L3"])
+            self.assertLessEqual(result.evidence_chars_actual, 200)
+            self.assertTrue(result.evidence_text.startswith("[E1]\n"))
+        finally:
+            if old is None:
+                os.environ.pop("MULTIHOP_EVIDENCE_ALLOCATION", None)
+            else:
+                os.environ["MULTIHOP_EVIDENCE_ALLOCATION"] = old
+
+    def test_multi_hop_allocation_reserves_space_for_long_parent_child_hops(self) -> None:
+        old = os.environ.get("MULTIHOP_EVIDENCE_ALLOCATION")
+        os.environ["MULTIHOP_EVIDENCE_ALLOCATION"] = "1"
+        try:
+            chunks = [
+                (Chunk("doc:L1", "doc", "[§ 第七章]\n" + "父" * 400, (1,)), 1.0),
+                (Chunk("doc:L2", "doc", "[§ 第七章 - 7.1总则]\n" + "子" * 200, (2,)), 0.9),
+            ]
+            query = "分别涉及“第七章”与“第七章 - 7.1总则”两处"
+            result = evaluate_at_budget(chunks, 500, query=query, task_type="multi_hop")
+            self.assertEqual(len(result.kept_chunks), 2)
+            self.assertIn("父", result.evidence_text)
+            self.assertIn("子", result.evidence_text)
+            self.assertLessEqual(result.evidence_chars_actual, 500)
+        finally:
+            if old is None:
+                os.environ.pop("MULTIHOP_EVIDENCE_ALLOCATION", None)
+            else:
+                os.environ["MULTIHOP_EVIDENCE_ALLOCATION"] = old
 
     def test_cost_online_response_is_derived_from_phases(self) -> None:
         cost = {"arm": {

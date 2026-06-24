@@ -230,6 +230,17 @@ def _resolve_openai_trust_env() -> bool:
     return False
 
 
+def _resolve_treerag_llm_timeout_seconds() -> float:
+    raw = os.environ.get("TREERAG_LLM_TIMEOUT_SECONDS", "120").strip()
+    try:
+        timeout = float(raw)
+    except ValueError as e:
+        raise RuntimeError(f"Invalid TREERAG_LLM_TIMEOUT_SECONDS={raw!r}") from e
+    if timeout <= 0:
+        raise RuntimeError(f"TREERAG_LLM_TIMEOUT_SECONDS must be positive, got {timeout}")
+    return timeout
+
+
 class RequiredOpenAITreeRagLLM:
     """Required OpenAI-compatible client for TreeRAG's paper LLM steps."""
 
@@ -246,6 +257,7 @@ class RequiredOpenAITreeRagLLM:
         self.api_key = api_key
         self.verify_ssl = _resolve_openai_verify_ssl()
         self.trust_env = _resolve_openai_trust_env()
+        self.llm_timeout_seconds = _resolve_treerag_llm_timeout_seconds()
         self._httpx = httpx
         self.client = self._make_client()
         self.cache_path = cache_path
@@ -282,8 +294,9 @@ class RequiredOpenAITreeRagLLM:
     def _make_client(self):
         from openai import OpenAI
 
-        http_client = self._httpx.Client(verify=self.verify_ssl, timeout=20.0, trust_env=self.trust_env)
-        return OpenAI(api_key=self.api_key, base_url=self.base_url or None, timeout=20.0, max_retries=0, http_client=http_client)
+        timeout = float(self.llm_timeout_seconds)
+        http_client = self._httpx.Client(verify=self.verify_ssl, timeout=timeout, trust_env=self.trust_env)
+        return OpenAI(api_key=self.api_key, base_url=self.base_url or None, timeout=timeout, max_retries=0, http_client=http_client)
 
     def _reset_client(self) -> None:
         try:
@@ -358,7 +371,7 @@ class RequiredOpenAITreeRagLLM:
         max_attempts = 8
         for attempt in range(1, max_attempts + 1):
             try:
-                timeout_seconds = 25
+                timeout_seconds = float(self.llm_timeout_seconds) + 10.0
                 previous_handler = signal.getsignal(signal.SIGALRM)
 
                 def _timeout_handler(signum: int, frame: Any) -> None:
@@ -1387,7 +1400,7 @@ def _existing_result_paths() -> List[Path]:
     # Canonical fair-protocol Gold/Flat result (used for the summary markdown comparison;
     # also the cap source only if TREERAG_FAIR_CAP=1, which is OFF by default).
     return [
-        PACKAGE_ROOT.parent.parent / "results" / "fair_clean_gold_flat_fair_clean_scopefix_v2_b500.json",
+        PACKAGE_ROOT.parent.parent / "results" / "fair_clean_gold_flat_fair_clean_goldnav_e2_v1_b500.json",
     ]
 
 

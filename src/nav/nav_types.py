@@ -103,6 +103,12 @@ class NavState:
     discovery_rerank_meta: Dict[str, Any] = field(default_factory=dict)
     hybrid_section_candidates: List[Dict[str, Any]] = field(default_factory=list)
     discovery_picked_ids: List[str] = field(default_factory=list)
+    discovery_bridge_sections: List[Dict[str, Any]] = field(default_factory=list)
+    exhausted_search_scopes: set[Optional[str]] = field(default_factory=set)
+    collected_section_ids: set[str] = field(default_factory=set)
+    covered_section_ids: set[str] = field(default_factory=set)
+    blocked_collect_section_ids: set[str] = field(default_factory=set)
+    scope_evidence_locked: bool = False
     action_history: List[Dict[str, Any]] = field(default_factory=list)
     refusal_events: List[Dict[str, Any]] = field(default_factory=list)
 

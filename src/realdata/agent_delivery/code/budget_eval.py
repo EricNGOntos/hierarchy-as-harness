@@ -99,12 +99,86 @@ def _partial_chunk_for_block(chunk: Chunk, visible_block: str, evidence_index: i
     )
 
 
+def _multi_hop_anchors(query: str) -> Tuple[str, str]:
+    """Extract the two hierarchy locations used by fair-clean multi-hop queries."""
+    quoted = [
+        (left or right).strip()
+        for left, right in re.findall(r"“([^”]+)”|\"([^\"]+)\"", query or "")
+        if (left or right).strip()
+    ]
+    if len(quoted) < 2:
+        return "", ""
+    return quoted[-2], quoted[-1]
+
+
+def _anchor_terms(anchor: str) -> List[str]:
+    parts = [
+        re.sub(r"\s+", "", part)
+        for part in re.split(r"\s+-\s+|[\s　]+", anchor or "")
+    ]
+    return [part for part in parts if len(part) >= 2]
+
+
+def _anchor_match_score(anchor: str, text: str) -> float:
+    compact_text = re.sub(r"\s+", "", text or "").lower()
+    terms = _anchor_terms(anchor)
+    if not compact_text or not terms:
+        return 0.0
+    matched = sum(len(term) for term in terms if term.lower() in compact_text)
+    return float(matched) / float(sum(len(term) for term in terms))
+
+
+def _multi_hop_groups(
+    ranked: Sequence[Tuple[Chunk, float]], query: str
+) -> Tuple[List[Tuple[Chunk, float]], List[Tuple[Chunk, float]], List[Tuple[Chunk, float]]]:
+    anchor_1, anchor_2 = _multi_hop_anchors(query)
+    if not anchor_1 or not anchor_2:
+        return [], [], list(ranked)
+    hop_1: List[Tuple[Chunk, float]] = []
+    hop_2: List[Tuple[Chunk, float]] = []
+    unassigned: List[Tuple[Chunk, float]] = []
+    specificity_1 = sum(len(term) for term in _anchor_terms(anchor_1))
+    specificity_2 = sum(len(term) for term in _anchor_terms(anchor_2))
+    for item in ranked:
+        chunk = item[0]
+        score_1 = _anchor_match_score(anchor_1, chunk.text)
+        score_2 = _anchor_match_score(anchor_2, chunk.text)
+        if max(score_1, score_2) < 0.34:
+            unassigned.append(item)
+        elif score_1 > score_2:
+            hop_1.append(item)
+        elif score_2 > score_1:
+            hop_2.append(item)
+        elif specificity_1 > specificity_2:
+            hop_1.append(item)
+        elif specificity_2 > specificity_1:
+            hop_2.append(item)
+        else:
+            unassigned.append(item)
+    return hop_1, hop_2, unassigned
+
+
+def _hop_aware_ranked(
+    ranked: Sequence[Tuple[Chunk, float]], query: str
+) -> Tuple[List[Tuple[Chunk, float]], List[Tuple[Chunk, float]]]:
+    """Return hop-promoted ranking and the two candidates receiving reserved space."""
+    hop_1, hop_2, _unassigned = _multi_hop_groups(ranked, query)
+    if not hop_1 or not hop_2:
+        return list(ranked), []
+    promoted = [hop_1[0], hop_2[0]]
+    promoted_ids = {item[0].node_id for item in promoted}
+    reordered = promoted + [item for item in ranked if item[0].node_id not in promoted_ids]
+    return reordered, promoted
+
+
 def evaluate_at_budget(
     scored_chunks: Sequence[Tuple[Chunk, float]],
     budget_chars: int,
     *,
     min_partial_chars: int = 20,
     block_sep: str = "\n\n",
+    query: str = "",
+    task_type: str = "",
 ) -> BudgetFillResult:
     """
     plan §P1–P2：对 `scored_chunks` 去重后按 score 降序填充，直到 `budget_chars` 用尽；
@@ -134,17 +208,54 @@ def evaluate_at_budget(
         if prev is None or float(s) > float(prev[1]):
             seen[c.node_id] = (c, float(s))
     uniq_ranked = sorted(seen.values(), key=lambda x: -x[1])
+    hop_aware = (
+        (task_type or "").strip().lower() == "multi_hop"
+        and os.environ.get("MULTIHOP_EVIDENCE_ALLOCATION", "0").strip().lower()
+        not in {"0", "false", "no", "off"}
+    )
+    hop_promoted: List[Tuple[Chunk, float]] = []
+    if hop_aware:
+        uniq_ranked, hop_promoted = _hop_aware_ranked(uniq_ranked, query)
 
     parts: List[str] = []
     kept: List[Chunk] = []
     used = 0
     sep_len = len(block_sep)
     truncated_last = False
+    prefilled_ids: set = set()
+
+    if hop_promoted:
+        configured_quota = int(_env_float("MULTIHOP_EVIDENCE_MIN_CHARS_PER_HOP", 180.0))
+        per_hop_quota = max(
+            min_partial_chars,
+            min(configured_quota, max(min_partial_chars, (budget_chars - sep_len) // 2)),
+        )
+        for c, _score in hop_promoted:
+            evidence_index = len(parts) + 1
+            block = _block_for(c, evidence_index)
+            available = budget_chars - used - (sep_len if parts else 0)
+            take = min(len(block), per_hop_quota, available)
+            if take < min_partial_chars:
+                break
+            visible_block = block[:take]
+            parts.append(visible_block)
+            if take < len(block):
+                kept.append(_partial_chunk_for_block(c, visible_block, evidence_index))
+                truncated_last = True
+            else:
+                kept.append(c)
+            used += take + (sep_len if len(parts) > 1 else 0)
+            prefilled_ids.add(c.node_id)
 
     pack_penalty = float(_env_float("BODYRICH_PACK_LINE_OVERLAP_PENALTY", 0.09))
+    if hop_aware:
+        # Preserve the two promoted anchors before normal overlap-aware competition.
+        pack_penalty = 0.0
 
     if pack_penalty <= 0:
         for c, _score in uniq_ranked:
+            if c.node_id in prefilled_ids:
+                continue
             evidence_index = len(parts) + 1
             block = _block_for(c, evidence_index)
             add_len = len(block) + (sep_len if parts else 0)
@@ -165,7 +276,10 @@ def evaluate_at_budget(
             break
     else:
         candidates = list(uniq_ranked)
-        picked: set = set()
+        picked: set = {
+            i for i, (candidate, _score) in enumerate(candidates)
+            if candidate.node_id in prefilled_ids
+        }
         while used < budget_chars:
             evidence_index = len(parts) + 1
             best_i: Optional[int] = None

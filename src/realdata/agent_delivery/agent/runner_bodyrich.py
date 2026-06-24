@@ -635,7 +635,12 @@ def _equalize_episode_pool(
             },
         )
     truncated = list(ep.scored_chunks)[: max(0, int(n_cap))]
-    fill: BudgetFillResult = evaluate_at_budget(truncated, budget_chars=budget_chars)
+    fill: BudgetFillResult = evaluate_at_budget(
+        truncated,
+        budget_chars=budget_chars,
+        query=task.query,
+        task_type=task.task_type,
+    )
     retrieved_nodes = _chunks_to_retrieved_nodes(fill.kept_chunks)
     retrieval_seconds = time.perf_counter() - phase_t0
     compose_t0 = time.perf_counter()
@@ -809,7 +814,12 @@ def run_flat_react_episode(
         )
 
     scored = _merge_scored_chunk_pools(all_scored)
-    fill: BudgetFillResult = evaluate_at_budget(scored, budget_chars=budget_chars)
+    fill: BudgetFillResult = evaluate_at_budget(
+        scored,
+        budget_chars=budget_chars,
+        query=query,
+        task_type=tt,
+    )
     retrieved_nodes = _chunks_to_retrieved_nodes(fill.kept_chunks)
     retrieval_seconds = time.perf_counter() - retrieval_t0
     composed = ""
@@ -942,7 +952,12 @@ def _run_hier_compact_episode(
             },
         ),
     ]
-    fill: BudgetFillResult = evaluate_at_budget(scored, budget_chars=budget_chars)
+    fill: BudgetFillResult = evaluate_at_budget(
+        scored,
+        budget_chars=budget_chars,
+        query=query,
+        task_type=(task.task_type if task is not None else ""),
+    )
     retrieved_nodes = _chunks_to_retrieved_nodes(fill.kept_chunks)
     if task is None:
         task = AgentTask(query=query, doc_id=doc_id, gold_nodes=[], gold_answer="", task_type="niche_fact")
@@ -1105,7 +1120,12 @@ def run_bodyrich_episode(
     else:
         raise ValueError(f"unknown representation: {representation}")
 
-    fill: BudgetFillResult = evaluate_at_budget(scored, budget_chars=budget_chars)
+    fill: BudgetFillResult = evaluate_at_budget(
+        scored,
+        budget_chars=budget_chars,
+        query=query,
+        task_type=(task.task_type if task is not None else ""),
+    )
     retrieved_nodes = _chunks_to_retrieved_nodes(fill.kept_chunks)
     retrieval_seconds = time.perf_counter() - retrieval_t0
     if task is None:
@@ -1550,6 +1570,47 @@ def _checkpoint_signature(
         "compose_model": os.environ.get("COMPOSE_MODEL", "").strip(),
         "judge_model": os.environ.get("JUDGE_MODEL", "").strip(),
         "nav_model": os.environ.get("NAV_LLM_MODEL", "").strip(),
+        "nav_behavior_protocol": "goldnav_e_v1",
+        "nav_discovery_scope_bridge": os.environ.get(
+            "NAV_DISCOVERY_SCOPE_BRIDGE", "0"
+        ).strip(),
+        "nav_discovery_scope_bridge_k": os.environ.get(
+            "NAV_DISCOVERY_SCOPE_BRIDGE_K", "3"
+        ).strip(),
+        "multihop_compose_hop_alignment": os.environ.get(
+            "MULTIHOP_COMPOSE_HOP_ALIGNMENT", "0"
+        ).strip(),
+        "multihop_evidence_allocation": os.environ.get(
+            "MULTIHOP_EVIDENCE_ALLOCATION", "0"
+        ).strip(),
+        "multihop_evidence_min_chars_per_hop": os.environ.get(
+            "MULTIHOP_EVIDENCE_MIN_CHARS_PER_HOP", "180"
+        ).strip(),
+        "nav_scope_collect_relevance_first": os.environ.get(
+            "NAV_SCOPE_COLLECT_RELEVANCE_FIRST", "1"
+        ).strip(),
+        "nav_block_exhausted_search": os.environ.get(
+            "NAV_BLOCK_EXHAUSTED_SEARCH", "1"
+        ).strip(),
+        "nav_filter_collected_sections": os.environ.get(
+            "NAV_FILTER_COLLECTED_SECTIONS", "1"
+        ).strip(),
+        "nav_scope_collect_strategy": os.environ.get(
+            "NAV_SCOPE_COLLECT_STRATEGY", "local_band"
+        ).strip(),
+        "nav_scope_local_band_min_pool": os.environ.get(
+            "NAV_SCOPE_LOCAL_BAND_MIN_POOL", "20"
+        ).strip(),
+        "nav_scope_local_band_k": os.environ.get("NAV_SCOPE_LOCAL_BAND_K", "8").strip(),
+        "nav_scope_local_band_context_before": os.environ.get(
+            "NAV_SCOPE_LOCAL_BAND_CONTEXT_BEFORE", "1"
+        ).strip(),
+        "nav_scope_action_score_cap": os.environ.get(
+            "NAV_SCOPE_ACTION_SCORE_CAP", "1.0"
+        ).strip(),
+        "nav_scope_post_lock_score_penalty": os.environ.get(
+            "NAV_SCOPE_POST_LOCK_SCORE_PENALTY", "2.0"
+        ).strip(),
         "pool_mode": _POOL_MODE or "none",
         "evidence_header_protocol": EVIDENCE_HEADER_PROTOCOL,
         "scope_scoring_protocol": "structured_item_alignment_v2",

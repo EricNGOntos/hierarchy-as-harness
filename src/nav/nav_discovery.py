@@ -271,3 +271,46 @@ def compute_discovery_scores(ts: ToolSpace, state: NavState, config: NavConfig) 
             continue
         out[sid] = raw * scale
     return out
+
+
+def build_discovery_bridge_sections(ts: ToolSpace, state: NavState) -> List[dict[str, Any]]:
+    """Resolve discovery hits to nearby expandable sections without collecting them."""
+    task_type = (state.task_type or "").strip().lower()
+    if task_type not in {"scope_collection", "regulatory_coverage"}:
+        return []
+    if os.environ.get("NAV_DISCOVERY_SCOPE_BRIDGE", "0").strip().lower() in {
+        "0",
+        "false",
+        "no",
+        "off",
+    }:
+        return []
+
+    limit = max(1, int(os.environ.get("NAV_DISCOVERY_SCOPE_BRIDGE_K", "3").strip() or "3"))
+    bridges: List[dict[str, Any]] = []
+    seen: set[str] = set()
+    for sid, score in sorted(state.discovery_scores.items(), key=lambda item: (-item[1], item[0])):
+        chain = [sid] + [node for node in _ancestor_node_ids(ts, state.doc_id, sid) if node != sid]
+        for target in chain:
+            if target in seen:
+                break
+            try:
+                structure = ts.get_structure(target)
+            except Exception:
+                continue
+            if not structure.get("children"):
+                continue
+            preview = str(structure.get("preview") or target).replace("\n", " ")[:120]
+            bridges.append(
+                {
+                    "section_id": target,
+                    "label": preview,
+                    "discovery_score": float(score),
+                    "source_section_id": sid,
+                }
+            )
+            seen.add(target)
+            break
+        if len(bridges) >= limit:
+            break
+    return bridges

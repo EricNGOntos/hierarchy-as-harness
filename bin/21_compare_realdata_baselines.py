@@ -145,9 +145,9 @@ def _cache_hits(payload: Optional[dict[str, Any]]) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Summarize RealData Gold/Pred/Flat plus TreeRAG baseline.")
     parser.add_argument("--budgets", default="500")
-    parser.add_argument("--gpf-template", default="results/fair_clean_gold_flat_fair_clean_scopefix_v2_b{budget}.json")
-    parser.add_argument("--treerag-template", default="results/fair_clean_treerag_fair_clean_scopefix_v2_b{budget}.json")
-    parser.add_argument("--treerag-wrapper-template", default="results/fair_clean_treerag_fair_clean_scopefix_v2_b{budget}.json")
+    parser.add_argument("--gpf-template", default="results/fair_clean_gold_flat_fair_clean_goldnav_e2_v1_b{budget}.json")
+    parser.add_argument("--treerag-template", default="results/fair_clean_treerag_fair_clean_goldnav_e2_v1_b{budget}.json")
+    parser.add_argument("--treerag-wrapper-template", default="results/fair_clean_treerag_fair_clean_goldnav_e2_v1_b{budget}.json")
     parser.add_argument("--out-md", type=Path, default=Path("cache/compare_fair_clean_final.md"))
     args = parser.parse_args()
 

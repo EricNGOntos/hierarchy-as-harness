@@ -1,11 +1,17 @@
-# API 密钥（本地保留，勿提交）
+# API 密钥与本地密钥副本（本地保留，勿提交）
 **/llm_api.env
 .env
-.env.local
+.env.*
+!.env.example
+!.env.*.example
 
-# 运行缓存与断点（可重跑生成）
+# LLM 响应缓存（可能含 prompt/回复片段）
+**/llm_api_cache.jsonl
 cache/*
 !cache/.gitkeep
+
+# 审计/清洗临时日志（可重跑生成）
+results/task_clean_log.json
 
 # Python
 __pycache__/

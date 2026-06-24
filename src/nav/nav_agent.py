@@ -13,7 +13,7 @@ from agent_delivery.code.index_retrieval import Chunk
 from agent_delivery.code.tool_space import Refusal, ToolSpace
 
 from nav_actions import build_legal_actions
-from nav_discovery import compute_discovery_scores
+from nav_discovery import build_discovery_bridge_sections, compute_discovery_scores
 from nav_policy import choose_llm_action
 from nav_projection import build_projection
 from nav_types import ActionKind, LegalAction, NavConfig, NavState
@@ -130,6 +130,78 @@ def _add_scored(state: NavState, scored: List[Tuple[Chunk, float]]) -> int:
     return added
 
 
+def _env_enabled(name: str, default: str = "1") -> bool:
+    return os.environ.get(name, default).strip().lower() not in {"0", "false", "no", "off"}
+
+
+def _line_order(pool: List[Chunk]) -> List[Chunk]:
+    return sorted(pool, key=lambda c: (min(c.line_ids or (10**9,)), c.node_id))
+
+
+def _scope_collect_strategy() -> str:
+    explicit = os.environ.get("NAV_SCOPE_COLLECT_STRATEGY", "").strip().lower()
+    if explicit in {"line_order", "local_band", "relevance"}:
+        return explicit
+    return "local_band" if _env_enabled("NAV_SCOPE_COLLECT_RELEVANCE_FIRST") else "line_order"
+
+
+def _scope_collect_scored(
+    idx: Any,
+    pool: List[Chunk],
+    action: LegalAction,
+    state: NavState,
+    config: NavConfig,
+) -> List[Tuple[Chunk, float]]:
+    ordered = _line_order(pool)
+    strategy = _scope_collect_strategy()
+    min_pool = max(1, int(os.environ.get("NAV_SCOPE_LOCAL_BAND_MIN_POOL", "20") or "20"))
+    action_score_cap = max(
+        0.0, float(os.environ.get("NAV_SCOPE_ACTION_SCORE_CAP", "1.0") or "1.0")
+    )
+    action_score = max(0.0, min(float(action.score or 0.0), action_score_cap))
+    base = float(config.read_score_bonus) + action_score
+    if state.scope_evidence_locked:
+        base -= max(
+            0.0,
+            float(os.environ.get("NAV_SCOPE_POST_LOCK_SCORE_PENALTY", "2.0") or "2.0"),
+        )
+
+    if strategy == "line_order" or (strategy == "local_band" and len(ordered) < min_pool):
+        limit = min(len(ordered), int(config.collect_k))
+        return [
+            (chunk, base + (limit - rank) * 0.001)
+            for rank, chunk in enumerate(ordered[:limit])
+        ]
+
+    ranked = idx.search(state.query, pool, len(pool), doc_id_filter=state.doc_id)
+    relevance_by_id = {c.node_id: float(score) for c, score in ranked}
+    if strategy == "relevance":
+        relevance_order = sorted(
+            ordered,
+            key=lambda c: (-relevance_by_id.get(c.node_id, float("-inf")), min(c.line_ids or (10**9,)), c.node_id),
+        )
+        return [
+            (chunk, base + relevance_by_id.get(chunk.node_id, 0.0))
+            for chunk in relevance_order[: min(len(relevance_order), int(config.collect_k))]
+        ]
+
+    band_k = max(1, int(os.environ.get("NAV_SCOPE_LOCAL_BAND_K", "8") or "8"))
+    band_k = min(band_k, int(config.collect_k), len(ordered))
+    anchor = ranked[0][0] if ranked else ordered[0]
+    anchor_idx = next((i for i, chunk in enumerate(ordered) if chunk.node_id == anchor.node_id), 0)
+    context_before = min(
+        max(0, int(os.environ.get("NAV_SCOPE_LOCAL_BAND_CONTEXT_BEFORE", "1") or "1")),
+        max(0, band_k - 1),
+    )
+    start = max(0, min(anchor_idx - context_before, len(ordered) - band_k))
+    band = ordered[start : start + band_k]
+    anchor_score = relevance_by_id.get(anchor.node_id, 0.0)
+    return [
+        (chunk, base + anchor_score + (band_k - rank) * 0.001)
+        for rank, chunk in enumerate(band)
+    ]
+
+
 def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config: NavConfig) -> List[Tuple[Chunk, float]]:
     sid = action.section_id
     if not sid:
@@ -141,13 +213,7 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
         if pool:
             task_type = (state.task_type or "").strip().lower()
             if task_type in {"scope_collection", "regulatory_coverage"}:
-                ordered = sorted(pool, key=lambda c: (min(c.line_ids or (10**9,)), c.node_id))
-                limit = min(len(ordered), int(config.collect_k))
-                base = float(config.read_score_bonus) + float(action.score or 0.0)
-                return [
-                    (chunk, base + (limit - rank) * 0.001)
-                    for rank, chunk in enumerate(ordered[:limit])
-                ]
+                return _scope_collect_scored(idx, pool, action, state, config)
             scored = idx.search(state.query, pool, min(len(pool), int(config.collect_k)), doc_id_filter=state.doc_id)
             return [(c, float(s) + float(config.read_score_bonus)) for c, s in scored]
     rc = ts.read_chunks(sid, state.query, doc_id=state.doc_id, k=int(config.collect_k))
@@ -163,6 +229,36 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
         )
         return []
     return [(h.chunk, float(h.score) + float(config.read_score_bonus)) for h in rc]
+
+
+def _update_collect_coverage(ts: ToolSpace, action: LegalAction, state: NavState, added: int) -> dict[str, Any]:
+    sid = str(action.section_id or "").strip()
+    if not sid or not _env_enabled("NAV_FILTER_COLLECTED_SECTIONS"):
+        return {}
+    materialize = getattr(ts, "_materialize_leaf_path_chunks", None)
+    relations = getattr(ts, "section_relation_ids", None)
+    pool = list(materialize(sid, state.doc_id)) if callable(materialize) else []
+    ancestors, descendants = relations(sid, state.doc_id) if callable(relations) else (set(), {sid})
+    if added > 0:
+        state.collected_section_ids.add(sid)
+        # A single-leaf collect is often a probe before collecting its parent
+        # collection. Lock ancestors only after a broader section was useful.
+        if len(pool) > 1:
+            state.blocked_collect_section_ids.update(ancestors)
+    is_full = bool(pool) and all(chunk.node_id in state.collected_ids for chunk in pool)
+    if is_full:
+        state.covered_section_ids.update(descendants)
+        if added > 0 and len(pool) > 1 and (state.task_type or "").strip().lower() in {
+            "scope_collection",
+            "regulatory_coverage",
+        }:
+            state.scope_evidence_locked = True
+    return {
+        "collect_full": is_full,
+        "scope_evidence_locked": state.scope_evidence_locked,
+        "n_covered_sections": len(state.covered_section_ids),
+        "n_blocked_ancestor_collects": len(state.blocked_collect_section_ids),
+    }
 
 
 def _search_doc(ts: ToolSpace, state: NavState, config: NavConfig) -> List[Tuple[Chunk, float]]:
@@ -224,6 +320,7 @@ def run_nav_episode(
     steps: List[AgentStep] = []
     section_ids = ts.sections_for_doc(doc_id)
     state.discovery_scores = compute_discovery_scores(ts, state, cfg)
+    state.discovery_bridge_sections = build_discovery_bridge_sections(ts, state)
 
     for step_idx in range(1, max(1, int(cfg.max_steps)) + 1):
         projection = build_projection(
@@ -272,6 +369,8 @@ def run_nav_episode(
             added = _add_scored(state, scored)
             detail["n_hits"] = len(scored)
             detail["n_added"] = added
+            if added == 0:
+                state.exhausted_search_scopes.add(state.current_scope)
             steps.append(AgentStep(step_idx=len(steps) + 1, action="nav_search", detail=detail))
             state.action_history.append({**detail, "step_idx": step_idx})
             continue
@@ -280,6 +379,7 @@ def run_nav_episode(
             added = _add_scored(state, scored)
             detail["n_hits"] = len(scored)
             detail["n_added"] = added
+            detail.update(_update_collect_coverage(ts, chosen, state, added))
             steps.append(AgentStep(step_idx=len(steps) + 1, action="nav_collect", detail=detail))
             state.action_history.append({**detail, "step_idx": step_idx})
             continue
@@ -298,7 +398,12 @@ def run_nav_episode(
         )
 
     scored_chunks = _dedupe_scored(list(state.collected))
-    fill = evaluate_at_budget(scored_chunks, budget_chars=budget_chars)
+    fill = evaluate_at_budget(
+        scored_chunks,
+        budget_chars=budget_chars,
+        query=query,
+        task_type=task_type,
+    )
     retrieval_seconds = time.perf_counter() - retrieval_t0
     composed = ""
     compose_seconds = 0.0

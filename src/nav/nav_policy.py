@@ -124,6 +124,12 @@ def _format_agent_state(state: NavState, step_idx: int, config: NavConfig) -> st
         for sid in explored_empty[:5]:
             lines.append(f'  - "{sid}"')
 
+    block_empty_search = os.environ.get(
+        "NAV_BLOCK_EXHAUSTED_SEARCH", "1"
+    ).strip().lower() not in {"0", "false", "no", "off"}
+    if block_empty_search and state.current_scope in state.exhausted_search_scopes:
+        lines.append("Search status: exhausted in current scope; SEARCH is suppressed.")
+
     remaining = config.max_steps - step_idx - 1
     if remaining <= 2:
         lines.append(

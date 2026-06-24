@@ -251,12 +251,12 @@ def main() -> None:
     ap.add_argument(
         "--gold-flat-results",
         type=Path,
-        default=Path("results/fair_clean_gold_flat_fair_clean_scopefix_v2_b500.json"),
+        default=Path("results/fair_clean_gold_flat_fair_clean_goldnav_e2_v1_b500.json"),
     )
     ap.add_argument(
         "--treerag-results",
         type=Path,
-        default=Path("results/fair_clean_treerag_fair_clean_scopefix_v2_b500.json"),
+        default=Path("results/fair_clean_treerag_fair_clean_goldnav_e2_v1_b500.json"),
     )
     ap.add_argument(
         "--inspect-tasks",
