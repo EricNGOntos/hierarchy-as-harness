@@ -32,6 +32,10 @@ def _toolspace_no_refusal() -> bool:
     return os.environ.get("TOOLSPACE_NO_REFUSAL", "").strip() in ("1", "true", "yes")
 
 
+def _env_enabled(name: str, default: str = "1") -> bool:
+    return os.environ.get(name, default).strip().lower() not in {"0", "false", "no", "off"}
+
+
 class ToolSpace:
     """五工具：get_map / get_structure / read_chunks(+refusal) / discover_files / search。"""
 
@@ -39,6 +43,115 @@ class ToolSpace:
         self._t = tools
         self._idx: CorpusIndex = tools.index
         self._leaf_path_cache: dict[tuple[str, str], List[Chunk]] = {}
+
+    def _synthetic_root_enabled(self) -> bool:
+        return _env_enabled("NAV_SYNTHETIC_ROOT_SECTIONS", "1")
+
+    def _direct_search_mode(self) -> str:
+        raw = os.environ.get("NAV_HYBRID_DIRECT_SEARCH", "auto").strip().lower()
+        if raw in {"0", "false", "no", "off"}:
+            return "off"
+        if raw in {"1", "true", "yes", "on", "always"}:
+            return "always"
+        return "auto"
+
+    def _doc_root_id(self, doc_id: str) -> str:
+        return f"{doc_id}:__doc_root"
+
+    def _prefix_id(self, doc_id: str) -> str:
+        return f"{doc_id}:__prefix"
+
+    def _synthetic_doc_id(self, section_id: str) -> Optional[str]:
+        if section_id.endswith(":__doc_root"):
+            return section_id[: -len(":__doc_root")]
+        if section_id.endswith(":__prefix"):
+            return section_id[: -len(":__prefix")]
+        return None
+
+    def _top_level_anchor_indices(self, doc_id: str) -> List[int]:
+        b = self._idx._bundles.get(doc_id)
+        if not b:
+            return []
+        return [j for j, level in enumerate(b.levels_for_tree) if level == 1]
+
+    def _doc_needs_direct_search(self, doc_id: Optional[str]) -> bool:
+        if not doc_id:
+            return True
+        b = self._idx._bundles.get(doc_id)
+        if not b or not b.lines:
+            return False
+        levels = list(b.levels_for_tree)
+        if levels and levels[0] != 0:
+            return True
+        anchors = self._top_level_anchor_indices(doc_id)
+        if not anchors:
+            return True
+        prefix_min = max(
+            1,
+            int(os.environ.get("NAV_SYNTHETIC_PREFIX_MIN_LINES", "2").strip() or "2"),
+        )
+        if int(anchors[0]) >= prefix_min:
+            return True
+        return any(levels[i] > levels[i - 1] + 1 for i in range(1, len(levels)))
+
+    def _synthetic_section_bounds(
+        self, section_id: str, doc_id: str
+    ) -> Optional[tuple[int, int]]:
+        if not self._synthetic_root_enabled():
+            return None
+        b = self._idx._bundles.get(doc_id)
+        if not b or not b.lines:
+            return None
+        if section_id == self._doc_root_id(doc_id):
+            return (0, len(b.lines))
+        if section_id == self._prefix_id(doc_id):
+            anchors = self._top_level_anchor_indices(doc_id)
+            if not anchors:
+                return None
+            prefix_min = max(
+                1,
+                int(os.environ.get("NAV_SYNTHETIC_PREFIX_MIN_LINES", "2").strip() or "2"),
+            )
+            first_anchor = int(anchors[0])
+            if first_anchor >= prefix_min:
+                return (0, first_anchor)
+        return None
+
+    def _synthetic_child_rows(
+        self, section_id: str, doc_id: str, limit: int = 24
+    ) -> List[dict]:
+        bounds = self._synthetic_section_bounds(section_id, doc_id)
+        b = self._idx._bundles.get(doc_id)
+        parents = self._idx._doc_parents.get(doc_id, [])
+        if bounds is None or not b:
+            return []
+        start, end = bounds
+        children: List[dict] = []
+        for j in range(start, end):
+            if j >= len(b.lines):
+                continue
+            level = b.levels_for_tree[j] if j < len(b.levels_for_tree) else 0
+            if level <= 0:
+                continue
+            parent = parents[j] if j < len(parents) else None
+            parent_level = (
+                b.levels_for_tree[parent]
+                if parent is not None and 0 <= parent < len(b.levels_for_tree)
+                else 0
+            )
+            if parent is not None and start <= parent < end and parent_level > 0:
+                continue
+            rec = b.lines[j]
+            children.append(
+                {
+                    "section_id": line_node_id(doc_id, rec.line_id),
+                    "level": level,
+                    "preview": (rec.content or "")[:160],
+                }
+            )
+            if len(children) >= limit:
+                break
+        return children
 
     # --- 1) get_map ---
     def get_map(self, doc_id: str) -> str:
@@ -55,16 +168,22 @@ class ToolSpace:
         return "sections:\n" + "\n".join(lines_out)
 
     def _sections_for_doc(self, doc_id: str) -> List[str]:
-        out: List[str] = []
         b = self._idx._bundles.get(doc_id)
         if b and b.lines:
-            for j, rec in enumerate(b.lines):
-                lev = b.levels_for_tree[j] if j < len(b.levels_for_tree) else 0
-                if lev == 1:
-                    out.append(line_node_id(doc_id, rec.line_id))
-            if out:
-                return out
+            anchors = self._top_level_anchor_indices(doc_id)
+            if self._synthetic_root_enabled():
+                if not anchors:
+                    return [self._doc_root_id(doc_id)]
+                out: List[str] = []
+                if self._synthetic_section_bounds(self._prefix_id(doc_id), doc_id):
+                    out.append(self._prefix_id(doc_id))
+                out.extend(line_node_id(doc_id, b.lines[j].line_id) for j in anchors)
+                if out:
+                    return out
+            if anchors:
+                return [line_node_id(doc_id, b.lines[j].line_id) for j in anchors]
             return [line_node_id(doc_id, b.lines[0].line_id)]
+        out: List[str] = []
         for sid, pool in self._idx.fact_by_section.items():
             if pool and pool[0].doc_id == doc_id:
                 out.append(sid)
@@ -76,6 +195,8 @@ class ToolSpace:
         sp = str(section_path).strip()
         if sp.endswith("__path"):
             sp = sp[: -len("__path")]
+        if self._synthetic_section_bounds(sp, doc_id):
+            return sp
         if sp in self._idx.fact_by_section:
             return sp
         if sp in self._idx._node_to_doc_line:
@@ -105,6 +226,19 @@ class ToolSpace:
 
     def _pool_for_section_path(self, section_id: str, doc_id: str) -> List[Chunk]:
         """返回任意层级节点覆盖的子树 small chunks；兼容旧的 level-1 fact_by_section。"""
+        synthetic_bounds = self._synthetic_section_bounds(section_id, doc_id)
+        if synthetic_bounds is not None:
+            b = self._idx._bundles.get(doc_id)
+            if not b:
+                return []
+            start, end = synthetic_bounds
+            node_to_chunk = {c.node_id: c for c in self._idx.small_chunks if c.doc_id == doc_id}
+            out: List[Chunk] = []
+            for rec in b.lines[start:end]:
+                chunk = node_to_chunk.get(line_node_id(doc_id, rec.line_id))
+                if chunk is not None:
+                    out.append(chunk)
+            return out
         if section_id in self._idx.fact_by_section:
             return [
                 c
@@ -138,6 +272,9 @@ class ToolSpace:
         self, section_id: str, doc_id: str
     ) -> Optional[tuple[int, int]]:
         """返回 section_path 在 bundle.lines 中覆盖的 [start, end) 范围。"""
+        synthetic_bounds = self._synthetic_section_bounds(section_id, doc_id)
+        if synthetic_bounds is not None:
+            return synthetic_bounds
         loc = self._idx._node_to_doc_line.get(section_id)
         b = self._idx._bundles.get(doc_id)
         if not loc or loc[0] != doc_id or not b:
@@ -153,6 +290,34 @@ class ToolSpace:
                     end = j
                     break
         return start, end
+
+    def section_relation_ids(self, section_id: str, doc_id: str) -> tuple[set[str], set[str]]:
+        """Return structural ancestors and subtree section ids for navigation coverage."""
+        bounds = self._subtree_bounds_for_section_path(section_id, doc_id)
+        b = self._idx._bundles.get(doc_id)
+        if bounds is None or not b:
+            return set(), {section_id}
+        start, end = bounds
+        ancestors = set(self._idx.ancestor_line_node_ids(section_id))
+        if self._synthetic_section_bounds(section_id, doc_id) is not None:
+            ancestors = set()
+        # Some document trees contain wrapper headings that span the target but
+        # are not linked by the normalized parent pointer chain.
+        for j in range(0, start):
+            level = b.levels_for_tree[j] if j < len(b.levels_for_tree) else 0
+            if level <= 0:
+                continue
+            candidate = line_node_id(doc_id, b.lines[j].line_id)
+            candidate_bounds = self._subtree_bounds_for_section_path(candidate, doc_id)
+            if candidate_bounds and candidate_bounds[0] <= start < candidate_bounds[1]:
+                ancestors.add(candidate)
+        descendants = {section_id}
+        for j in range(start, end):
+            level = b.levels_for_tree[j] if j < len(b.levels_for_tree) else 0
+            if level > 0:
+                descendants.add(line_node_id(doc_id, b.lines[j].line_id))
+        ancestors.discard(section_id)
+        return ancestors, descendants
 
     def _materialize_leaf_path_chunks(self, section_id: str, doc_id: str) -> List[Chunk]:
         """
@@ -177,7 +342,8 @@ class ToolSpace:
 
         levels = b.levels_for_tree
         parents = self._idx._doc_parents.get(doc_id, [])
-        base_level = levels[start] if start < len(levels) else 0
+        is_synthetic = self._synthetic_section_bounds(section_id, doc_id) is not None
+        base_level = 0 if is_synthetic else (levels[start] if start < len(levels) else 0)
 
         def lev_at(i: int) -> int:
             return levels[i] if i < len(levels) else 0
@@ -302,6 +468,9 @@ class ToolSpace:
         return self._leaf_path_search_pool(doc_id)
 
     def _children_for_section_path(self, section_id: str, doc_id: str, limit: int = 24) -> List[dict]:
+        synthetic_children = self._synthetic_child_rows(section_id, doc_id, limit=limit)
+        if synthetic_children:
+            return synthetic_children
         loc = self._idx._node_to_doc_line.get(section_id)
         b = self._idx._bundles.get(doc_id)
         parents = self._idx._doc_parents.get(doc_id, [])
@@ -327,7 +496,7 @@ class ToolSpace:
     # --- 2) get_structure ---
     def get_structure(self, section_id: str) -> dict:
         loc = self._idx._node_to_doc_line.get(section_id)
-        doc_id = loc[0] if loc else ""
+        doc_id = loc[0] if loc else (self._synthetic_doc_id(section_id) or "")
         pool = self._pool_for_section_path(section_id, doc_id) if doc_id else []
         leaf_chunks = self._materialize_leaf_path_chunks(section_id, doc_id) if doc_id else []
         if not pool:
@@ -342,6 +511,7 @@ class ToolSpace:
             }
         return {
             "section_id": section_id,
+            "level": 0 if self._synthetic_section_bounds(section_id, doc_id) is not None else None,
             "n_chunks": len(leaf_chunks) if leaf_chunks else len(pool),
             "n_leaf_path_chunks": len(leaf_chunks),
             "n_lines": len(pool),
@@ -462,3 +632,84 @@ class ToolSpace:
             return self._t.search_small(query, k, doc_id=doc_id)
         scored = self._idx.search(query, pool, min(len(pool), k), doc_id_filter=doc_id)
         return [ToolHit(chunk=c, score=s) for c, s in scored]
+
+    def _direct_line_window_chunk(
+        self,
+        chunk: Chunk,
+        *,
+        before: int,
+        after: int,
+    ) -> Chunk:
+        loc = self._idx._node_to_doc_line.get(chunk.node_id)
+        b = self._idx._bundles.get(chunk.doc_id)
+        if not loc or not b:
+            return chunk
+        _, j = loc
+        start = max(0, j - max(0, before))
+        end = min(len(b.lines), j + max(0, after) + 1)
+        records = b.lines[start:end]
+        line_ids = tuple(rec.line_id for rec in records)
+        text = "\n".join((rec.content or "").strip() for rec in records if (rec.content or "").strip())
+        return Chunk(
+            node_id=f"{chunk.node_id}__directwin",
+            doc_id=chunk.doc_id,
+            text=text or chunk.text,
+            line_ids=line_ids or chunk.line_ids,
+            section_id=chunk.section_id,
+        )
+
+    def hybrid_search(
+        self,
+        query: str,
+        k: int,
+        *,
+        doc_id: Optional[str] = None,
+        task_type: str = "unknown",
+    ) -> List[ToolHit]:
+        """
+        Query-only search that combines hierarchical leaf/path chunks with
+        direct line chunks. This makes noisy predicted trees robust without
+        using gold labels or task-specific evidence ids.
+        """
+        mode = self._direct_search_mode()
+        if mode == "off":
+            return self.search(query, k, doc_id=doc_id)
+        if mode == "auto" and not self._doc_needs_direct_search(doc_id):
+            return self.search(query, k, doc_id=doc_id)
+
+        k = max(0, int(k))
+        if k <= 0:
+            return []
+
+        leaf_pool = self._leaf_path_search_pool(doc_id)
+        direct_pool = [
+            chunk for chunk in self._idx.small_chunks if doc_id is None or chunk.doc_id == doc_id
+        ]
+        leaf_k = min(len(leaf_pool), max(k, int(os.environ.get("NAV_HYBRID_LEAF_K", str(k)).strip() or k)))
+        direct_k = min(
+            len(direct_pool),
+            max(k, int(os.environ.get("NAV_HYBRID_DIRECT_K", str(k)).strip() or k)),
+        )
+        scored_leaf = self._idx.search(query, leaf_pool, leaf_k, doc_id_filter=doc_id) if leaf_pool else []
+        scored_direct = (
+            self._idx.search(query, direct_pool, direct_k, doc_id_filter=doc_id) if direct_pool else []
+        )
+
+        is_scope = (task_type or "").strip().lower() in {"scope_collection", "regulatory_coverage"}
+        before = int(os.environ.get("NAV_SCOPE_DIRECT_WINDOW_BEFORE", "1").strip() or "1")
+        after = int(os.environ.get("NAV_SCOPE_DIRECT_WINDOW_AFTER", "1").strip() or "1")
+        direct_bonus = float(os.environ.get("NAV_HYBRID_DIRECT_SCORE_BONUS", "0.0").strip() or "0.0")
+
+        merged: dict[str, ToolHit] = {}
+        for chunk, score in scored_leaf:
+            merged[chunk.node_id] = ToolHit(chunk=chunk, score=float(score))
+        for chunk, score in scored_direct:
+            out_chunk = self._direct_line_window_chunk(chunk, before=before, after=after) if is_scope else chunk
+            out_score = float(score) + direct_bonus
+            prev = merged.get(out_chunk.node_id)
+            if prev is None or out_score > prev.score:
+                merged[out_chunk.node_id] = ToolHit(chunk=out_chunk, score=out_score)
+
+        out = list(merged.values())
+        out.sort(key=lambda hit: (-float(hit.score), hit.chunk.node_id))
+        return out[:k]

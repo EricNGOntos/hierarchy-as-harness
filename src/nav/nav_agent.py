@@ -140,7 +140,7 @@ def _line_order(pool: List[Chunk]) -> List[Chunk]:
 
 def _scope_collect_strategy() -> str:
     explicit = os.environ.get("NAV_SCOPE_COLLECT_STRATEGY", "").strip().lower()
-    if explicit in {"line_order", "local_band", "relevance"}:
+    if explicit in {"line_order", "local_band", "multi_band", "relevance"}:
         return explicit
     return "local_band" if _env_enabled("NAV_SCOPE_COLLECT_RELEVANCE_FIRST") else "line_order"
 
@@ -187,12 +187,70 @@ def _scope_collect_scored(
 
     band_k = max(1, int(os.environ.get("NAV_SCOPE_LOCAL_BAND_K", "8") or "8"))
     band_k = min(band_k, int(config.collect_k), len(ordered))
-    anchor = ranked[0][0] if ranked else ordered[0]
-    anchor_idx = next((i for i, chunk in enumerate(ordered) if chunk.node_id == anchor.node_id), 0)
     context_before = min(
         max(0, int(os.environ.get("NAV_SCOPE_LOCAL_BAND_CONTEXT_BEFORE", "1") or "1")),
         max(0, band_k - 1),
     )
+    if strategy == "multi_band":
+        anchors_n = max(1, int(os.environ.get("NAV_SCOPE_MULTI_BAND_ANCHORS", "3") or "3"))
+        context_after = max(
+            0, int(os.environ.get("NAV_SCOPE_MULTI_BAND_CONTEXT_AFTER", "1") or "1")
+        )
+        selected: List[Chunk] = []
+        selected_ids: set[str] = set()
+        candidate_anchors = [chunk for chunk, _ in ranked]
+        if not candidate_anchors:
+            candidate_anchors = ordered
+        seeded = 0
+        for cand in candidate_anchors:
+            if len(selected) >= band_k:
+                break
+            if seeded >= anchors_n:
+                break
+            cand_idx = next((i for i, chunk in enumerate(ordered) if chunk.node_id == cand.node_id), None)
+            if cand_idx is None:
+                continue
+            before = min(context_before, max(0, band_k - len(selected) - 1))
+            win_start = max(0, cand_idx - context_before)
+            win_end = min(len(ordered), cand_idx + context_after + 1)
+            if before != context_before:
+                win_start = max(0, cand_idx - before)
+            before_count = len(selected)
+            for chunk in ordered[win_start:win_end]:
+                if chunk.node_id in selected_ids:
+                    continue
+                selected.append(chunk)
+                selected_ids.add(chunk.node_id)
+                if len(selected) >= band_k:
+                    break
+            if len(selected) > before_count:
+                seeded += 1
+        if len(selected) < band_k:
+            for chunk in ordered:
+                if chunk.node_id in selected_ids:
+                    continue
+                selected.append(chunk)
+                selected_ids.add(chunk.node_id)
+                if len(selected) >= band_k:
+                    break
+        selected.sort(
+            key=lambda c: (
+                -relevance_by_id.get(c.node_id, float("-inf")),
+                min(c.line_ids or (10**9,)),
+                c.node_id,
+            )
+        )
+        return [
+            (
+                chunk,
+                base
+                + relevance_by_id.get(chunk.node_id, 0.0)
+                + (band_k - rank) * 0.001,
+            )
+            for rank, chunk in enumerate(selected)
+        ]
+    anchor = ranked[0][0] if ranked else ordered[0]
+    anchor_idx = next((i for i, chunk in enumerate(ordered) if chunk.node_id == anchor.node_id), 0)
     start = max(0, min(anchor_idx - context_before, len(ordered) - band_k))
     band = ordered[start : start + band_k]
     anchor_score = relevance_by_id.get(anchor.node_id, 0.0)
@@ -262,7 +320,16 @@ def _update_collect_coverage(ts: ToolSpace, action: LegalAction, state: NavState
 
 
 def _search_doc(ts: ToolSpace, state: NavState, config: NavConfig) -> List[Tuple[Chunk, float]]:
-    hits = ts.search(state.query, int(config.search_k), doc_id=state.doc_id)
+    hybrid = getattr(ts, "hybrid_search", None)
+    if callable(hybrid) and _env_enabled("NAV_HYBRID_DIRECT_SEARCH", "1"):
+        hits = hybrid(
+            state.query,
+            int(config.search_k),
+            doc_id=state.doc_id,
+            task_type=state.task_type,
+        )
+    else:
+        hits = ts.search(state.query, int(config.search_k), doc_id=state.doc_id)
     return [(h.chunk, float(h.score)) for h in hits]
 
 

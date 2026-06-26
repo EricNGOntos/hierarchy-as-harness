@@ -1,108 +1,86 @@
-# fair_clean 共享输出预算协议（canonical）
+# Gold/Pred/Flat/TreeRAG 当前协议说明
 
-> **版本**：`fair_clean_goldnav_e2_v1` · b500 · 51 题
-> **状态**：当前唯一主结果与代码基线
+> 当前完整实验：`latest_clean400_goldpred_robust_v1 · b500 · 400 题`
+> 状态：robust-v1 已完成；结果为负，不作为正向主 claim。
 
----
+## 1. 比较口径
 
-## 1. 实验在比什么
+本轮执行的是 Gold/Pred 公平优化实验：
 
-在 **同一任务集、同一 evidence 字符预算、同一 compose / Inspect judge** 下，比较三种检索方式谁能更好地支撑最终答题：
+| 方法 | 来源 |
+|---|---|
+| Gold Nav robust-v1 | 新跑 `results/latest_clean400_goldpred_robust_v1_gold_b500.json` |
+| Pred Nav robust-v1 | 新跑 `results/latest_clean400_goldpred_robust_v1_pred_b500.json` |
+| Flat | 复用 `results/latest_clean400_goldnav_e2_v1_gold_flat_b500.json` |
+| TreeRAG | 复用 `results/latest_clean400_goldnav_e2_v1_treerag_b500.json` |
 
-| 方法 | 检索 |
-|------|------|
-| **Gold** | LLM Nav Agent + hybrid discovery（D*） |
-| **Flat** | flat_react 多轮 dense |
-| **TreeRAG** | LLM 建树 + intent + BTR |
+四方按同一 400 个 `inspect_id` 对齐，最终 evidence budget 均为 b500。
 
-这是**共享输出预算协议**，不是等计算量协议：各方法保留自身的检索轮数、候选上限、建树与 LLM 成本。
+Gold/Pred 共享：
 
----
+- 同一 `src/nav` 导航算法
+- 同一 `src/realdata/agent_delivery` budget fill / compose / Inspect judge
+- 同一 LLM cache 策略
+- 同一输出 JSON schema
 
-## 2. 协议要点（修正后）
+唯一允许差异：
 
-### 2.1 Evidence 呈现
+- Gold 使用 `tree_source=gold`
+- Pred 使用 `tree_source=pred`
 
-- 三方使用 **方法无关** header：`[E1]`、`[E2]`…（`method_neutral_ordinal_v1`）
-- 无 `PATH:` 行；无导航后 soft_safety 注入
-- Gold / Flat / TreeRAG 共用 `src/realdata/agent_delivery/` 的 budget fill、compose、judge
+## 2. robust-v1 改动边界
 
-### 2.2 Scope 任务与判分
+robust-v1 是通用结构鲁棒性修复，不使用 gold answer 刷分：
 
-- 17 道 scope 题的 `gold_nodes`、Inspect `gold_line_ids` 与 latest-clean corpus 对齐（`bin/23_repair_scope_tasks.py`）
-- 判分使用 `target.table` 逻辑条目 + items 一对一模糊匹配（`inspect_scoring.py`），不用整段 JSON 字符串当 gold
+- synthetic prefix/doc-root section
+- hybrid direct search in `auto` mode
+- scope direct hit local window
+- Gold/Pred single-arm runner
+- shared compose parser fallback for malformed scope `items`
 
-### 2.3 Gold Nav（Phase1，仍生效）
+不进入正式方法：
 
-- Agent State + 增强 Observation
-- 前置 hybrid discovery → D* COLLECT
-- Emergency Guard（collected 为空时，当前 0 触发）
+- `previous_level`
+- 用 `gold_nodes` 修 Pred tree
+- Gold 专属最终 evidence 注入
+- TreeRAG/Flat 重跑或重建树
 
-### 2.4 E2 multi-hop evidence allocation
+## 3. 400 题结果
 
-- 从 query 的两个层级锚点对候选证据分组，b500 为每跳保留 180 字上限
-- Gold / Flat / TreeRAG 共用同一 `evaluate_at_budget` 实现；不改 header、compose schema 或 judge
-- 默认复跑脚本开启 `MULTIHOP_EVIDENCE_ALLOCATION=1`
+| 方法 | 状态 | Overall | Niche | Multi-hop | Scope | Evidence |
+|---|---|---:|---:|---:|---:|---:|
+| Gold Nav robust-v1 | new | 0.1891 | 0.2090 | 0.0777 | 0.2806 | 0.5697 |
+| Pred Nav robust-v1 | new | 0.1338 | 0.1276 | 0.0601 | 0.2136 | 0.3946 |
+| TreeRAG | reused | 0.2016 | 0.1522 | 0.0831 | 0.3698 | 0.5125 |
+| Flat | reused | 0.1376 | 0.0903 | 0.0683 | 0.2547 | 0.4988 |
 
----
+Paired bootstrap：
 
-## 3. 当前主结果（score_task_mean）
+- Gold−TreeRAG：`-0.0125`，95% CI `[-0.0465, +0.0217]`
+- Pred−TreeRAG：`-0.0678`，95% CI `[-0.1006, -0.0355]`
+- Pred−Flat：`-0.0039`，95% CI `[-0.0345, +0.0274]`
 
-| 方法 | 总体 | niche | multi | scope |
-|------|-----:|------:|------:|------:|
-| **Gold** | **0.504** | **0.824** | **0.157** | 0.530 |
-| **TreeRAG** | 0.433 | **0.824** | 0.098 | 0.379 |
-| **Flat** | 0.354 | 0.471 | 0.020 | **0.572** |
+结论：robust-v1 没有在 400 题上泛化。Pred 不能作为正式论文中的 predicted hierarchy 正向优势证据；Gold 也不能声称稳定优于 TreeRAG。
 
-逐题 paired bootstrap 95% CI：Gold−TreeRAG `[-0.046, 0.188]`（仍不能声称稳定优于 TreeRAG）；Gold−Flat `[0.027, 0.276]`。
+## 4. 成本与过程量
 
-**结果文件**
+新增 Gold/Pred 成本按 audit：
 
-- `results/fair_clean_gold_flat_fair_clean_goldnav_e2_v1_b500.json`
-- `results/fair_clean_treerag_fair_clean_goldnav_e2_v1_b500.json`
-- 摘要：`results/summary.md`
+| Arm | Billed tokens | API calls | Cache hits |
+|---|---:|---:|---:|
+| Gold Nav robust-v1 | 525,406 | 356 | 3,265 |
+| Pred Nav robust-v1 | 907,302 | 544 | 3,014 |
 
----
+过程量：
 
-## 4. 复跑
+- `cache/latest_clean400_goldpred_robust_v1/`
+- `results/latest_clean400_goldpred_robust_v1_summary.json`
+- `results/latest_clean400_goldpred_robust_v1_summary.md`
 
-```bash
-bash bin/32_run_quality_balanced_gold_flat.sh   # Gold + Flat，默认 tag=goldnav_e2_v1
-bash bin/35_run_quality_balanced60_treerag.sh   # TreeRAG
-bash bin/21_compare_realdata_baselines.sh       # 对比表 → cache/compare_fair_clean_goldnav_e2_v1.md
-python3 tests/test_protocol.py -q               # 协议单测
-bash bin/36_recompose_judge.sh                  # 重跑 compose+judge（保留 nav/evidence）
-python3 bin/36_recompose_judge.py --judge-only  # 仅重判分（改 scope 金标/判分后）
-```
+## 5. 当前建议
 
-Scope 金标修复（改 task 后执行一次）：
+停止在已观察的 400 题上继续调导航规则。下一步应先修 Pred tree 生成质量，并使用新 holdout 支撑论文主 claim：
 
-```bash
-python3 bin/23_repair_scope_tasks.py
-```
-
----
-
-## 5. 已知短板（后续优化方向）
-
-| 项 | 现状 |
-|----|------|
-| multi_hop task | 0.157，已改善但仍是最弱分项 |
-| collect 零增率 | 16.9%，已达 <25% 目标 |
-| scope | Gold 0.530，仍低于 Flat 0.572 |
-
-优先方向：针对无法由层级锚点区分的同章相邻 multi-hop，以及 scope 49 的稳定召回；避免硬性 FINISH 门控。
-
----
-
-## 6. 代码索引
-
-| 模块 | 路径 |
-|------|------|
-| Evidence budget fill | `src/realdata/agent_delivery/code/budget_eval.py` |
-| Inspect 判分 | `src/realdata/agent_delivery/code/inspect_scoring.py` |
-| Scope 金标修复 | `bin/23_repair_scope_tasks.py` |
-| 重判分 / 重 compose | `bin/36_recompose_judge.py` |
-| Gold Nav | `src/nav/` |
-| TreeRAG 适配 | `src/treerag/eval_arxiv_treerag.py` |
-| 协议测试 | `tests/test_protocol.py` |
+- 修 parent exact、top-level/prefix coverage、upward jump、过宽父节点。
+- 离线结构指标过关后再跑小 dev。
+- 最强论文结论必须来自未参与调参的新 holdout。

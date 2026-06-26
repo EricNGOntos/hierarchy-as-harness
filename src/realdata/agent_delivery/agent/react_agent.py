@@ -534,7 +534,12 @@ def run_toolspace_episode(
         )
 
     scored = _dedupe_scored(hits_acc)
-    fill = evaluate_at_budget(scored, budget_chars=budget_chars)
+    fill = evaluate_at_budget(
+        scored,
+        budget_chars=budget_chars,
+        query=query,
+        task_type=task_type,
+    )
 
     retrieved = _chunks_to_retrieved_nodes(list(fill.kept_chunks))
     retrieval_seconds = time.perf_counter() - retrieval_t0

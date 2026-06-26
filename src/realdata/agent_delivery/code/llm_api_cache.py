@@ -15,6 +15,20 @@ _LOCK = Lock()
 _CACHE: dict[str, dict[str, Any]] | None = None
 
 
+def _append_audit_event(event: Dict[str, Any]) -> None:
+    raw = os.environ.get("BODYRICH_LLM_API_AUDIT_PATH", "").strip()
+    if not raw:
+        return
+    path = Path(raw)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {"recorded_at": time.time(), **event}
+    with _LOCK:
+        with path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+
+
 def _cache_enabled() -> bool:
     raw = os.environ.get("BODYRICH_LLM_API_CACHE", "1").strip().lower()
     return raw not in {"0", "false", "no", "off"}
@@ -96,6 +110,7 @@ def cached_chat_completion(
     response_format: Optional[Dict[str, Any]] = None,
     extra: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    call_t0 = time.perf_counter()
     load_llm_env()
     cache_key = _key(
         purpose=purpose,
@@ -118,6 +133,16 @@ def cached_chat_completion(
                 "cache_hit": True,
                 "retry_wait_seconds": 0.0,
             }
+            _append_audit_event({
+                "run_id": os.environ.get("BODYRICH_LLM_API_AUDIT_RUN_ID", ""),
+                "key": cache_key,
+                "purpose": purpose,
+                "model": model,
+                "cache_hit": True,
+                "original_usage": _usage_dict(row.get("usage") or {}),
+                "billed_usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+                "elapsed_seconds": time.perf_counter() - call_t0,
+            })
             return {"content": str(row.get("content") or ""), "usage": usage, "cache_hit": True}
 
     kwargs: Dict[str, Any] = {
@@ -175,4 +200,15 @@ def cached_chat_completion(
                 os.fsync(f.fileno())
             _load_cache()[cache_key] = row
         print(f"[llm-cache] saved purpose={purpose} model={model}", file=sys.stderr, flush=True)
+    _append_audit_event({
+        "run_id": os.environ.get("BODYRICH_LLM_API_AUDIT_RUN_ID", ""),
+        "key": cache_key,
+        "purpose": purpose,
+        "model": model,
+        "cache_hit": False,
+        "original_usage": _usage_dict(usage),
+        "billed_usage": _usage_dict(usage),
+        "retry_wait_seconds": retry_wait_seconds,
+        "elapsed_seconds": time.perf_counter() - call_t0,
+    })
     return {"content": content, "usage": usage, "cache_hit": False}

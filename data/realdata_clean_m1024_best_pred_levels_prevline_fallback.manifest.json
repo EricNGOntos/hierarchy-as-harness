@@ -1,0 +1,38 @@
+{
+  "description": "SFT level predictions with prevline/doc-mode fallback for parse failures",
+  "source_model": "new/model/finetuned_realdata_clean_ws_m1024_best/checkpoint_levelacc_ge65_g10000_samples40000",
+  "source_predictions": "new/model/finetuned_realdata_clean_ws_m1024_best/full_eval_predictions.jsonl",
+  "fallback_script": "new_sft_delivery/merge/process_full_eval_predictions.py",
+  "output_file": "data/realdata_clean_m1024_best_pred_levels_prevline_fallback.jsonl",
+  "corpus_file": "data/corpus/test_data_full_realdata_clean_latest.jsonl",
+  "total_rows": 60749,
+  "raw_metrics": {
+    "parse_fail_predicted_level_none": 4388,
+    "parse_fail_rate_pct": 7.2232,
+    "level_accuracy_pct": 79.9223,
+    "level_correct": 48552
+  },
+  "fallback_stats": {
+    "parsed_ok": 56361,
+    "fallback_prev_line": 4353,
+    "fallback_doc_mode": 35,
+    "rejected_absurd_level": 0
+  },
+  "fallback_metrics": {
+    "predicted_level_none": 0,
+    "level_accuracy_pct": 85.6327,
+    "level_correct": 52021
+  },
+  "corpus_alignment": {
+    "corpus_rows": 60749,
+    "missing_from_output": 0,
+    "extra_in_output": 0
+  },
+  "source_full_eval_summary": {
+    "total_samples": 60749,
+    "action_correct": 27958,
+    "level_correct": 48552,
+    "action_accuracy": 46.02215674332088,
+    "level_accuracy": 79.92230324779008
+  }
+}

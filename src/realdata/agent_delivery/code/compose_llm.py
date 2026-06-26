@@ -310,8 +310,67 @@ def _extract_loose_json_string_field(text: str, field: str) -> Optional[str]:
     return _decode_json_string_fragment(tail) if tail else None
 
 
+def _extract_loose_json_items(text: str) -> list[str]:
+    """Extract string entries from an `items` array even when one entry contains a stray quote."""
+    s = text or ""
+    m = re.search(r'"items"\s*:\s*\[', s)
+    if not m:
+        return []
+    i = m.end()
+    items: list[str] = []
+    while i < len(s):
+        while i < len(s) and s[i].isspace():
+            i += 1
+        if i >= len(s) or s[i] == "]":
+            break
+        if s[i] != '"':
+            i += 1
+            continue
+        start = i + 1
+        i = start
+        escaped = False
+        while i < len(s):
+            ch = s[i]
+            if escaped:
+                escaped = False
+                i += 1
+                continue
+            if ch == "\\":
+                escaped = True
+                i += 1
+                continue
+            if ch == '"':
+                j = i + 1
+                while j < len(s) and s[j].isspace():
+                    j += 1
+                # Treat a quote as the item terminator only when it is followed by an array delimiter.
+                # This keeps scanning across common malformed outputs like `"...新时代"争议..."`.
+                if j >= len(s) or s[j] in {",", "]", "}"}:
+                    raw = s[start:i]
+                    val = _decode_json_string_fragment(raw).strip()
+                    if val:
+                        items.append(val)
+                    i = j + (1 if j < len(s) and s[j] == "," else 0)
+                    break
+            i += 1
+        else:
+            tail = s[start:].strip()
+            tail = re.sub(r'[\s,}\]]+$', "", tail).strip()
+            if tail:
+                items.append(_decode_json_string_fragment(tail).strip())
+            break
+    return [x for x in items if x]
+
+
 def _extract_truncated_compose_obj(text: str, tt: str) -> Optional[dict]:
     s = text or ""
+    if tt in ("scope_collection", "regulatory_coverage"):
+        items = _extract_loose_json_items(s)
+        if items:
+            return {
+                "task_type": _extract_loose_json_string_field(s, "task_type") or tt,
+                "items": items,
+            }
     if tt == "multi_hop":
         obj = {
             "task_type": _extract_loose_json_string_field(s, "task_type") or tt,

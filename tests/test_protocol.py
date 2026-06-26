@@ -16,12 +16,17 @@ if str(REALDATA_SRC) not in sys.path:
     sys.path.insert(0, str(REALDATA_SRC))
 
 from agent_delivery.code.budget_eval import evaluate_at_budget  # noqa: E402
+from agent_delivery.code.hierarchical_tools import HierarchicalTools  # noqa: E402
 from agent_delivery.code.index_retrieval import Chunk  # noqa: E402
+from agent_delivery.code.index_retrieval import CorpusIndex  # noqa: E402
 from agent_delivery.code.inspect_scoring import (  # noqa: E402
     build_inspect_pred_output,
     scope_collection_items_score,
     score_sample,
 )
+from agent_delivery.code.compose_llm import _extract_truncated_compose_obj  # noqa: E402
+from agent_delivery.code.load_data import DocBundle, LineRecord  # noqa: E402
+from agent_delivery.code.tool_space import ToolSpace  # noqa: E402
 from agent_delivery.agent.runner_bodyrich import _finalize_cost  # noqa: E402
 
 
@@ -153,6 +158,15 @@ class BudgetProtocolTests(unittest.TestCase):
         self.assertEqual(pred["items"], ["甲，含逗号", "乙"])
         self.assertEqual(pred["final_answer"], "甲，含逗号；乙")
 
+    def test_scope_compose_fallback_recovers_items_with_stray_quote(self) -> None:
+        bad = (
+            '{"task_type":"scope_collection","items":["第一项","第二项",'
+            '"本协议落实新时代"争议调解机制，仍应作为同一条"]}'
+        )
+        obj = _extract_truncated_compose_obj(bad, "scope_collection")
+        self.assertIsNotNone(obj)
+        self.assertEqual(obj["items"], ["第一项", "第二项", "本协议落实新时代\"争议调解机制，仍应作为同一条"])
+
     def test_treerag_metadata_reports_output_not_compute_parity(self) -> None:
         module = _load_treerag_module()
         args = argparse.Namespace(initial_top_k=80, max_traversal_leaves=0)
@@ -177,6 +191,70 @@ class BudgetProtocolTests(unittest.TestCase):
             "text_line_id_groups": [[1], [2]],
         })
         self.assertEqual(chunk.text_line_id_groups, ((1,), (2,)))
+
+    def test_synthetic_prefix_section_covers_predicted_tree_prefix_gap(self) -> None:
+        old = os.environ.get("NAV_SYNTHETIC_ROOT_SECTIONS")
+        os.environ["NAV_SYNTHETIC_ROOT_SECTIONS"] = "1"
+        try:
+            bundle = DocBundle(
+                doc_id="doc",
+                lines=[
+                    LineRecord("doc", 1, "封面", 0),
+                    LineRecord("doc", 2, "前缀答案 needle", 0),
+                    LineRecord("doc", 3, "前缀正文", 2),
+                    LineRecord("doc", 4, "第一章", 1),
+                    LineRecord("doc", 5, "章节正文", 2),
+                ],
+                levels_for_tree=[0, 0, 2, 1, 2],
+            )
+            idx = CorpusIndex.from_bundles([bundle], tree_mode="hierarchical", retrieval_backend="overlap")
+            ts = ToolSpace(HierarchicalTools(idx))
+            sections = ts.sections_for_doc("doc")
+            self.assertIn("doc:__prefix", sections)
+            self.assertIn("doc:L4", sections)
+            prefix = ts.get_structure("doc:__prefix")
+            self.assertTrue(prefix["exists"])
+            self.assertEqual(prefix["n_lines"], 3)
+            prefix_chunks = ts.materialize_doc_leaf_path_chunks("doc")
+            self.assertTrue(any(2 in chunk.line_ids for chunk in prefix_chunks))
+        finally:
+            if old is None:
+                os.environ.pop("NAV_SYNTHETIC_ROOT_SECTIONS", None)
+            else:
+                os.environ["NAV_SYNTHETIC_ROOT_SECTIONS"] = old
+
+    def test_hybrid_search_uses_direct_lines_without_gold_labels(self) -> None:
+        old_direct = os.environ.get("NAV_HYBRID_DIRECT_SEARCH")
+        old_synth = os.environ.get("NAV_SYNTHETIC_ROOT_SECTIONS")
+        os.environ["NAV_HYBRID_DIRECT_SEARCH"] = "1"
+        os.environ["NAV_SYNTHETIC_ROOT_SECTIONS"] = "1"
+        try:
+            bundle = DocBundle(
+                doc_id="doc",
+                lines=[
+                    LineRecord("doc", 1, "封面", 0),
+                    LineRecord("doc", 2, "scope needle 命中行", 0),
+                    LineRecord("doc", 3, "相邻解释", 2),
+                    LineRecord("doc", 4, "第一章", 1),
+                    LineRecord("doc", 5, "章节正文", 2),
+                ],
+                levels_for_tree=[0, 0, 2, 1, 2],
+            )
+            idx = CorpusIndex.from_bundles([bundle], tree_mode="hierarchical", retrieval_backend="overlap")
+            ts = ToolSpace(HierarchicalTools(idx))
+            hits = ts.hybrid_search("needle", 5, doc_id="doc", task_type="scope_collection")
+            self.assertTrue(hits)
+            self.assertTrue(any(hit.chunk.node_id.endswith("__directwin") for hit in hits))
+            self.assertTrue(any(2 in hit.chunk.line_ids for hit in hits))
+        finally:
+            if old_direct is None:
+                os.environ.pop("NAV_HYBRID_DIRECT_SEARCH", None)
+            else:
+                os.environ["NAV_HYBRID_DIRECT_SEARCH"] = old_direct
+            if old_synth is None:
+                os.environ.pop("NAV_SYNTHETIC_ROOT_SECTIONS", None)
+            else:
+                os.environ["NAV_SYNTHETIC_ROOT_SECTIONS"] = old_synth
 
 
 class FairCleanTaskTests(unittest.TestCase):

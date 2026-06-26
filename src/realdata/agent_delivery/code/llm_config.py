@@ -35,15 +35,15 @@ def _apply_env_file(path: Path) -> None:
 def load_llm_env() -> None:
     """
     从若干固定位置读取 LLM API 配置（若系统环境变量已存在则不覆盖）：
-      1) ~/.config/realdata_treerag/llm_api.env（推荐，用户级、不入库）
-      2) src/realdata/agent_delivery/llm_api.env（仓库内本地副本，gitignore）
+      1) ~/.config/realdata_treerag/llm_api.env（用户级共享，新 worktree 也可复用）
+      2) src/realdata/agent_delivery/llm_api.env（当前实验包位置）
       3) core/agent_delivery/llm_api.env（兼容旧实验包布局）
+      4) src/realdata/agent_delivery/llm_api.env（兼容从实验包根定位）
     按顺序加载；后读到的键仍遵守「不覆盖已在 os.environ 中的值」。
     """
     here = Path(__file__).resolve()
-    user_cfg = Path.home() / ".config" / "realdata_treerag" / "llm_api.env"
     candidates = [
-        user_cfg,
+        Path.home() / ".config" / "realdata_treerag" / "llm_api.env",
         here.parents[1] / "llm_api.env",
         here.parents[4] / "core" / "agent_delivery" / "llm_api.env",
         here.parents[4] / "src" / "realdata" / "agent_delivery" / "llm_api.env",
@@ -92,6 +92,6 @@ def require_llm_env(*, context: str = "") -> None:
     prefix = f"{context}: " if context else ""
     raise RuntimeError(
         f"{prefix}必须配置 LLM API（OPENAI_API_KEY）。"
-        "请复制 llm_api.env.example 到 ~/.config/realdata_treerag/llm_api.env 并填入密钥，"
+        "请复制 src/realdata/agent_delivery/llm_api.env.example 为 llm_api.env 并填入密钥，"
         "或通过环境变量导出 OPENAI_API_KEY（及可选 OPENAI_BASE_URL、COMPOSE_MODEL、JUDGE_MODEL、NAV_LLM_MODEL）。"
     )

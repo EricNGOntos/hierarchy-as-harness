@@ -1611,6 +1611,22 @@ def _checkpoint_signature(
         "nav_scope_post_lock_score_penalty": os.environ.get(
             "NAV_SCOPE_POST_LOCK_SCORE_PENALTY", "2.0"
         ).strip(),
+        "nav_synthetic_root_sections": os.environ.get(
+            "NAV_SYNTHETIC_ROOT_SECTIONS", "1"
+        ).strip(),
+        "nav_synthetic_prefix_min_lines": os.environ.get(
+            "NAV_SYNTHETIC_PREFIX_MIN_LINES", "2"
+        ).strip(),
+        "nav_hybrid_direct_search": os.environ.get(
+            "NAV_HYBRID_DIRECT_SEARCH", "auto"
+        ).strip(),
+        "nav_hybrid_direct_k": os.environ.get("NAV_HYBRID_DIRECT_K", "").strip(),
+        "nav_scope_direct_window_before": os.environ.get(
+            "NAV_SCOPE_DIRECT_WINDOW_BEFORE", "1"
+        ).strip(),
+        "nav_scope_direct_window_after": os.environ.get(
+            "NAV_SCOPE_DIRECT_WINDOW_AFTER", "1"
+        ).strip(),
         "pool_mode": _POOL_MODE or "none",
         "evidence_header_protocol": EVIDENCE_HEADER_PROTOCOL,
         "scope_scoring_protocol": "structured_item_alignment_v2",

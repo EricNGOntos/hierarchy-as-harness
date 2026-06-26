@@ -1,72 +1,62 @@
-# Hierarchy-as-Harness · RealData 共享输出预算基线（fair_clean）
+# RealData Gold/Pred Hierarchy Evaluation
 
-本仓库包含 **RealData latest-clean** 上的端到端对比：Gold（金标层级 Nav Agent）、Flat、[TreeRAG](https://aclanthology.org/2025.findings-acl.20/) 基线。三方采用同一任务集、最终 evidence 字符预算、compose 与 judge；检索过程保留各方法自身的候选策略与成本，因此这是**共享输出预算协议**，不是等计算量协议。
+当前工作区主线是 latest-clean 400 题 Gold/Pred/Flat/TreeRAG 对齐评测。最新完整实验是 `latest_clean400_goldpred_robust_v1 · b500 · 400 题`。
 
-- **任务**：51 题（niche / multi_hop / scope 各 17）
-- **预算**：b500，三方共享最终 evidence 字符预算 + 方法无关 `[E1]`/`[E2]` header + 同一 compose + 同一 judge
-- **Canonical 配置**：`goldnav_e2_v1`（见 [UNIFIED_FIX_PLAN.zh-CN.md](UNIFIED_FIX_PLAN.zh-CN.md)）
+## 当前结论
 
-## 当前主结果（51 题 · b500 · goldnav_e2_v1）
+robust-v1 已按公平协议完成，但结果为负：51 题 dev gate 通过，完整 400 题没有泛化。
 
-| 方法 | 总体 | niche | multi | scope |
-|------|-----:|------:|------:|------:|
-| **Gold（nav）** | **0.504** | **0.824** | **0.157** | 0.530 |
-| **TreeRAG** | 0.433 | **0.824** | 0.098 | 0.379 |
-| Flat | 0.354 | 0.471 | 0.020 | **0.572** |
+| 方法 | 状态 | Overall | Niche | Multi-hop | Scope | Evidence |
+|---|---|---:|---:|---:|---:|---:|
+| Gold Nav robust-v1 | new | 0.1891 | 0.2090 | 0.0777 | 0.2806 | 0.5697 |
+| Pred Nav robust-v1 | new | 0.1338 | 0.1276 | 0.0601 | 0.2136 | 0.3946 |
+| TreeRAG | reused | 0.2016 | 0.1522 | 0.0831 | 0.3698 | 0.5125 |
+| Flat | reused | 0.1376 | 0.0903 | 0.0683 | 0.2547 | 0.4988 |
 
-Gold−Flat bootstrap 95% CI `[0.027, 0.276]`；Gold−TreeRAG `[-0.046, 0.188]`（不能声称稳定优于 TreeRAG）。
+Pred robust-v1 显著低于 TreeRAG，且与 Flat 基本持平。Gold robust-v1 与 TreeRAG 差值 CI 跨 0，不能声称稳定优于 TreeRAG。
 
-**文档**：[results/summary.md](results/summary.md)（索引）· [results/paper_main_experiment.zh-CN.md](results/paper_main_experiment.zh-CN.md)（论文稿）
+## Fairness Protocol
 
-## Nav 架构
+Gold/Pred robust-v1 共享同一导航算法、b500 evidence budget、compose、Inspect judge 和 cache 策略。区别只在 `tree_source=gold` vs `tree_source=pred`。
 
-Gold Nav 采用 **[KnowWhere](https://github.com/Ontos-AI/knowhere)** 风格的三通道 hybrid discovery + LLM rerank：
+TreeRAG 和 Flat 在 robust-v1 中没有重跑，只按 `inspect_id` 复用已有完整结果。
 
-1. **宽召回**：path BM25 + content BM25 + term 子串 → 加权 RRF
-2. **LLM rerank**：导航模型挑选 1–3 个 section，暴露为 **D*** COLLECT 动作
-3. **显式收集**：只有 agent 选择 COLLECT/SEARCH 后 evidence 才进入 pool
+## Key Artifacts
 
-`bin/32` 默认 env：`NAV_DISCOVERY_SOFT_SIGNAL=1`，`NAV_DISCOVERY_RECALL_K=10`，`NAV_DISCOVERY_PICK_K=3`。
+robust-v1：
 
-## 目录结构
+- `results/latest_clean400_goldpred_robust_v1_gold_b500.json`
+- `results/latest_clean400_goldpred_robust_v1_pred_b500.json`
+- `results/latest_clean400_goldpred_robust_v1_summary.md`
+- `cache/latest_clean400_goldpred_robust_v1/`
 
-```
-├── bin/                 # 复跑与对比脚本
-├── config/
-├── data/tasks/          # 51 题 fair_clean + 可选 60 题外推集
-├── results/             # canonical JSON + 摘要/论文 md
-├── cache/               # 断点续跑（gitignore，不入库）
-└── src/{realdata,nav,treerag}/
-```
+复用 baseline：
 
-## 快速开始
+- `results/latest_clean400_goldnav_e2_v1_gold_flat_b500.json`
+- `results/latest_clean400_goldnav_e2_v1_treerag_b500.json`
 
-### LLM 配置（勿提交密钥）
+诊断：
 
-```bash
-mkdir -p ~/.config/realdata_treerag
-cp src/realdata/agent_delivery/llm_api.env.example ~/.config/realdata_treerag/llm_api.env
-# 填入 OPENAI_API_KEY、OPENAI_BASE_URL、COMPOSE_MODEL 等；chmod 600
-```
+- `results/gold_pred_robust_v1_diagnostics.md`
 
-也可在仓库内复制为 `src/realdata/agent_delivery/llm_api.env`（已在 `.gitignore` 中，**不会**被 git 跟踪）。`llm_config.py` 优先读取用户级 `~/.config/realdata_treerag/llm_api.env`。
+## Main Scripts
 
-**安全**：切勿 commit `llm_api.env`、`.env*` 或 `cache/` 下的 LLM 响应缓存。
+- `bin/44_run_pred_only_bodyrich.py`：single hierarchical arm runner，支持 `--tree-source gold|pred`
+- `bin/48_diagnose_gold_pred_robust.py`：零 token Gold/Pred 结构诊断
+- `bin/49_run_fair_clean_goldpred_robust_v1_dev51.sh`：51 题 dev gate
+- `bin/50_summarize_goldpred_reuse.py`：Gold/Pred 新结果 + Flat/TreeRAG 复用汇总
+- `bin/51_run_latest_clean400_goldpred_robust_v1.sh`：400 题 robust-v1 最终脚本
 
-### 复跑
+## Reproduce
 
 ```bash
-bash bin/32_run_quality_balanced_gold_flat.sh   # Gold + Flat
-bash bin/35_run_quality_balanced60_treerag.sh   # TreeRAG
-bash bin/21_compare_realdata_baselines.sh       # 对比表 → cache/
 python3 tests/test_protocol.py -q
-python3 tests/test_nav_improvements.py -q
+bash bin/49_run_fair_clean_goldpred_robust_v1_dev51.sh
+bash bin/51_run_latest_clean400_goldpred_robust_v1.sh
 ```
 
-## 实验口径
+脚本会复用 `cache/llm_api_cache.jsonl`、`cache/fair_clean_goldpred_robust_v1b_dev51/` 和 `cache/latest_clean400_goldpred_robust_v1/` 中可用缓存。已有结果文件存在时会跳过对应 arm。
 
-| 方法 | 检索 | 答题 |
-|------|------|------|
-| **Gold** | LLM Nav Agent（expand/collect/search + hybrid discovery D*） | 共享 compose + Inspect judge |
-| **Flat** | flat_react 多轮 dense | 同上 |
-| **TreeRAG** | LLM 建树 + intent + BTR | 同上 |
+## Next Step
+
+不要继续在已观察 400 题上刷导航规则。下一步应修 Pred tree 生成质量，并用新的 holdout 支撑论文 claim。

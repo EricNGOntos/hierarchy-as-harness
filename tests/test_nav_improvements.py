@@ -125,6 +125,45 @@ class ScopeCollectTests(unittest.TestCase):
             ["doc:L14__path", "doc:L15__path", "doc:L16__path", "doc:L17__path"],
         )
 
+    def test_large_scope_collect_can_use_multiple_local_bands(self) -> None:
+        chunks = [
+            Chunk(f"doc:L{i}__path", "doc", str(i), (i,), "doc:L1")
+            for i in range(1, 26)
+        ]
+        scores = {chunk.node_id: 0.1 for chunk in chunks}
+        scores.update(
+            {
+                "doc:L5__path": 0.9,
+                "doc:L15__path": 0.8,
+                "doc:L23__path": 0.7,
+            }
+        )
+        tools = _FakeToolSpace(chunks, scores)
+        with patch.dict(
+            os.environ,
+            {
+                "NAV_SCOPE_COLLECT_STRATEGY": "multi_band",
+                "NAV_SCOPE_LOCAL_BAND_MIN_POOL": "20",
+                "NAV_SCOPE_LOCAL_BAND_K": "6",
+                "NAV_SCOPE_LOCAL_BAND_CONTEXT_BEFORE": "0",
+                "NAV_SCOPE_MULTI_BAND_CONTEXT_AFTER": "1",
+                "NAV_SCOPE_MULTI_BAND_ANCHORS": "3",
+            },
+        ):
+            scored = _collect_subtree(tools, self.action, self.state, NavConfig(collect_k=8))
+
+        self.assertEqual(
+            {chunk.node_id for chunk, _ in scored},
+            {
+                "doc:L5__path",
+                "doc:L6__path",
+                "doc:L15__path",
+                "doc:L16__path",
+                "doc:L23__path",
+                "doc:L24__path",
+            },
+        )
+
     def test_relevance_strategy_remains_available_for_ablation(self) -> None:
         tools = _FakeToolSpace(
             self.chunks,
