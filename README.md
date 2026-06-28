@@ -1,10 +1,10 @@
 # RealData Gold/Pred Hierarchy Evaluation
 
-当前工作区主线是 latest-clean 400 题 Gold/Pred/Flat/TreeRAG 对齐评测。最新完整实验是 `latest_clean400_goldpred_robust_v1 · b500 · 400 题`。
+当前 canonical 实验：**`latest_clean400_goldpred_robust_v1 · b500 · 400 题`**
 
-## 当前结论
+在 latest-clean 400 题上比较 Gold Nav / Pred Nav / Flat / TreeRAG。Gold 与 Pred 使用同一 robust-v1 导航算法与共享输出预算协议；Flat 与 TreeRAG 按 `inspect_id` 复用已有 400 题 baseline。
 
-robust-v1 已按公平协议完成，但结果为负：51 题 dev gate 通过，完整 400 题没有泛化。
+## 主结果（400 题）
 
 | 方法 | 状态 | Overall | Niche | Multi-hop | Scope | Evidence |
 |---|---|---:|---:|---:|---:|---:|
@@ -13,50 +13,65 @@ robust-v1 已按公平协议完成，但结果为负：51 题 dev gate 通过，
 | TreeRAG | reused | 0.2016 | 0.1522 | 0.0831 | 0.3698 | 0.5125 |
 | Flat | reused | 0.1376 | 0.0903 | 0.0683 | 0.2547 | 0.4988 |
 
-Pred robust-v1 显著低于 TreeRAG，且与 Flat 基本持平。Gold robust-v1 与 TreeRAG 差值 CI 跨 0，不能声称稳定优于 TreeRAG。
+要点：Pred 显著低于 TreeRAG；Gold 与 TreeRAG 差值 bootstrap CI 跨 0，不能写稳定优于 TreeRAG。
 
-## Fairness Protocol
+## 公平协议
 
-Gold/Pred robust-v1 共享同一导航算法、b500 evidence budget、compose、Inspect judge 和 cache 策略。区别只在 `tree_source=gold` vs `tree_source=pred`。
+Gold/Pred 共享：同一 `src/nav` 导航、b500 evidence budget、compose、Inspect judge、cache 策略。唯一差异是 `tree_source=gold` vs `tree_source=pred`。
 
-TreeRAG 和 Flat 在 robust-v1 中没有重跑，只按 `inspect_id` 复用已有完整结果。
+robust-v1 为通用结构修复（synthetic root、hybrid direct search、scope direct window 等），不使用 gold answer 或 Pred tree 作弊。
 
-## Key Artifacts
+## 入库文件
 
-robust-v1：
+**400 题新跑**
 
 - `results/latest_clean400_goldpred_robust_v1_gold_b500.json`
 - `results/latest_clean400_goldpred_robust_v1_pred_b500.json`
-- `results/latest_clean400_goldpred_robust_v1_summary.md`
-- `cache/latest_clean400_goldpred_robust_v1/`
+- `results/latest_clean400_goldpred_robust_v1_summary.{json,md}`
 
-复用 baseline：
+**400 题复用 baseline**
 
 - `results/latest_clean400_goldnav_e2_v1_gold_flat_b500.json`
 - `results/latest_clean400_goldnav_e2_v1_treerag_b500.json`
 
-诊断：
+**诊断**
 
-- `results/gold_pred_robust_v1_diagnostics.md`
+- `results/gold_pred_robust_v1_diagnostics.{json,md}`
 
-## Main Scripts
+**任务与语料**
 
-- `bin/44_run_pred_only_bodyrich.py`：single hierarchical arm runner，支持 `--tree-source gold|pred`
-- `bin/48_diagnose_gold_pred_robust.py`：零 token Gold/Pred 结构诊断
-- `bin/49_run_fair_clean_goldpred_robust_v1_dev51.sh`：51 题 dev gate
-- `bin/50_summarize_goldpred_reuse.py`：Gold/Pred 新结果 + Flat/TreeRAG 复用汇总
-- `bin/51_run_latest_clean400_goldpred_robust_v1.sh`：400 题 robust-v1 最终脚本
+- `data/tasks/tasks_realdata_bodyrich_latest_clean_400.{jsonl,inspect.jsonl}`
+- `data/corpus/test_data_full_realdata_clean_latest.jsonl`
+- `data/realdata_clean_m1024_best_pred_levels_prevline_fallback.jsonl`
 
-## Reproduce
+## 脚本
+
+| 脚本 | 用途 |
+|---|---|
+| `bin/44_run_pred_only_bodyrich.py` | 单臂 Gold/Pred runner |
+| `bin/47_prepare_pred400_cache.py` | 合并可复用 LLM cache |
+| `bin/48_diagnose_gold_pred_robust.py` | 零 token 结构诊断 |
+| `bin/50_summarize_goldpred_reuse.py` | Gold/Pred + Flat/TreeRAG 汇总 |
+| `bin/51_run_latest_clean400_goldpred_robust_v1.sh` | 400 题完整复跑 |
+| `bin/25_check_llm_endpoint.py` | LLM 连通性检查 |
+
+## 复跑
 
 ```bash
 python3 tests/test_protocol.py -q
-bash bin/49_run_fair_clean_goldpred_robust_v1_dev51.sh
+python3 tests/test_nav_improvements.py -q
 bash bin/51_run_latest_clean400_goldpred_robust_v1.sh
 ```
 
-脚本会复用 `cache/llm_api_cache.jsonl`、`cache/fair_clean_goldpred_robust_v1b_dev51/` 和 `cache/latest_clean400_goldpred_robust_v1/` 中可用缓存。已有结果文件存在时会跳过对应 arm。
+本地 cache（`cache/`，不入库）可加速复跑：`cache/llm_api_cache.jsonl`、`cache/latest_clean400_goldpred_robust_v1/`、`cache/embeddings/`。
+
+API 密钥放在 `src/realdata/agent_delivery/llm_api.env`（或 `~/.config/realdata_treerag/llm_api.env`），已在 `.gitignore` 中。
+
+## 文档
+
+- [UNIFIED_FIX_PLAN.zh-CN.md](UNIFIED_FIX_PLAN.zh-CN.md) — 协议与结论
+- [results/summary.md](results/summary.md) — 结果索引
 
 ## Next Step
 
-不要继续在已观察 400 题上刷导航规则。下一步应修 Pred tree 生成质量，并用新的 holdout 支撑论文 claim。
+不要在已观察 400 题上继续调导航规则。下一步应修 Pred tree 离线结构，并用新 holdout 支撑论文 claim。

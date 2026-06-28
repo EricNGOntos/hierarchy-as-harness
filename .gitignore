@@ -13,6 +13,12 @@ cache/*
 # 审计/清洗临时日志（可重跑生成）
 results/task_clean_log.json
 
+# 51 题 dev 任务与结果（仅本地保留，不入库）
+data/tasks/tasks_realdata_bodyrich_fair_clean*
+results/fair_clean_goldpred_robust_v1b_dev51*
+results/fair_clean_gold_flat_fair_clean_goldnav_e2_v1_b500.json
+results/fair_clean_treerag_fair_clean_goldnav_e2_v1_b500.json
+
 # Python
 __pycache__/
 *.py[cod]

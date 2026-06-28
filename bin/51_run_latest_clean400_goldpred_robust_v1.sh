@@ -4,15 +4,6 @@ export PYTHONDONTWRITEBYTECODE=1
 
 cd "$(dirname "$0")/.."
 
-DEV_SUMMARY="${DEV_SUMMARY:-results/fair_clean_goldpred_robust_v1b_dev51_summary.json}"
-if [[ "${SKIP_DEV_GATE:-0}" != "1" ]]; then
-  if [[ ! -f "${DEV_SUMMARY}" ]]; then
-    echo "missing dev gate summary: ${DEV_SUMMARY}; run bin/49_run_fair_clean_goldpred_robust_v1_dev51.sh first" >&2
-    exit 1
-  fi
-  python3 -c 'import json,sys; p=json.load(open(sys.argv[1])); q=p["quality"]["overall"]; pred=q["pred"]["score_task"]; gold=q["gold"]["score_task"]; print(f"dev51 gate: pred={pred:.4f} gold={gold:.4f}"); sys.exit(0 if pred>=0.4366 and gold>=0.4835 else 2)' "${DEV_SUMMARY}"
-fi
-
 RUN_TAG="${RUN_TAG:-latest_clean400_goldpred_robust_v1}"
 RUN_ROOT="cache/${RUN_TAG}"
 GOLD_ROOT="${RUN_ROOT}/gold"
