@@ -69,8 +69,8 @@ API 密钥放在 `src/realdata/agent_delivery/llm_api.env`（或 `~/.config/real
 
 ## 文档
 
-- [UNIFIED_FIX_PLAN.zh-CN.md](UNIFIED_FIX_PLAN.zh-CN.md) — 协议与结论
-- [results/summary.md](results/summary.md) — 结果索引
+- [results/summary.md](results/summary.md) — 结果索引与协议摘要
+- [results/latest_clean400_goldpred_robust_v1_summary.md](results/latest_clean400_goldpred_robust_v1_summary.md) — 400 题详细汇总
 
 ## Next Step
 

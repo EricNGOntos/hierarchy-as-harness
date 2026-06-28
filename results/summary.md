@@ -42,4 +42,4 @@ bash bin/51_run_latest_clean400_goldpred_robust_v1.sh
 python3 bin/48_diagnose_gold_pred_robust.py
 ```
 
-详见 [UNIFIED_FIX_PLAN.zh-CN.md](../UNIFIED_FIX_PLAN.zh-CN.md)。
+详见 [latest_clean400_goldpred_robust_v1_summary.md](latest_clean400_goldpred_robust_v1_summary.md)。
