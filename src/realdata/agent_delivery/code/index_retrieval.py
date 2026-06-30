@@ -124,7 +124,23 @@ class CorpusIndex:
                     sec_id = line_node_id(b.doc_id, lines[start_j].line_id)
                     title = lines[start_j].content[:200]
                     body_preview = "\n".join(r.content for r in sec_lines[:3])[:500]
-                    summary_text = f"{title}\n{body_preview}"
+                    child_levels_in_sec = set(
+                        levels[j] for j in range(start_j + 1, end_j)
+                        if levels[j] > levels[start_j]
+                    )
+                    if child_levels_in_sec:
+                        child_level = min(child_levels_in_sec)
+                        children_titles = "；".join(
+                            lines[j].content[:60]
+                            for j in range(start_j + 1, end_j)
+                            if levels[j] == child_level
+                        )[:300]
+                    else:
+                        children_titles = ""
+                    if children_titles:
+                        summary_text = f"{title}\n子节：{children_titles}\n{body_preview}"
+                    else:
+                        summary_text = f"{title}\n{body_preview}"
                     idx.section_summaries.append(
                         Chunk(
                             node_id=f"{sec_id}__summary",
