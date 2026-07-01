@@ -14,6 +14,7 @@ for source_dir in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
 
 from agent_delivery.code.index_retrieval import Chunk  # noqa: E402
 from agent_delivery.code.compose_llm import _multi_hop_anchor_guidance  # noqa: E402
+from agent_delivery.code.load_data import DocBundle, LineRecord  # noqa: E402
 from nav_actions import build_legal_actions  # noqa: E402
 from nav_agent import _collect_subtree, _update_collect_coverage  # noqa: E402
 from nav_policy import _format_agent_state  # noqa: E402
@@ -28,8 +29,9 @@ from nav_types import (  # noqa: E402
 
 
 class _FakeIndex:
-    def __init__(self, scores: dict[str, float]) -> None:
+    def __init__(self, scores: dict[str, float], bundles: dict[str, DocBundle] | None = None) -> None:
         self.scores = scores
+        self._bundles = bundles or {}
 
     def search(self, query, pool, k, doc_id_filter=None):
         del query, doc_id_filter
@@ -45,9 +47,10 @@ class _FakeToolSpace:
         *,
         ancestors: set[str] | None = None,
         descendants: set[str] | None = None,
+        bundles: dict[str, DocBundle] | None = None,
     ) -> None:
         self._chunks = chunks
-        self._idx = _FakeIndex(scores)
+        self._idx = _FakeIndex(scores, bundles)
         self._ancestors = ancestors or set()
         self._descendants = descendants or {"doc:L1"}
 
@@ -192,6 +195,51 @@ class ScopeCollectTests(unittest.TestCase):
         state = NavState(doc_id="doc", query="query", task_type="niche_fact")
         scored = _collect_subtree(tools, self.action, state, NavConfig(collect_k=2))
         self.assertEqual([chunk.node_id for chunk, _ in scored], ["doc:L30__path", "doc:L20__path"])
+
+    def test_outline_collect_builds_chunks_from_bundle_lines(self) -> None:
+        lines = [
+            LineRecord("doc", 1, "Root section", 1),
+            LineRecord("doc", 2, "Child A", 2),
+            LineRecord("doc", 3, "A detail", 3),
+            LineRecord("doc", 4, "Child B", 2),
+            LineRecord("doc", 5, "B detail", 3),
+            LineRecord("doc", 6, "Child C", 2),
+            LineRecord("doc", 7, "C detail", 3),
+        ]
+        bundle = DocBundle("doc", lines, [1, 2, 3, 2, 3, 2, 3])
+        # Deliberately provide leaf/path chunks that do not map by child line_id.
+        path_chunks = [
+            Chunk("doc:L3__path", "doc", "old path A", (1, 2, 3), "doc:L1"),
+            Chunk("doc:L5__path", "doc", "old path B", (1, 4, 5), "doc:L1"),
+        ]
+        tools = _FakeToolSpace(
+            path_chunks,
+            {chunk.node_id: 0.1 for chunk in path_chunks},
+            bundles={"doc": bundle},
+        )
+        state = NavState(
+            doc_id="doc",
+            query="列举该部分的主要条目。",
+            task_type="scope_collection",
+        )
+
+        with patch.dict(
+            os.environ,
+            {
+                "NAV_SCOPE_OUTLINE_MODE": "1",
+                "NAV_SCOPE_OUTLINE_LINES_PER_CHILD": "2",
+                "NAV_SCOPE_OUTLINE_MIN_CHUNKS": "4",
+            },
+        ):
+            scored = _collect_subtree(tools, self.action, state, NavConfig(collect_k=10))
+
+        self.assertEqual(
+            [chunk.node_id for chunk, _ in scored],
+            ["doc:L1__outline", "doc:L2__outline", "doc:L4__outline", "doc:L6__outline"],
+        )
+        self.assertEqual(scored[1][0].line_ids, (2, 3))
+        self.assertEqual(scored[1][0].text, "Child A\nA detail")
+        self.assertNotIn("__path", "\n".join(chunk.node_id for chunk, _ in scored))
 
     def test_successful_collect_blocks_ancestors_and_marks_full_subtree(self) -> None:
         tools = _FakeToolSpace(

@@ -145,6 +145,15 @@ def _scope_collect_strategy() -> str:
     return "local_band" if _env_enabled("NAV_SCOPE_COLLECT_RELEVANCE_FIRST") else "line_order"
 
 
+def _has_explicit_scope_collect_strategy() -> bool:
+    return os.environ.get("NAV_SCOPE_COLLECT_STRATEGY", "").strip().lower() in {
+        "line_order",
+        "local_band",
+        "multi_band",
+        "relevance",
+    }
+
+
 def _is_scope_outline_query(query: str, task_type: str) -> bool:
     """Scope_collection 查询是否为结构概览类（需要广度覆盖所有子节）。"""
     if (task_type or "").strip().lower() not in ("scope_collection", "regulatory_coverage"):
@@ -182,6 +191,8 @@ def _scope_collect_outline(
 
     lines = bundle.lines
     levels = bundle.levels_for_tree
+    if len(levels) < len(lines):
+        return _scope_collect_scored(idx, pool, action, state, config)
 
     target_sid = action.section_id
     if not target_sid:
@@ -223,35 +234,46 @@ def _scope_collect_outline(
     if len(child_starts) < 2:
         return _scope_collect_scored(idx, pool, action, state, config)
 
-    chunk_by_line_id: Dict[int, Chunk] = {}
-    for c in pool:
-        if c.line_ids:
-            chunk_by_line_id[c.line_ids[0]] = c
-
     outline_chunks: List[Tuple[Chunk, float]] = []
     seen_ids: set = set()
 
-    sec_first = chunk_by_line_id.get(lines[sec_start].line_id)
-    if sec_first and sec_first.node_id not in seen_ids:
+    sec_first = Chunk(
+        node_id=f"{state.doc_id}:L{lines[sec_start].line_id}__outline",
+        doc_id=state.doc_id,
+        text=(lines[sec_start].content or "").strip(),
+        line_ids=(lines[sec_start].line_id,),
+        section_id=target_sid,
+    )
+    if sec_first.text:
         outline_chunks.append((sec_first, base + 1.0))
         seen_ids.add(sec_first.node_id)
 
     for ci, child_j in enumerate(child_starts):
         child_end = child_starts[ci + 1] if ci + 1 < len(child_starts) else sec_end
-        collected_for_child = 0
-        for j in range(child_j, min(child_j + lines_per_child, child_end)):
-            line_id = lines[j].line_id
-            chunk = chunk_by_line_id.get(line_id)
-            if chunk and chunk.node_id not in seen_ids:
-                score = base + 0.9 - ci * 0.01 - collected_for_child * 0.001
-                outline_chunks.append((chunk, score))
-                seen_ids.add(chunk.node_id)
-                collected_for_child += 1
+        window_end = min(child_j + lines_per_child, child_end)
+        window = [rec for rec in lines[child_j:window_end] if (rec.content or "").strip()]
+        if not window:
+            continue
+        line_ids = tuple(rec.line_id for rec in window)
+        chunk = Chunk(
+            node_id=f"{state.doc_id}:L{lines[child_j].line_id}__outline",
+            doc_id=state.doc_id,
+            text="\n".join((rec.content or "").strip() for rec in window),
+            line_ids=line_ids,
+            section_id=target_sid,
+        )
+        if chunk.node_id in seen_ids:
+            continue
+        score = base + 0.9 - ci * 0.01
+        outline_chunks.append((chunk, score))
+        seen_ids.add(chunk.node_id)
 
-    if len(outline_chunks) < 3:
+    min_outline = max(1, int(os.environ.get("NAV_SCOPE_OUTLINE_MIN_CHUNKS", "3") or "3"))
+    if len(outline_chunks) < min_outline:
         return _scope_collect_scored(idx, pool, action, state, config)
 
-    return outline_chunks
+    limit = min(len(outline_chunks), int(config.collect_k))
+    return outline_chunks[:limit]
 
 
 def _scope_collect_scored(
@@ -263,7 +285,11 @@ def _scope_collect_scored(
 ) -> List[Tuple[Chunk, float]]:
     ordered = _line_order(pool)
     strategy = _scope_collect_strategy()
-    if not _is_scope_outline_query(state.query, state.task_type or ""):
+    if (
+        not _is_scope_outline_query(state.query, state.task_type or "")
+        and _env_enabled("NAV_SCOPE_DETAIL_FORCE_LINE_ORDER", "1")
+        and not _has_explicit_scope_collect_strategy()
+    ):
         strategy = "line_order"
     min_pool = max(1, int(os.environ.get("NAV_SCOPE_LOCAL_BAND_MIN_POOL", "20") or "20"))
     action_score_cap = max(
@@ -382,7 +408,7 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
         if pool:
             task_type = (state.task_type or "").strip().lower()
             if task_type in {"scope_collection", "regulatory_coverage"}:
-                if _is_scope_outline_query(state.query, task_type):
+                if _env_enabled("NAV_SCOPE_OUTLINE_MODE", "1") and _is_scope_outline_query(state.query, task_type):
                     return _scope_collect_outline(idx, pool, action, state, config)
                 return _scope_collect_scored(idx, pool, action, state, config)
             scored = idx.search(state.query, pool, min(len(pool), int(config.collect_k)), doc_id_filter=state.doc_id)

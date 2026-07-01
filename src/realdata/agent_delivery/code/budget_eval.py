@@ -69,6 +69,54 @@ def _block_for(chunk: Chunk, evidence_index: int) -> str:
     return f"{_evidence_header(evidence_index)}{chunk.text or ''}"
 
 
+def _scope_compact_text(chunk: Chunk, *, task_type: str) -> str:
+    """Keep scope outline evidence broad by capping each item before packing."""
+    tt = (task_type or "").strip().lower()
+    if tt not in {"scope_collection", "regulatory_coverage"}:
+        return chunk.text or ""
+    if os.environ.get("BODYRICH_SCOPE_COMPACT_EVIDENCE", "1").strip().lower() in {
+        "0",
+        "false",
+        "no",
+        "off",
+    }:
+        return chunk.text or ""
+
+    max_chars = max(40, int(_env_float("BODYRICH_SCOPE_COMPACT_CHARS_PER_CHUNK", 180.0)))
+    text = (chunk.text or "").strip()
+    if not text or len(text) <= max_chars:
+        return text
+
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    if not lines:
+        return text[:max_chars].rstrip()
+
+    header = lines[0]
+    body_lines = lines[1:]
+    if not body_lines:
+        return header[:max_chars].rstrip()
+
+    kept = [header]
+    used = len(header)
+    for line in body_lines:
+        sep = 1
+        available = max_chars - used - sep
+        if available <= 0:
+            break
+        if len(line) <= available:
+            kept.append(line)
+            used += sep + len(line)
+            continue
+        if available >= 16:
+            kept.append(line[:available].rstrip())
+        break
+    return "\n".join(kept).strip() or text[:max_chars].rstrip()
+
+
+def _block_text_for(chunk: Chunk, evidence_index: int, *, task_type: str) -> str:
+    return f"{_evidence_header(evidence_index)}{_scope_compact_text(chunk, task_type=task_type)}"
+
+
 def _partial_chunk_for_block(chunk: Chunk, visible_block: str, evidence_index: int) -> Chunk:
     """
     为字符级截断后的最后一个 evidence block 生成只含可见前缀行号的 Chunk。
@@ -232,7 +280,7 @@ def evaluate_at_budget(
         )
         for c, _score in hop_promoted:
             evidence_index = len(parts) + 1
-            block = _block_for(c, evidence_index)
+            block = _block_text_for(c, evidence_index, task_type=task_type)
             available = budget_chars - used - (sep_len if parts else 0)
             take = min(len(block), per_hop_quota, available)
             if take < min_partial_chars:
@@ -257,7 +305,7 @@ def evaluate_at_budget(
             if c.node_id in prefilled_ids:
                 continue
             evidence_index = len(parts) + 1
-            block = _block_for(c, evidence_index)
+            block = _block_text_for(c, evidence_index, task_type=task_type)
             add_len = len(block) + (sep_len if parts else 0)
             if used + add_len <= budget_chars:
                 parts.append(block)
@@ -290,7 +338,7 @@ def evaluate_at_budget(
                     continue
                 ov = _max_overlap_to_kept(c, kept)
                 eff = float(s) - pack_penalty * ov
-                block = _block_for(c, evidence_index)
+                block = _block_text_for(c, evidence_index, task_type=task_type)
                 add_len = len(block) + (sep_len if parts else 0)
                 if used + add_len <= budget_chars:
                     if eff > best_eff:
@@ -307,7 +355,7 @@ def evaluate_at_budget(
                 break
             c, _s = candidates[best_i]
             picked.add(best_i)
-            block = _block_for(c, evidence_index)
+            block = _block_text_for(c, evidence_index, task_type=task_type)
             if best_mode == "full":
                 add_len = len(block) + (sep_len if parts else 0)
                 parts.append(block)

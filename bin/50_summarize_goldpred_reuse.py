@@ -62,6 +62,10 @@ def _cost(payload: dict[str, Any], arm_key: str) -> dict[str, Any]:
     return ((payload.get("summary") or {}).get("cost") or {}).get(arm_key) or {}
 
 
+def _mean_or_zero(values: list[float]) -> float:
+    return mean(values) if values else 0.0
+
+
 def _usage(cost: dict[str, Any]) -> dict[str, float]:
     usage = cost.get("token_usage_total") or {}
     return {
@@ -125,8 +129,12 @@ def main() -> int:
             "n": len(subset),
             **{
                 arm: {
-                    "score_task": mean(score(task_id, arm, "score_task") for task_id in subset),
-                    "score_evidence": mean(score(task_id, arm, "score_evidence") for task_id in subset),
+                    "score_task": _mean_or_zero(
+                        [score(task_id, arm, "score_task") for task_id in subset]
+                    ),
+                    "score_evidence": _mean_or_zero(
+                        [score(task_id, arm, "score_evidence") for task_id in subset]
+                    ),
                 }
                 for arm in ("gold", "pred", "treerag", "flat")
             },

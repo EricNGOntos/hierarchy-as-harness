@@ -8,6 +8,7 @@ import sys
 import unittest
 from collections import Counter
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,7 +25,10 @@ from agent_delivery.code.inspect_scoring import (  # noqa: E402
     scope_collection_items_score,
     score_sample,
 )
-from agent_delivery.code.compose_llm import _extract_truncated_compose_obj  # noqa: E402
+from agent_delivery.code.compose_llm import (  # noqa: E402
+    _extract_truncated_compose_obj,
+    _task_type_compose_guidance,
+)
 from agent_delivery.code.load_data import DocBundle, LineRecord  # noqa: E402
 from agent_delivery.code.tool_space import ToolSpace  # noqa: E402
 from agent_delivery.agent.runner_bodyrich import _finalize_cost  # noqa: E402
@@ -61,6 +65,41 @@ class BudgetProtocolTests(unittest.TestCase):
         ]
         result = evaluate_at_budget(chunks, budget_chars=100)
         self.assertEqual(result.evidence_text, "[E1]\n甲\n\n[E2]\n乙\n\n[E3]\n丙")
+
+    def test_scope_budget_compacts_long_items_for_broad_coverage(self) -> None:
+        chunks = [
+            (Chunk("doc:L1__outline", "doc", "一、目标\n" + "甲" * 120, (1, 2), "doc:L1"), 1.0),
+            (Chunk("doc:L3__outline", "doc", "二、过程\n" + "乙" * 120, (3, 4), "doc:L3"), 0.9),
+            (Chunk("doc:L5__outline", "doc", "三、结果\n" + "丙" * 120, (5, 6), "doc:L5"), 0.8),
+        ]
+        with patch.dict(
+            os.environ,
+            {
+                "BODYRICH_SCOPE_COMPACT_EVIDENCE": "1",
+                "BODYRICH_SCOPE_COMPACT_CHARS_PER_CHUNK": "50",
+                "BODYRICH_PACK_LINE_OVERLAP_PENALTY": "0",
+            },
+        ):
+            result = evaluate_at_budget(
+                chunks,
+                budget_chars=180,
+                task_type="scope_collection",
+            )
+
+        self.assertLessEqual(result.evidence_chars_actual, 180)
+        self.assertEqual(
+            [chunk.node_id for chunk in result.kept_chunks],
+            ["doc:L1__outline", "doc:L3__outline", "doc:L5__outline"],
+        )
+        self.assertIn("一、目标", result.evidence_text)
+        self.assertIn("二、过程", result.evidence_text)
+        self.assertIn("三、结果", result.evidence_text)
+
+    def test_scope_compose_guidance_requires_block_coverage(self) -> None:
+        guidance = _task_type_compose_guidance("scope_collection")
+        self.assertIn("不同 Evidence block", guidance)
+        self.assertIn("不能只输出第一个子标题", guidance)
+        self.assertIn("不要把同一句完整规定拆成多个 item", guidance)
 
     def test_multi_hop_allocation_is_disabled_by_default(self) -> None:
         chunks = [

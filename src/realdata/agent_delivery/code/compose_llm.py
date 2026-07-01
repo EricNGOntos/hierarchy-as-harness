@@ -40,6 +40,9 @@ def _task_type_compose_guidance(task_type: str) -> str:
         return (
             "【题型 scope/regulatory】输出 `items` 为非空字符串数组：每一项对应 evidence 中一条独立要点或条款，"
             "优先保留带编号/条目标记的行（如 1.、（一）、第X条）；不要把多条合并成一条；"
+            "也不要把同一句完整规定拆成多个 item；若 Evidence 由 [E1]/[E2] 等块组成，"
+            "应尽量按不同 Evidence block 或子标题逐项覆盖，尤其不能只输出第一个子标题；"
+            "如果某块包含“标题：说明”格式，item 应保留标题和必要说明，不要只写标题。"
             "去重、简短；尽量覆盖问题所问的全部子项，顺序可与证据不一致。"
         )
     if tt == "niche_fact":

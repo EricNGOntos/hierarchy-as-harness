@@ -1,0 +1,398 @@
+{
+  "protocol": "latest_clean400_scope_compact_cap180_scope133_v1",
+  "integrity": {
+    "aligned_inspect_ids": 133,
+    "gold_rows": 133,
+    "pred_rows": 133,
+    "flat_source_rows": 400,
+    "treerag_rows": 400,
+    "task_type_counts": {
+      "niche_fact": 0,
+      "multi_hop": 0,
+      "scope_collection": 133
+    }
+  },
+  "quality": {
+    "overall": {
+      "gold": {
+        "score_task": 0.34664285714285714,
+        "score_evidence": 0.5823315789473684
+      },
+      "pred": {
+        "score_task": 0.24740225563909773,
+        "score_evidence": 0.3610255639097744
+      },
+      "treerag": {
+        "score_task": 0.36984360902255636,
+        "score_evidence": 0.5563917293233083
+      },
+      "flat": {
+        "score_task": 0.2546796992481203,
+        "score_evidence": 0.4249360902255639
+      }
+    },
+    "per_type": {
+      "niche_fact": {
+        "n": 0,
+        "gold": {
+          "score_task": 0.0,
+          "score_evidence": 0.0
+        },
+        "pred": {
+          "score_task": 0.0,
+          "score_evidence": 0.0
+        },
+        "treerag": {
+          "score_task": 0.0,
+          "score_evidence": 0.0
+        },
+        "flat": {
+          "score_task": 0.0,
+          "score_evidence": 0.0
+        }
+      },
+      "multi_hop": {
+        "n": 0,
+        "gold": {
+          "score_task": 0.0,
+          "score_evidence": 0.0
+        },
+        "pred": {
+          "score_task": 0.0,
+          "score_evidence": 0.0
+        },
+        "treerag": {
+          "score_task": 0.0,
+          "score_evidence": 0.0
+        },
+        "flat": {
+          "score_task": 0.0,
+          "score_evidence": 0.0
+        }
+      },
+      "scope_collection": {
+        "n": 133,
+        "gold": {
+          "score_task": 0.34664285714285714,
+          "score_evidence": 0.5823315789473684
+        },
+        "pred": {
+          "score_task": 0.24740225563909773,
+          "score_evidence": 0.3610255639097744
+        },
+        "treerag": {
+          "score_task": 0.36984360902255636,
+          "score_evidence": 0.5563917293233083
+        },
+        "flat": {
+          "score_task": 0.2546796992481203,
+          "score_evidence": 0.4249360902255639
+        }
+      }
+    }
+  },
+  "comparisons": {
+    "gold_minus_pred": {
+      "mean": 0.09924060150375939,
+      "paired_bootstrap_95_ci": [
+        0.04824887218045113,
+        0.1515872180451128
+      ],
+      "positive": 46,
+      "negative": 22,
+      "ties": 65
+    },
+    "gold_minus_treerag": {
+      "mean": -0.023200751879699253,
+      "paired_bootstrap_95_ci": [
+        -0.08290526315789475,
+        0.036385714285714285
+      ],
+      "positive": 39,
+      "negative": 44,
+      "ties": 50
+    },
+    "gold_minus_flat": {
+      "mean": 0.09196315789473684,
+      "paired_bootstrap_95_ci": [
+        0.03178345864661653,
+        0.15329172932330826
+      ],
+      "positive": 57,
+      "negative": 24,
+      "ties": 52
+    },
+    "pred_minus_treerag": {
+      "mean": -0.12244135338345866,
+      "paired_bootstrap_95_ci": [
+        -0.1877233082706767,
+        -0.05712255639097745
+      ],
+      "positive": 29,
+      "negative": 53,
+      "ties": 51
+    },
+    "pred_minus_flat": {
+      "mean": -0.00727744360902256,
+      "paired_bootstrap_95_ci": [
+        -0.06551052631578948,
+        0.05122932330827067
+      ],
+      "positive": 36,
+      "negative": 37,
+      "ties": 60
+    },
+    "treerag_minus_flat": {
+      "mean": 0.1151639097744361,
+      "paired_bootstrap_95_ci": [
+        0.05639548872180451,
+        0.1742436090225564
+      ],
+      "positive": 46,
+      "negative": 20,
+      "ties": 67
+    }
+  },
+  "cost": {
+    "new_gold_cost": {
+      "total_seconds": 493.8954369490966,
+      "api_seconds": 493.8954369490966,
+      "cold_start_seconds": 0.3468928330039489,
+      "data_load_seconds": 0.10592812499817228,
+      "index_build_seconds": 0.24096470800577663,
+      "retrieval_framework_seconds": 278.7969066640362,
+      "compose_seconds": 214.63135682899883,
+      "online_response_seconds": 493.42826349303505,
+      "retry_wait_seconds": 0.0,
+      "judge_eval_seconds": 0.46717345606157323,
+      "warm_end_to_end_eval_seconds": 493.8954369490966,
+      "end_to_end_eval_seconds": 494.24232978210057,
+      "token_usage_by_purpose": {
+        "compose": {
+          "prompt_tokens": 98500,
+          "completion_tokens": 17278,
+          "total_tokens": 115778,
+          "api_calls": 133,
+          "cache_hits": 0,
+          "retry_wait_seconds": 0.0
+        },
+        "nav": {
+          "prompt_tokens": 565708,
+          "completion_tokens": 7031,
+          "total_tokens": 572739,
+          "api_calls": 320,
+          "cache_hits": 543,
+          "retry_wait_seconds": 0.0
+        },
+        "nav_discovery_rerank": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "api_calls": 0,
+          "cache_hits": 133,
+          "retry_wait_seconds": 0.0
+        }
+      },
+      "token_usage_total": {
+        "prompt_tokens": 664208,
+        "completion_tokens": 24309,
+        "total_tokens": 688517,
+        "api_calls": 453,
+        "cache_hits": 676,
+        "retry_wait_seconds": 0.0
+      }
+    },
+    "new_pred_cost": {
+      "total_seconds": 336.6750373359755,
+      "api_seconds": 336.6750373359755,
+      "cold_start_seconds": 0.5900604169946746,
+      "data_load_seconds": 0.20629208399623167,
+      "index_build_seconds": 0.38376833299844293,
+      "retrieval_framework_seconds": 181.11064586498833,
+      "compose_seconds": 155.1500242129987,
+      "online_response_seconds": 336.260670077987,
+      "retry_wait_seconds": 0.0,
+      "judge_eval_seconds": 0.41436725798848784,
+      "warm_end_to_end_eval_seconds": 336.6750373359755,
+      "end_to_end_eval_seconds": 337.2650977529702,
+      "token_usage_by_purpose": {
+        "compose": {
+          "prompt_tokens": 87449,
+          "completion_tokens": 10980,
+          "total_tokens": 98429,
+          "api_calls": 118,
+          "cache_hits": 15,
+          "retry_wait_seconds": 0.0
+        },
+        "nav": {
+          "prompt_tokens": 303713,
+          "completion_tokens": 3071,
+          "total_tokens": 306784,
+          "api_calls": 134,
+          "cache_hits": 714,
+          "retry_wait_seconds": 0.0
+        },
+        "nav_discovery_rerank": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "api_calls": 0,
+          "cache_hits": 133,
+          "retry_wait_seconds": 0.0
+        }
+      },
+      "token_usage_total": {
+        "prompt_tokens": 391162,
+        "completion_tokens": 14051,
+        "total_tokens": 405213,
+        "api_calls": 252,
+        "cache_hits": 862,
+        "retry_wait_seconds": 0.0
+      }
+    },
+    "reused_flat_cost": {
+      "total_seconds": 2132.81425275479,
+      "api_seconds": 2132.81425275479,
+      "cold_start_seconds": 0.15483883398701437,
+      "data_load_seconds": 0.10832529200706631,
+      "index_build_seconds": 0.04651354197994806,
+      "retrieval_framework_seconds": 287.63100674099405,
+      "compose_seconds": 558.4292006267933,
+      "online_response_seconds": 846.0602073677874,
+      "retry_wait_seconds": 0.0,
+      "judge_eval_seconds": 1286.7540453870024,
+      "warm_end_to_end_eval_seconds": 2132.81425275479,
+      "end_to_end_eval_seconds": 2132.969091588777,
+      "token_usage_by_purpose": {
+        "compose": {
+          "prompt_tokens": 255325,
+          "completion_tokens": 30660,
+          "total_tokens": 285985,
+          "api_calls": 340,
+          "cache_hits": 60,
+          "retry_wait_seconds": 0.0
+        },
+        "judge": {
+          "prompt_tokens": 72198,
+          "completion_tokens": 30578,
+          "total_tokens": 102776,
+          "api_calls": 391,
+          "cache_hits": 95,
+          "retry_wait_seconds": 0.0
+        }
+      },
+      "token_usage_total": {
+        "prompt_tokens": 327523,
+        "completion_tokens": 61238,
+        "total_tokens": 388761,
+        "api_calls": 731,
+        "cache_hits": 155,
+        "retry_wait_seconds": 0.0
+      }
+    },
+    "reused_treerag_cost": {
+      "total_seconds": 1918.92773270607,
+      "api_seconds": 1918.92773270607,
+      "cold_start_seconds": 885.3039078712463,
+      "preflight_seconds": 0.0,
+      "embedding_load_seconds": 3.67692494392395,
+      "data_load_seconds": 0.13152194023132324,
+      "index_build_seconds": 881.4954609870911,
+      "retrieval_candidate_seconds": 188.02060079574585,
+      "budget_fill_seconds": 1.330362319946289,
+      "retrieval_framework_seconds": 189.35096311569214,
+      "compose_seconds": 627.6534104347229,
+      "online_response_seconds": 817.004373550415,
+      "retry_wait_seconds": 0.0,
+      "judge_eval_seconds": 1101.923359155655,
+      "warm_end_to_end_eval_seconds": 1918.92773270607,
+      "end_to_end_eval_seconds": 2804.2316405773163,
+      "runtime_seconds": 2804.2316405773163,
+      "offline_preprocess_seconds": 885.3039078712463,
+      "offline_index_build_seconds": 881.4954609870911,
+      "online_retrieval_seconds": 189.35096311569214,
+      "online_compose_seconds": 627.6534104347229,
+      "online_eval_seconds": 1918.92773270607,
+      "total_with_preprocessing_seconds": 2804.2316405773163,
+      "timing_semantics": {
+        "online_response_seconds": "retrieval_framework_seconds + compose_seconds; excludes judge_eval_seconds and offline cold/index build.",
+        "warm_end_to_end_eval_seconds": "online_response_seconds + judge_eval_seconds; excludes offline cold/index build.",
+        "end_to_end_eval_seconds": "cold_start_seconds + warm_end_to_end_eval_seconds; includes offline preprocessing/index build.",
+        "offline_preprocess_seconds": "preflight_seconds + embedding_load_seconds + data_load_seconds + index_build_seconds."
+      },
+      "token_usage_by_purpose": {
+        "intent_detection": {
+          "prompt_tokens": 53905,
+          "completion_tokens": 1710,
+          "total_tokens": 55615,
+          "api_calls": 340,
+          "cache_hits": 60
+        },
+        "tree_chunking": {
+          "prompt_tokens": 151707,
+          "completion_tokens": 90380,
+          "total_tokens": 242087,
+          "api_calls": 60,
+          "cache_hits": 0
+        },
+        "compose": {
+          "prompt_tokens": 275699,
+          "completion_tokens": 37350,
+          "total_tokens": 313049,
+          "api_calls": 376,
+          "cache_hits": 24,
+          "retry_wait_seconds": 0.0
+        },
+        "judge": {
+          "prompt_tokens": 73101,
+          "completion_tokens": 30258,
+          "total_tokens": 103359,
+          "api_calls": 393,
+          "cache_hits": 93,
+          "retry_wait_seconds": 0.0
+        }
+      },
+      "token_usage_total": {
+        "prompt_tokens": 554412,
+        "completion_tokens": 159698,
+        "total_tokens": 714110,
+        "api_calls": 1169,
+        "cache_hits": 177,
+        "retry_wait_seconds": 0.0
+      }
+    },
+    "gold_wall_time": {
+      "real": 495.41,
+      "user": 34.69,
+      "sys": 7.06
+    },
+    "pred_wall_time": {
+      "real": 338.33,
+      "user": 43.1,
+      "sys": 6.66
+    },
+    "gold_audit": {
+      "path": "cache/latest_clean400_scope_compact_cap180_scope133_v1/gold/llm_call_audit.jsonl",
+      "calls": 1129,
+      "api_calls": 453,
+      "cache_hits": 676,
+      "billed_tokens": 688517,
+      "cache_reused_logical_tokens": 1483106
+    },
+    "pred_audit": {
+      "path": "cache/latest_clean400_scope_compact_cap180_scope133_v1/pred/llm_call_audit.jsonl",
+      "calls": 1114,
+      "api_calls": 252,
+      "cache_hits": 862,
+      "billed_tokens": 405213,
+      "cache_reused_logical_tokens": 1763236
+    },
+    "semantics": "Only Gold and Pred are newly evaluated. Flat and TreeRAG rows are reused by inspect_id."
+  },
+  "artifacts": {
+    "gold": "results/latest_clean400_scope_compact_cap180_scope133_v1_gold_b500.json",
+    "pred": "results/latest_clean400_scope_compact_cap180_scope133_v1_pred_b500.json",
+    "flat_source": "results/latest_clean400_goldnav_e2_v1_gold_flat_b500.json",
+    "treerag": "results/latest_clean400_goldnav_e2_v1_treerag_b500.json"
+  }
+}
