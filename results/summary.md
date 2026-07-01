@@ -6,7 +6,7 @@ Canonical 实验：**`latest_clean400_scope_compact_cap180_v1 · b500 · 400 题
 
 Gold/Pred 使用同一 robust-v1 导航、b500 evidence 预算、compose、Inspect judge；差异仅在 `tree_source`。本版加入 scope outline collection、compact evidence packing 与 scope compose guidance。Flat / TreeRAG 按 `inspect_id` 复用 400 题 baseline，未在本轮重跑。
 
-省成本口径：只重跑受改动影响的 `scope_collection` 133 题，`niche_fact` / `multi_hop` 267 题复用 `scope_outline_fixed_v1` 同题结果；最终表是完整 400 题质量。
+省成本口径：只重跑受改动影响的 `scope_collection` 133 题，`niche_fact` / `multi_hop` 267 题复用上一版同题结果；最终表是完整 400 题质量。仓库只保留最终最佳结果文件，不保留 smoke、中间子集和旧对照结果。
 
 ## 主表（score_task_mean）
 
@@ -24,7 +24,7 @@ Gold/Pred 使用同一 robust-v1 导航、b500 evidence 预算、compose、Inspe
 - Pred−TreeRAG：`-0.0566`，CI `[-0.0891, -0.0242]`
 - Pred−Flat：`+0.0074`，CI `[-0.0227, +0.0383]`（跨 0）
 
-## 相比 `scope_outline_fixed_v1`
+## 相比上一版同题结果
 
 | Arm | Overall Δ | Scope Δ | Evidence Δ | Scope W/L/T |
 |---|---:|---:|---:|---:|
@@ -43,10 +43,6 @@ scope 修复显著改善 Gold/Pred 的 scope_collection 表现。Gold overall �
 |---|---|
 | Gold / Pred 400 题 | `results/latest_clean400_scope_compact_cap180_v1_{gold,pred}_b500.json` |
 | 汇总 | `results/latest_clean400_scope_compact_cap180_v1_summary.{json,md}` |
-| scope-only 增量复跑 | `results/latest_clean400_scope_compact_cap180_scope133_v1_{gold,pred}_b500.json` |
-| scope fixed 对照 | `results/latest_clean400_scope_outline_fixed_v1_{gold,pred}_b500.json` |
-| Flat / TreeRAG 复用 | `results/latest_clean400_goldnav_e2_v1_{gold_flat,treerag}_b500.json` |
-| 结构诊断 | `results/gold_pred_robust_v1_diagnostics.{json,md}` |
 
 ## 复跑
 

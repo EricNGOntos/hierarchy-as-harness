@@ -388,7 +388,7 @@
       "sys": 6.66
     },
     "gold_audit": {
-      "path": "cache/latest_clean400_scope_compact_cap180_scope133_v1/gold/llm_call_audit.jsonl",
+      "path": "cache audit not retained in git",
       "calls": 1129,
       "api_calls": 453,
       "cache_hits": 676,
@@ -396,7 +396,7 @@
       "cache_reused_logical_tokens": 1483106
     },
     "pred_audit": {
-      "path": "cache/latest_clean400_scope_compact_cap180_scope133_v1/pred/llm_call_audit.jsonl",
+      "path": "cache audit not retained in git",
       "calls": 1114,
       "api_calls": 252,
       "cache_hits": 862,
@@ -408,7 +408,10 @@
   "artifacts": {
     "gold": "results/latest_clean400_scope_compact_cap180_v1_gold_b500.json",
     "pred": "results/latest_clean400_scope_compact_cap180_v1_pred_b500.json",
-    "flat_source": "results/latest_clean400_goldnav_e2_v1_gold_flat_b500.json",
-    "treerag": "results/latest_clean400_goldnav_e2_v1_treerag_b500.json"
+    "summary_md": "results/latest_clean400_scope_compact_cap180_v1_summary.md",
+    "summary_json": "results/latest_clean400_scope_compact_cap180_v1_summary.json"
+  },
+  "notes": {
+    "retention": "Only the latest canonical result files are retained in git; smoke, subset, and older comparison artifacts were removed."
   }
 }

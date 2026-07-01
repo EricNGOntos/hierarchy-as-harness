@@ -139,12 +139,12 @@
     },
     "protocol": "latest_clean400_scope_compact_cap180_v1",
     "merge_note": {
-      "base_full_file": "results/latest_clean400_scope_outline_fixed_v1_pred_b500.json",
-      "scope_rerun_file": "results/latest_clean400_scope_compact_cap180_scope133_v1_pred_b500.json",
+      "merge_method": "scope_collection rows were rerun with scope compact cap180; non-scope rows were reused unchanged from the previous same-question run.",
       "scope_rows_replaced": 133,
       "non_scope_rows_reused": 267,
       "scope_compact_chars_per_chunk": 180,
-      "arm_key": "hierarchical_pred"
+      "arm_key": "hierarchical_pred",
+      "retention": "Only latest canonical result files are retained in git; intermediate subset and older comparison artifacts were removed."
     }
   },
   "rows": [

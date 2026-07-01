@@ -1,6 +1,6 @@
 # latest_clean400_scope_compact_cap180_v1 · Gold/Pred + reused baselines
 
-This is the current canonical 400-row result. It is a cost-saving merge: only the 133 `scope_collection` rows were rerun with scope compact evidence and compose guidance; the 267 non-scope rows are reused unchanged from `latest_clean400_scope_outline_fixed_v1`.
+This is the current canonical 400-row result. It is a cost-saving merge: only the 133 `scope_collection` rows were rerun with scope compact evidence and compose guidance; the 267 non-scope rows are reused unchanged from the previous same-question run.
 
 ## Quality
 

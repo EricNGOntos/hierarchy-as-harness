@@ -6,7 +6,7 @@
 
 ## 当前落地结果
 
-省成本复跑口径：只重跑 133 条 `scope_collection`，267 条非 scope 行复用 `scope_outline_fixed_v1` 同题结果；最终质量仍按完整 400 题汇总。
+省成本复跑口径：只重跑 133 条 `scope_collection`，267 条非 scope 行复用上一版同题结果；最终质量仍按完整 400 题汇总。仓库现在只保留最终最佳结果文件，不保留 smoke、中间子集和旧对照结果。
 
 | Method | Overall | Niche | Multi-hop | Scope | Evidence |
 |---|---:|---:|---:|---:|---:|
@@ -15,7 +15,7 @@
 | TreeRAG | 0.2016 | 0.1522 | 0.0831 | 0.3698 | 0.5125 |
 | Flat | 0.1376 | 0.0903 | 0.0683 | 0.2547 | 0.4988 |
 
-相比 `latest_clean400_scope_outline_fixed_v1`：
+相比上一版同题结果：
 
 | Arm | Overall Δ | Scope Δ | Evidence Δ | Scope W/L/T |
 |---|---:|---:|---:|---:|
@@ -27,7 +27,6 @@
 - `results/latest_clean400_scope_compact_cap180_v1_summary.{json,md}`
 - `results/latest_clean400_scope_compact_cap180_v1_gold_b500.json`
 - `results/latest_clean400_scope_compact_cap180_v1_pred_b500.json`
-- `results/latest_clean400_scope_compact_cap180_scope133_v1_summary.{json,md}`
 
 ---
 
@@ -381,7 +380,7 @@ Phase 3 (验证):  在新 holdout 上验证（遵循 README 指示）
 
 | 阶段 | scope_collection | Overall | 依据 |
 |------|:---:|:---:|------|
-| scope_outline_fixed_v1 | 0.2809 | 0.1892 | — |
+| 上一版同题结果 | 0.2809 | 0.1892 | — |
 | +Phase 0 (summary) | ~0.30 | ~0.193 | 修复部分 NAV_MISS（19%×50%×scope权重） |
 | +Phase 1 (outline) | ~0.35-0.38 | ~0.205-0.215 | 修复 ~50% PARTIAL |
 | +Phase 2 (complete) | ~0.36-0.40 | ~0.208-0.220 | 修复部分 FACTUAL_DETAIL |
