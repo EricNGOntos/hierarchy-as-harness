@@ -1,16 +1,28 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 
 class ActionKind(str, Enum):
-    EXPAND = "expand"
     COLLECT = "collect"
-    BACK = "back"
-    SEARCH = "search"
+    DISPATCH = "dispatch"
     FINISH = "finish"
+
+
+def map_mode_enabled(config: "NavConfig | None" = None) -> bool:
+    """True when map-first observation/actions are active."""
+    if config is not None and bool(getattr(config, "map_mode", False)):
+        return True
+    return os.environ.get("NAV_MAP_MODE", "0").strip().lower() not in {
+        "0",
+        "false",
+        "no",
+        "off",
+        "",
+    }
 
 
 @dataclass
@@ -22,15 +34,27 @@ class NavConfig:
     max_steps: int = 8
     collect_k: int = 64
     search_k: int = 40
-    expand_top_k: int = 6
-    collect_top_k: int = 6
+    collect_top_k: int = 6  # rescue-K for highlights (not action quota)
     read_score_bonus: float = 10.0
     policy: str = "rule"
     llm_model_env: str = "NAV_LLM_MODEL"
     llm_temperature: float = 0.0
-    llm_max_tokens: int = 128
+    llm_max_tokens: int = 256
     critical_remaining_steps: int = 1
     tight_remaining_steps: int = 2
+    # Map-first mode (also gated by NAV_MAP_MODE env).
+    map_mode: bool = False
+    map_char_limit: int = 5000  # display budget (fold threshold); only hard display limit
+    map_children_limit: int = 10000
+    # Recursive dispatch (default off for experiments: only depth-0 may DISPATCH).
+    enable_recursive_dispatch: bool = False
+    max_dispatch_depth: int = 3
+    navigate_max_steps: int = 8
+    dispatch_group_size: int = 5
+    dispatch_max_workers: int = 4
+    subagent_model_env: str = "NAV_SUBAGENT_MODEL"
+    # COMPOSE: child_score = own_unit + compose_confidence_weight * collect_confidence
+    compose_confidence_weight: float = 0.1
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "NavConfig":
@@ -43,8 +67,23 @@ class NavConfig:
             flat["tight_remaining_steps"] = int(
                 budget_modes.get("tight_remaining_steps", cls.tight_remaining_steps)
             )
+        # Drop deprecated keys quietly (legacy map_peek/jump/expand/peek_content).
+        for dead in (
+            "expand_top_k",
+            "map_peek_top_k",
+            "map_jump_top_k",
+            "peek_content_fanout",
+            "peek_content_chars",
+            "map_collapse_min_score",
+        ):
+            flat.pop(dead, None)
         allowed = {f.name for f in cls.__dataclass_fields__.values()}
-        return cls(**{k: v for k, v in flat.items() if k in allowed})
+        cfg = cls(**{k: v for k, v in flat.items() if k in allowed})
+        if map_mode_enabled(None) and not cfg.map_mode:
+            cfg.map_mode = True
+        if cfg.map_mode and cfg.llm_max_tokens < 256:
+            cfg.llm_max_tokens = 256
+        return cfg
 
 
 @dataclass
@@ -57,6 +96,12 @@ class SectionView:
     n_chunks: int = 0
     has_children: bool = False
     depth_from_scope: int = 0
+    map_id: str = ""
+    title: str = ""
+    n_descendants: int = 0
+    is_highlight: bool = False
+    parent_id: Optional[str] = None
+    summary: str = ""
 
 
 @dataclass
@@ -65,7 +110,11 @@ class Projection:
     scope: Optional[str]
     text: str
     visible_sections: List[SectionView]
-    truncated: bool = False
+    truncated: bool = False  # True if any budget-hidden nodes
+    id_to_section: Dict[str, str] = field(default_factory=dict)
+    map_mode: bool = False
+    tree_sections: List[SectionView] = field(default_factory=list)
+    highlight_ids: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -91,33 +140,39 @@ class LegalAction:
 
 
 @dataclass
+class RegionReport:
+    """Result of one navigate(scope, ...) call (top-level or dispatched subagent)."""
+
+    scope: Optional[str]
+    collected_section_ids: List[str] = field(default_factory=list)
+    suggestions: List[str] = field(default_factory=list)
+    summary: str = ""
+    reason: str = ""
+    skipped: bool = False
+    depth: int = 0
+
+
+@dataclass
 class NavState:
     doc_id: str
     query: str
     task_type: str = "unknown"
+    # Working scope for the *current* navigate call (set by navigate(), not a stack).
     current_scope: Optional[str] = None
-    scope_stack: List[Optional[str]] = field(default_factory=lambda: [None])
     collected_ids: set[str] = field(default_factory=set)
     collected: List[Tuple[Any, float]] = field(default_factory=list)
-    discovery_scores: Dict[str, float] = field(default_factory=dict)
-    discovery_rerank_meta: Dict[str, Any] = field(default_factory=dict)
-    hybrid_section_candidates: List[Dict[str, Any]] = field(default_factory=list)
-    discovery_picked_ids: List[str] = field(default_factory=list)
-    discovery_bridge_sections: List[Dict[str, Any]] = field(default_factory=list)
-    exhausted_search_scopes: set[Optional[str]] = field(default_factory=set)
+    map_scores: Dict[str, float] = field(default_factory=dict)
+    unit_scores: Dict[str, float] = field(default_factory=dict)
+    highlight_ids: List[str] = field(default_factory=list)
+    # "Branch done / removed from map" = COLLECT'd sid ∪ all descendants.
     collected_section_ids: set[str] = field(default_factory=set)
-    covered_section_ids: set[str] = field(default_factory=set)
     blocked_collect_section_ids: set[str] = field(default_factory=set)
     scope_evidence_locked: bool = False
     action_history: List[Dict[str, Any]] = field(default_factory=list)
     refusal_events: List[Dict[str, Any]] = field(default_factory=list)
-
-    def push_scope(self, section_id: Optional[str]) -> None:
-        self.current_scope = section_id
-        self.scope_stack.append(section_id)
-
-    def back(self) -> Optional[str]:
-        if len(self.scope_stack) > 1:
-            self.scope_stack.pop()
-        self.current_scope = self.scope_stack[-1] if self.scope_stack else None
-        return self.current_scope
+    # Subagent / investigate reports shown to the parent agent.
+    reports_context: str = ""
+    investigated_section_ids: set[str] = field(default_factory=set)
+    dismissed_section_ids: set[str] = field(default_factory=set)
+    # Explicit COLLECT confidence by section_id; hydration-only descendants stay 0.
+    collect_confidence: Dict[str, float] = field(default_factory=dict)

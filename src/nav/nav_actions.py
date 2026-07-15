@@ -3,15 +3,23 @@ from __future__ import annotations
 import os
 from typing import List, Optional
 
-from nav_types import ActionKind, LegalAction, NavConfig, NavState, Projection
+from nav_types import (
+    ActionKind,
+    LegalAction,
+    NavConfig,
+    NavState,
+    Projection,
+    SectionView,
+)
 
 
 def _env_enabled(name: str, default: str = "1") -> bool:
     return os.environ.get(name, default).strip().lower() not in {"0", "false", "no", "off"}
 
 
-def _budget_mode(step_idx: int, config: NavConfig) -> str:
-    remaining = max(0, config.max_steps - step_idx)
+def _budget_mode(step_idx: int, config: NavConfig, *, max_steps: Optional[int] = None) -> str:
+    episode_steps = int(max_steps if max_steps is not None else config.max_steps)
+    remaining = max(0, episode_steps - step_idx)
     if remaining <= config.critical_remaining_steps:
         return "critical"
     if remaining <= config.tight_remaining_steps:
@@ -25,185 +33,173 @@ def build_legal_actions(
     *,
     step_idx: int,
     config: NavConfig,
+    depth: int = 0,
+    max_steps: Optional[int] = None,
 ) -> List[LegalAction]:
-    mode = _budget_mode(step_idx, config)
+    """Every visible node is actionable: COLLECT + DISPATCH (when allowed) + FINISH.
+
+    No action-space top-K: visibility is governed only by map display budget folding.
+    """
+    episode_steps = int(max_steps if max_steps is not None else config.max_steps)
+    mode = _budget_mode(step_idx, config, max_steps=episode_steps)
     actions: List[LegalAction] = []
-
-    def add(kind: ActionKind, prefix: str, n: int, **kwargs) -> None:
-        actions.append(LegalAction(action_id=f"{prefix}{n}", kind=kind, **kwargs))
-
-    collect_limit = config.collect_top_k
-    expand_limit = config.expand_top_k
-    if mode == "tight":
-        expand_limit = min(expand_limit, 3)
-    if mode == "critical":
-        expand_limit = 0
-
-    collect_i = 1
-    expand_i = 1
-    discovery_scores = dict(getattr(state, "discovery_scores", {}) or {})
-    label_by_id = {
-        str(c.get("section_id") or ""): str(c.get("label") or "")[:100]
-        for c in (getattr(state, "hybrid_section_candidates", None) or [])
-    }
+    filter_collected = _env_enabled("NAV_FILTER_COLLECTED_SECTIONS")
     collected_sids = set(state.collected_section_ids) | {
         str(h.get("section_id") or "").strip()
         for h in state.action_history
         if h.get("kind") == "collect" and int(h.get("n_added", 0) or 0) > 0
     }
-    covered_sids = set(state.covered_section_ids)
-    blocked_collect_sids = set(state.blocked_collect_section_ids)
-    visible_all = list(projection.visible_sections)
-    visible_ids = {view.section_id for view in visible_all}
-    visible_candidates = visible_all[: max(collect_limit, expand_limit)]
-    filter_collected = _env_enabled("NAV_FILTER_COLLECTED_SECTIONS")
-    # Keep C*/E* tied to projection order (N1 parity). Hybrid discovery only adds D* paths.
-    for view in visible_candidates:
-        adjusted_score = float(view.score)
-        collect_blocked = filter_collected and view.section_id in (
-            collected_sids | covered_sids | blocked_collect_sids
+    blocked = set(state.blocked_collect_section_ids)
+    map_scores = dict(getattr(state, "map_scores", {}) or {})
+    unit_scores = dict(getattr(state, "unit_scores", {}) or {})
+    highlight_set = set(projection.highlight_ids or state.highlight_ids or [])
+
+    # DISPATCH only at depth 0 unless recursive dispatch is enabled and under max depth.
+    can_dispatch = depth == 0 or (
+        bool(config.enable_recursive_dispatch) and depth < int(config.max_dispatch_depth)
+    )
+
+    rows = list(projection.tree_sections) or list(projection.visible_sections)
+    collect_i = 1
+    dispatch_i = 1
+
+    def view_score(view: SectionView) -> float:
+        score = float(view.score)
+        if score <= 0.0:
+            score = float(map_scores.get(view.section_id, 0.0) or 0.0)
+        if score <= 0.0:
+            score = float(unit_scores.get(view.section_id, 0.0) or 0.0)
+            self_key = f"{view.section_id}__self"
+            if self_key in unit_scores:
+                score = max(score, float(unit_scores[self_key] or 0.0))
+        return score
+
+    for view in rows:
+        sid = view.section_id
+        label = view.title or view.preview or sid
+        score = view_score(view)
+        is_hit = sid in highlight_set or bool(view.is_highlight)
+
+        collect_blocked = filter_collected and sid in (
+            collected_sids | blocked
         )
-        expand_blocked = filter_collected and view.section_id in covered_sids
-        if collect_i <= collect_limit and not collect_blocked:
-            add(
-                ActionKind.COLLECT,
-                "C",
-                collect_i,
-                section_id=view.section_id,
-                label=view.preview[:80],
-                score=adjusted_score,
-                metadata={
-                    "n_chunks": view.n_chunks,
-                    "n_lines": view.n_lines,
-                    "base_score": view.score,
-                    "discovery_score": float(discovery_scores.get(view.section_id, 0.0)),
-                },
+        if not collect_blocked:
+            actions.append(
+                LegalAction(
+                    action_id=f"C{collect_i}",
+                    kind=ActionKind.COLLECT,
+                    section_id=sid,
+                    label=label,
+                    score=score,
+                    metadata={
+                        "map_id": view.map_id,
+                        "n_chunks": view.n_chunks,
+                        "highlight": is_hit,
+                        "multi": True,
+                    },
+                )
             )
             collect_i += 1
+
         if (
-            view.has_children
-            and view.section_id != state.current_scope
-            and expand_i <= expand_limit
-            and not expand_blocked
+            can_dispatch
+            and view.has_children
+            and sid not in collected_sids
+            and mode != "critical"
         ):
-            add(
-                ActionKind.EXPAND,
-                "E",
-                expand_i,
-                section_id=view.section_id,
-                label=view.preview[:80],
-                score=adjusted_score,
-                metadata={
-                    "n_chunks": view.n_chunks,
-                    "n_lines": view.n_lines,
-                    "base_score": view.score,
-                    "discovery_score": float(discovery_scores.get(view.section_id, 0.0)),
-                },
+            actions.append(
+                LegalAction(
+                    action_id=f"D{dispatch_i}",
+                    kind=ActionKind.DISPATCH,
+                    section_id=sid,
+                    label=label,
+                    score=score,
+                    metadata={
+                        "map_id": view.map_id,
+                        "highlight": is_hit,
+                        "multi": True,
+                    },
+                )
             )
-            expand_i += 1
+            dispatch_i += 1
 
-    # Discovery bridge exposes a relevant parent as a navigation path. It does
-    # not add evidence; the agent must still expand and choose what to collect.
-    if (
-        _env_enabled("NAV_DISCOVERY_SCOPE_BRIDGE", "0")
-        and (state.task_type or "").strip().lower()
-        in {"scope_collection", "regulatory_coverage"}
-        and mode != "critical"
-    ):
-        bridge_limit = max(
-            1, int(os.environ.get("NAV_DISCOVERY_SCOPE_BRIDGE_K", "3").strip() or "3")
-        )
-        bridge_i = 1
-        existing_expands = {
-            action.section_id for action in actions if action.kind == ActionKind.EXPAND
-        }
-        for bridge in state.discovery_bridge_sections:
-            if bridge_i > bridge_limit:
-                break
-            section_id = str(bridge.get("section_id") or "").strip()
-            if (
-                not section_id
-                or section_id == state.current_scope
-                or section_id in existing_expands
-                or (filter_collected and section_id in covered_sids)
-            ):
-                continue
-            score = float(bridge.get("discovery_score", 0.0) or 0.0)
-            label = str(bridge.get("label") or section_id)[:80]
-            add(
-                ActionKind.EXPAND,
-                "G",
-                bridge_i,
-                section_id=section_id,
-                label=f"Discovery bridge: {label}",
-                score=score,
-                metadata={
-                    "discovery_score": score,
-                    "source": "discovery_scope_bridge",
-                    "source_section_id": bridge.get("source_section_id"),
-                },
-            )
-            existing_expands.add(section_id)
-            bridge_i += 1
-
-    # Hybrid discovery: expose LLM-reranked D* COLLECT actions only (no auto-inject).
-    d_i = 1
-    d_limit = max(1, int(os.environ.get("NAV_DISCOVERY_PICK_K", "5").strip() or "5"))
-    for section_id, score in sorted(discovery_scores.items(), key=lambda item: (-item[1], item[0])):
-        if d_i > d_limit:
-            break
-        if section_id in visible_ids or (
-            filter_collected
-            and section_id in (collected_sids | covered_sids | blocked_collect_sids)
-        ):
-            continue
-        if any(a.section_id == section_id for a in actions if a.kind == ActionKind.COLLECT):
-            continue
-        label = label_by_id.get(section_id) or "discovery section"
-        add(
-            ActionKind.COLLECT,
-            "D",
-            d_i,
-            section_id=section_id,
-            label=f"Discovery collect: {label} (score={float(score):.2f})",
-            score=float(score),
-            metadata={"discovery_score": float(score), "source": "knowhere_hybrid_rerank"},
-        )
-        d_i += 1
-
-    search_exhausted = (
-        _env_enabled("NAV_BLOCK_EXHAUSTED_SEARCH")
-        and state.current_scope in state.exhausted_search_scopes
-    )
-    if mode != "critical" and not search_exhausted:
+    # Empty FINISH guard: no evidence yet and still have room → withhold FINISH.
+    remaining = max(0, episode_steps - step_idx - 1)
+    allow_finish = True
+    if not state.collected and remaining > 2 and mode != "critical":
+        allow_finish = False
+    if allow_finish:
         actions.append(
             LegalAction(
-                action_id="S1",
-                kind=ActionKind.SEARCH,
-                query=state.query,
-                label="global leaf/path search in current document",
-                score=0.0,
+                action_id="F1",
+                kind=ActionKind.FINISH,
+                label="finish navigation and pack final evidence budget",
             )
         )
-
-    if state.current_scope is not None:
-        actions.append(
-            LegalAction(
-                action_id="B1",
-                kind=ActionKind.BACK,
-                section_id=state.scope_stack[-2] if len(state.scope_stack) >= 2 else None,
-                label="return to parent scope",
-            )
-        )
-
-    actions.append(
-        LegalAction(
-            action_id="F1",
-            kind=ActionKind.FINISH,
-            label="finish navigation and pack final evidence budget",
-        )
-    )
     return actions
+
+
+def format_actionable_map_observation(
+    projection: Projection,
+    actions: List[LegalAction],
+    *,
+    inline_summary: bool = False,
+) -> str:
+    """Tree observation: each node line carries its legal action IDs."""
+    by_sid: dict[str, list[LegalAction]] = {}
+    global_actions: List[LegalAction] = []
+    for act in actions:
+        if act.kind == ActionKind.FINISH or not act.section_id:
+            global_actions.append(act)
+            continue
+        by_sid.setdefault(str(act.section_id), []).append(act)
+
+    kind_label = {
+        ActionKind.COLLECT: "collect",
+        ActionKind.DISPATCH: "dispatch",
+    }
+
+    def node_actions(sid: str) -> str:
+        acts = by_sid.get(sid) or []
+        if not acts:
+            return "none"
+        order = {ActionKind.COLLECT: 0, ActionKind.DISPATCH: 1}
+        acts = sorted(acts, key=lambda a: (order.get(a.kind, 9), a.action_id))
+        return ", ".join(
+            f"{kind_label.get(a.kind, a.kind.value)}={a.action_id}" for a in acts
+        )
+
+    rows = list(projection.tree_sections) or list(projection.visible_sections)
+    lines = [
+        f"doc_id={projection.doc_id}",
+        f"scope={projection.scope or '<document-root>'}",
+        "Each visible section appears once. Choose action IDs attached to the relevant line.",
+    ]
+    for view in rows:
+        indent = "  " * max(0, int(view.depth_from_scope))
+        leaf_tag = " [Leaf]" if not view.has_children else ""
+        hit_tag = " [Hit]" if view.is_highlight else ""
+        map_id = view.map_id or "?"
+        meta = f"({view.n_chunks} chunks)"
+        lines.append(
+            f"{indent}[{map_id}] {view.title or view.section_id} {meta}{leaf_tag}{hit_tag} "
+            f"actions: {node_actions(view.section_id)}"
+        )
+        if inline_summary and view.summary:
+            lines.append(f"{indent}    summary: {view.summary}")
+
+    if global_actions:
+        lines.append("")
+        lines.append("Global actions:")
+        for act in global_actions:
+            if act.kind == ActionKind.FINISH:
+                lines.append(f"  finish={act.action_id}")
+            else:
+                lines.append(f"  {act.action_id} ({act.kind.value})")
+    # TODO(knowhere-align): KNOWHERE also exposes SEARCH_IMAGES / SEARCH_TABLES
+    # under Global actions (gated by total_images/total_tables + budget). Not used
+    # in this paper experiment; restore when migrating back.
+    return "\n".join(lines)
 
 
 def action_by_id(actions: List[LegalAction], action_id: Optional[str]) -> Optional[LegalAction]:
@@ -214,3 +210,19 @@ def action_by_id(actions: List[LegalAction], action_id: Optional[str]) -> Option
         if a.action_id.upper() == aid:
             return a
     return None
+
+
+def actions_by_ids(actions: List[LegalAction], ids: List[str]) -> List[LegalAction]:
+    """Resolve a multi-id selection (COLLECT / DISPATCH), preserving request order."""
+    by_id = {a.action_id.upper(): a for a in actions}
+    out: List[LegalAction] = []
+    seen: set[str] = set()
+    for raw in ids:
+        aid = (raw or "").strip().upper()
+        if not aid or aid in seen:
+            continue
+        act = by_id.get(aid)
+        if act is not None:
+            out.append(act)
+            seen.add(aid)
+    return out

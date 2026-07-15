@@ -64,7 +64,15 @@ class _FakeToolSpace:
 
 
 def _projection(*views: SectionView) -> Projection:
-    return Projection(doc_id="doc", scope=None, text="", visible_sections=list(views))
+    rows = list(views)
+    return Projection(
+        doc_id="doc",
+        scope=None,
+        text="",
+        visible_sections=rows,
+        tree_sections=rows,
+        map_mode=True,
+    )
 
 
 def _view(section_id: str, *, has_children: bool = True) -> SectionView:
@@ -253,12 +261,14 @@ class ScopeCollectTests(unittest.TestCase):
             meta = _update_collect_coverage(tools, self.action, self.state, added=3)
 
         self.assertTrue(meta["collect_full"])
-        self.assertEqual(self.state.collected_section_ids, {"doc:L1"})
-        self.assertEqual(self.state.covered_section_ids, {"doc:L1", "doc:L2"})
+        self.assertTrue(meta["branch_selected"])
+        # collected = sid ∪ descendants (merged covered semantics)
+        self.assertEqual(self.state.collected_section_ids, {"doc:L1", "doc:L2"})
         self.assertEqual(self.state.blocked_collect_section_ids, {"doc:L0"})
         self.assertTrue(self.state.scope_evidence_locked)
 
-    def test_partial_collect_blocks_ancestor_without_covering_descendants(self) -> None:
+    def test_partial_collect_still_selects_whole_branch(self) -> None:
+        """added>0 selects the branch even when hydrate is not full."""
         tools = _FakeToolSpace(
             self.chunks,
             {chunk.node_id: 1.0 for chunk in self.chunks},
@@ -270,8 +280,10 @@ class ScopeCollectTests(unittest.TestCase):
             meta = _update_collect_coverage(tools, self.action, self.state, added=1)
 
         self.assertFalse(meta["collect_full"])
-        self.assertFalse(self.state.covered_section_ids)
+        self.assertTrue(meta["branch_selected"])
+        self.assertEqual(self.state.collected_section_ids, {"doc:L1", "doc:L2"})
         self.assertEqual(self.state.blocked_collect_section_ids, {"doc:L0"})
+        self.assertFalse(self.state.scope_evidence_locked)
 
     def test_single_leaf_collect_keeps_parent_collect_available(self) -> None:
         leaf = [Chunk("doc:L2__path", "doc", "leaf", (2,), "doc:L2")]
@@ -336,114 +348,67 @@ class MultiHopComposeTests(unittest.TestCase):
 
 class LegalActionTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.config = NavConfig(collect_top_k=4, expand_top_k=4)
+        self.config = NavConfig(collect_top_k=4, map_mode=True)
 
-    def test_empty_search_is_blocked_per_scope(self) -> None:
+    def test_search_action_fully_removed(self) -> None:
         state = NavState(doc_id="doc", query="query")
-        state.exhausted_search_scopes.add(None)
         projection = _projection(_view("doc:L1"))
-        with patch.dict(os.environ, {"NAV_BLOCK_EXHAUSTED_SEARCH": "1"}):
-            root_actions = build_legal_actions(state, projection, step_idx=1, config=self.config)
-            state.push_scope("doc:L1")
-            child_actions = build_legal_actions(state, projection, step_idx=2, config=self.config)
-            state.exhausted_search_scopes.add("doc:L1")
-            exhausted_child_actions = build_legal_actions(state, projection, step_idx=3, config=self.config)
+        root_actions = build_legal_actions(state, projection, step_idx=6, config=self.config)
+        map_cfg = NavConfig(map_mode=True, collect_top_k=4)
+        with patch.dict(os.environ, {"NAV_MAP_MODE": "1"}):
+            map_actions = build_legal_actions(state, projection, step_idx=6, config=map_cfg)
+        for actions in (root_actions, map_actions):
+            kinds = {action.kind for action in actions}
+            self.assertTrue(kinds <= {ActionKind.COLLECT, ActionKind.DISPATCH, ActionKind.FINISH})
+        agent_state = _format_agent_state(state, 1, self.config)
+        self.assertNotIn("Search status", agent_state)
 
-        self.assertNotIn(ActionKind.SEARCH, [action.kind for action in root_actions])
-        self.assertIn(ActionKind.SEARCH, [action.kind for action in child_actions])
-        self.assertNotIn(ActionKind.SEARCH, [action.kind for action in exhausted_child_actions])
-
-    def test_scope_discovery_bridge_adds_expand_without_collect(self) -> None:
+    def test_no_discovery_bridge_or_g_actions(self) -> None:
         state = NavState(doc_id="doc", query="query", task_type="scope_collection")
-        state.discovery_bridge_sections = [
-            {
-                "section_id": "doc:L9",
-                "label": "relevant parent",
-                "discovery_score": 4.0,
-                "source_section_id": "doc:L10",
-            }
-        ]
+        setattr(
+            state,
+            "discovery_bridge_sections",
+            [{"section_id": "doc:L9", "label": "parent", "discovery_score": 4.0}],
+        )
+        setattr(state, "discovery_scores", {"doc:L9": 4.0})
         with patch.dict(os.environ, {"NAV_DISCOVERY_SCOPE_BRIDGE": "1"}):
             actions = build_legal_actions(
-                state, _projection(_view("doc:L1")), step_idx=1, config=self.config
+                state, _projection(_view("doc:L1")), step_idx=6, config=self.config
             )
+        self.assertFalse(any(action.action_id.startswith("G") for action in actions))
+        # D* is DISPATCH (legal), not discovery.
+        self.assertTrue(any(a.kind == ActionKind.DISPATCH for a in actions))
 
-        bridge = [action for action in actions if action.action_id == "G1"]
-        self.assertEqual(len(bridge), 1)
-        self.assertEqual(bridge[0].kind, ActionKind.EXPAND)
-        self.assertEqual(bridge[0].section_id, "doc:L9")
-        self.assertFalse(
-            any(
-                action.kind == ActionKind.COLLECT and action.section_id == "doc:L9"
-                for action in actions
-            )
-        )
-
-    def test_scope_discovery_bridge_respects_covered_and_task_type(self) -> None:
-        bridge = [{"section_id": "doc:L9", "label": "parent", "discovery_score": 4.0}]
-        covered = NavState(doc_id="doc", query="query", task_type="scope_collection")
-        covered.discovery_bridge_sections = bridge
-        covered.covered_section_ids.add("doc:L9")
-        niche = NavState(doc_id="doc", query="query", task_type="niche_fact")
-        niche.discovery_bridge_sections = bridge
-        with patch.dict(
-            os.environ,
-            {"NAV_DISCOVERY_SCOPE_BRIDGE": "1", "NAV_FILTER_COLLECTED_SECTIONS": "1"},
-        ):
-            covered_actions = build_legal_actions(
-                covered, _projection(_view("doc:L1")), step_idx=1, config=self.config
-            )
-            niche_actions = build_legal_actions(
-                niche, _projection(_view("doc:L1")), step_idx=1, config=self.config
-            )
-
-        self.assertFalse(any(action.action_id.startswith("G") for action in covered_actions))
-        self.assertFalse(any(action.action_id.startswith("G") for action in niche_actions))
-
-    def test_search_block_can_be_disabled(self) -> None:
-        state = NavState(doc_id="doc", query="query", exhausted_search_scopes={None})
-        with patch.dict(os.environ, {"NAV_BLOCK_EXHAUSTED_SEARCH": "0"}):
-            actions = build_legal_actions(
-                state, _projection(_view("doc:L1")), step_idx=1, config=self.config
-            )
-            agent_state = _format_agent_state(state, 1, self.config)
-        self.assertIn(ActionKind.SEARCH, [action.kind for action in actions])
-        self.assertNotIn("Search status: exhausted", agent_state)
-
-    def test_successful_partial_collect_blocks_repeat_but_allows_expand(self) -> None:
+    def test_successful_partial_collect_blocks_repeat(self) -> None:
         state = NavState(doc_id="doc", query="query")
         state.action_history.append({"kind": "collect", "section_id": "doc:L1", "n_added": 2})
         projection = _projection(_view("doc:L1"), _view("doc:L2"))
         with patch.dict(os.environ, {"NAV_FILTER_COLLECTED_SECTIONS": "1"}):
-            actions = build_legal_actions(state, projection, step_idx=1, config=self.config)
+            actions = build_legal_actions(state, projection, step_idx=6, config=self.config)
 
-        navigable = {
+        collectable = {
             (action.kind, action.section_id)
             for action in actions
-            if action.kind in {ActionKind.COLLECT, ActionKind.EXPAND}
+            if action.kind == ActionKind.COLLECT
         }
-        self.assertNotIn((ActionKind.COLLECT, "doc:L1"), navigable)
-        self.assertIn((ActionKind.EXPAND, "doc:L1"), navigable)
-        self.assertIn((ActionKind.COLLECT, "doc:L2"), navigable)
+        self.assertNotIn((ActionKind.COLLECT, "doc:L1"), collectable)
+        self.assertIn((ActionKind.COLLECT, "doc:L2"), collectable)
 
-    def test_successful_collect_filters_discovery_section(self) -> None:
+    def test_successful_collect_does_not_emit_discovery_g_actions(self) -> None:
         state = NavState(doc_id="doc", query="query")
-        state.discovery_scores = {"doc:L9": 2.0}
+        setattr(state, "discovery_scores", {"doc:L9": 2.0})
         state.action_history.append({"kind": "collect", "section_id": "doc:L9", "n_added": 2})
         actions = build_legal_actions(
-            state, _projection(_view("doc:L1")), step_idx=1, config=self.config
+            state, _projection(_view("doc:L1")), step_idx=6, config=self.config
         )
-        self.assertNotIn(
-            "doc:L9",
-            [action.section_id for action in actions if action.action_id.startswith("D")],
-        )
+        self.assertFalse(any(action.action_id.startswith("G") for action in actions))
 
-    def test_zero_add_collect_is_not_covered(self) -> None:
+    def test_zero_add_collect_is_not_marked(self) -> None:
         state = NavState(doc_id="doc", query="query")
         state.action_history.append({"kind": "collect", "section_id": "doc:L1", "n_added": 0})
         with patch.dict(os.environ, {"NAV_FILTER_COLLECTED_SECTIONS": "1"}):
             actions = build_legal_actions(
-                state, _projection(_view("doc:L1")), step_idx=1, config=self.config
+                state, _projection(_view("doc:L1")), step_idx=6, config=self.config
             )
         self.assertIn(
             (ActionKind.COLLECT, "doc:L1"),
@@ -455,7 +420,7 @@ class LegalActionTests(unittest.TestCase):
         state.collected_section_ids.add("doc:L1")
         with patch.dict(os.environ, {"NAV_FILTER_COLLECTED_SECTIONS": "1"}):
             actions = build_legal_actions(
-                state, _projection(_view("doc:L1")), step_idx=1, config=self.config
+                state, _projection(_view("doc:L1")), step_idx=6, config=self.config
             )
         self.assertNotIn(
             (ActionKind.COLLECT, "doc:L1"),
@@ -463,34 +428,34 @@ class LegalActionTests(unittest.TestCase):
         )
         self.assertIn(ActionKind.FINISH, [action.kind for action in actions])
 
-    def test_ancestor_collect_is_blocked_but_expand_remains_available(self) -> None:
+    def test_ancestor_collect_is_blocked_dispatch_remains(self) -> None:
         state = NavState(doc_id="doc", query="query")
         state.blocked_collect_section_ids.add("doc:L1")
         with patch.dict(os.environ, {"NAV_FILTER_COLLECTED_SECTIONS": "1"}):
             actions = build_legal_actions(
-                state, _projection(_view("doc:L1")), step_idx=1, config=self.config
+                state, _projection(_view("doc:L1")), step_idx=6, config=self.config
             )
         pairs = {(action.kind, action.section_id) for action in actions}
         self.assertNotIn((ActionKind.COLLECT, "doc:L1"), pairs)
-        self.assertIn((ActionKind.EXPAND, "doc:L1"), pairs)
+        self.assertIn((ActionKind.DISPATCH, "doc:L1"), pairs)
 
-    def test_covered_descendant_blocks_collect_and_expand(self) -> None:
+    def test_collected_descendant_blocks_collect_and_dispatch(self) -> None:
         state = NavState(doc_id="doc", query="query")
-        state.covered_section_ids.add("doc:L1")
+        state.collected_section_ids.add("doc:L1")
         with patch.dict(os.environ, {"NAV_FILTER_COLLECTED_SECTIONS": "1"}):
             actions = build_legal_actions(
-                state, _projection(_view("doc:L1")), step_idx=1, config=self.config
+                state, _projection(_view("doc:L1")), step_idx=6, config=self.config
             )
         pairs = {(action.kind, action.section_id) for action in actions}
         self.assertNotIn((ActionKind.COLLECT, "doc:L1"), pairs)
-        self.assertNotIn((ActionKind.EXPAND, "doc:L1"), pairs)
+        self.assertNotIn((ActionKind.DISPATCH, "doc:L1"), pairs)
 
     def test_collect_filter_can_be_disabled(self) -> None:
         state = NavState(doc_id="doc", query="query")
         state.action_history.append({"kind": "collect", "section_id": "doc:L1", "n_added": 1})
         projection = _projection(_view("doc:L1"), _view("doc:L2"))
         with patch.dict(os.environ, {"NAV_FILTER_COLLECTED_SECTIONS": "0"}):
-            actions = build_legal_actions(state, projection, step_idx=1, config=self.config)
+            actions = build_legal_actions(state, projection, step_idx=6, config=self.config)
         self.assertIn(
             (ActionKind.COLLECT, "doc:L1"),
             {(action.kind, action.section_id) for action in actions},

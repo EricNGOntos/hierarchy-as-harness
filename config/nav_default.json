@@ -6,16 +6,24 @@
   "max_steps": 8,
   "collect_k": 64,
   "search_k": 40,
-  "expand_top_k": 6,
   "collect_top_k": 6,
   "read_score_bonus": 10.0,
   "policy": "llm",
   "llm_model_env": "NAV_LLM_MODEL",
   "llm_temperature": 0.0,
-  "llm_max_tokens": 128,
+  "llm_max_tokens": 256,
   "budget_modes": {
     "critical_remaining_steps": 1,
     "tight_remaining_steps": 2
-  }
+  },
+  "map_mode": false,
+  "map_char_limit": 5000,
+  "map_children_limit": 10000,
+  "enable_recursive_dispatch": false,
+  "max_dispatch_depth": 3,
+  "navigate_max_steps": 8,
+  "dispatch_group_size": 5,
+  "dispatch_max_workers": 4,
+  "subagent_model_env": "NAV_SUBAGENT_MODEL",
+  "compose_confidence_weight": 0.1
 }
-

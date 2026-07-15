@@ -2,9 +2,16 @@ from __future__ import annotations
 
 import math
 import re
-from typing import Any, Iterable, List, Optional
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Set
 
-from nav_types import NavConfig, Projection, SectionView
+from nav_types import NavConfig, Projection, SectionView, map_mode_enabled
+
+try:
+    from section_summary_store import get_summary
+except Exception:  # pragma: no cover
+    def get_summary(section_id: str) -> Optional[str]:  # type: ignore
+        return None
 
 
 def _tokens(text: str) -> set[str]:
@@ -44,14 +51,30 @@ def _section_view_from_structure(
         n_chunks=int(st.get("n_chunks") or 0),
         has_children=bool(children),
         depth_from_scope=depth_from_scope,
+        title=preview[:80] if preview else section_id,
     )
 
 
-def _children(ts: Any, section_id: str) -> List[dict]:
+def _children(ts: Any, section_id: str, *, limit: int) -> List[dict]:
+    children_fn = getattr(ts, "_children_for_section_path", None)
+    if callable(children_fn):
+        loc = getattr(ts, "_idx", None)
+        doc_id = ""
+        if loc is not None:
+            node = getattr(loc, "_node_to_doc_line", {}).get(section_id)
+            if node:
+                doc_id = node[0]
+            else:
+                synth = getattr(ts, "_synthetic_doc_id", lambda _x: None)(section_id)
+                doc_id = synth or ""
+        if doc_id:
+            rows = children_fn(section_id, doc_id, limit=max(1, int(limit)))
+            if isinstance(rows, list):
+                return [c for c in rows if isinstance(c, dict)]
     st = ts.get_structure(section_id)
     children = st.get("children") or []
     if isinstance(children, list):
-        return [c for c in children if isinstance(c, dict)]
+        return [c for c in children if isinstance(c, dict)][: max(0, int(limit))]
     return []
 
 
@@ -62,6 +85,400 @@ def _top_sections(ts: Any, doc_id: str) -> List[str]:
         return []
 
 
+def _title_from_row(row: dict, section_id: str) -> str:
+    preview = str(row.get("preview") or "").replace("\n", " ").strip()
+    if preview:
+        return preview[:80]
+    return section_id
+
+
+@dataclass
+class _MapNode:
+    section_id: str
+    depth: int
+    title: str
+    score: float
+    n_lines: int
+    n_chunks: int
+    has_children: bool
+    children: List["_MapNode"] = field(default_factory=list)
+    n_descendants: int = 0
+    hidden: bool = False
+    is_highlight: bool = False
+    map_id: str = ""
+    parent_id: Optional[str] = None
+
+
+def _count_descendants(node: _MapNode) -> int:
+    total = 0
+    for child in node.children:
+        if child.hidden:
+            continue
+        total += 1 + _count_descendants(child)
+    node.n_descendants = total
+    return total
+
+
+def _flatten(nodes: List[_MapNode], *, include_hidden: bool = False) -> List[_MapNode]:
+    out: List[_MapNode] = []
+
+    def rec(node: _MapNode) -> None:
+        if node.hidden and not include_hidden:
+            return
+        out.append(node)
+        for child in node.children:
+            rec(child)
+
+    for n in nodes:
+        rec(n)
+    return out
+
+
+def _ancestors_in_tree(roots: List[_MapNode], section_id: str) -> List[str]:
+    found: List[str] = []
+
+    def dfs(node: _MapNode, trail: List[str]) -> bool:
+        if node.section_id == section_id:
+            found.extend(trail)
+            return True
+        for child in node.children:
+            if dfs(child, trail + [node.section_id]):
+                return True
+        return False
+
+    for root in roots:
+        if dfs(root, []):
+            break
+    return found
+
+
+def _subtree_contains_must_keep(node: _MapNode, must_keep: Set[str]) -> bool:
+    if node.section_id in must_keep:
+        return True
+    for child in node.children:
+        if not child.hidden and _subtree_contains_must_keep(child, must_keep):
+            return True
+    return False
+
+
+def _mark_hidden_subtree(node: _MapNode) -> None:
+    node.hidden = True
+    for child in node.children:
+        _mark_hidden_subtree(child)
+
+
+def _estimate_actionable_line(node: _MapNode, *, with_summary: bool = False) -> int:
+    indent = 2 * node.depth
+    title = len(node.title or node.section_id)
+    meta = 28
+    tags = 14
+    actions = 48
+    summary = 140 if with_summary else 0
+    return indent + title + meta + tags + actions + summary + 1
+
+
+def _estimate_actionable_total(nodes: List[_MapNode], *, with_summary: bool = False) -> int:
+    total = 120
+    stack = list(nodes)
+    while stack:
+        cur = stack.pop()
+        if cur.hidden:
+            continue
+        total += _estimate_actionable_line(cur, with_summary=with_summary)
+        stack.extend(cur.children)
+    return total
+
+
+def _apply_budget_hide(
+    nodes: List[_MapNode],
+    *,
+    char_limit: int,
+    must_keep: Set[str],
+    extra_hidden_ids: Optional[Set[str]] = None,
+    with_summary: bool = False,
+) -> None:
+    """Hide low-score branches so the actionable map fits char_limit.
+
+    TODO: if exploration near highlights fails, re-reveal previously hidden
+    subtrees into the actionable map (budget permitting).
+
+    Never hard-truncates: keeps hiding score-ordered candidates (depth-0 allowed)
+    until the estimate fits or only must_keep spine remains.
+    """
+    extra = set(extra_hidden_ids or ())
+    flat_all = _flatten(nodes, include_hidden=True)
+
+    for node in flat_all:
+        if node.section_id in extra and node.section_id not in must_keep:
+            if not _subtree_contains_must_keep(node, must_keep):
+                _mark_hidden_subtree(node)
+
+    def try_hide_one() -> bool:
+        candidates = [
+            n
+            for n in _flatten(nodes, include_hidden=True)
+            if not n.hidden
+            and n.section_id not in must_keep
+            and not _subtree_contains_must_keep(n, must_keep)
+        ]
+        if not candidates:
+            return False
+        candidates.sort(
+            key=lambda n: (n.score, -n.n_descendants, -n.depth, n.section_id)
+        )
+        _mark_hidden_subtree(candidates[0])
+        return True
+
+    for root in nodes:
+        _count_descendants(root)
+
+    if _estimate_actionable_total(nodes, with_summary=with_summary) <= char_limit:
+        return
+
+    while _estimate_actionable_total(nodes, with_summary=with_summary) > char_limit:
+        if not try_hide_one():
+            break
+        for root in nodes:
+            _count_descendants(root)
+
+
+def _build_map_tree(
+    ts: Any,
+    *,
+    root_ids: List[str],
+    query: str,
+    map_scores: Dict[str, float],
+    children_limit: int,
+    max_nodes: int = 20000,
+    collected_section_ids: Optional[Set[str]] = None,
+    dismissed_section_ids: Optional[Set[str]] = None,
+) -> List[_MapNode]:
+    roots: List[_MapNode] = []
+    seen: Set[str] = set()
+    node_count = 0
+    # collected = branch done (sid ∪ descendants already marked by caller).
+    gone = set(collected_section_ids or ()) | set(dismissed_section_ids or ())
+
+    def make_node(section_id: str, depth: int, parent_id: Optional[str]) -> Optional[_MapNode]:
+        nonlocal node_count
+        if not section_id or section_id in seen or node_count >= max_nodes:
+            return None
+        if section_id in gone:
+            return None
+        seen.add(section_id)
+        node_count += 1
+        try:
+            st = ts.get_structure(section_id)
+        except Exception:
+            return None
+        preview = str(st.get("preview") or "").replace("\n", " ").strip()
+        title = preview if preview else section_id
+        score = float(map_scores.get(section_id, 0.0) or 0.0)
+        if score <= 0.0:
+            score = _lexical_score(query, f"{title} {section_id}")
+        return _MapNode(
+            section_id=section_id,
+            depth=depth,
+            title=title,
+            score=score,
+            n_lines=int(st.get("n_lines") or 0),
+            n_chunks=int(st.get("n_chunks") or 0),
+            has_children=False,
+            parent_id=parent_id,
+        )
+
+    def append_visible_descendants(
+        parent_children: List[_MapNode],
+        section_id: str,
+        depth: int,
+        parent_id: Optional[str],
+        row_title_hint: Optional[dict] = None,
+    ) -> None:
+        """Attach section_id if visible. collected/dismissed drop node + subtree."""
+        if not section_id or section_id in gone:
+            return
+        node = make_node(section_id, depth, parent_id)
+        if node is None:
+            return
+        if row_title_hint and (not node.title or node.title == section_id):
+            node.title = _title_from_row(row_title_hint, section_id)
+        for row in _children(ts, section_id, limit=children_limit):
+            child_id = str(row.get("section_id") or "").strip()
+            if child_id:
+                append_visible_descendants(
+                    node.children, child_id, depth + 1, section_id, row
+                )
+        node.has_children = bool(node.children)
+        _count_descendants(node)
+        parent_children.append(node)
+
+    for rid in root_ids:
+        append_visible_descendants(roots, rid, 0, None)
+    return roots
+
+
+def _clip_summary(text: str, *, head: int = 120) -> str:
+    s = (text or "").replace("\n", " ").strip()
+    if len(s) <= head:
+        return s
+    return s[: max(0, head - 1)].rstrip() + "…"
+
+
+def _render_map(
+    nodes: List[_MapNode],
+    *,
+    doc_id: str,
+    scope: Optional[str],
+    char_limit: int,
+    highlight_ids: Optional[Set[str]] = None,
+    inline_summary: bool = False,
+) -> tuple[str, List[SectionView], Dict[str, str], bool]:
+    """Render the budget-hidden title map (no mid-tree hard truncation)."""
+    _ = char_limit
+    hits = set(highlight_ids or ())
+    lines: List[str] = []
+    visible: List[SectionView] = []
+    id_to_section: Dict[str, str] = {}
+    counter = 1
+    any_hidden = False
+
+    lines.append(f"doc_id={doc_id}")
+    lines.append(f"scope={scope or '<document-root>'}")
+    lines.append(
+        "map=title+summary" if inline_summary else "map=title-only (action IDs attached per node)"
+    )
+
+    def render(node: _MapNode) -> None:
+        nonlocal counter, any_hidden
+        if node.hidden:
+            any_hidden = True
+            return
+        map_id = f"N{counter}"
+        counter += 1
+        node.map_id = map_id
+        id_to_section[map_id] = node.section_id
+        indent = "  " * node.depth
+        is_hit = node.section_id in hits or node.is_highlight
+        leaf_tag = " [Leaf]" if not node.has_children else ""
+        hit_tag = " [Hit]" if is_hit else ""
+        line = (
+            f"{indent}[{map_id}] {node.title} ({node.n_chunks} chunks)"
+            f"{leaf_tag}{hit_tag}"
+        )
+        lines.append(line)
+        summary = ""
+        if inline_summary:
+            summary = _clip_summary(get_summary(node.section_id) or "")
+            if summary:
+                lines.append(f"{indent}    summary: {summary}")
+        visible.append(
+            SectionView(
+                section_id=node.section_id,
+                level=node.depth,
+                preview="",
+                score=node.score,
+                n_lines=node.n_lines,
+                n_chunks=node.n_chunks,
+                has_children=node.has_children,
+                depth_from_scope=node.depth,
+                map_id=map_id,
+                title=node.title,
+                n_descendants=node.n_descendants,
+                is_highlight=is_hit,
+                parent_id=node.parent_id,
+                summary=summary,
+            )
+        )
+        for child in node.children:
+            render(child)
+
+    for root in nodes:
+        render(root)
+
+    return "\n".join(lines), visible, id_to_section, any_hidden
+
+
+def _fallback_highlights_from_tree(roots: List[_MapNode], k: int) -> List[str]:
+    leaves = [n for n in _flatten(roots, include_hidden=True) if not n.has_children]
+    leaves.sort(key=lambda n: (-n.score, n.section_id))
+    return [n.section_id for n in leaves[: max(0, int(k))]]
+
+
+def build_map(
+    ts: Any,
+    *,
+    doc_id: str,
+    query: str,
+    scope: Optional[str],
+    config: NavConfig,
+    map_scores: Optional[Dict[str, float]] = None,
+    collected_section_ids: Optional[Set[str]] = None,
+    dismissed_section_ids: Optional[Set[str]] = None,
+    highlight_ids: Optional[List[str]] = None,
+    extra_hidden_ids: Optional[Set[str]] = None,
+) -> Projection:
+    """Full-depth title map with score-ordered budget hiding (+ optional inline summary)."""
+    scores = dict(map_scores or {})
+    if scope:
+        root_ids = [scope]
+    else:
+        root_ids = _top_sections(ts, doc_id)
+    roots = _build_map_tree(
+        ts,
+        root_ids=root_ids,
+        query=query,
+        map_scores=scores,
+        children_limit=max(1, int(config.map_children_limit)),
+        collected_section_ids=collected_section_ids,
+        dismissed_section_ids=dismissed_section_ids,
+    )
+    hits = [str(x).strip() for x in (highlight_ids or []) if str(x).strip()]
+    if not hits:
+        hits = _fallback_highlights_from_tree(roots, int(config.collect_top_k))
+    hit_set = set(hits)
+    for node in _flatten(roots, include_hidden=True):
+        if node.section_id in hit_set:
+            node.is_highlight = True
+
+    must_keep: Set[str] = set(hit_set)
+    for hid in hits:
+        must_keep.update(_ancestors_in_tree(roots, hid))
+
+    # Root (scope=None): title-only. Scoped region: inline summaries.
+    inline_summary = scope is not None
+    char_limit = max(1, int(config.map_char_limit or config.projection_char_limit))
+    _apply_budget_hide(
+        roots,
+        char_limit=char_limit,
+        must_keep=must_keep,
+        extra_hidden_ids=extra_hidden_ids,
+        with_summary=inline_summary,
+    )
+    text, tree_visible, id_map, truncated = _render_map(
+        roots,
+        doc_id=doc_id,
+        scope=scope,
+        char_limit=char_limit,
+        highlight_ids=hit_set,
+        inline_summary=inline_summary,
+    )
+    visible_sorted = sorted(
+        tree_visible,
+        key=lambda v: (-v.score, v.depth_from_scope, v.section_id),
+    )
+    return Projection(
+        doc_id=doc_id,
+        scope=scope,
+        text=text,
+        visible_sections=visible_sorted,
+        truncated=truncated,
+        id_to_section=id_map,
+        map_mode=True,
+        tree_sections=list(tree_visible),
+        highlight_ids=list(hits),
+    )
+
+
 def build_projection(
     ts: Any,
     *,
@@ -69,7 +486,27 @@ def build_projection(
     query: str,
     scope: Optional[str],
     config: NavConfig,
+    map_scores: Optional[Dict[str, float]] = None,
+    collected_section_ids: Optional[Set[str]] = None,
+    dismissed_section_ids: Optional[Set[str]] = None,
+    highlight_ids: Optional[List[str]] = None,
+    extra_hidden_ids: Optional[Set[str]] = None,
 ) -> Projection:
+    if map_mode_enabled(config):
+        return build_map(
+            ts,
+            doc_id=doc_id,
+            query=query,
+            scope=scope,
+            config=config,
+            map_scores=map_scores,
+            collected_section_ids=collected_section_ids,
+            dismissed_section_ids=dismissed_section_ids,
+            highlight_ids=highlight_ids,
+            extra_hidden_ids=extra_hidden_ids,
+        )
+
+    # Minimal non-map fallback (legacy shallow projection) — kept for ablation only.
     visible: List[SectionView] = []
     lines: List[str] = []
     truncated = False
@@ -93,12 +530,13 @@ def build_projection(
     else:
         root_ids = _top_sections(ts, doc_id)
 
+    collected = set(collected_section_ids or ())
     root_ids = root_ids[: max(1, config.projection_child_limit)]
     frontier: List[tuple[str, int]] = [(sid, 0) for sid in root_ids]
     seen: set[str] = set()
     while frontier:
         sid, depth = frontier.pop(0)
-        if sid in seen:
+        if sid in seen or sid in collected:
             continue
         seen.add(sid)
         try:
@@ -122,7 +560,7 @@ def build_projection(
             add_line(f"{indent}     Preview: \"{view.preview[:80]}\"")
         if depth + 1 >= max(1, config.projection_depth):
             continue
-        child_rows = _children(ts, sid)[: max(0, config.projection_child_limit)]
+        child_rows = _children(ts, sid, limit=max(0, config.projection_child_limit))
         for child in child_rows:
             child_id = str(child.get("section_id") or "").strip()
             if child_id and child_id not in seen:
@@ -135,9 +573,9 @@ def build_projection(
         text="\n".join(lines),
         visible_sections=visible,
         truncated=truncated,
+        map_mode=False,
     )
 
 
 def top_visible_sections(projection: Projection, *, limit: int) -> List[SectionView]:
     return list(projection.visible_sections[: max(0, limit)])
-

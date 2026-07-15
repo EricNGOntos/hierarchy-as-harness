@@ -6,17 +6,28 @@ import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from agent_delivery.agent.types import AgentStep, EpisodeResult
-from agent_delivery.code.budget_eval import evaluate_at_budget
 from agent_delivery.code.compose_llm import compose_answer_llm
 from agent_delivery.code.hierarchical_tools import HierarchicalTools
 from agent_delivery.code.index_retrieval import Chunk
 from agent_delivery.code.tool_space import Refusal, ToolSpace
 
-from nav_actions import build_legal_actions
-from nav_discovery import build_discovery_bridge_sections, compute_discovery_scores
-from nav_policy import choose_llm_action
-from nav_projection import build_projection
-from nav_types import ActionKind, LegalAction, NavConfig, NavState
+from nav_compose import (
+    evidence_owner_section_id,
+    pack_nav_evidence,
+    unit_score_for_evidence_chunk,
+)
+from nav_map_scores import compute_map_and_unit_scores, select_map_highlights
+from nav_navigate import navigate
+from nav_types import (
+    LegalAction,
+    NavConfig,
+    NavState,
+    map_mode_enabled,
+)
+
+# Back-compat aliases for tests / callers.
+_evidence_owner_section_id = evidence_owner_section_id
+_unit_score_for_evidence_chunk = unit_score_for_evidence_chunk
 
 
 def _chunks_to_retrieved_nodes(chunks: List[Chunk]) -> List[str]:
@@ -42,83 +53,6 @@ def _dedupe_scored(scored: List[Tuple[Chunk, float]]) -> List[Tuple[Chunk, float
     return out
 
 
-def _query_tokens_for_compose(query: str) -> List[str]:
-    raw = (query or "").lower()
-    toks = re.findall(r"[a-z0-9_]+|[\u4e00-\u9fff]", raw)
-    return [t for t in toks if t.strip()]
-
-
-def _prepare_compose_evidence_text(
-    query: str,
-    evidence_text: str,
-    *,
-    budget_chars: int,
-    task_type: str,
-) -> str:
-    text = (evidence_text or "").strip()
-    if not text:
-        return ""
-    if os.environ.get("NAV_COMPOSE_CLEAN_EVIDENCE", "1").strip().lower() in {"0", "false", "no"}:
-        return text[: max(1, int(budget_chars))]
-
-    tt = (task_type or "").strip().lower()
-    keep_path = tt == "multi_hop"
-    blocks: List[Tuple[str, str]] = []
-    for raw_block in re.split(r"\n\s*\n(?=\[)", text):
-        chunk = raw_block.strip()
-        if not chunk:
-            continue
-        lines = chunk.splitlines()
-        if not lines:
-            continue
-        header = lines[0].strip()
-        body_lines = list(lines[1:]) if keep_path else [ln for ln in lines[1:] if not ln.strip().startswith("PATH:")]
-        body = "\n".join(body_lines).strip()
-        if not body:
-            continue
-        blocks.append((header, body))
-    if not blocks:
-        cleaned = re.sub(r"(?m)^PATH:.*\n?", "", text).strip()
-        return (cleaned or text)[: max(1, int(budget_chars))]
-
-    should_rerank = tt in {"scope_collection", "regulatory_coverage"}
-    if should_rerank:
-        toks = _query_tokens_for_compose(query)
-
-        def _score_block(block: Tuple[str, str]) -> Tuple[int, int]:
-            body = block[1].lower()
-            overlap = sum(1 for t in toks if t in body)
-            return (overlap, len(body))
-
-        blocks.sort(key=_score_block, reverse=True)
-
-    deduped: List[Tuple[str, str]] = []
-    seen_body: set[str] = set()
-    for h, b in blocks:
-        b_norm = re.sub(r"\s+", " ", b).strip()
-        if not b_norm or b_norm in seen_body:
-            continue
-        seen_body.add(b_norm)
-        deduped.append((h, b))
-
-    out_parts: List[str] = []
-    used = 0
-    for h, b in deduped:
-        piece = f"{h}\n{b}"
-        add_len = len(piece) + (2 if out_parts else 0)
-        if used + add_len <= int(budget_chars):
-            out_parts.append(piece)
-            used += add_len
-            continue
-        remain = int(budget_chars) - used - (2 if out_parts else 0)
-        if remain > 40:
-            out_parts.append(piece[:remain])
-        break
-    if out_parts:
-        return "\n\n".join(out_parts)
-    return text[: max(1, int(budget_chars))]
-
-
 def _add_scored(state: NavState, scored: List[Tuple[Chunk, float]]) -> int:
     added = 0
     for c, score in scored:
@@ -128,6 +62,42 @@ def _add_scored(state: NavState, scored: List[Tuple[Chunk, float]]) -> int:
         state.collected.append((c, float(score)))
         added += 1
     return added
+
+
+def _purge_descendant_evidence(
+    ts: ToolSpace,
+    state: NavState,
+    parent_sid: str,
+) -> int:
+    """Drop standalone evidence owned by proper descendants of parent_sid.
+
+    When COLLECT parent after COLLECT child (e.g. L93 then L92), child chunks
+    are absorbed into the parent hydrate and must not keep a separate bag slot.
+    """
+    sid = str(parent_sid or "").strip()
+    if not sid:
+        return 0
+    relations = getattr(ts, "section_relation_ids", None)
+    if callable(relations):
+        _anc, descendants = relations(sid, state.doc_id)
+    else:
+        descendants = _section_and_descendants(ts, sid, state.doc_id)
+    descendants = {str(x).strip() for x in (descendants or set()) if str(x).strip()}
+    descendants.discard(sid)
+    if not descendants:
+        return 0
+
+    kept: List[Tuple[Chunk, float]] = []
+    removed = 0
+    for chunk, score in list(state.collected):
+        owner = _evidence_owner_section_id(chunk)
+        if owner in descendants:
+            state.collected_ids.discard(chunk.node_id)
+            removed += 1
+            continue
+        kept.append((chunk, score))
+    state.collected = kept
+    return removed
 
 
 def _env_enabled(name: str, default: str = "1") -> bool:
@@ -155,7 +125,11 @@ def _has_explicit_scope_collect_strategy() -> bool:
 
 
 def _is_scope_outline_query(query: str, task_type: str) -> bool:
-    """Scope_collection 查询是否为结构概览类（需要广度覆盖所有子节）。"""
+    """Scope_collection 查询是否为结构概览类（需要广度覆盖所有子节）。
+
+    TODO(knowhere-align): replace keyword heuristics with query_intent labels
+    (MACRO_SUMMARY / STRUCTURE_OVERVIEW) when migrating back to KNOWHERE.
+    """
     if (task_type or "").strip().lower() not in ("scope_collection", "regulatory_coverage"):
         return False
     q = (query or "").strip()
@@ -270,6 +244,8 @@ def _scope_collect_outline(
 
     min_outline = max(1, int(os.environ.get("NAV_SCOPE_OUTLINE_MIN_CHUNKS", "3") or "3"))
     if len(outline_chunks) < min_outline:
+        if map_mode_enabled(None) or bool(getattr(state, "unit_scores", None)):
+            return _collect_by_unit_scores(pool, state, config, action=action)
         return _scope_collect_scored(idx, pool, action, state, config)
 
     limit = min(len(outline_chunks), int(config.collect_k))
@@ -407,6 +383,14 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
         pool = list(materialize(sid, state.doc_id))
         if pool:
             task_type = (state.task_type or "").strip().lower()
+            # Map-first: hydrate by hybrid unit scores (BM25 ⊕ path/content dense).
+            if map_mode_enabled(config) or bool(getattr(state, "unit_scores", None)):
+                if task_type in {"scope_collection", "regulatory_coverage"}:
+                    if _env_enabled("NAV_SCOPE_OUTLINE_MODE", "1") and _is_scope_outline_query(
+                        state.query, task_type
+                    ):
+                        return _scope_collect_outline(idx, pool, action, state, config)
+                return _collect_by_unit_scores(pool, state, config, action=action)
             if task_type in {"scope_collection", "regulatory_coverage"}:
                 if _env_enabled("NAV_SCOPE_OUTLINE_MODE", "1") and _is_scope_outline_query(state.query, task_type):
                     return _scope_collect_outline(idx, pool, action, state, config)
@@ -428,70 +412,126 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
     return [(h.chunk, float(h.score) + float(config.read_score_bonus)) for h in rc]
 
 
-def _update_collect_coverage(ts: ToolSpace, action: LegalAction, state: NavState, added: int) -> dict[str, Any]:
+def _mark_collected_branch(
+    ts: ToolSpace, action: LegalAction, state: NavState, added: int
+) -> dict[str, Any]:
+    """On successful COLLECT: mark sid ∪ descendants as collected (removed from map).
+
+    Replaces the old covered/collected split — one set only.
+    """
     sid = str(action.section_id or "").strip()
     if not sid or not _env_enabled("NAV_FILTER_COLLECTED_SECTIONS"):
         return {}
     materialize = getattr(ts, "_materialize_leaf_path_chunks", None)
     relations = getattr(ts, "section_relation_ids", None)
     pool = list(materialize(sid, state.doc_id)) if callable(materialize) else []
-    ancestors, descendants = relations(sid, state.doc_id) if callable(relations) else (set(), {sid})
+    if callable(relations):
+        ancestors, descendants = relations(sid, state.doc_id)
+    else:
+        ancestors, descendants = set(), _section_and_descendants(ts, sid, state.doc_id)
+    descendants = {str(x).strip() for x in (descendants or set()) if str(x).strip()}
+    descendants.add(sid)
+
+    is_full = bool(pool) and all(chunk.node_id in state.collected_ids for chunk in pool)
     if added > 0:
-        state.collected_section_ids.add(sid)
-        # A single-leaf collect is often a probe before collecting its parent
-        # collection. Lock ancestors only after a broader section was useful.
+        state.collected_section_ids.update(descendants)
         if len(pool) > 1:
             state.blocked_collect_section_ids.update(ancestors)
-    is_full = bool(pool) and all(chunk.node_id in state.collected_ids for chunk in pool)
-    if is_full:
-        state.covered_section_ids.update(descendants)
-        if added > 0 and len(pool) > 1 and (state.task_type or "").strip().lower() in {
+        if is_full and len(pool) > 1 and (state.task_type or "").strip().lower() in {
             "scope_collection",
             "regulatory_coverage",
         }:
             state.scope_evidence_locked = True
     return {
         "collect_full": is_full,
+        "branch_selected": added > 0,
         "scope_evidence_locked": state.scope_evidence_locked,
-        "n_covered_sections": len(state.covered_section_ids),
+        "n_collected_sections": len(state.collected_section_ids),
         "n_blocked_ancestor_collects": len(state.blocked_collect_section_ids),
     }
 
 
-def _search_doc(ts: ToolSpace, state: NavState, config: NavConfig) -> List[Tuple[Chunk, float]]:
-    hybrid = getattr(ts, "hybrid_search", None)
-    if callable(hybrid) and _env_enabled("NAV_HYBRID_DIRECT_SEARCH", "1"):
-        hits = hybrid(
-            state.query,
-            int(config.search_k),
-            doc_id=state.doc_id,
-            task_type=state.task_type,
-        )
-    else:
-        hits = ts.search(state.query, int(config.search_k), doc_id=state.doc_id)
-    return [(h.chunk, float(h.score)) for h in hits]
+# Back-compat name used by older tests; prefer _mark_collected_branch.
+_update_collect_coverage = _mark_collected_branch
 
 
-def _emergency_guard_collect(ts: ToolSpace, state: NavState) -> int:
-    """Last-resort dense top-k when navigation collected nothing."""
-    if state.collected:
-        return 0
-    pool = ts.leaf_path_search_pool(state.doc_id)
+def _collect_by_unit_scores(
+    pool: List[Chunk],
+    state: NavState,
+    config: NavConfig,
+    *,
+    action: LegalAction,
+) -> List[Tuple[Chunk, float]]:
+    """Rank evidence chunks by own unit hybrid score (no branch MAX-pool)."""
+    del action
     if not pool:
-        return 0
-    idx = getattr(ts, "_idx", None)
-    if idx is None:
-        return 0
-    k = min(len(pool), 8)
-    scored = idx.search(state.query, pool, k, doc_id_filter=state.doc_id)
-    added = 0
-    for chunk, score in scored:
-        if chunk.node_id in state.collected_ids:
+        return []
+    unit_scores = dict(getattr(state, "unit_scores", {}) or {})
+    per_chunk = [_unit_score_for_evidence_chunk(c, unit_scores) for c in pool]
+    ranked = sorted(
+        zip(pool, per_chunk),
+        key=lambda item: (
+            -item[1],
+            min(item[0].line_ids or (10**9,)),
+            item[0].node_id,
+        ),
+    )
+    limit = min(len(ranked), int(config.collect_k))
+    return [(chunk, float(own)) for chunk, own in ranked[:limit]]
+
+
+def _direct_child_ids(ts: ToolSpace, section_id: str, doc_id: str) -> List[str]:
+    sid = (section_id or "").strip()
+    if not sid:
+        return []
+    children_fn = getattr(ts, "_children_for_section_path", None)
+    rows: List[Any] = []
+    if callable(children_fn):
+        try:
+            rows = list(children_fn(sid, doc_id, limit=100000) or [])
+        except Exception:
+            rows = []
+    if not rows:
+        try:
+            st = ts.get_structure(sid)
+            rows = list(st.get("children") or [])
+        except Exception:
+            return []
+    out: List[str] = []
+    seen: set[str] = set()
+    for row in rows:
+        if not isinstance(row, dict):
             continue
-        state.collected_ids.add(chunk.node_id)
-        state.collected.append((chunk, float(score) * 0.4))
-        added += 1
-    return added
+        child_id = str(row.get("section_id") or "").strip()
+        if child_id and child_id not in seen:
+            seen.add(child_id)
+            out.append(child_id)
+    return out
+
+
+def _section_and_descendants(ts: ToolSpace, section_id: str, doc_id: str) -> set[str]:
+    """Return {section_id} ∪ descendants (best-effort)."""
+    sid = (section_id or "").strip()
+    if not sid:
+        return set()
+    relations = getattr(ts, "section_relation_ids", None)
+    if callable(relations):
+        try:
+            _anc, desc = relations(sid, doc_id)
+            out = {str(x).strip() for x in (desc or set()) if str(x).strip()}
+            out.add(sid)
+            return out
+        except Exception:
+            pass
+    out: set[str] = {sid}
+    stack = [sid]
+    while stack:
+        cur = stack.pop()
+        for child in _direct_child_ids(ts, cur, doc_id):
+            if child not in out:
+                out.add(child)
+                stack.append(child)
+    return out
 
 
 def run_nav_episode(
@@ -513,6 +553,10 @@ def run_nav_episode(
     load_llm_env()
     require_llm_env(context="Nav Agent")
     cfg = config or NavConfig(policy="llm")
+    if map_mode_enabled(None):
+        cfg.map_mode = True
+        if cfg.llm_max_tokens < 256:
+            cfg.llm_max_tokens = 256
     nav_policy = (policy or cfg.policy or "llm").strip().lower()
     if nav_policy != "llm":
         raise ValueError(
@@ -525,91 +569,33 @@ def run_nav_episode(
     state = NavState(doc_id=doc_id, query=query, task_type=task_type)
     steps: List[AgentStep] = []
     section_ids = ts.sections_for_doc(doc_id)
-    state.discovery_scores = compute_discovery_scores(ts, state, cfg)
-    state.discovery_bridge_sections = build_discovery_bridge_sections(ts, state)
-
-    for step_idx in range(1, max(1, int(cfg.max_steps)) + 1):
-        projection = build_projection(
-            ts,
-            doc_id=doc_id,
-            query=query,
-            scope=state.current_scope,
-            config=cfg,
-        )
-        actions = build_legal_actions(state, projection, step_idx=step_idx, config=cfg)
-        chosen, llm_meta = choose_llm_action(state, projection, actions, step_idx=step_idx, config=cfg)
-
-        detail: Dict[str, Any] = {
-            "action_id": chosen.action_id,
-            "kind": chosen.kind.value,
-            "section_id": chosen.section_id,
-            "scope": state.current_scope,
-            "projection_chars": len(projection.text),
-            "n_visible_sections": len(projection.visible_sections),
-            "n_legal_actions": len(actions),
-            "legal_actions": [a.prompt_line() for a in actions],
-            "n_discovery_scores": len(state.discovery_scores),
-        }
-        if state.discovery_rerank_meta:
-            detail["discovery_rerank"] = dict(state.discovery_rerank_meta)
-        if llm_meta:
-            detail["llm"] = llm_meta
-
-        if chosen.kind == ActionKind.FINISH:
-            steps.append(AgentStep(step_idx=len(steps) + 1, action="nav_finish", detail=detail))
-            state.action_history.append({**detail, "step_idx": step_idx})
-            break
-        if chosen.kind == ActionKind.EXPAND:
-            state.push_scope(chosen.section_id)
-            steps.append(AgentStep(step_idx=len(steps) + 1, action="nav_expand", detail=detail))
-            state.action_history.append({**detail, "step_idx": step_idx})
-            continue
-        if chosen.kind == ActionKind.BACK:
-            new_scope = state.back()
-            detail["new_scope"] = new_scope
-            steps.append(AgentStep(step_idx=len(steps) + 1, action="nav_back", detail=detail))
-            state.action_history.append({**detail, "step_idx": step_idx})
-            continue
-        if chosen.kind == ActionKind.SEARCH:
-            scored = _search_doc(ts, state, cfg)
-            added = _add_scored(state, scored)
-            detail["n_hits"] = len(scored)
-            detail["n_added"] = added
-            if added == 0:
-                state.exhausted_search_scopes.add(state.current_scope)
-            steps.append(AgentStep(step_idx=len(steps) + 1, action="nav_search", detail=detail))
-            state.action_history.append({**detail, "step_idx": step_idx})
-            continue
-        if chosen.kind == ActionKind.COLLECT:
-            scored = _collect_subtree(ts, chosen, state, cfg)
-            added = _add_scored(state, scored)
-            detail["n_hits"] = len(scored)
-            detail["n_added"] = added
-            detail.update(_update_collect_coverage(ts, chosen, state, added))
-            steps.append(AgentStep(step_idx=len(steps) + 1, action="nav_collect", detail=detail))
-            state.action_history.append({**detail, "step_idx": step_idx})
-            continue
-
-    emergency_added = _emergency_guard_collect(ts, state)
-    if emergency_added:
-        steps.append(
-            AgentStep(
-                step_idx=len(steps) + 1,
-                action="nav_emergency_guard",
-                detail={
-                    "reason": "zero_collection_fallback",
-                    "n_added": emergency_added,
-                },
-            )
-        )
-
-    scored_chunks = _dedupe_scored(list(state.collected))
-    fill = evaluate_at_budget(
-        scored_chunks,
-        budget_chars=budget_chars,
-        query=query,
-        task_type=task_type,
+    state.map_scores, state.unit_scores = compute_map_and_unit_scores(
+        ts, doc_id=doc_id, query=query, root_ids=section_ids
     )
+    state.highlight_ids = select_map_highlights(
+        state.unit_scores, k=int(cfg.collect_top_k)
+    )
+
+    # Top-level recursive-dispatch navigate (depth 0).
+    navigate(
+        ts,
+        state=state,
+        scope=None,
+        query=query,
+        config=cfg,
+        depth=0,
+        budget=int(cfg.map_char_limit),
+        steps_out=steps,
+    )
+
+    fill = pack_nav_evidence(
+        _dedupe_scored(list(state.collected)),
+        ts,
+        state,
+        cfg,
+        budget_chars=budget_chars,
+    )
+    scored_chunks = list(fill.scored_chunks)
     retrieval_seconds = time.perf_counter() - retrieval_t0
     composed = ""
     compose_seconds = 0.0
@@ -625,16 +611,10 @@ def run_nav_episode(
         fc = compose_format_constraints
         if extra_mh_constraint:
             fc = (f"{fc}\n{extra_mh_constraint}" if fc else extra_mh_constraint)
-        compose_evidence = _prepare_compose_evidence_text(
-            query,
-            fill.evidence_text or "",
-            budget_chars=int(budget_chars),
-            task_type=task_type or "niche_fact",
-        )
         composed = compose_answer_llm(
             query,
             task_type=task_type or "niche_fact",
-            evidence_text=compose_evidence,
+            evidence_text=fill.evidence_text or "",
             max_answer_chars=max_ans,
             budget_chars=int(budget_chars),
             format_constraints=fc,

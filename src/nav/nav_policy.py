@@ -6,6 +6,7 @@ import re
 import time
 from typing import Any, List, Optional
 
+from nav_actions import action_by_id, actions_by_ids
 from nav_types import ActionKind, LegalAction, NavConfig, NavState, Projection
 
 
@@ -17,36 +18,22 @@ def choose_rule_action(
     step_idx: int,
     config: NavConfig,
 ) -> LegalAction:
-    """Deterministic fallback policy used for cheap debugging and invalid LLM actions."""
+    """Deterministic fallback when LLM returns an illegal action."""
+    del projection, step_idx, config
+
     def first(kind: ActionKind) -> Optional[LegalAction]:
         for a in actions:
             if a.kind == kind:
                 return a
         return None
 
-    task_type = (state.task_type or "").lower()
     if not state.collected:
-        if task_type in ("scope_collection", "regulatory_coverage"):
-            act = first(ActionKind.EXPAND) or first(ActionKind.COLLECT)
-            if act:
-                return act
-        act = first(ActionKind.SEARCH) or first(ActionKind.COLLECT)
+        act = first(ActionKind.DISPATCH) or first(ActionKind.COLLECT)
         if act:
             return act
-
-    if task_type in ("scope_collection", "regulatory_coverage"):
-        act = first(ActionKind.COLLECT)
-        if act:
-            return act
-        act = first(ActionKind.BACK)
-        if act:
-            return act
-
-    if len(state.collected) < 3:
-        act = first(ActionKind.COLLECT) or first(ActionKind.SEARCH)
-        if act:
-            return act
-
+    act = first(ActionKind.COLLECT) or first(ActionKind.DISPATCH)
+    if act:
+        return act
     return first(ActionKind.FINISH) or actions[-1]
 
 
@@ -71,7 +58,6 @@ def _extract_json_obj(text: str) -> Optional[dict]:
 
 
 def _extract_action_id_fallback(text: str) -> str:
-    """Recover action_id from a truncated JSON object; still validated against legal actions."""
     s = (text or "").strip()
     for key in ("action_id", "id"):
         m = re.search(rf'"{key}"\s*:\s*"([^"]+)"', s, flags=re.I)
@@ -80,64 +66,133 @@ def _extract_action_id_fallback(text: str) -> str:
     return ""
 
 
-def _compatible_discovery_action_id(aid: str, actions: List[LegalAction]) -> str:
-    """Map habitual Cn collect IDs to Dn when only discovery collect choices exist."""
-    normalized = (aid or "").strip().upper()
-    m = re.fullmatch(r"C(\d+)", normalized)
-    if not m:
-        return normalized
-    wanted = f"D{m.group(1)}"
-    legal = {a.action_id.upper() for a in actions}
-    if normalized not in legal and wanted in legal:
-        return wanted
-    return normalized
+def _normalize_id_list(obj: dict, primary_aid: str) -> List[str]:
+    ids_raw = obj.get("ids") or obj.get("action_ids") or obj.get("action_args", {})
+    ids: List[str] = []
+    if isinstance(ids_raw, dict):
+        ids_raw = ids_raw.get("ids") or []
+    if isinstance(ids_raw, list):
+        ids = [str(x).strip().upper() for x in ids_raw if str(x).strip()]
+    if primary_aid and primary_aid not in ids:
+        ids = [primary_aid] + ids
+    out: List[str] = []
+    seen: set[str] = set()
+    for i in ids:
+        if i not in seen:
+            out.append(i)
+            seen.add(i)
+    return out
 
 
-def _format_agent_state(state: NavState, step_idx: int, config: NavConfig) -> str:
-    """Agent state block so the nav LLM knows what was already collected."""
-    lines = ["=== Agent State ==="]
-    lines.append(f"Current scope: {state.current_scope or 'document-root'}")
-    lines.append(f"Step: {step_idx + 1} / {config.max_steps}")
-
-    collected_sections: List[str] = []
-    explored_empty: List[str] = []
+def _collect_roots_from_history(state: NavState) -> List[str]:
+    """Sections the agent explicitly COLLECT'd (not descendant auto-marks)."""
+    roots: List[str] = []
     seen: set[str] = set()
     for h in state.action_history:
-        sid = str(h.get("section_id") or "").strip()
-        if not sid or sid in seen:
+        if h.get("kind") != "collect":
             continue
-        seen.add(sid)
-        if h.get("kind") == "collect" and int(h.get("n_added", 0) or 0) > 0:
-            collected_sections.append(sid)
-        elif h.get("kind") == "collect" and int(h.get("n_added", 0) or 0) == 0:
-            explored_empty.append(sid)
+        if int(h.get("n_added", 0) or 0) <= 0:
+            continue
+        sid = str(h.get("section_id") or "").strip()
+        if sid and sid not in seen:
+            roots.append(sid)
+            seen.add(sid)
+    return roots
 
-    if collected_sections:
-        lines.append(f"Evidence collected: {len(collected_sections)} section(s)")
-        for sid in collected_sections:
+
+def _format_agent_state(
+    state: NavState,
+    step_idx: int,
+    config: NavConfig,
+    *,
+    max_steps: Optional[int] = None,
+) -> str:
+    """Agent state block shown before the actionable observation."""
+    episode_steps = int(max_steps if max_steps is not None else config.max_steps)
+    lines = ["=== Agent State ==="]
+    lines.append(f"Current scope: {state.current_scope or 'document-root'}")
+    lines.append(f"Step: {step_idx + 1} / {episode_steps}")
+    lines.append(
+        "Observation mode: folded hierarchy map "
+        "(title-only at document-root; summaries inline inside dispatched regions)"
+    )
+
+    roots = _collect_roots_from_history(state)
+    if roots:
+        lines.append(f"Evidence collected: {len(roots)} section(s)")
+        for sid in roots:
             lines.append(f'  - "{sid}"')
     else:
         lines.append("Evidence collected: none")
 
-    if explored_empty:
-        lines.append(f"Already explored (no new evidence): {len(explored_empty)} section(s)")
-        for sid in explored_empty[:5]:
+    investigated = sorted(state.investigated_section_ids)
+    if investigated:
+        lines.append(f"Regions investigated (subagent reports below): {len(investigated)}")
+        for sid in investigated[:20]:
             lines.append(f'  - "{sid}"')
+        if len(investigated) > 20:
+            lines.append(f"  - ... (+{len(investigated) - 20} more)")
 
-    block_empty_search = os.environ.get(
-        "NAV_BLOCK_EXHAUSTED_SEARCH", "1"
-    ).strip().lower() not in {"0", "false", "no", "off"}
-    if block_empty_search and state.current_scope in state.exhausted_search_scopes:
-        lines.append("Search status: exhausted in current scope; SEARCH is suppressed.")
-
-    remaining = config.max_steps - step_idx - 1
+    remaining = episode_steps - step_idx - 1
     if remaining <= 2:
         lines.append(
-            f"Only {remaining} step(s) remaining. Consider FINISH if evidence is sufficient."
+            f"Only {remaining} step(s) remaining. Prefer COLLECT or FINISH if evidence is sufficient."
         )
 
     lines.append("=== End Agent State ===")
     return "\n".join(lines)
+
+
+def _system_prompt(*, depth: int = 0) -> str:
+    """Observe-act navigate prompt (COLLECT / DISPATCH / FINISH).
+
+    Style follows KNOWHERE collector rules (action IDs on node lines, English
+    reason, no invented targets) adapted to recursive DISPATCH instead of
+    EXPAND/BACK. TODO(knowhere-align): restore SEARCH_IMAGES / SEARCH_TABLES
+    and outline:true side-effects when migrating back.
+    """
+    role = (
+        "You are a document navigation agent running an observe-act loop."
+        if depth == 0
+        else "You are a region subagent investigating one assigned document subtree."
+    )
+    return (
+        f"{role}\n\n"
+        "The observation is a folded hierarchy map. Each visible node lists only the "
+        "action IDs currently legal for that node. Collected branches are removed from "
+        "the map. At document-root the map is title-only; inside a dispatched region, "
+        "node summaries are inlined.\n\n"
+        "=== Rules ===\n\n"
+        "Each step chooses exactly ONE primary action_id. For multi-select of the same "
+        'kind, include "ids": ["C1","C3",...] or ["D1","D2",...].\n\n'
+        "Action semantics:\n"
+        "  - collect=C*: add a listed section AND all its descendant content to evidence.\n"
+        "    For every collected action id, provide confidence in [0,1] "
+        '(object map keyed by action id, or a single scalar for one id).\n'
+        "  - dispatch=D*: hand the listed region(s) to concurrent subagent explorers; "
+        "you receive their reports without moving your own viewpoint.\n"
+        "  - finish=F*: end navigation for this scope / document.\n\n"
+        "  - Use only action IDs shown on a node line or under Global actions. "
+        "Never invent IDs or write raw section paths as targets.\n"
+        "  - Prefer DISPATCH for large internal sections when available; prefer "
+        "COLLECT for leaves or small clearly-relevant sections.\n"
+        "  - Do NOT re-collect a section already listed under Evidence collected.\n"
+        "  - FINISH only when collected evidence is sufficient for the user's query. "
+        "The system will not infer missing evidence for you.\n"
+        "  - When steps remaining <= 2, prioritize COLLECT or FINISH.\n\n"
+        "=== End Rules ===\n\n"
+        "Return ONLY one JSON object, e.g.:\n"
+        '{"action_id":"C1","confidence":0.8,"reason":"short reason"}\n'
+        'Multi collect: {"action_id":"C1","ids":["C1","C3"],'
+        '"confidence":{"C1":0.7,"C3":0.9},"reason":"..."}\n'
+        'Multi dispatch: {"action_id":"D1","ids":["D1","D2"],"reason":"..."}\n'
+        "Do not include any explanation outside the JSON.\n\n"
+        "IMPORTANT:\n"
+        "1. All agent-generated text (reason) MUST be in English.\n"
+        "2. Document content and section titles MUST remain in their original language.\n"
+        "3. Keep reason under 25 words.\n"
+        "4. COLLECT must include confidence for each selected collect id.\n"
+    )
 
 
 def choose_llm_action(
@@ -147,6 +202,8 @@ def choose_llm_action(
     *,
     step_idx: int,
     config: NavConfig,
+    depth: int = 0,
+    max_steps: Optional[int] = None,
 ) -> tuple[LegalAction, dict]:
     from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
     from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
@@ -154,51 +211,49 @@ def choose_llm_action(
 
     require_llm_env(context="Nav Agent")
     key = os.environ.get("OPENAI_API_KEY", "").strip()
-    model = os.environ.get(config.llm_model_env, "").strip() or os.environ.get("COMPOSE_MODEL", "gpt-4o-mini")
+    model_env = config.subagent_model_env if depth > 0 else config.llm_model_env
+    model = (
+        os.environ.get(model_env, "").strip()
+        or os.environ.get(config.llm_model_env, "").strip()
+        or os.environ.get("COMPOSE_MODEL", "gpt-4o-mini")
+    )
     base_url = os.environ.get("OPENAI_BASE_URL", "").strip() or None
     client = make_openai_client(api_key=key, base_url=base_url)
-    agent_state = _format_agent_state(state, step_idx, config)
-    action_block = "\n".join(f"- {a.prompt_line()}" for a in actions)
-
-    system = (
-        "You are a document navigation agent running an observe-act loop.\n\n"
-        "Each step chooses exactly ONE action_id from the legal action list.\n\n"
-        "Action semantics:\n"
-        "  - C* (COLLECT): adds a section and all descendant content to evidence.\n"
-        "  - E* (EXPAND): opens a section to see its children in the next step.\n"
-        "  - D* (DISCOVERY COLLECT): collects a section found by bottom-up search.\n"
-        "  - S* (SEARCH): keyword search within the document.\n"
-        "  - B* (BACK): return to parent scope.\n"
-        "  - F* (FINISH): end navigation for this document.\n\n"
-        "Rules:\n"
-        "  - Do NOT re-collect a section already listed in 'Evidence collected'.\n"
-        "  - Do NOT re-explore a section listed in 'Already explored'.\n"
-        "  - For [Leaf] sections, prefer COLLECT over EXPAND.\n"
-        "  - If evidence is sufficient for the query, choose FINISH.\n"
-        "  - When steps remaining <= 2, prioritize COLLECT or FINISH.\n"
-        "  - Do not invent action IDs. Use only IDs from the legal action list.\n\n"
-        'Return ONLY one JSON object: {"action_id":"C1","reason":"short reason"}\n'
-        "Keep reason under 15 words. Reason must be in English."
+    agent_state = _format_agent_state(
+        state, step_idx, config, max_steps=max_steps
     )
+    system = _system_prompt(depth=depth)
+
+    reports_block = ""
+    if state.reports_context:
+        reports_block = (
+            f"\n=== Subagent Reports ===\n{state.reports_context}\n"
+            f"=== End Subagent Reports ===\n"
+        )
+
     user = (
         f"User query: {state.query}\n"
         f"Task type: {state.task_type}\n\n"
         f"{agent_state}\n\n"
         f"=== Actionable Observation ===\n"
         f"{projection.text}\n"
-        f"=== End Actionable Observation ===\n\n"
-        f"Legal actions:\n{action_block}\n\n"
+        f"=== End Actionable Observation ===\n"
+        f"{reports_block}\n"
         'Return: {"action_id":"...","reason":"..."}'
     )
 
+    purpose = "nav_navigate_v1" if depth == 0 else "nav_subagent_v1"
     last_error: Optional[Exception] = None
     for attempt in range(3):
         try:
             cached = cached_chat_completion(
                 client,
-                purpose="nav_action_v2",
+                purpose=purpose,
                 model=model,
-                messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
                 temperature=float(config.llm_temperature),
                 max_tokens=int(config.llm_max_tokens),
                 response_format={"type": "json_object"},
@@ -209,14 +264,37 @@ def choose_llm_action(
             aid = str(obj.get("action_id") or obj.get("id") or "").strip().upper()
             if not aid:
                 aid = _extract_action_id_fallback(text)
-            aid = _compatible_discovery_action_id(aid, actions)
-            for action in actions:
-                if action.action_id.upper() == aid:
-                    return action, {
-                        "model": model,
-                        "reason": str(obj.get("reason") or "")[:300],
-                        "raw": text[:500],
-                    }
+            primary = action_by_id(actions, aid)
+            if primary is not None:
+                meta: dict[str, Any] = {
+                    "model": model,
+                    "reason": str(obj.get("reason") or "")[:300],
+                    "raw": text[:500],
+                    "depth": depth,
+                }
+                if primary.kind in {ActionKind.COLLECT, ActionKind.DISPATCH}:
+                    id_list = _normalize_id_list(obj, primary.action_id.upper())
+                    selected = actions_by_ids(actions, id_list)
+                    selected = [a for a in selected if a.kind == primary.kind]
+                    if not selected:
+                        selected = [primary]
+                    meta["selected_ids"] = [a.action_id for a in selected]
+                    meta["selected_section_ids"] = [a.section_id for a in selected]
+                    primary.metadata = dict(primary.metadata or {})
+                    primary.metadata["batch_actions"] = selected
+                    if primary.kind == ActionKind.COLLECT:
+                        from nav_compose import parse_collect_confidence
+
+                        conf_by_aid = parse_collect_confidence(obj, selected)
+                        conf_by_sid = {
+                            str(a.section_id): float(conf_by_aid.get(a.action_id.upper(), 0.0))
+                            for a in selected
+                            if a.section_id
+                        }
+                        meta["confidence_by_action"] = conf_by_aid
+                        meta["confidence_by_section"] = conf_by_sid
+                        primary.metadata["confidence_by_section"] = conf_by_sid
+                return primary, meta
             last_error = RuntimeError(
                 "Nav Agent LLM 返回了非法 action_id="
                 f"{aid!r}；合法选项={[a.action_id for a in actions]!r}；raw={text[:500]!r}"
@@ -233,6 +311,7 @@ def choose_llm_action(
                 "raw": text[:500],
                 "illegal_action_id": aid,
                 "fallback_action_id": fallback.action_id,
+                "depth": depth,
             }
         except RuntimeError as exc:
             last_error = exc

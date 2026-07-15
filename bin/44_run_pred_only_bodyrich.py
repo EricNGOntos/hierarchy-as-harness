@@ -93,6 +93,8 @@ def _signature(args: argparse.Namespace, embedding_model: str) -> str:
         "nav_synthetic_root_sections": os.environ.get("NAV_SYNTHETIC_ROOT_SECTIONS", ""),
         "nav_synthetic_prefix_min_lines": os.environ.get("NAV_SYNTHETIC_PREFIX_MIN_LINES", ""),
         "nav_hybrid_direct_search": os.environ.get("NAV_HYBRID_DIRECT_SEARCH", ""),
+        "nav_map_mode": os.environ.get("NAV_MAP_MODE", "0"),
+        "nav_peek_content_enabled": os.environ.get("NAV_PEEK_CONTENT_ENABLED", "0"),
         "nav_hybrid_direct_k": os.environ.get("NAV_HYBRID_DIRECT_K", ""),
         "nav_scope_direct_window_before": os.environ.get("NAV_SCOPE_DIRECT_WINDOW_BEFORE", ""),
         "nav_scope_direct_window_after": os.environ.get("NAV_SCOPE_DIRECT_WINDOW_AFTER", ""),
@@ -153,6 +155,8 @@ def main() -> int:
     )
 
     arm_key = "hierarchical_pred" if args.tree_source == "pred" else "hierarchical_gold"
+    if os.environ.get("NAV_MAP_MODE", "0").strip().lower() not in {"0", "false", "no", "off", ""}:
+        arm_key = f"{arm_key}_map"
     setup_cost: dict[str, dict[str, float]] = {}
     t0 = time.perf_counter()
     bundles = bundles_from_paths(

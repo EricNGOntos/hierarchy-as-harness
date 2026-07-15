@@ -319,6 +319,39 @@ class ToolSpace:
         ancestors.discard(section_id)
         return ancestors, descendants
 
+    def materialize_self_only_chunks(self, section_id: str, doc_id: str) -> List[Chunk]:
+        """Return chunks for this node only (exclude descendant sections).
+
+        Used by map scoring / intro units so self text is not diluted by the
+        full subtree (Knowhere self_only hydration analogue).
+        """
+        bounds = self._subtree_bounds_for_section_path(section_id, doc_id)
+        b = self._idx._bundles.get(doc_id)
+        if bounds is None or not b:
+            return []
+        start, end = bounds
+        levels = b.levels_for_tree
+        is_synthetic = self._synthetic_section_bounds(section_id, doc_id) is not None
+        base_level = 0 if is_synthetic else (levels[start] if start < len(levels) else 0)
+        # Self span: from node start until the first structural child (deeper level).
+        self_end = end
+        if base_level >= 0:
+            for j in range(start + 1, end):
+                lev = levels[j] if j < len(levels) else 0
+                if lev > base_level:
+                    self_end = j
+                    break
+                if base_level > 0 and lev > 0 and lev <= base_level:
+                    self_end = j
+                    break
+        node_to_chunk = {c.node_id: c for c in self._idx.small_chunks if c.doc_id == doc_id}
+        out: List[Chunk] = []
+        for rec in b.lines[start:self_end]:
+            chunk = node_to_chunk.get(line_node_id(doc_id, rec.line_id))
+            if chunk is not None:
+                out.append(chunk)
+        return out
+
     def _materialize_leaf_path_chunks(self, section_id: str, doc_id: str) -> List[Chunk]:
         """
         将一个 section_path 子树物化为 evidence units。
@@ -467,7 +500,14 @@ class ToolSpace:
         """Public retrieval-only access to leaf/path chunks, optionally scoped to one document."""
         return self._leaf_path_search_pool(doc_id)
 
-    def _children_for_section_path(self, section_id: str, doc_id: str, limit: int = 24) -> List[dict]:
+    def _children_for_section_path(self, section_id: str, doc_id: str, limit: int | None = None) -> List[dict]:
+        if limit is None:
+            # Map mode needs full fan-out; legacy projection keeps a modest default.
+            if os.environ.get("NAV_MAP_MODE", "0").strip().lower() not in {"0", "false", "no", "off", ""}:
+                limit = max(1, int(os.environ.get("NAV_MAP_CHILDREN_LIMIT", "10000") or "10000"))
+            else:
+                limit = 24
+
         synthetic_children = self._synthetic_child_rows(section_id, doc_id, limit=limit)
         if synthetic_children:
             return synthetic_children

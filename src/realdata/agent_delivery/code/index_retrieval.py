@@ -57,8 +57,10 @@ class CorpusIndex:
             self._ensure_dense_model()
             from .embedding_backend import encode_chunks_normalized
 
+            import os
+            batch = int(os.environ.get("BODYRICH_EMBEDDING_BATCH_SIZE", "10") or "10")
             self._pool_emb_cache[key] = encode_chunks_normalized(
-                self._dense_model, pool, batch_size=64
+                self._dense_model, pool, batch_size=max(1, min(batch, 10))
             )
         return self._pool_emb_cache[key]
 
