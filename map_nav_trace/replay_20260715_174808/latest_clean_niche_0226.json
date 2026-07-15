@@ -1,0 +1,147 @@
+{
+  "inspect_id": "latest_clean_niche_0226",
+  "task_type": "niche_fact",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“2.4 隐患整改”相关内容，该处明确写出的规定或事实是什么？",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L82"
+  ],
+  "elapsed_sec": 4.42,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 8,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L82",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 2.4 隐患整改 / 2.4.7 隐患整改（控制或变更降低安全风险）措施的优先顺序：]\n4、标志、警告和管理控制措施：安全标志、危险区域标识、警告器或警告灯、报警器、安全规程、设备检修、作业安全制度、操作牌和作业许可证等；\n\n[E2]\n[§ 2.4 隐患整改 / 2.4.4 重大事故隐患整改、复查、销项]\n2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐患排除前或者排除过程中无法保证安全的，应当从危险区域内撤出作业人员，并疏散可能危及的其他人员，设置警戒标志，暂时停工；对暂时难以停工或者停止使用的相关生产储存装置、设施、设备，应当加强维护和保养，防止事故发生。\n\n[E3]\n[§ 2.4 隐患整改 / 2.4.2 隐患整改的职责]\n2、各二级单位主要负责人对事故隐患治理负直接管理领导责任；\n\n[E4]\n[§ 2.4 隐患整改 / 2.4.7 隐患整改（控制或变更降低安全风险）措施的优先顺序：]\n5、个体防护装备：为操作者配备必要的个体防护装备；\n\n[E5]\n[§ 2.4 隐患整改 / 2.4.7 隐患整改（控制或变更降低安全风险）措"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 481,
+    "n_retrieved_nodes": 11,
+    "gold_node_recall": 1.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L82",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 2.4 隐患整改]\n  2.4.1 事故隐患分为一般事故隐患和重大事故隐患。\n  1、一般事故隐患，是指危害和整改难度较小，发现后能够立即整改排除的隐患；\n  2、重大事故隐患，是指危害和整改难度较大，应当全部或者局部停产停业，并经过一定时间整改治理方能排除的隐患，或者因外部因素影响致使生产经营单位自身难以排除的隐患。\n\n[E2]\n[§ 2.4.2 隐患整改的职责]\n  1、各项目的项目经理对事故隐患治理负直接全面责任；\n  2、各二级单位主要负责人对事故隐患治理负直接管理领导责任；\n  3、集团公司相关部门对事故隐患治理负监督管理责任。\n\n[E3]\n[§ 2.4.3 一般事故隐患整改、复查、销项]\n  1、一般事故隐患的治理由各项目部根据事故隐患的实际情况，制定针对性的治理措施，落实相关责任人，限期进行整改；\n  2、集团公司各级安全检查发现的一般事故隐患，必须建立档案（事故隐患登记台账），由被检查项目负责整改，整改完成后在隐患整改回复单填写自检情况（须附证明材料），项目负责人复查验证，签字确认后上报二级单位，由二级单位复查销项。",
+    "trajectory_length": 2,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L81",
+      "real_69c60974d4242eda8c47c615:L82",
+      "real_69c60974d4242eda8c47c615:L83",
+      "real_69c60974d4242eda8c47c615:L84",
+      "real_69c60974d4242eda8c47c615:L85",
+      "real_69c60974d4242eda8c47c615:L86",
+      "real_69c60974d4242eda8c47c615:L87",
+      "real_69c60974d4242eda8c47c615:L88",
+      "real_69c60974d4242eda8c47c615:L89",
+      "real_69c60974d4242eda8c47c615:L90",
+      "real_69c60974d4242eda8c47c615:L91"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C10",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L81",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect section 2.4 '隐患整改' to retrieve all relevant regulations and facts.",
+      "llm_raw": "{\"action_id\":\"C10\",\"ids\":[\"C10\"],\"confidence\":{\"C10\":0.9},\"reason\":\"Collect section 2.4 '隐患整改' to retrieve all relevant regulations and facts.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L81"
+      ],
+      "n_added": 25,
+      "n_hits": 25,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 50,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0723",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0723",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0596",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0596",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0596",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0535",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0535",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0535",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0535",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L54 | 10、各类事故是否按“四不放过”的原则进行处理，是否有隐瞒不报情况。 | score=0.0535",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0541",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0541",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L77 | 2.3.6 日常安全检查 | score=0.0541",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L77 | 2.3.6 日常安全检查 | score=0.0541",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L78 | 1、项目施工管理人员应对施工区域内的安全措施落实情况和作业人员遵章守纪情况进行巡查，对发现的违章行为和事故隐患应及时纠正和整改； | score=0.0541",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0723"
+      ],
+      "projection_chars": 3620
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Assembled evidence fully covers section 2.4 Hazard Rectification including definitions, responsibilities, and procedures.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G3\",\"G4\",\"G1\",\"G2\",\"G5\"],\"reason\":\"Assembled evidence fully covers section 2.4 Hazard Rectification including definitions, responsibilities, and procedures.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G3",
+        "G4",
+        "G1",
+        "G2",
+        "G5"
+      ],
+      "n_legal_actions": 52,
+      "legal_actions_preview": [
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0723",
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0596",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0596",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0596",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L42 | 2.1.2 集团公司各级安全检查、隐患整改、回复销项、安全处罚均采用集团公司企业发展部的统一检查表格。 | score=0.0477",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0535",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0535",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0535",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0535",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L54 | 10、各类事故是否按“四不放过”的原则进行处理，是否有隐瞒不报情况。 | score=0.0535",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0509",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0509",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L56 | 1、安全技术交底、安全措施是否落实到施工作业中； | score=0.0509",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L59 | 4、施工作业环境是否整洁安全，符合施工作业要求； | score=0.0502",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0541",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0541"
+      ],
+      "projection_chars": 3548
+    }
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "inspect_id": "latest_clean_multi_0202",
+  "task_type": "multi_hop",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“第二章 安全检查及隐患排查规定”相关内容，分别说明两处相邻证据给出的要点。",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L41",
+    "real_69c60974d4242eda8c47c615:L42"
+  ],
+  "elapsed_sec": 4.32,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 498,
+    "n_retrieved_nodes": 14,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L41",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L42",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 2.3安全检查及隐患排查的方法]\n2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。\n\n[E2]\n[§ 2.2  安全检查及隐患排查内容 / 2.2.2班组安全检查的内容：]\n2、安全“三宝”的使用情况；\n\n[E3]\n[§ 2.2  安全检查及隐患排查内容 / 2.2.2班组安全检查的内容：]\n1、安全技术交底、安全措施是否落实到施工作业中；\n\n[E4]\n[§ 2.2  安全检查及隐患排查内容 / 2.2.2班组安全检查的内容：]\n6、其他应检查的内容。\n\n[E5]\n[§ 2.2  安全检查及隐患排查内容 / 2.2.1集团公司、二级单位、项目部安全检查的主要内容：]\n1、安全生产法律法规、标准规范和其他要求的执行情况；\n\n[E6]\n[§ 2.4 隐患整改 / 2.4.4 重大事故隐患整改、复查、销项]\n2、采取的方法和措施；\n\n[E7]\n[§ 2.3安全检查及隐患排查的方法 / 2.3.3 定期安全检查]\n附表2-3-3《项目周检查标准化表格》"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 490,
+    "n_retrieved_nodes": 11,
+    "gold_node_recall": 1.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L41",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L42",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 2.1总则]\n  2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。\n  2.1.2 集团公司各级安全检查、隐患整改、回复销项、安全处罚均采用集团公司企业发展部的统一检查表格。\n\n[E2]\n[§ 2.3安全检查及隐患排查的方法]\n  2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。\n  2.3.2集团公司安全检查及隐患排查的方式包括定期安全检查、专项安全检查、季节性安全检查、日常安全巡查、不定期抽查等。\n\n[E3]\n[§ 2.4.4 重大事故隐患整改、复查、销项]\n  对重大事故隐患，由被检查项目负责整改，整改应制定事故隐患治理方案，该方案由项目经理组织制定和实施。方案包括以下内容：\n  5、治理的时限和要求；",
+    "trajectory_length": 2,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L39",
+      "real_69c60974d4242eda8c47c615:L40",
+      "real_69c60974d4242eda8c47c615:L41",
+      "real_69c60974d4242eda8c47c615:L42",
+      "real_69c60974d4242eda8c47c615:L62",
+      "real_69c60974d4242eda8c47c615:L63",
+      "real_69c60974d4242eda8c47c615:L64",
+      "real_69c60974d4242eda8c47c615:L81",
+      "real_69c60974d4242eda8c47c615:L92",
+      "real_69c60974d4242eda8c47c615:L93",
+      "real_69c60974d4242eda8c47c615:L98"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C1",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L39",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collecting Chapter 2 to find the two adjacent evidence sections regarding safety inspection and hazard investigation.",
+      "llm_raw": "{\n  \"action_id\": \"C1\",\n  \"ids\": [\"C1\"],\n  \"confidence\": {\n    \"C1\": 0.95\n  },\n  \"reason\": \"Collecting Chapter 2 to find the two adjacent evidence sections regarding safety inspection and hazard investigation.\"\n}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L39"
+      ],
+      "n_added": 59,
+      "n_hits": 59,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 49,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0713",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0713",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0687",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0687",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0687",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L42 | 2.1.2 集团公司各级安全检查、隐患整改、回复销项、安全处罚均采用集团公司企业发展部的统一检查表格。 | score=0.0502",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0605",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0605",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0605",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0605",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L45 | 1、安全生产法律法规、标准规范和其他要求的执行情况； | score=0.0559",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L49 | 5、施工现场管理行为和实物状况（安全隐患排查、安全设施及安全防护等各项措施和落实情况）； | score=0.0605",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0578",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0578",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L61 | 6、其他应检查的内容。 | score=0.0578",
+        "C11 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0713"
+      ],
+      "projection_chars": 3552
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Assembled evidence covers Chapter 2 requirements. G2 (General Provisions) and G1 (Methods) provide the two adjacent sections requested.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G2\",\"G1\"],\"reason\":\"Assembled evidence covers Chapter 2 requirements. G2 (General Provisions) and G1 (Methods) provide the two adjacent sections requested.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G2",
+        "G1"
+      ],
+      "n_legal_actions": 55,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L2 | 安全管理规定（2020版） | score=0.0406",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0484",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0484",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0484",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0484",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0484",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0484",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L11 | 1、二级单位（集团公司级）教育培训的主要内容：国家有关安全生产的法律法规、标准规范和集团公司的安全规章制度；建筑施工的特点和易发生的五大伤害，典型事故案例分析； | score=0.0484",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L113 | 第三章　生产安全事故报告处理规定 | score=0.0494",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L113 | 第三章　生产安全事故报告处理规定 | score=0.0494",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L127 | 3.3 事故调查 | score=0.0398",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L127 | 3.3 事故调查 | score=0.0398",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L128 | 发生一般及以上事故，依据《生产安全事故报告和调查处理条例》（中华人民共和国国务院令第493号），经县级以上有关部门组织事故调查组进行调查。 | score=0.0398",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L130 | 3.4 事故处理 | score=0.0494",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L130 | 3.4 事故处理 | score=0.0494",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L131 | 3.4.1 依据事故调查报告，陕建股份《安全生产监督管理暂行办法》，集团公司《管理人员责任追究暂行规定》以及本条相关规定，由集集团公司董事会做出事故处理决定。对于上级组织的事故调查报告未涉及的责任人，由集团公司董事会根据责任人在事故中的具体责任做出处理决定。 | score=0.0494"
+      ],
+      "projection_chars": 3318
+    }
+  ]
+}

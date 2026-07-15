@@ -1,0 +1,193 @@
+{
+  "inspect_id": "latest_clean_multi_0075",
+  "task_type": "multi_hop",
+  "doc_id": "real_69c60971d4242eda8c47c605",
+  "query": "根据《陕西建工第十一建设集团有限公司印章管理办法（2020版）》中“陕西建工第十一建设集团有限公司印章管理办法（2020版）.docx”相关内容，分别说明两处相邻证据给出的要点。",
+  "gold_nodes": [
+    "real_69c60971d4242eda8c47c605:L2",
+    "real_69c60971d4242eda8c47c605:L3"
+  ],
+  "elapsed_sec": 4.19,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 9,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60971d4242eda8c47c605:L2",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60971d4242eda8c47c605:L3",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 第三章\t印章的使用范围 / 第十二条 项目部印章使用范围]\n（七）项目印章应在项目负责人审批后用印，用印内容不得违背施工合同要件内容。\n\n[E2]\n[§ 第三章\t印章的使用范围 / 第十二条 项目部印章使用范围]\n（一）项目施工过程中涉及的生产、技术、质量、安全管理等工程资料；\n\n[E3]\n[§ 第三章\t印章的使用范围 / 第十二条 项目部印章使用范围]\n（六）项目部行政后勤相关资料；\n\n[E4]\n[§ 第三章\t印章的使用范围 / 第十二条 项目部印章使用范围]\n（四）项目施工变更资料及签证，项目施工计划及完成统计报表、进度款支付报审资料、认质认价单，与分包分供方各类结算单等；\n\n[E5]\n[§ 第三章\t印章的使用范围 / 第十二条 项目部印章使用范围]\n（五）项目部与两级机关部门业务沟通的相关内部资料，如开复工备案、专项方案、整改回复等资料；\n\n[E6]\n[§ 第三章\t印章的使用范围 / 第十二条 项目部印章使用范围]\n（二）以项目部名义向建设单位、监理单位等出具的有关技术质量和安全生产的业务函件、工作联系单；\n\n[E7]\n[§ 第三章\t印章的使用范围 / 第十条 机"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 292,
+    "n_retrieved_nodes": 4,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60971d4242eda8c47c605:L2",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60971d4242eda8c47c605:L3",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 第二章\t印章的刻制与启用]\n  确因工作需要刻制印章的，由用印单位或部门提出申请，详细说明印章的名称、用途、式样和规格，报集团公司主要领导批准后由办公室制发。\n  第七条项目部印章在使用前，项目部应负责将集团公司办公室出具的印章启用文件报送建设单位、监理单位等相关方，以便业务往来确认。并在文件送达后一周内将回执返回集团公司办公室留存。\n  印章责任管理单位应将印章遗失报告、遗失声明、告知函回复等相关资料在一月内报集团公司办公室，以备查考。\n\n[E2]\n[§ 第十二条 项目部印章使用范围]\n（七）项目印章应在项目负责人审批后用印，用印内容不得违背施工合同要件内容。",
+    "trajectory_length": 3,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60971d4242eda8c47c605:L19",
+      "real_69c60971d4242eda8c47c605:L21",
+      "real_69c60971d4242eda8c47c605:L24",
+      "real_69c60971d4242eda8c47c605:L56"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C3",
+      "kind": "collect",
+      "section_id": "real_69c60971d4242eda8c47c605:L19",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Select adjacent leaf nodes C3 and C4 to extract key points regarding seal creation and project department seal usage procedures.",
+      "llm_raw": "{\"action_id\":\"C3\",\"ids\":[\"C3\",\"C4\"],\"confidence\":{\"C3\":0.9,\"C4\":0.9},\"reason\":\"Select adjacent leaf nodes C3 and C4 to extract key points regarding seal creation and project department seal usage procedures.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60971d4242eda8c47c605:L19",
+        "real_69c60971d4242eda8c47c605:L21"
+      ],
+      "n_added": 2,
+      "n_hits": 2,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 44,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60971d4242eda8c47c605:L7 | 第二章\t印章的刻制与启用 | score=0.0646",
+        "D1 | DISPATCH | real_69c60971d4242eda8c47c605:L7 | 第二章\t印章的刻制与启用 | score=0.0646",
+        "C2 | COLLECT | real_69c60971d4242eda8c47c605:L9 | （一）集团公司机关各部门章，二级单位章，由集团办公室根据集团公司或上级有关部门批准成立该机构的文件制发。 | score=0.0539",
+        "C3 | COLLECT | real_69c60971d4242eda8c47c605:L19 | 确因工作需要刻制印章的，由用印单位或部门提出申请，详细说明印章的名称、用途、式样和规格，报集团公司主要领导批准后由办公室制发。 | score=0.0646",
+        "C4 | COLLECT | real_69c60971d4242eda8c47c605:L21 | 第七条项目部印章在使用前，项目部应负责将集团公司办公室出具的印章启用文件报送建设单位、监理单位等相关方，以便业务往来确认。并在文件送达后一周内将回执返回集团公司办公室留存。 | score=0.0634",
+        "C5 | COLLECT | real_69c60971d4242eda8c47c605:L22 | 第八条印章使用过程中，如应变更或者因损坏需要重新刻制的，由使用单位或部门提出申请，经单位或部门负责人审批后，报集团公司办公室进行重新刻制。新印章需重新办理启用手续，原印章同时交回集团公司办公室。 | score=0.0502",
+        "C6 | COLLECT | real_69c60971d4242eda8c47c605:L23 | 第九条发生印章遗失，印章责任管理单位应在24小时内向集团公司和当地公安机关报告；在3个工作日内在省级以上报刊办理遗失声明，并向集团公司申请出具告知函，及时通知相关单位。印章遗失处理流程见附件。 | score=0.0594",
+        "C7 | COLLECT | real_69c60971d4242eda8c47c605:L24 | 印章责任管理单位应将印章遗失报告、遗失声明、告知函回复等相关资料在一月内报集团公司办公室，以备查考。 | score=0.0628",
+        "C8 | COLLECT | real_69c60971d4242eda8c47c605:L25 | 第三章\t印章的使用范围 | score=0.0654",
+        "D2 | DISPATCH | real_69c60971d4242eda8c47c605:L25 | 第三章\t印章的使用范围 | score=0.0654",
+        "C9 | COLLECT | real_69c60971d4242eda8c47c605:L36 | 第十条 机关各部门章、二级单位印章使用范围 | score=0.0545",
+        "D3 | DISPATCH | real_69c60971d4242eda8c47c605:L36 | 第十条 机关各部门章、二级单位印章使用范围 | score=0.0545",
+        "C10 | COLLECT | real_69c60971d4242eda8c47c605:L41 | （五）集团公司内部专业分包合同签订； | score=0.0498",
+        "C11 | COLLECT | real_69c60971d4242eda8c47c605:L42 | （六）集团公司法人明确授权或者委托对外使用印章的事项。 | score=0.0545",
+        "C12 | COLLECT | real_69c60971d4242eda8c47c605:L49 | 第十二条 项目部印章使用范围 | score=0.0654",
+        "D4 | DISPATCH | real_69c60971d4242eda8c47c605:L49 | 第十二条 项目部印章使用范围 | score=0.0654"
+      ],
+      "projection_chars": 3578
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_collect",
+      "action_id": "C7",
+      "kind": "collect",
+      "section_id": "real_69c60971d4242eda8c47c605:L24",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect adjacent sections C7 and C15 to compare their key points as requested.",
+      "llm_raw": "{\"action_id\":\"C7\",\"ids\":[\"C15\"],\"confidence\":{\"C7\":0.9,\"C15\":0.9},\"reason\":\"Collect adjacent sections C7 and C15 to compare their key points as requested.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60971d4242eda8c47c605:L24",
+        "real_69c60971d4242eda8c47c605:L56"
+      ],
+      "n_added": 2,
+      "n_hits": 2,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 46,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60971d4242eda8c47c605:L1 | 第一章 总则 | score=0.0497",
+        "D1 | DISPATCH | real_69c60971d4242eda8c47c605:L1 | 第一章 总则 | score=0.0497",
+        "C2 | COLLECT | real_69c60971d4242eda8c47c605:L2 | 第一条为规范集团公司及下属单位印章管理工作，有效防范风险，保障经营管理活动的有序开展，特制定本办法。 | score=0.0497",
+        "C3 | COLLECT | real_69c60971d4242eda8c47c605:L7 | 第二章\t印章的刻制与启用 | score=0.0646",
+        "D2 | DISPATCH | real_69c60971d4242eda8c47c605:L7 | 第二章\t印章的刻制与启用 | score=0.0646",
+        "C4 | COLLECT | real_69c60971d4242eda8c47c605:L9 | （一）集团公司机关各部门章，二级单位章，由集团办公室根据集团公司或上级有关部门批准成立该机构的文件制发。 | score=0.0539",
+        "C5 | COLLECT | real_69c60971d4242eda8c47c605:L22 | 第八条印章使用过程中，如应变更或者因损坏需要重新刻制的，由使用单位或部门提出申请，经单位或部门负责人审批后，报集团公司办公室进行重新刻制。新印章需重新办理启用手续，原印章同时交回集团公司办公室。 | score=0.0502",
+        "C6 | COLLECT | real_69c60971d4242eda8c47c605:L23 | 第九条发生印章遗失，印章责任管理单位应在24小时内向集团公司和当地公安机关报告；在3个工作日内在省级以上报刊办理遗失声明，并向集团公司申请出具告知函，及时通知相关单位。印章遗失处理流程见附件。 | score=0.0594",
+        "C7 | COLLECT | real_69c60971d4242eda8c47c605:L24 | 印章责任管理单位应将印章遗失报告、遗失声明、告知函回复等相关资料在一月内报集团公司办公室，以备查考。 | score=0.0628",
+        "C8 | COLLECT | real_69c60971d4242eda8c47c605:L25 | 第三章\t印章的使用范围 | score=0.0654",
+        "D3 | DISPATCH | real_69c60971d4242eda8c47c605:L25 | 第三章\t印章的使用范围 | score=0.0654",
+        "C9 | COLLECT | real_69c60971d4242eda8c47c605:L36 | 第十条 机关各部门章、二级单位印章使用范围 | score=0.0545",
+        "D4 | DISPATCH | real_69c60971d4242eda8c47c605:L36 | 第十条 机关各部门章、二级单位印章使用范围 | score=0.0545",
+        "C10 | COLLECT | real_69c60971d4242eda8c47c605:L41 | （五）集团公司内部专业分包合同签订； | score=0.0498",
+        "C11 | COLLECT | real_69c60971d4242eda8c47c605:L42 | （六）集团公司法人明确授权或者委托对外使用印章的事项。 | score=0.0545",
+        "C12 | COLLECT | real_69c60971d4242eda8c47c605:L49 | 第十二条 项目部印章使用范围 | score=0.0654"
+      ],
+      "projection_chars": 3507
+    },
+    {
+      "step_idx": 3,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence collected covers both adjacent sections: G2 (Chapter 2) and G1 (Article 12). Ready to answer.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G2\",\"G1\"],\"reason\":\"Evidence collected covers both adjacent sections: G2 (Chapter 2) and G1 (Article 12). Ready to answer.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G2",
+        "G1"
+      ],
+      "n_legal_actions": 45,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60971d4242eda8c47c605:L1 | 第一章 总则 | score=0.0497",
+        "D1 | DISPATCH | real_69c60971d4242eda8c47c605:L1 | 第一章 总则 | score=0.0497",
+        "C2 | COLLECT | real_69c60971d4242eda8c47c605:L2 | 第一条为规范集团公司及下属单位印章管理工作，有效防范风险，保障经营管理活动的有序开展，特制定本办法。 | score=0.0497",
+        "C3 | COLLECT | real_69c60971d4242eda8c47c605:L5 | 集团公司法人章为圆形，直径为4.2CM，中央刊五角星，上环刊单位名称自左向右环排；部门章一律为圆形，直径为3.8CM，上刊集团名称自左向右环排，中央刊五角星，部门名称放在星下方作横排；二级单位公章一律为圆形，直径4.0CM，集团名称自左而右环排，二级单位名称放在星下方作横排。项目部章一律为圆形，直径4.0CM，集团名称和工程名称依次自左而右环排，“工程项目部”字样放在星下方作横排，名称应严格按“陕 | score=0.0483",
+        "C4 | COLLECT | real_69c60971d4242eda8c47c605:L7 | 第二章\t印章的刻制与启用 | score=0.0646",
+        "D2 | DISPATCH | real_69c60971d4242eda8c47c605:L7 | 第二章\t印章的刻制与启用 | score=0.0646",
+        "C5 | COLLECT | real_69c60971d4242eda8c47c605:L9 | （一）集团公司机关各部门章，二级单位章，由集团办公室根据集团公司或上级有关部门批准成立该机构的文件制发。 | score=0.0539",
+        "C6 | COLLECT | real_69c60971d4242eda8c47c605:L22 | 第八条印章使用过程中，如应变更或者因损坏需要重新刻制的，由使用单位或部门提出申请，经单位或部门负责人审批后，报集团公司办公室进行重新刻制。新印章需重新办理启用手续，原印章同时交回集团公司办公室。 | score=0.0502",
+        "C7 | COLLECT | real_69c60971d4242eda8c47c605:L23 | 第九条发生印章遗失，印章责任管理单位应在24小时内向集团公司和当地公安机关报告；在3个工作日内在省级以上报刊办理遗失声明，并向集团公司申请出具告知函，及时通知相关单位。印章遗失处理流程见附件。 | score=0.0594",
+        "C8 | COLLECT | real_69c60971d4242eda8c47c605:L25 | 第三章\t印章的使用范围 | score=0.0654",
+        "D3 | DISPATCH | real_69c60971d4242eda8c47c605:L25 | 第三章\t印章的使用范围 | score=0.0654",
+        "C9 | COLLECT | real_69c60971d4242eda8c47c605:L36 | 第十条 机关各部门章、二级单位印章使用范围 | score=0.0545",
+        "D4 | DISPATCH | real_69c60971d4242eda8c47c605:L36 | 第十条 机关各部门章、二级单位印章使用范围 | score=0.0545",
+        "C10 | COLLECT | real_69c60971d4242eda8c47c605:L41 | （五）集团公司内部专业分包合同签订； | score=0.0498",
+        "C11 | COLLECT | real_69c60971d4242eda8c47c605:L42 | （六）集团公司法人明确授权或者委托对外使用印章的事项。 | score=0.0545",
+        "C12 | COLLECT | real_69c60971d4242eda8c47c605:L49 | 第十二条 项目部印章使用范围 | score=0.0654"
+      ],
+      "projection_chars": 3558
+    }
+  ]
+}

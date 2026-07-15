@@ -1,0 +1,189 @@
+{
+  "inspect_id": "latest_clean_multi_0573",
+  "task_type": "multi_hop",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“附表6.6.1-2”相关内容，分别说明两处相邻证据给出的要点。",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L556",
+    "real_69c60974d4242eda8c47c615:L558"
+  ],
+  "elapsed_sec": 5.81,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 18,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L556",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L558",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n附件_安全管理规定（2020版）.docx\n\n[E2]\n[§ 附件_安全管理规定（2020版）.docx / 第八章　附　则 / 3.2 生产安全事故快报 / 6.7.3 安全技术交底记录 / 附表6.6.1-1]\n备注： 本表中所列工程，若本工程施工中有时在对应的辨识结论栏内打“√”，无时打“×”。\n\n[E3]\n[§ 附件_安全管理规定（2020版）.docx / 第一章　安全教育培训规定 / 1.7 附则]\n附表1：安全教育记录；\n\n[E4]\n[§ 附件_安全管理规定（2020版）.docx / 第八章　附　则 / 3.2 生产安全事故快报 / 6.7.3 安全技术交底记录 / 附表1.1.1]\n编号：\n\n[E5]\n[§ 附件_安全管理规定（2020版）.docx / 第二章　安全检查及隐患排查规定 / 2.2  安全检查及隐患排查内容 / 2.2.2班组安全检查的内容：]\n2、安全“三宝”的使用情况；\n\n[E6]\n[§ 附件_安全管理规定（2020版）.docx / 第二章　安全检查及隐患排查规定 / 2.4 隐患整改 / 2.4.4 重大事故隐患整改、复查、销项]\n6"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 148,
+    "n_retrieved_nodes": 2,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L556",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L558",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 6.6 危险性较大的分部分项工程管理]\n危险性较大的分部分项工程识别清单（见附表6.6.1-1）；超过一定规模的危险性较大的分部分项工程识别清单（见附表6.6.1-2）。\n\n[E2]\n[§ 6.11 安全标志]\n附表6.6.1-2：超过一定规模的危险性较大的分部分项工程识别清单；",
+    "trajectory_length": 3,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L365",
+      "real_69c60974d4242eda8c47c615:L412"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C31",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L412",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Target section '附表6.6.1-2' is a leaf node containing the specific list required by the query.",
+      "llm_raw": "{\"action_id\":\"C31\",\"confidence\":0.9,\"reason\":\"Target section '附表6.6.1-2' is a leaf node containing the specific list required by the query.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L412"
+      ],
+      "n_added": 1,
+      "n_hits": 1,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 59,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0561",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0561",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0561",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0561",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0561",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0561",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L11 | 1、二级单位（集团公司级）教育培训的主要内容：国家有关安全生产的法律法规、标准规范和集团公司的安全规章制度；建筑施工的特点和易发生的五大伤害，典型事故案例分析； | score=0.0561",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0566",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0566",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0566",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0566",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L63 | 2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。 | score=0.0566",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0507",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0507",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0507",
+        "D7 | DISPATCH | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0507"
+      ],
+      "projection_chars": 3423
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_collect",
+      "action_id": "C25",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L365",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect section containing reference to Table 6.6.1-2 to retrieve its content.",
+      "llm_raw": "{\"action_id\":\"C25\",\"confidence\":0.9,\"reason\":\"Collect section containing reference to Table 6.6.1-2 to retrieve its content.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L365"
+      ],
+      "n_added": 1,
+      "n_hits": 1,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 59,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0561",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0561",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0561",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0561",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0561",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0561",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L11 | 1、二级单位（集团公司级）教育培训的主要内容：国家有关安全生产的法律法规、标准规范和集团公司的安全规章制度；建筑施工的特点和易发生的五大伤害，典型事故案例分析； | score=0.0561",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0566",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0566",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0566",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0566",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L63 | 2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。 | score=0.0566",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0507",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0507",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0507",
+        "D7 | DISPATCH | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0507"
+      ],
+      "projection_chars": 3362
+    },
+    {
+      "step_idx": 3,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Assembled evidence covers both required sections (G1, G2) for the query regarding 附表6.6.1-2.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G2\",\"G1\"],\"reason\":\"Assembled evidence covers both required sections (G1, G2) for the query regarding 附表6.6.1-2.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G2",
+        "G1"
+      ],
+      "n_legal_actions": 63,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0561",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0561",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0561",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0561",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0561",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0561",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L11 | 1、二级单位（集团公司级）教育培训的主要内容：国家有关安全生产的法律法规、标准规范和集团公司的安全规章制度；建筑施工的特点和易发生的五大伤害，典型事故案例分析； | score=0.0561",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0566",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0566",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0566",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0566",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L63 | 2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。 | score=0.0566",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0507",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0507",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0507",
+        "D7 | DISPATCH | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0507"
+      ],
+      "projection_chars": 3537
+    }
+  ]
+}

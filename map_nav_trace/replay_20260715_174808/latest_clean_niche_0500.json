@@ -1,0 +1,137 @@
+{
+  "inspect_id": "latest_clean_niche_0500",
+  "task_type": "niche_fact",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“7.2 总平面布局”相关内容，该处明确写出的规定或事实是什么？",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L424"
+  ],
+  "elapsed_sec": 3.53,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 481,
+    "n_retrieved_nodes": 8,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L424",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 第七章　施工现场消防安全管理暂行规定 / 7.5 防火管理一般规定]\n7.5.3 施工单位(项目部)必须编制施工现场消防应急预案，定期组织消防演练，并根据现场情况变化及时对其修改、完善和持续改进。\n\n[E2]\n[§ 第七章　施工现场消防安全管理暂行规定]\n为了加强集团公司在建项目施工现场消防管理，保障施工现场生活区、办公区和施工区施工人员生命安全和财产安全。依据《中华人民共和国消防法》、《建设工程施工现场消防安全技术规范》（GB50720—2011）及其他有关消防法规，结合施工现场实际，特制定《集团公司施工现场消防安全管理暂行规定》。\n\n[E3]\n[§ 第七章　施工现场消防安全管理暂行规定 / 7.1 总  则]\n7.1.6 定期对施工的各类人员进行消防安全教育，提高防火灭火技能。定期进行防火安全大检查，消除火险隐患。\n\n[E4]\n[§ 第七章　施工现场消防安全管理暂行规定 / 7.8 其他防火管理]\n7.8.1 施工单位(项目部)必须做好施工现场临时消防设施的日常维护工作，对已失效、损坏或丢失的消防设施，必须及时更换、修复或补充。"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 390,
+    "n_retrieved_nodes": 5,
+    "gold_node_recall": 1.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L424",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 7.2 总平面布局]\n  7.2.1 施工现场出入口的设置必须满足消防车通行的要求，并应布置在不同方向，其数量不宜少于2个。当确有困难只能设置1个出入口时，在施工现场内设置满足消防车通行的环形道路，消防车道的净宽度和净空高度均不应小于4米。\n  7.2.2 宿舍、厨房操作间、配电室、可燃材料堆场及其加工场、可燃材料及易燃易爆危险品库房等临时用房、临时设施不能设置于在建工程内。\n  7.2.3 固定动火作业场要布置在可燃材料堆场及其加工场、易燃易爆危险品库房等全年最小频率风向的上风侧，并宜布置在临时办公用房、宿舍、可燃材料库房、在建工程等全年最小频率风向的上风侧。\n  7.2.4 易燃易爆危险品库房与在建工程的防火间距不小于15m，可燃材料堆场及其加工场、固定动火作业场与在建工程的防火间距不小于10m，其它临时用房、临时设施与在建工程的防火间距不小于6m。",
+    "trajectory_length": 2,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L423",
+      "real_69c60974d4242eda8c47c615:L424",
+      "real_69c60974d4242eda8c47c615:L425",
+      "real_69c60974d4242eda8c47c615:L426",
+      "real_69c60974d4242eda8c47c615:L427"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C28",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L423",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Target section 7.2 Total Layout found with relevant content.",
+      "llm_raw": "{\"action_id\":\"C28\",\"ids\":[\"C28\"],\"confidence\":{\"C28\":0.95},\"reason\":\"Target section 7.2 Total Layout found with relevant content.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L423"
+      ],
+      "n_added": 4,
+      "n_hits": 4,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 50,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0647",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0647",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0647",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0647",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0647",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0623",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0623",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L89 | 2.4.3 一般事故隐患整改、复查、销项 | score=0.0581",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L89 | 2.4.3 一般事故隐患整改、复查、销项 | score=0.0581",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L90 | 1、一般事故隐患的治理由各项目部根据事故隐患的实际情况，制定针对性的治理措施，落实相关责任人，限期进行整改； | score=0.0581",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0623",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0623",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L102 | 2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐患排除前或者排除过程中无法保证安全的，应当从危险区域内撤出作业人员，并疏散可能危及的其他人员，设置警戒标志，暂时停工；对暂时难以停工或者停止使用的相关生产储存装置、设施、设备，应当加强维护和保养，防止事故发生。 | score=0.0623",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L113 | 第三章　生产安全事故报告处理规定 | score=0.0662",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L113 | 第三章　生产安全事故报告处理规定 | score=0.0662",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L130 | 3.4 事故处理 | score=0.0585"
+      ],
+      "projection_chars": 3473
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence G1 contains all required content from section 7.2 regarding total layout regulations.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Evidence G1 contains all required content from section 7.2 regarding total layout regulations.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "n_legal_actions": 54,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0647",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0647",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0647",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0647",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0647",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0527",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0527",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0527",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0527",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L56 | 1、安全技术交底、安全措施是否落实到施工作业中； | score=0.0527",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0623",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0623",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L89 | 2.4.3 一般事故隐患整改、复查、销项 | score=0.0581",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L89 | 2.4.3 一般事故隐患整改、复查、销项 | score=0.0581",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L90 | 1、一般事故隐患的治理由各项目部根据事故隐患的实际情况，制定针对性的治理措施，落实相关责任人，限期进行整改； | score=0.0581",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0623"
+      ],
+      "projection_chars": 3511
+    }
+  ]
+}

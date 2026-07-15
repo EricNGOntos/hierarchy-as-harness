@@ -1,0 +1,136 @@
+{
+  "inspect_id": "latest_clean_niche_0223",
+  "task_type": "niche_fact",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“2.3.6 日常安全检查”相关内容，该处明确写出的规定或事实是什么？",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L78"
+  ],
+  "elapsed_sec": 3.9,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 483,
+    "n_retrieved_nodes": 14,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L78",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 第二章　安全检查及隐患排查规定 / 2.2  安全检查及隐患排查内容 / 2.2.1集团公司、二级单位、项目部安全检查的主要内容：]\n1、安全生产法律法规、标准规范和其他要求的执行情况；\n\n[E2]\n[§ 第二章　安全检查及隐患排查规定 / 2.3安全检查及隐患排查的方法 / 2.3.4 专项安全检查]\n对于危险性较大的分部分项工程的施工，施工现场临时用电，安全技术措施等，集团公司及二级单位安全监督管理部门应当在必要时安排专项安全检查。\n\n[E3]\n[§ 第二章　安全检查及隐患排查规定 / 2.2  安全检查及隐患排查内容 / 2.2.2班组安全检查的内容：]\n1、安全技术交底、安全措施是否落实到施工作业中；\n\n[E4]\n[§ 第二章　安全检查及隐患排查规定 / 2.4 隐患整改 / 2.4.4 重大事故隐患整改、复查、销项]\n3、经费和物资的落实；\n\n[E5]\n[§ 第二章　安全检查及隐患排查规定 / 2.3安全检查及隐患排查的方法 / 2.3.3 定期安全检查]\n2、集团公司委托二级单位每月组织对所属项目进行一次安全检查及隐患排查。"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 239,
+    "n_retrieved_nodes": 4,
+    "gold_node_recall": 1.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L78",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 2.3.6 日常安全检查]\n  1、项目施工管理人员应对施工区域内的安全措施落实情况和作业人员遵章守纪情况进行巡查，对发现的违章行为和事故隐患应及时纠正和整改；\n  2、项目经理和安全员要督促分包和设备租赁单位做好作业班组班前、班中和班后的安全岗位检查，发现问题及时整改；\n  3、项目专职安全员每日必须深入施工现场巡查，发现事故隐患应及时督促整改，并将检查情况及时报告项目负责人和上级安全监督管理部门，以便落实整改措施。附表2-3-6《安全员日巡查标准化表格》",
+    "trajectory_length": 2,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L77",
+      "real_69c60974d4242eda8c47c615:L78",
+      "real_69c60974d4242eda8c47c615:L79",
+      "real_69c60974d4242eda8c47c615:L80"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C10",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L77",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Target section 2.3.6 contains the specific rules for daily safety inspections.",
+      "llm_raw": "{\"action_id\":\"C10\",\"ids\":[\"C10\"],\"confidence\":{\"C10\":0.9},\"reason\":\"Target section 2.3.6 contains the specific rules for daily safety inspections.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L77"
+      ],
+      "n_added": 3,
+      "n_hits": 3,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 53,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0651",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0651",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0651",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0651",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0651",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0541",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0541",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0541",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0541",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L56 | 1、安全技术交底、安全措施是否落实到施工作业中； | score=0.0541",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0619",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0619",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L63 | 2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。 | score=0.0604",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L64 | 2.3.2集团公司安全检查及隐患排查的方式包括定期安全检查、专项安全检查、季节性安全检查、日常安全巡查、不定期抽查等。 | score=0.0555",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L77 | 2.3.6 日常安全检查 | score=0.0619",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L77 | 2.3.6 日常安全检查 | score=0.0619"
+      ],
+      "projection_chars": 3544
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence G1 contains the specific regulations for section 2.3.6 Daily Safety Inspection as requested.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Evidence G1 contains the specific regulations for section 2.3.6 Daily Safety Inspection as requested.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "n_legal_actions": 51,
+      "legal_actions_preview": [
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0651",
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0651",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0651",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0651",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0541",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0541",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0541",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0541",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L56 | 1、安全技术交底、安全措施是否落实到施工作业中； | score=0.0541",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L61 | 6、其他应检查的内容。 | score=0.0514",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0619",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L63 | 2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。 | score=0.0604",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L64 | 2.3.2集团公司安全检查及隐患排查的方式包括定期安全检查、专项安全检查、季节性安全检查、日常安全巡查、不定期抽查等。 | score=0.0555",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0574",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0574",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L89 | 2.4.3 一般事故隐患整改、复查、销项 | score=0.0574"
+      ],
+      "projection_chars": 3501
+    }
+  ]
+}

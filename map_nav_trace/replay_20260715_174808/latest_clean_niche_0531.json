@@ -1,0 +1,143 @@
+{
+  "inspect_id": "latest_clean_niche_0531",
+  "task_type": "niche_fact",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“7.7.3 施工现场用气管理”相关内容，该处明确写出的规定或事实是什么？",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L464"
+  ],
+  "elapsed_sec": 3.91,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 9,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L464",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 第七章　施工现场消防安全管理暂行规定]\n为了加强集团公司在建项目施工现场消防管理，保障施工现场生活区、办公区和施工区施工人员生命安全和财产安全。依据《中华人民共和国消防法》、《建设工程施工现场消防安全技术规范》（GB50720—2011）及其他有关消防法规，结合施工现场实际，特制定《集团公司施工现场消防安全管理暂行规定》。\n\n[E2]\n[§ 第七章　施工现场消防安全管理暂行规定 / 7.7 用火、用电、用气管理 / 7.7.3 施工现场用气管理]\n（6）气瓶内的气体不能全部用完，氧气瓶的氧气要留有0.1MPa以上压力，乙炔瓶内的乙炔最后必须留有0.05MPa以上压力，并将瓶阀关紧，防止漏气或可燃气体进入。\n\n[E3]\n[§ 第七章　施工现场消防安全管理暂行规定 / 7.5 防火管理一般规定]\n7.5.3 施工单位(项目部)必须编制施工现场消防应急预案，定期组织消防演练，并根据现场情况变化及时对其修改、完善和持续改进。\n\n[E4]\n[§ 第七章　施工现场消防安全管理暂行规定 / 7.7 用火、用电、用气管理 / 7.7.2 施工现场用电管理]\n2、电气设备与可燃、易燃易爆"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 478,
+    "n_retrieved_nodes": 11,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L464",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 7.7.3 施工现场用气管理]\n  1、 焊接、切割用氧气、乙炔瓶\n  （2）气瓶的钢印和颜色标记清晰，确保瓶帽和防震圈的完好，禁止粘有油脂。\n  （3）气瓶间安全距离不少于5米，与明火安全距离不应少于10米。\n  （4）储装气体的罐瓶及其附件应合格、完好和有效；严禁使用减压器及其他附件缺损的氧气瓶，严禁使用乙炔专用减压器、回火防止器及其他附件缺损的乙炔瓶（强条）。\n  （5）使用时乙炔瓶与氧气瓶应直立放置，采取可靠防倾倒措施。防止乙炔瓶倾倒丙酮流出。\n  （6）气瓶内的气体不能全部用完，氧气瓶的氧气要留有0.1MPa以上压力，乙炔瓶内的乙炔最后必须留有0.05MPa以上压力，并将瓶阀关紧，防止漏气或可燃气体进入。\n  （7）搬运气瓶时，必须使用专用的小车并固定牢固，严禁碰撞、敲打、抛掷、滚动。不得将氧气瓶放在地上滚动；乙炔瓶不应受到剧烈震动和撞击，避免引起乙炔瓶爆炸。\n  2、二保焊用二氧化碳气瓶\n  （1）应放在阴凉、干燥的地方，不得超过30摄氏度，远离明火等热源。\n  （4）不得超量充装，填充量不要超过钢瓶溶积的75％。",
+    "trajectory_length": 2,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L462",
+      "real_69c60974d4242eda8c47c615:L463",
+      "real_69c60974d4242eda8c47c615:L465",
+      "real_69c60974d4242eda8c47c615:L466",
+      "real_69c60974d4242eda8c47c615:L467",
+      "real_69c60974d4242eda8c47c615:L468",
+      "real_69c60974d4242eda8c47c615:L469",
+      "real_69c60974d4242eda8c47c615:L470",
+      "real_69c60974d4242eda8c47c615:L471",
+      "real_69c60974d4242eda8c47c615:L472",
+      "real_69c60974d4242eda8c47c615:L475"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C31",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L462",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Target section 7.7.3 contains specific rules on gas management in construction sites.",
+      "llm_raw": "{\"action_id\":\"C31\",\"ids\":[\"C31\"],\"confidence\":{\"C31\":0.9},\"reason\":\"Target section 7.7.3 contains specific rules on gas management in construction sites.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L462"
+      ],
+      "n_added": 14,
+      "n_hits": 14,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 52,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0529",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0529",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0529",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0529",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0529",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0529",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L102 | 2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐患排除前或者排除过程中无法保证安全的，应当从危险区域内撤出作业人员，并疏散可能危及的其他人员，设置警戒标志，暂时停工；对暂时难以停工或者停止使用的相关生产储存装置、设施、设备，应当加强维护和保养，防止事故发生。 | score=0.0529",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L113 | 第三章　生产安全事故报告处理规定 | score=0.0561",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L113 | 第三章　生产安全事故报告处理规定 | score=0.0561",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L130 | 3.4 事故处理 | score=0.0561",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L130 | 3.4 事故处理 | score=0.0561",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L131 | 3.4.1 依据事故调查报告，陕建股份《安全生产监督管理暂行办法》，集团公司《管理人员责任追究暂行规定》以及本条相关规定，由集集团公司董事会做出事故处理决定。对于上级组织的事故调查报告未涉及的责任人，由集团公司董事会根据责任人在事故中的具体责任做出处理决定。 | score=0.0561",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L143 | 3.5 分析改进 | score=0.0550",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L143 | 3.5 分析改进 | score=0.0550",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L146 | 3.7 集团公司生产安全事故实行月度报告制度。各基层单位的安全管理部门应当每月、年度末及时填报《职工伤亡事故月（年）报表》（附表3.7-1）；每月报送《工程项目安全跟踪监控记录表》（附表3.7-2）；每季度、年度末对安全生产情况进行统计分析并填写《安全生产信息统计报表》（附表3.7-3）。经本单位负责人签字确认后，上报集团公司安全管理部（电子版事故报表经电子签名后通过梦龙发送至集团公司安全管理部相 | score=0.0550",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0672"
+      ],
+      "projection_chars": 3583
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "The assembled evidence G1 fully contains the specific regulations for section 7.7.3 regarding site gas management.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"The assembled evidence G1 fully contains the specific regulations for section 7.7.3 regarding site gas management.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "n_legal_actions": 53,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0529",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0529",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0529",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0529",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0529",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0529",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L102 | 2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐患排除前或者排除过程中无法保证安全的，应当从危险区域内撤出作业人员，并疏散可能危及的其他人员，设置警戒标志，暂时停工；对暂时难以停工或者停止使用的相关生产储存装置、设施、设备，应当加强维护和保养，防止事故发生。 | score=0.0529",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L113 | 第三章　生产安全事故报告处理规定 | score=0.0561",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L113 | 第三章　生产安全事故报告处理规定 | score=0.0561",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L130 | 3.4 事故处理 | score=0.0561",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L130 | 3.4 事故处理 | score=0.0561",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L131 | 3.4.1 依据事故调查报告，陕建股份《安全生产监督管理暂行办法》，集团公司《管理人员责任追究暂行规定》以及本条相关规定，由集集团公司董事会做出事故处理决定。对于上级组织的事故调查报告未涉及的责任人，由集团公司董事会根据责任人在事故中的具体责任做出处理决定。 | score=0.0561",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L143 | 3.5 分析改进 | score=0.0550",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L143 | 3.5 分析改进 | score=0.0550",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L146 | 3.7 集团公司生产安全事故实行月度报告制度。各基层单位的安全管理部门应当每月、年度末及时填报《职工伤亡事故月（年）报表》（附表3.7-1）；每月报送《工程项目安全跟踪监控记录表》（附表3.7-2）；每季度、年度末对安全生产情况进行统计分析并填写《安全生产信息统计报表》（附表3.7-3）。经本单位负责人签字确认后，上报集团公司安全管理部（电子版事故报表经电子签名后通过梦龙发送至集团公司安全管理部相 | score=0.0550",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0672"
+      ],
+      "projection_chars": 3544
+    }
+  ]
+}

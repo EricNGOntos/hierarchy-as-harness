@@ -1,0 +1,170 @@
+{
+  "inspect_id": "latest_clean_multi_0415",
+  "task_type": "multi_hop",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“6.4 安全生产违章行为处罚”相关内容，分别说明两处相邻证据给出的要点。",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L315",
+    "real_69c60974d4242eda8c47c615:L316"
+  ],
+  "elapsed_sec": 5.64,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 10,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L315",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L316",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 6.4 安全生产违章行为处罚]\n二级单位在检查中发现项目的违章行为，对项目部进行处罚；\n\n[E2]\n[§ 6.4 安全生产违章行为处罚]\n10、其他违反安全规范的现象或行为。\n\n[E3]\n[§ 6.4 安全生产违章行为处罚]\n2、被地市级建设行政部门通报，媒体曝光，罚款人民币20000元；\n\n[E4]\n[§ 6.4 安全生产违章行为处罚]\n6.4.5 集团公司在检查中发现项目的违章行为，对二级单位和项目部同时进行处罚；\n\n[E5]\n[§ 6.4 安全生产违章行为处罚]\n1、被县级建设行政部门（或同级别的其它行政部门，下同）通报，媒体曝光，罚款人民币10000元；\n\n[E6]\n[§ 6.4 安全生产违章行为处罚]\n7、未按规定在施工现场危险部位设置明显的安全警示标志；\n\n[E7]\n[§ 6.4 安全生产违章行为处罚]\n4、其他违章指挥行为。\n\n[E8]\n[§ 6.4 安全生产违章行为处罚]\n2、擅自离岗，玩忽职守；\n\n[E9]\n[§ 6.4 安全生产违章行为处罚]\n6.4.4 项目部管理人员或作业人员有下列行为之一的，按“违反安全相关规定”论处，责令改正，并处以罚款500"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 490,
+    "n_retrieved_nodes": 13,
+    "gold_node_recall": 0.5,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L315",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L316",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 6.4 安全生产违章行为处罚]\n  6.4.1 项目部管理人员或作业队伍班组长有下列行为之一的，按“违章指挥”论处，责令整改，并处以罚款500～1000元罚款。\n  4、其他违章指挥行为。\n  6.4.2 项目部管理人员或作业人员有下列行为之一的，按“违章作业”论处，责令立即停止作业，并处以罚款50～500元罚款。\n  8、其他违章作业行为。\n  6.4.3 项目部管理人员或作业人员有下列行为之一的，按“违反劳动纪律“论处，责令改正，并处以罚款100～500元罚款。\n  6.4.4 项目部管理人员或作业人员有下列行为之一的，按“违反安全相关规定”论处，责令改正，并处以罚款500～1000元罚款。\n  2、安全生产责任未分解到人的；\n  7、未按规定在施工现场危险部位设置明显的安全警示标志；\n  10、其他违反安全规范的现象或行为。\n  6.4.5 集团公司在检查中发现项目的违章行为，对二级单位和项目部同时进行处罚；\n  二级单位在检查中发现项目的违章行为，对项目部进行处罚；\n  项目部在检查中发现的违章行为，对项目管理人员或作业班组（人员）进行处罚。",
+    "trajectory_length": 2,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L314",
+      "real_69c60974d4242eda8c47c615:L315",
+      "real_69c60974d4242eda8c47c615:L319",
+      "real_69c60974d4242eda8c47c615:L320",
+      "real_69c60974d4242eda8c47c615:L328",
+      "real_69c60974d4242eda8c47c615:L329",
+      "real_69c60974d4242eda8c47c615:L337",
+      "real_69c60974d4242eda8c47c615:L339",
+      "real_69c60974d4242eda8c47c615:L343",
+      "real_69c60974d4242eda8c47c615:L346",
+      "real_69c60974d4242eda8c47c615:L347",
+      "real_69c60974d4242eda8c47c615:L348",
+      "real_69c60974d4242eda8c47c615:L349"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C18",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L314",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect section 6.4 to identify two adjacent evidence points regarding safety violation penalties.",
+      "llm_raw": "{\"action_id\":\"C18\",\"ids\":[\"C19\",\"C20\",\"C21\",\"C22\",\"C23\",\"C24\",\"C25\",\"C26\",\"C27\",\"C28\",\"C29\",\"C30\",\"C31\",\"C32\"],\"confidence\":{\"C19\":0.9,\"C20\":0.9,\"C21\":0.9,\"C22\":0.9,\"C23\":0.9,\"C24\":0.9,\"C25\":0.9,\"C26\":0.9,\"C27\":0.9,\"C28\":0.9,\"C29\":0.9,\"C30\":0.9,\"C31\":0.9,\"C32\":0.9},\"reason\":\"Collect section 6.4 to i",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L314",
+        "real_69c60974d4242eda8c47c615:L315",
+        "real_69c60974d4242eda8c47c615:L319",
+        "real_69c60974d4242eda8c47c615:L320",
+        "real_69c60974d4242eda8c47c615:L324",
+        "real_69c60974d4242eda8c47c615:L328",
+        "real_69c60974d4242eda8c47c615:L329",
+        "real_69c60974d4242eda8c47c615:L337",
+        "real_69c60974d4242eda8c47c615:L339",
+        "real_69c60974d4242eda8c47c615:L343",
+        "real_69c60974d4242eda8c47c615:L345",
+        "real_69c60974d4242eda8c47c615:L346",
+        "real_69c60974d4242eda8c47c615:L347",
+        "real_69c60974d4242eda8c47c615:L348",
+        "real_69c60974d4242eda8c47c615:L349"
+      ],
+      "n_added": 39,
+      "n_hits": 53,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": false,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 46,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0534",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0534",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0534",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0534",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0534",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0534",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L11 | 1、二级单位（集团公司级）教育培训的主要内容：国家有关安全生产的法律法规、标准规范和集团公司的安全规章制度；建筑施工的特点和易发生的五大伤害，典型事故案例分析； | score=0.0534",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L12 | 2、项目部教育培训的主要内容：观看《生命之鉴》安全教育警示片，观看率达到100％；施工现场的环境、施工特点及可能存在的危害等；违章指挥、违章作业、违反劳动纪律产生的后果；预防、减少安全风险以及紧急情况下应急救援的基本措施； | score=0.0471",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0520",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0520",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0520",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0520",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0520",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0503",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0503",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0503"
+      ],
+      "projection_chars": 3533
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence G1 fully covers section 6.4 penalties for violations, addressing the user's query.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Evidence G1 fully covers section 6.4 penalties for violations, addressing the user's query.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "n_legal_actions": 48,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0534",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0534",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0534",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0534",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0534",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0534",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L11 | 1、二级单位（集团公司级）教育培训的主要内容：国家有关安全生产的法律法规、标准规范和集团公司的安全规章制度；建筑施工的特点和易发生的五大伤害，典型事故案例分析； | score=0.0534",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L12 | 2、项目部教育培训的主要内容：观看《生命之鉴》安全教育警示片，观看率达到100％；施工现场的环境、施工特点及可能存在的危害等；违章指挥、违章作业、违反劳动纪律产生的后果；预防、减少安全风险以及紧急情况下应急救援的基本措施； | score=0.0471",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L18 | 1.3岗前教育 | score=0.0436",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L18 | 1.3岗前教育 | score=0.0436",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L24 | 4、违章指挥、违章作业、违反劳动纪律产生的后果； | score=0.0436",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0520",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0520",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0520",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0520",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0520"
+      ],
+      "projection_chars": 3263
+    }
+  ]
+}

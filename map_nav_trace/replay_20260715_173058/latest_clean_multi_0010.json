@@ -1,0 +1,227 @@
+{
+  "inspect_id": "latest_clean_multi_0010",
+  "task_type": "multi_hop",
+  "doc_id": "real_69c6095ed4242eda8c47c5b2",
+  "query": "根据《线上学习平台学习管理方案（修订）》中“十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订）”相关内容，分别说明两处相邻证据给出的要点。",
+  "gold_nodes": [
+    "real_69c6095ed4242eda8c47c5b2:L2",
+    "real_69c6095ed4242eda8c47c5b2:L3"
+  ],
+  "elapsed_sec": 0.14,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 210,
+    "n_retrieved_nodes": 2,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c6095ed4242eda8c47c5b2:L2",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6095ed4242eda8c47c5b2:L3",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\n\n[E2]\n（ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 487,
+    "n_retrieved_nodes": 11,
+    "gold_node_recall": 0.5,
+    "gold_node_hits": [
+      {
+        "node": "real_69c6095ed4242eda8c47c5b2:L2",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6095ed4242eda8c47c5b2:L3",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 一、管理机构及其职责]\n  线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\n  （ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。\n  （ 二）各专家组：负责各领域内员工培训需求征集，教材、课件及习题开发，课件修改、适时更新、审核，业务答疑，题库组建等工作，集团对口业务部门负责人为各专业课程开发责任人，统筹推进本业务系统课程开发工作。\n  （ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟\n  踪和定期调研，反馈十一在线平台中心。\n\n[E2]\n[§ 4.其他事项]\n（ 4）其他未尽事宜，另行规定。",
+    "trajectory_length": 4,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c6095ed4242eda8c47c5b2:L1",
+      "real_69c6095ed4242eda8c47c5b2:L3",
+      "real_69c6095ed4242eda8c47c5b2:L4",
+      "real_69c6095ed4242eda8c47c5b2:L5",
+      "real_69c6095ed4242eda8c47c5b2:L6",
+      "real_69c6095ed4242eda8c47c5b2:L7",
+      "real_69c6095ed4242eda8c47c5b2:L8",
+      "real_69c6095ed4242eda8c47c5b2:L32",
+      "real_69c6095ed4242eda8c47c5b2:L38",
+      "real_69c6095ed4242eda8c47c5b2:L47",
+      "real_69c6095ed4242eda8c47c5b2:L51"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C4",
+      "kind": "collect",
+      "section_id": "real_69c6095ed4242eda8c47c5b2:L4",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect adjacent sections on management structure and office duties to answer the query.",
+      "llm_raw": "{\"action_id\":\"C4\",\"ids\":[\"C4\",\"C6\"],\"confidence\":{\"C4\":0.9,\"C6\":0.9},\"reason\":\"Collect adjacent sections on management structure and office duties to answer the query.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c6095ed4242eda8c47c5b2:L4",
+        "real_69c6095ed4242eda8c47c5b2:L7"
+      ],
+      "n_added": 2,
+      "n_hits": 2,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 46,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0722",
+        "D1 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0722",
+        "C2 | COLLECT | real_69c6095ed4242eda8c47c5b2:L2 | 为进一步深化学习型组织建设，整合学习资源，传播最佳实践，有效助力员工工作技能提升和绩效改善。为进一步强化学习效果，规范线上学习管理，特制订本方案。 | score=0.0616",
+        "C3 | COLLECT | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0697",
+        "D2 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0697",
+        "C4 | COLLECT | real_69c6095ed4242eda8c47c5b2:L4 | 线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下： | score=0.0691",
+        "C5 | COLLECT | real_69c6095ed4242eda8c47c5b2:L5 | （ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。 | score=0.0587",
+        "C6 | COLLECT | real_69c6095ed4242eda8c47c5b2:L7 | （ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟 | score=0.0646",
+        "C7 | COLLECT | real_69c6095ed4242eda8c47c5b2:L8 | 踪和定期调研，反馈十一在线平台中心。 | score=0.0589",
+        "C8 | COLLECT | real_69c6095ed4242eda8c47c5b2:L9 | （ 四）平台管理员 | score=0.0599",
+        "D3 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L9 | （ 四）平台管理员 | score=0.0599",
+        "C9 | COLLECT | real_69c6095ed4242eda8c47c5b2:L11 | 2.各二级单位平台管理员：负责督促本单位各类课件指定人员在线学习，按时完成学习计划，并向各专家组及十一在线平台中心办公室反馈学习情况。 | score=0.0599",
+        "C10 | COLLECT | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0697",
+        "D4 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0697",
+        "C11 | COLLECT | real_69c6095ed4242eda8c47c5b2:L14 | 2.督促本部室及本单位员工开展在线学习，并结合线上学习内容和业务实际，组织本部室及本单位开展线下探讨、分享、集中培训等。 | score=0.0697",
+        "C12 | COLLECT | real_69c6095ed4242eda8c47c5b2:L15 | （ 六 ）学员 | score=0.0599"
+      ],
+      "projection_chars": 3379
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_collect",
+      "action_id": "C10",
+      "kind": "collect",
+      "section_id": "real_69c6095ed4242eda8c47c5b2:L14",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect C10 to obtain the second adjacent evidence point regarding employee learning supervision and offline training organization.",
+      "llm_raw": "{\"action_id\":\"C10\",\"ids\":[\"C10\"],\"confidence\":{\"C10\":0.9},\"reason\":\"Collect C10 to obtain the second adjacent evidence point regarding employee learning supervision and offline training organization.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c6095ed4242eda8c47c5b2:L14"
+      ],
+      "n_added": 1,
+      "n_hits": 1,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 50,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0722",
+        "D1 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0722",
+        "C2 | COLLECT | real_69c6095ed4242eda8c47c5b2:L2 | 为进一步深化学习型组织建设，整合学习资源，传播最佳实践，有效助力员工工作技能提升和绩效改善。为进一步强化学习效果，规范线上学习管理，特制订本方案。 | score=0.0616",
+        "C3 | COLLECT | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0697",
+        "D2 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0697",
+        "C4 | COLLECT | real_69c6095ed4242eda8c47c5b2:L5 | （ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。 | score=0.0587",
+        "C5 | COLLECT | real_69c6095ed4242eda8c47c5b2:L8 | 踪和定期调研，反馈十一在线平台中心。 | score=0.0589",
+        "C6 | COLLECT | real_69c6095ed4242eda8c47c5b2:L9 | （ 四）平台管理员 | score=0.0599",
+        "D3 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L9 | （ 四）平台管理员 | score=0.0599",
+        "C7 | COLLECT | real_69c6095ed4242eda8c47c5b2:L11 | 2.各二级单位平台管理员：负责督促本单位各类课件指定人员在线学习，按时完成学习计划，并向各专家组及十一在线平台中心办公室反馈学习情况。 | score=0.0599",
+        "C8 | COLLECT | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0697",
+        "D4 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0697",
+        "C9 | COLLECT | real_69c6095ed4242eda8c47c5b2:L13 | 1.协同做好线上学习平台的推广、使用和维护等日常管理工作，配合各专家组完成本业务条线培训课程开发、选配工作。 | score=0.0565",
+        "C10 | COLLECT | real_69c6095ed4242eda8c47c5b2:L14 | 2.督促本部室及本单位员工开展在线学习，并结合线上学习内容和业务实际，组织本部室及本单位开展线下探讨、分享、集中培训等。 | score=0.0697",
+        "C11 | COLLECT | real_69c6095ed4242eda8c47c5b2:L15 | （ 六 ）学员 | score=0.0599",
+        "D5 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L15 | （ 六 ）学员 | score=0.0599"
+      ],
+      "projection_chars": 3541
+    },
+    {
+      "step_idx": 3,
+      "action": "nav_collect",
+      "action_id": "C1",
+      "kind": "collect",
+      "section_id": "real_69c6095ed4242eda8c47c5b2:L1",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect full document to find adjacent evidence sections for the query.",
+      "llm_raw": "{\"action_id\":\"C1\",\"ids\":[\"C1\"],\"confidence\":{\"C1\":0.9},\"reason\":\"Collect full document to find adjacent evidence sections for the query.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c6095ed4242eda8c47c5b2:L1"
+      ],
+      "n_added": 36,
+      "n_hits": 36,
+      "n_purged_descendant_evidence": 3,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 50,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0722",
+        "D1 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0722",
+        "C2 | COLLECT | real_69c6095ed4242eda8c47c5b2:L2 | 为进一步深化学习型组织建设，整合学习资源，传播最佳实践，有效助力员工工作技能提升和绩效改善。为进一步强化学习效果，规范线上学习管理，特制订本方案。 | score=0.0616",
+        "C3 | COLLECT | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0697",
+        "D2 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0697",
+        "C4 | COLLECT | real_69c6095ed4242eda8c47c5b2:L5 | （ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。 | score=0.0587",
+        "C5 | COLLECT | real_69c6095ed4242eda8c47c5b2:L8 | 踪和定期调研，反馈十一在线平台中心。 | score=0.0589",
+        "C6 | COLLECT | real_69c6095ed4242eda8c47c5b2:L9 | （ 四）平台管理员 | score=0.0599",
+        "D3 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L9 | （ 四）平台管理员 | score=0.0599",
+        "C7 | COLLECT | real_69c6095ed4242eda8c47c5b2:L11 | 2.各二级单位平台管理员：负责督促本单位各类课件指定人员在线学习，按时完成学习计划，并向各专家组及十一在线平台中心办公室反馈学习情况。 | score=0.0599",
+        "C8 | COLLECT | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0697",
+        "D4 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0697",
+        "C9 | COLLECT | real_69c6095ed4242eda8c47c5b2:L13 | 1.协同做好线上学习平台的推广、使用和维护等日常管理工作，配合各专家组完成本业务条线培训课程开发、选配工作。 | score=0.0565",
+        "C10 | COLLECT | real_69c6095ed4242eda8c47c5b2:L15 | （ 六 ）学员 | score=0.0599",
+        "D5 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L15 | （ 六 ）学员 | score=0.0599",
+        "C11 | COLLECT | real_69c6095ed4242eda8c47c5b2:L16 | 根据课程设置及时完成相应必修课程学习，根据岗位和个人能力的发展规划，合理选修相应课程，积极学以致用，改进工作绩效。 | score=0.0599"
+      ],
+      "projection_chars": 3543
+    },
+    {
+      "step_idx": 4,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence covers management structure and unit responsibilities as requested.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G2\",\"G1\"],\"reason\":\"Evidence covers management structure and unit responsibilities as requested.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G2",
+        "G1"
+      ],
+      "n_legal_actions": 1,
+      "legal_actions_preview": [
+        "F1 | FINISH | finish navigation and pack final evidence budget"
+      ],
+      "projection_chars": 171
+    }
+  ]
+}

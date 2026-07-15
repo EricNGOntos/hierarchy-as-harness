@@ -1,0 +1,150 @@
+{
+  "inspect_id": "latest_clean_multi_0475",
+  "task_type": "multi_hop",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“6.10 施工机具管理”相关内容，分别说明两处相邻证据给出的要点。",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L391",
+    "real_69c60974d4242eda8c47c615:L392"
+  ],
+  "elapsed_sec": 3.84,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 10,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L391",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L392",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 第五章　施工机械设备管理规定 / 5.4 职责 / 5.4.1 项目部（使用单位）应当履行下列职责：]\n9、配合出租单位对机械设备及其安全保护装置进行经常性和定期检查，并做好记录；\n\n[E2]\n[§ 第五章　施工机械设备管理规定 / 5.4 职责 / 5.4.1 项目部（使用单位）应当履行下列职责：]\n2、向安装单位提供拟安装设备位置的基础施工资料；确保机械设备进场安装、拆卸所需的施工条件；\n\n[E3]\n[§ 第五章　施工机械设备管理规定 / 5.4 职责 / 5.4.1 项目部（使用单位）应当履行下列职责：]\n6、施工现场有多台塔式起重机作业时，制定并实施防止塔式起重机相互碰撞的安全措施；\n\n[E4]\n[§ 第五章　施工机械设备管理规定 / 5.4 职责 / 5.4.1 项目部（使用单位）应当履行下列职责：]\n7、根据不同施工阶段、周围环境以及季节、气候的变化，及时督促出租单位采取相应的安全防护措施；\n\n[E5]\n[§ 第五章　施工机械设备管理规定 / 5.2机械设备管理 / 5.2.5 租用机械设备管理程序：]\n7、项目部编写使用过程应急预案和群塔作业防碰撞措施，到"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 489,
+    "n_retrieved_nodes": 7,
+    "gold_node_recall": 0.5,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L391",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L392",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 6.10 施工机具管理]\n  6.10.2 项目部材料动力组负责施工机具的日常检查及定期检查工作。检查依据：《建筑施工安全检查标准JGJ59-2011》，《建筑机械使用安全技术规程JGJ33-2012》，《施工现场机械设备检查技术规程JGJ160-2008》。\n  6.10.3 项目部材料动力组负责施工机具的安装调试，施工机具安装完毕后由项目部组织按规定履行验收程序验收（总包方、分包方、租赁方、安装方、监理方），并应经责任人签字确认。\n  6.10.4 项目部自有或租赁的施工机具，负有使用、维护、保养管理工作的义务。但劳务分包，专业分包或租赁的施工机具，合同及安全管理协议书必须明确使用、维护、保养管理工作的责任方。\n  6.10.5 施工机具的各种检测仪表及安全装置必须齐全有效，严禁使用安全装置不齐全有效、超过使用年限或技术性能落后耗能高、效率低的施工机具。\n  6.10.6 施工机具的现场工作环境必须符合要求，禁止在不适宜的工作环境下使用施工机具。\n  6.10.9 施工机具出现故障或异常情况时应立即停机，待故障排除后方可使用，严禁机械带病运转。",
+    "trajectory_length": 2,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L390",
+      "real_69c60974d4242eda8c47c615:L392",
+      "real_69c60974d4242eda8c47c615:L393",
+      "real_69c60974d4242eda8c47c615:L394",
+      "real_69c60974d4242eda8c47c615:L395",
+      "real_69c60974d4242eda8c47c615:L396",
+      "real_69c60974d4242eda8c47c615:L399"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C24",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L390",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Target section 6.10 contains relevant points on construction tool management.",
+      "llm_raw": "{\"action_id\":\"C24\",\"ids\":[\"C24\"],\"confidence\":{\"C24\":0.9},\"reason\":\"Target section 6.10 contains relevant points on construction tool management.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L390"
+      ],
+      "n_added": 9,
+      "n_hits": 9,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 47,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0697",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0697",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L178 | 5.1 总则 | score=0.0685",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L178 | 5.1 总则 | score=0.0685",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L181 | 5.1.3 项目部（使用单位）必须在机械租赁合同中明确约定：建筑机械的检查、维护、保养由机械出租方负责。 | score=0.0517",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L185 | 根据工程特点及周围环境制定机械设备安全技术操作规程，设置安全警示标志；安全技术操作规程及警示标志应按照《施工现场标准化管理手册》要求制成标志牌悬挂在相应机械设备的醒目位置。 | score=0.0685",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L186 | 5.2机械设备管理 | score=0.0594",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L186 | 5.2机械设备管理 | score=0.0594",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L193 | 附表5.2.2：《施工现场安全负面清单（2019版）》 | score=0.0594",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L193 | 附表5.2.2：《施工现场安全负面清单（2019版）》 | score=0.0594",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L195 | 租赁、安装单位应提供加盖单位公章的营业执照、资质证书、安全生产许可证、施工机械租赁行业确认书、行业推荐证书等企业资质文件；以及拟租赁设备制造许可证、产品合格证、制造监督检验证明、备案登记、自检合格证明、安装使用说明书等产品证明文件。 | score=0.0594",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L207 | 5.3 工具式脚手架管理 | score=0.0664",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L207 | 5.3 工具式脚手架管理 | score=0.0664",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L214 | 5.3.4 附着式升降脚手架、高空作业吊篮等管理程序： | score=0.0664",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L214 | 5.3.4 附着式升降脚手架、高空作业吊篮等管理程序： | score=0.0664",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L227 | 5.3.5 分包单位做好工具式脚手架自检及出具自检合格证明，向项目部（使用单位）进行安全使用说明，办理验收手续并签字确认。 | score=0.0664"
+      ],
+      "projection_chars": 3477
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence G1 contains all required points from section 6.10 regarding construction tool management.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Evidence G1 contains all required points from section 6.10 regarding construction tool management.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "n_legal_actions": 54,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0502",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0502",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0502",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0502",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0502",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0502",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L11 | 1、二级单位（集团公司级）教育培训的主要内容：国家有关安全生产的法律法规、标准规范和集团公司的安全规章制度；建筑施工的特点和易发生的五大伤害，典型事故案例分析； | score=0.0502",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0495",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0495",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0495",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0495",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L63 | 2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。 | score=0.0495",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0697",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0697",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L178 | 5.1 总则 | score=0.0685",
+        "D7 | DISPATCH | real_69c60974d4242eda8c47c615:L178 | 5.1 总则 | score=0.0685"
+      ],
+      "projection_chars": 3553
+    }
+  ]
+}

@@ -101,7 +101,7 @@ navigate(scope, budget, depth) -> RegionReport
 | `src/nav/nav_compose.py` | COMPOSE：confidence 解析、父 scope 分组重排、缩进树打包 |
 | `src/nav/nav_types.py` | `ActionKind` / `NavConfig` / `NavState` / `RegionReport` |
 | `config/nav_default.json` | `map_char_limit`、`enable_recursive_dispatch` 等 |
-| `bin/56_replay_map_nav_traces.py` | 单题 TRACE 回放 |
+| `bin/56_replay_map_nav_traces.py` | 单题/批量 TRACE 回放（evidence-only）；批量续跑见 skill [`map-nav-replay-batch`](../map-nav-replay-batch/SKILL.md) |
 
 ## 4. 读 TRACE 时怎么说话
 

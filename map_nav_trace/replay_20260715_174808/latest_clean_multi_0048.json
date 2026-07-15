@@ -1,0 +1,229 @@
+{
+  "inspect_id": "latest_clean_multi_0048",
+  "task_type": "multi_hop",
+  "doc_id": "real_69c60970d4242eda8c47c5fd",
+  "query": "根据《集团公司对外捐赠管理办法（修订版）》中“第二章 对外捐赠的范围及类型”相关内容，分别说明两处相邻证据给出的要点。",
+  "gold_nodes": [
+    "real_69c60970d4242eda8c47c5fd:L7",
+    "real_69c60970d4242eda8c47c5fd:L8"
+  ],
+  "elapsed_sec": 0.09,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 495,
+    "n_retrieved_nodes": 11,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60970d4242eda8c47c5fd:L7",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60970d4242eda8c47c5fd:L8",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 第五条  对外捐赠的范围]\n用于对外捐赠的资产应当权属清晰，应为集团公司有权处分的合法财产，包括现金资产和实物资产等。\n\n[E2]\n[§ 第五条  对外捐赠的范围]\n（二）持有的股权和债权；\n\n[E3]\n[§ 第四条  对外捐赠的类型]\n（三）其他捐赠，即除上述捐赠外，为促进社会发展以及集团公司履行社会责任需要的其他捐赠，含外部各类活动赞助。\n\n[E4]\n[§ 第五条  对外捐赠的范围]\n（六）设定担保物权的财产；\n\n[E5]\n[§ 第五条  对外捐赠的范围]\n（四）国家财政拨款；\n\n[E6]\n[§ 第四条  对外捐赠的类型]\n各单位要正确参与社会公益事业，依法依规确定对外捐赠范围和支出规模，规范开展对外捐赠活动，避免无序、随意捐赠等行为。对于有关社会机构、团体的摊派性捐赠，要坚决依法拒绝，\n\n[E7]\n[§ 第五条  对外捐赠的范围]\n（一）生产经营用的主要固定资产；\n\n[E8]\n[§ 第五条  对外捐赠的范围]\n（九）企业拥有的知识产权。\n\n[E9]\n[§ 第四条  对外捐赠的类型]\n（二）公益性捐赠，即向科技文卫事业和环境保护等社会公益事业的公益性捐赠。"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 491,
+    "n_retrieved_nodes": 16,
+    "gold_node_recall": 1.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60970d4242eda8c47c5fd:L7",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60970d4242eda8c47c5fd:L8",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 第二章  对外捐赠的范围及类型]\n  第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。\n  集团公司所属非法人分支机构、项目部不得以分公司、项目部名义对外捐赠，不得将企业拥有的财产以个人名义对外捐赠。\n  对外捐赠原则上以集团公司（陕西建工第十一建设集团有限公司）名义进行捐赠，独立法人单位可根据实际需要以本单位名义进行捐赠。\n\n[E2]\n[§ 第五条  对外捐赠的范围]\n  用于对外捐赠的资产应当权属清晰，应为集团公司有权处分的合法财产，包括现金资产和实物资产等。\n  不具处分权的财产或者不合格产品不得用于对外捐赠。下列资产不得用于对外捐赠：\n  （一）生产经营用的主要固定资产；\n  （二）持有的股权和债权；\n  （三）国家特准储备物资；\n  （四）国家财政拨款；\n  （五）受代管财产；\n  （六）设定担保物权的财产；\n  （七）权属关系不清的财产；\n  （八）变质、残损、过期报废的商品物资；\n  （九）企业拥有的知识产权。",
+    "trajectory_length": 4,
+    "reports_context": "=== Investigate results (1 region(s)) ===\n[region 1] real_69c60970d4242eda8c47c5fd:L6 (ok)\ncollected 21 branch node(s); explicit roots=['real_69c60970d4242eda8c47c5fd:L6']\ncollected: real_69c60970d4242eda8c47c5fd:L10, real_69c60970d4242eda8c47c5fd:L11, real_69c60970d4242eda8c47c5fd:L12, real_69c60970d4242eda8c47c5fd:L13, real_69c60970d4242eda8c47c5fd:L14, real_69c60970d4242eda8c47c5fd:L15, real_69c60970d4242eda8c47c5fd:L16, real_69c60970d4242eda8c47c5fd:L17, real_69c60970d4242eda8c47c5fd:L18, real_69c60970d4242eda8c47c5fd:L19, real_69c60970d4242eda8c47c5fd:L20, real_69c60970d4242eda8c47c5fd:L21, real_69c60970d4242eda8c47c5fd:L22, real_69c60970d4242eda8c47c5fd:L23, real_69c60970d4242eda8c47c5fd:L24, real_69c60970d4242eda8c47c5fd:L25, real_69c60970d4242eda8c47c5fd:L26, real_69c60970d4242eda8c47c5fd:L6, real_69c60970d4242eda8c47c5fd:L7, real_69c60970d4242eda8c47c5fd:L8\nreason: Collected section L6 contains the required content from Chapter 2. Ready to synthesize the two adjacent points.\n---\n=== End Investigate ===",
+    "retrieved_nodes": [
+      "real_69c60970d4242eda8c47c5fd:L6",
+      "real_69c60970d4242eda8c47c5fd:L7",
+      "real_69c60970d4242eda8c47c5fd:L8",
+      "real_69c60970d4242eda8c47c5fd:L9",
+      "real_69c60970d4242eda8c47c5fd:L15",
+      "real_69c60970d4242eda8c47c5fd:L16",
+      "real_69c60970d4242eda8c47c5fd:L17",
+      "real_69c60970d4242eda8c47c5fd:L18",
+      "real_69c60970d4242eda8c47c5fd:L19",
+      "real_69c60970d4242eda8c47c5fd:L20",
+      "real_69c60970d4242eda8c47c5fd:L21",
+      "real_69c60970d4242eda8c47c5fd:L22",
+      "real_69c60970d4242eda8c47c5fd:L23",
+      "real_69c60970d4242eda8c47c5fd:L24",
+      "real_69c60970d4242eda8c47c5fd:L25",
+      "real_69c60970d4242eda8c47c5fd:L26"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C1",
+      "kind": "collect",
+      "section_id": "real_69c60970d4242eda8c47c5fd:L6",
+      "scope": "real_69c60970d4242eda8c47c5fd:L6",
+      "depth": 1,
+      "llm_reason": "Collect Chapter 2 to cover scope, types, and restrictions as requested.",
+      "llm_raw": "{\"action_id\":\"C1\",\"ids\":[\"C1\"],\"confidence\":{\"C1\":0.9},\"reason\":\"Collect Chapter 2 to cover scope, types, and restrictions as requested.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60970d4242eda8c47c5fd:L6"
+      ],
+      "n_added": 18,
+      "n_hits": 18,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 18,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60970d4242eda8c47c5fd:L6 | 第二章  对外捐赠的范围及类型 | score=0.0718",
+        "C2 | COLLECT | real_69c60970d4242eda8c47c5fd:L7 | 第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。 | score=0.0718",
+        "C3 | COLLECT | real_69c60970d4242eda8c47c5fd:L8 | 集团公司所属非法人分支机构、项目部不得以分公司、项目部名义对外捐赠，不得将企业拥有的财产以个人名义对外捐赠。 | score=0.0591",
+        "C4 | COLLECT | real_69c60970d4242eda8c47c5fd:L9 | 对外捐赠原则上以集团公司（陕西建工第十一建设集团有限公司）名义进行捐赠，独立法人单位可根据实际需要以本单位名义进行捐赠。 | score=0.0691",
+        "C5 | COLLECT | real_69c60970d4242eda8c47c5fd:L10 | 第四条  对外捐赠的类型 | score=0.0682",
+        "C6 | COLLECT | real_69c60970d4242eda8c47c5fd:L11 | （一）救济性捐赠，即向受灾地区、扶贫地区或者困难的社会弱势群体的救济性捐赠。 | score=0.0553",
+        "C7 | COLLECT | real_69c60970d4242eda8c47c5fd:L12 | （二）公益性捐赠，即向科技文卫事业和环境保护等社会公益事业的公益性捐赠。 | score=0.0559",
+        "C8 | COLLECT | real_69c60970d4242eda8c47c5fd:L13 | （三）其他捐赠，即除上述捐赠外，为促进社会发展以及集团公司履行社会责任需要的其他捐赠，含外部各类活动赞助。 | score=0.0631",
+        "C9 | COLLECT | real_69c60970d4242eda8c47c5fd:L14 | 各单位要正确参与社会公益事业，依法依规确定对外捐赠范围和支出规模，规范开展对外捐赠活动，避免无序、随意捐赠等行为。对于有关社会机构、团体的摊派性捐赠，要坚决依法拒绝， | score=0.0682",
+        "C10 | COLLECT | real_69c60970d4242eda8c47c5fd:L15 | 第五条  对外捐赠的范围 | score=0.0686",
+        "C11 | COLLECT | real_69c60970d4242eda8c47c5fd:L16 | 用于对外捐赠的资产应当权属清晰，应为集团公司有权处分的合法财产，包括现金资产和实物资产等。 | score=0.0686",
+        "C12 | COLLECT | real_69c60970d4242eda8c47c5fd:L17 | 不具处分权的财产或者不合格产品不得用于对外捐赠。下列资产不得用于对外捐赠： | score=0.0608",
+        "C13 | COLLECT | real_69c60970d4242eda8c47c5fd:L18 | （一）生产经营用的主要固定资产； | score=0.0578",
+        "C14 | COLLECT | real_69c60970d4242eda8c47c5fd:L19 | （二）持有的股权和债权； | score=0.0572",
+        "C15 | COLLECT | real_69c60970d4242eda8c47c5fd:L21 | （四）国家财政拨款； | score=0.0555",
+        "C16 | COLLECT | real_69c60970d4242eda8c47c5fd:L22 | （五）受代管财产； | score=0.0555"
+      ],
+      "projection_chars": 2889
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": "real_69c60970d4242eda8c47c5fd:L6",
+      "depth": 1,
+      "llm_reason": "Collected section L6 contains the required content from Chapter 2. Ready to synthesize the two adjacent points.",
+      "llm_raw": "{\"action_id\":\"F1\",\"reason\":\"Collected section L6 contains the required content from Chapter 2. Ready to synthesize the two adjacent points.\",\"confidence\":0.9}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": null,
+      "n_legal_actions": 1,
+      "legal_actions_preview": [
+        "F1 | FINISH | finish navigation and pack final evidence budget"
+      ],
+      "projection_chars": 188
+    },
+    {
+      "step_idx": 3,
+      "action": "nav_dispatch",
+      "action_id": "D3",
+      "kind": "dispatch",
+      "section_id": "real_69c60970d4242eda8c47c5fd:L6",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Dispatch Chapter 2 to retrieve details on scope and types for the query.",
+      "llm_raw": "{\"action_id\":\"D3\",\"ids\":[\"D3\"],\"reason\":\"Dispatch Chapter 2 to retrieve details on scope and types for the query.\"}",
+      "dispatch_regions": [
+        "real_69c60970d4242eda8c47c5fd:L6"
+      ],
+      "n_child_reports": 1,
+      "n_child_skipped": 0,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": null,
+      "n_legal_actions": 42,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60970d4242eda8c47c5fd:L1 | 陕西建工第十一建设集团有限公司 | score=0.0718",
+        "D1 | DISPATCH | real_69c60970d4242eda8c47c5fd:L1 | 陕西建工第十一建设集团有限公司 | score=0.0718",
+        "C2 | COLLECT | real_69c60970d4242eda8c47c5fd:L2 | 对外捐赠管理办法（修订版） | score=0.0588",
+        "C3 | COLLECT | real_69c60970d4242eda8c47c5fd:L3 | 第一章  总则 | score=0.0600",
+        "D2 | DISPATCH | real_69c60970d4242eda8c47c5fd:L3 | 第一章  总则 | score=0.0600",
+        "C4 | COLLECT | real_69c60970d4242eda8c47c5fd:L4 | 第一条为进一步规范集团公司对外捐赠行为，加强对外捐赠事项的管理，更好地履行社会责任，全面、有效提升和宣传集团公司品牌及企业形象，特制定本办法。 | score=0.0583",
+        "C5 | COLLECT | real_69c60970d4242eda8c47c5fd:L5 | 第二条本办法适用于集团公司及所属各单位对外捐赠行为。 | score=0.0600",
+        "C6 | COLLECT | real_69c60970d4242eda8c47c5fd:L6 | 第二章  对外捐赠的范围及类型 | score=0.0718",
+        "D3 | DISPATCH | real_69c60970d4242eda8c47c5fd:L6 | 第二章  对外捐赠的范围及类型 | score=0.0718",
+        "C7 | COLLECT | real_69c60970d4242eda8c47c5fd:L7 | 第三条本办法所称的“对外捐赠”，是指集团公司及所属各单位自愿将有处分权的合法财产无偿赠送给合法的受赠人（包含无偿捐赠工程），用于与捐赠人生产经营活动没有直接关系的公益事业的行为。 | score=0.0718",
+        "C8 | COLLECT | real_69c60970d4242eda8c47c5fd:L8 | 集团公司所属非法人分支机构、项目部不得以分公司、项目部名义对外捐赠，不得将企业拥有的财产以个人名义对外捐赠。 | score=0.0591",
+        "C9 | COLLECT | real_69c60970d4242eda8c47c5fd:L9 | 对外捐赠原则上以集团公司（陕西建工第十一建设集团有限公司）名义进行捐赠，独立法人单位可根据实际需要以本单位名义进行捐赠。 | score=0.0691",
+        "C10 | COLLECT | real_69c60970d4242eda8c47c5fd:L10 | 第四条  对外捐赠的类型 | score=0.0682",
+        "D4 | DISPATCH | real_69c60970d4242eda8c47c5fd:L10 | 第四条  对外捐赠的类型 | score=0.0682",
+        "C11 | COLLECT | real_69c60970d4242eda8c47c5fd:L11 | （一）救济性捐赠，即向受灾地区、扶贫地区或者困难的社会弱势群体的救济性捐赠。 | score=0.0553",
+        "C12 | COLLECT | real_69c60970d4242eda8c47c5fd:L12 | （二）公益性捐赠，即向科技文卫事业和环境保护等社会公益事业的公益性捐赠。 | score=0.0559"
+      ],
+      "projection_chars": 3504
+    },
+    {
+      "step_idx": 4,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence G1 and G2 cover Chapter 2 scope and types as requested. Ready to synthesize adjacent points.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\",\"G2\"],\"reason\":\"Evidence G1 and G2 cover Chapter 2 scope and types as requested. Ready to synthesize adjacent points.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1",
+        "G2"
+      ],
+      "n_legal_actions": 35,
+      "legal_actions_preview": [
+        "D1 | DISPATCH | real_69c60970d4242eda8c47c5fd:L1 | 陕西建工第十一建设集团有限公司 | score=0.0718",
+        "C1 | COLLECT | real_69c60970d4242eda8c47c5fd:L2 | 对外捐赠管理办法（修订版） | score=0.0588",
+        "C2 | COLLECT | real_69c60970d4242eda8c47c5fd:L3 | 第一章  总则 | score=0.0600",
+        "D2 | DISPATCH | real_69c60970d4242eda8c47c5fd:L3 | 第一章  总则 | score=0.0600",
+        "C3 | COLLECT | real_69c60970d4242eda8c47c5fd:L4 | 第一条为进一步规范集团公司对外捐赠行为，加强对外捐赠事项的管理，更好地履行社会责任，全面、有效提升和宣传集团公司品牌及企业形象，特制定本办法。 | score=0.0583",
+        "C4 | COLLECT | real_69c60970d4242eda8c47c5fd:L5 | 第二条本办法适用于集团公司及所属各单位对外捐赠行为。 | score=0.0600",
+        "C5 | COLLECT | real_69c60970d4242eda8c47c5fd:L27 | 第三章  对外捐赠的原则 | score=0.0615",
+        "D3 | DISPATCH | real_69c60970d4242eda8c47c5fd:L27 | 第三章  对外捐赠的原则 | score=0.0615",
+        "C6 | COLLECT | real_69c60970d4242eda8c47c5fd:L28 | 第六条企业捐赠程序以及行为的实施必须符合有关法律法规、规章以及企业章程的规定，对外捐赠应当遵循以下五项原则： | score=0.0576",
+        "C7 | COLLECT | real_69c60970d4242eda8c47c5fd:L29 | （一）自愿无偿。各单位自愿实施对外捐赠，不得要求受赠方在融资、市场准入、行政许可、占有其他资源等方面创造便利条件，不得以捐赠为名从事营利活动，从而导致市场不公平竞争。 | score=0.0499",
+        "C8 | COLLECT | real_69c60970d4242eda8c47c5fd:L30 | （二）量力而行。各单位对外捐赠应当充分考虑自身经营规模、盈利能力、负债水平、现金流量等财务承受能力，合理确定对外捐赠支出规模和标准。盈利能力大幅下降、负债水平偏高、经营活动现金净流量为负数或者大幅减少的企业，应严格控制对外捐赠；经营亏损的单位除特殊情况外，原则上不得安排对外捐赠支出。 | score=0.0547",
+        "C9 | COLLECT | real_69c60970d4242eda8c47c5fd:L31 | （三）权责清晰。各单位不得将集团公司拥有的财产以个人名义对外捐赠。且对外捐赠有权要求受赠人落实捐赠人正当的捐赠意愿，不得将捐赠财产挪作他用。 | score=0.0535",
+        "C10 | COLLECT | real_69c60970d4242eda8c47c5fd:L32 | （四）程序规范。企业对外捐赠，原则上由集团公司统一管理。凡涉及对外捐赠事项，履行集团公司内部审批程序后，报陕建控股集团审批核准；如有特殊事项需要对外捐赠的，应提前报告集团公司办公室，履行相应程序后办理捐赠手续，未经批准不得擅自对外捐赠。 | score=0.0615",
+        "C11 | COLLECT | real_69c60970d4242eda8c47c5fd:L33 | （五）诚实守信。各单位对外捐赠应当诚实守信，严禁各类虚假宣传或许诺行为。 | score=0.0513",
+        "C12 | COLLECT | real_69c60970d4242eda8c47c5fd:L34 | 第四章  对外捐赠的审批程序 | score=0.0678",
+        "D4 | DISPATCH | real_69c60970d4242eda8c47c5fd:L34 | 第四章  对外捐赠的审批程序 | score=0.0678"
+      ],
+      "projection_chars": 3089
+    }
+  ]
+}

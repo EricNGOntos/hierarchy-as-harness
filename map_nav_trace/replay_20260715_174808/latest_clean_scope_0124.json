@@ -1,0 +1,301 @@
+{
+  "inspect_id": "latest_clean_scope_0124",
+  "task_type": "scope_collection",
+  "doc_id": "real_69c60b0ad4242eda8c47c944",
+  "query": "列举《华侨城坪山综合体项目基坑支护工程专项施工方案》中“华侨城坪山综合体项目基坑支护工程专项施工方案.docx”部分的主要条目。",
+  "gold_nodes": [
+    "real_69c60b0ad4242eda8c47c944:L5",
+    "real_69c60b0ad4242eda8c47c944:L6",
+    "real_69c60b0ad4242eda8c47c944:L7",
+    "real_69c60b0ad4242eda8c47c944:L10",
+    "real_69c60b0ad4242eda8c47c944:L12",
+    "real_69c60b0ad4242eda8c47c944:L15"
+  ],
+  "elapsed_sec": 93.21,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 20,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L5",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L6",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L7",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L10",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L12",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L15",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n工程概况\n\n[E2]\n编制依据\n\n[E3]\n施工计划\n\n[E4]\n施工工艺技术\n\n[E5]\n施工保证措施\n\n[E6]\n基坑工程概况和特点\n工程基本情况\n表1.1-1 基坑工程概况表\n\n[E7]\n法律法规\n《建筑地基基础工程施工质量验收规范》GB 50202-2018\n《混凝土结构工程施工规范》GB 50666-2011\n\n[E8]\n施工进度计划\n施工总进度计划\n图表展示了华侨城坪山综合体项目地基基础工程施工的总进度计划，详细列出了从2020年6月至2021年5月各阶段的施工任务和时间安排。计划分为五个阶段，每个阶段包含多个具体工程项，如护坡施工、土方开挖、支撑施工等，并通过线条和节点表示各任务的开始、结束时间和相互关系。\n\n[E9]\n技术参数\n咬合桩\n（1）咬合桩共计688根，其中荤桩344根，素桩344根。采用“软咬合”施工工艺，全套管全回转钻机成孔施工。\n\n[E10]\n组织保障措施\n坚决执行企业管生产必须管安全的原则。必须坚持“安全第一，预防为主，综合治理”的方针。肯定安全在建筑生产活动中为首要位置和重要性。当安全与生产发生矛盾的时候，应该服从安全，消灭隐患，保证建设工程"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 494,
+    "n_retrieved_nodes": 18,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L5",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L6",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L7",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L10",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L12",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L15",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 施工工艺技术]\n  技术参数\n  咬合桩\n  （1）咬合桩共计688根，其中荤桩344根，素桩344根。采用“软咬合”施工工艺，全套管全回转钻机成孔施工。\n  工艺流程\n  基坑工程总的施工工艺流程\n  测量放线→咬合桩施工→立柱桩施工→槽钢桩施工→袖阀管施工→支撑梁施工→土方开挖→支撑梁施工（随着土方开挖逐层进行施工）\n  施工方法及操作要求\n  施工准备\n  （1）组织项目人员熟悉图纸，完成作业工人培训及技术及安全交底。\n  检查要求\n  （1）支护结构施工现场使用的砂、水泥、钢筋、混凝土等原材料和加工的成品，应按有关设计规范及施工验收标准进行检验。\n  （2）咬合桩检测：咬合桩采用超声波透射法检测桩身完整性，检测数量不小于荤桩总桩数的20%，且不应少于10 根。当桩身完整性类别为Ⅲ类、Ⅳ类时，应采用钻芯法补充检测，钻芯法检测数量不小于荤桩总桩数的1%，且不少于3 根。\n  常见问题及预防、处理措施\n  1）护坡桩常见问题及预防处理措施：\n  （1）桩位偏差\n\n[E2]\n[§ 施工计划]\n材料与设备计划\n主要材料需求计划\n表3.2-1 主要材料需求计划表",
+    "trajectory_length": 4,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60b0ad4242eda8c47c944:L234",
+      "real_69c60b0ad4242eda8c47c944:L235",
+      "real_69c60b0ad4242eda8c47c944:L236",
+      "real_69c60b0ad4242eda8c47c944:L261",
+      "real_69c60b0ad4242eda8c47c944:L262",
+      "real_69c60b0ad4242eda8c47c944:L263",
+      "real_69c60b0ad4242eda8c47c944:L273",
+      "real_69c60b0ad4242eda8c47c944:L274",
+      "real_69c60b0ad4242eda8c47c944:L275",
+      "real_69c60b0ad4242eda8c47c944:L469",
+      "real_69c60b0ad4242eda8c47c944:L470",
+      "real_69c60b0ad4242eda8c47c944:L471",
+      "real_69c60b0ad4242eda8c47c944:L474",
+      "real_69c60b0ad4242eda8c47c944:L475",
+      "real_69c60b0ad4242eda8c47c944:L476",
+      "real_69c60b0ad4242eda8c47c944:L197",
+      "real_69c60b0ad4242eda8c47c944:L198",
+      "real_69c60b0ad4242eda8c47c944:L199"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C1",
+      "kind": "collect",
+      "section_id": "real_69c60b0ad4242eda8c47c944:L1",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect main sections of the plan: Overview, Layout, Risks, Basis, and Schedule.",
+      "llm_raw": "{\"action_id\":\"C1\",\"ids\":[\"C1\",\"C5\",\"C8\",\"C11\",\"C31\"],\"confidence\":{\"C1\":0.9,\"C5\":0.9,\"C8\":0.9,\"C11\":0.9,\"C31\":0.9},\"reason\":\"Collect main sections of the plan: Overview, Layout, Risks, Basis, and Schedule.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60b0ad4242eda8c47c944:L1",
+        "real_69c60b0ad4242eda8c47c944:L88",
+        "real_69c60b0ad4242eda8c47c944:L113",
+        "real_69c60b0ad4242eda8c47c944:L124",
+        "real_69c60b0ad4242eda8c47c944:L187"
+      ],
+      "n_added": 24,
+      "n_hits": 26,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": false,
+      "group_rank": null,
+      "n_legal_actions": 47,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60b0ad4242eda8c47c944:L1 | 工程概况 | score=0.0498",
+        "D1 | DISPATCH | real_69c60b0ad4242eda8c47c944:L1 | 工程概况 | score=0.0498",
+        "C2 | COLLECT | real_69c60b0ad4242eda8c47c944:L2 | 基坑工程概况和特点 | score=0.0426",
+        "D2 | DISPATCH | real_69c60b0ad4242eda8c47c944:L2 | 基坑工程概况和特点 | score=0.0426",
+        "C3 | COLLECT | real_69c60b0ad4242eda8c47c944:L69 | 周边环境条件 | score=0.0426",
+        "D3 | DISPATCH | real_69c60b0ad4242eda8c47c944:L69 | 周边环境条件 | score=0.0426",
+        "C4 | COLLECT | real_69c60b0ad4242eda8c47c944:L72 | 根据设计图纸说明本项目基坑北侧支护工程施工范围划分为： | score=0.0426",
+        "C5 | COLLECT | real_69c60b0ad4242eda8c47c944:L88 | 施工平面布置 | score=0.0426",
+        "D4 | DISPATCH | real_69c60b0ad4242eda8c47c944:L88 | 施工平面布置 | score=0.0426",
+        "C6 | COLLECT | real_69c60b0ad4242eda8c47c944:L94 | 1.2.2 施工部署综述 | score=0.0426",
+        "D5 | DISPATCH | real_69c60b0ad4242eda8c47c944:L94 | 1.2.2 施工部署综述 | score=0.0426",
+        "C7 | COLLECT | real_69c60b0ad4242eda8c47c944:L95 | 施工区段划分：根据施工范围、施工图纸与建设单位的工期要求等综合情况，详细勘察了周围环境，确定了现场大门开设两个出入口，根据现场大门开设位置和三维工况模拟，将基坑分为一、二、三、四共四个生产区，其中一区为主塔楼区，二区为裙楼区域，三区为副塔楼区域，四区为裙楼区。 | score=0.0426",
+        "C8 | COLLECT | real_69c60b0ad4242eda8c47c944:L113 | 1.4 风险辨识与分级 | score=0.0498",
+        "D6 | DISPATCH | real_69c60b0ad4242eda8c47c944:L113 | 1.4 风险辨识与分级 | score=0.0498",
+        "C9 | COLLECT | real_69c60b0ad4242eda8c47c944:L120 | 依据设计图纸要求，根据建办质［2018］31号文及我单位关于《危险性较大的分部分项工程安全专项施工方案管理制度》 的要求：1、开挖深度超过5m（含5m）的基坑（槽）的土方开挖、支护、降水工程；2、开挖深度虽未超过5m，但地质条件、周围环境和地下管线复杂或影响毗邻建筑（构筑）物安全的基坑（槽）的土方开挖、支护、降水工程；这两项都属于“超过一定规模的危险性较大的分部分项工程”，拟建工程基坑开挖深度为2 | score=0.0498",
+        "C10 | COLLECT | real_69c60b0ad4242eda8c47c944:L121 | 综上可知，根据住房城乡建设部办公厅关于实施《危险性较大的分部分项工程安全管理规定》有关问题的通知建办质（2018）31号，此基坑工程属“超过一定规模的危险性较大的分部分项工程”，住建部37号令条文规定：施工单位应当组织专家对专项方案进行论证。施工单位应当根据论证报告修改完善专项方案，专项施工方案应当由施工单位技术负责人审核签字、加盖单位公章，并由总监理工程师审查签字、加盖执业印章后方可实施。 | score=0.0487"
+      ],
+      "projection_chars": 3028
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_collect",
+      "action_id": "C1",
+      "kind": "collect",
+      "section_id": "real_69c60b0ad4242eda8c47c944:L233",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "",
+      "llm_raw": "{\"action_id\":\"C1\",\"ids\":[\"C1\",\"C2\",\"C3\",\"C4\",\"C5\",\"C6\",\"C7\",\"C8\",\"C9\",\"C10\",\"C11\",\"C12\",\"C13\",\"C14\",\"C15\",\"C16\",\"C17\",\"C18\",\"C19\",\"C20\",\"C21\",\"C22\",\"C23\",\"C24\",\"C25\",\"C26\",\"C27\",\"C28\",\"C29\",\"C30\",\"C31\",\"C32\",\"C33\",\"C34\",\"C35\"],\"confidence\":{\"C1\":0.9,\"C2\":0.9,\"C3\":0.9,\"C4\":0.9,\"C5\":0.9,\"C6\":0.9,\"C7\":",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60b0ad4242eda8c47c944:L233"
+      ],
+      "n_added": 6,
+      "n_hits": 6,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": false,
+      "group_rank": null,
+      "n_legal_actions": 58,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60b0ad4242eda8c47c944:L233 | 施工工艺技术 | score=0.0363",
+        "D1 | DISPATCH | real_69c60b0ad4242eda8c47c944:L233 | 施工工艺技术 | score=0.0363",
+        "C2 | COLLECT | real_69c60b0ad4242eda8c47c944:L273 | 施工方法及操作要求 | score=0.0363",
+        "D2 | DISPATCH | real_69c60b0ad4242eda8c47c944:L273 | 施工方法及操作要求 | score=0.0363",
+        "C3 | COLLECT | real_69c60b0ad4242eda8c47c944:L281 | 咬合桩施工 | score=0.0363",
+        "D3 | DISPATCH | real_69c60b0ad4242eda8c47c944:L281 | 咬合桩施工 | score=0.0363",
+        "C4 | COLLECT | real_69c60b0ad4242eda8c47c944:L299 | 成孔： | score=0.0342",
+        "D4 | DISPATCH | real_69c60b0ad4242eda8c47c944:L299 | 成孔： | score=0.0342",
+        "C5 | COLLECT | real_69c60b0ad4242eda8c47c944:L306 | 分段施工接头处理：在不同施工段间设置砂桩（成孔后用砂灌满），待施工到此接头时挖出砂灌满混凝土即可。桩的排列方式为钢筋砼桩（B桩）和素桩（A桩）间隔布置（见图示）。 | score=0.0342",
+        "C6 | COLLECT | real_69c60b0ad4242eda8c47c944:L326 | 钢筋笼安装 | score=0.0363",
+        "D5 | DISPATCH | real_69c60b0ad4242eda8c47c944:L326 | 钢筋笼安装 | score=0.0363",
+        "C7 | COLLECT | real_69c60b0ad4242eda8c47c944:L329 | 总结：图片展示了一个建筑工地，几栋高层住宅楼正在建设中。画面中央有一台起重机正在吊装一根长柱，周围有其他施工设备和材料。背景是晴朗的蓝天，工地地面为裸露的泥土，周围有绿色植被和部分已建成的楼房。整体场景体现了城市建筑项目的进行状态。 | score=0.0363",
+        "C8 | COLLECT | real_69c60b0ad4242eda8c47c944:L518 | 施工保证措施 | score=0.0407",
+        "D6 | DISPATCH | real_69c60b0ad4242eda8c47c944:L518 | 施工保证措施 | score=0.0407",
+        "C9 | COLLECT | real_69c60b0ad4242eda8c47c944:L568 | 技术措施 | score=0.0398",
+        "D7 | DISPATCH | real_69c60b0ad4242eda8c47c944:L568 | 技术措施 | score=0.0398"
+      ],
+      "projection_chars": 3431
+    },
+    {
+      "step_idx": 3,
+      "action": "nav_collect",
+      "action_id": "C32",
+      "kind": "collect",
+      "section_id": "real_69c60b0ad4242eda8c47c944:L852",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect 'Calculation and Drawings' section to list main items as requested.",
+      "llm_raw": "{\"action_id\":\"C32\",\"ids\":[\"C32\"],\"confidence\":{\"C32\":0.9},\"reason\":\"Collect 'Calculation and Drawings' section to list main items as requested.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60b0ad4242eda8c47c944:L852"
+      ],
+      "n_added": 3,
+      "n_hits": 3,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": false,
+      "group_rank": null,
+      "n_legal_actions": 55,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60b0ad4242eda8c47c944:L518 | 施工保证措施 | score=0.0407",
+        "D1 | DISPATCH | real_69c60b0ad4242eda8c47c944:L518 | 施工保证措施 | score=0.0407",
+        "C2 | COLLECT | real_69c60b0ad4242eda8c47c944:L519 | 组织保障措施 | score=0.0312",
+        "D2 | DISPATCH | real_69c60b0ad4242eda8c47c944:L519 | 组织保障措施 | score=0.0312",
+        "C3 | COLLECT | real_69c60b0ad4242eda8c47c944:L520 | 坚决执行企业管生产必须管安全的原则。必须坚持“安全第一，预防为主，综合治理”的方针。肯定安全在建筑生产活动中为首要位置和重要性。当安全与生产发生矛盾的时候，应该服从安全，消灭隐患，保证建设工程在安全的条件下生产。 | score=0.0312",
+        "C4 | COLLECT | real_69c60b0ad4242eda8c47c944:L568 | 技术措施 | score=0.0398",
+        "D3 | DISPATCH | real_69c60b0ad4242eda8c47c944:L568 | 技术措施 | score=0.0398",
+        "C5 | COLLECT | real_69c60b0ad4242eda8c47c944:L569 | 安全保证措施 | score=0.0398",
+        "D4 | DISPATCH | real_69c60b0ad4242eda8c47c944:L569 | 安全保证措施 | score=0.0398",
+        "C6 | COLLECT | real_69c60b0ad4242eda8c47c944:L570 | 危险源辨识及风险评价 | score=0.0398",
+        "D5 | DISPATCH | real_69c60b0ad4242eda8c47c944:L570 | 危险源辨识及风险评价 | score=0.0398",
+        "C7 | COLLECT | real_69c60b0ad4242eda8c47c944:L571 | 本工程安全薄弱环节主要集中在深基坑支护工程、深基坑土方开挖及外运、基坑检测、降水工程、基坑安全防护、起重设备安装使用、加工棚机械作业、动火作业等。具体表现在以下几个方面： | score=0.0379",
+        "C8 | COLLECT | real_69c60b0ad4242eda8c47c944:L580 | 土方开挖运输施工保护措施 | score=0.0398",
+        "D6 | DISPATCH | real_69c60b0ad4242eda8c47c944:L580 | 土方开挖运输施工保护措施 | score=0.0398",
+        "C9 | COLLECT | real_69c60b0ad4242eda8c47c944:L584 | 项目部编制专项的交通策划方案，针对本工程地理位置，策划项目东侧有一个主出入口，南侧有一个次出入口，主出入口和次出入口全部作为土方开挖施工阶段的车辆出土口，制定专门的土方运输路线，确保土方开挖过程中的交通运输安全。如下图： | score=0.0398",
+        "C10 | COLLECT | real_69c60b0ad4242eda8c47c944:L629 | 各类地上地下管线及设施的安全保护 | score=0.0355"
+      ],
+      "projection_chars": 3498
+    },
+    {
+      "step_idx": 4,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Assembled evidence covers all main sections of the special construction plan including overview, basis, plan, technology, and calculations.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G6\",\"G5\",\"G2\",\"G4\",\"G3\",\"G7\",\"G1\"],\"reason\":\"Assembled evidence covers all main sections of the special construction plan including overview, basis, plan, technology, and calculations.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G6",
+        "G5",
+        "G2",
+        "G4",
+        "G3",
+        "G7",
+        "G1"
+      ],
+      "n_legal_actions": 54,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60b0ad4242eda8c47c944:L518 | 施工保证措施 | score=0.0407",
+        "D1 | DISPATCH | real_69c60b0ad4242eda8c47c944:L518 | 施工保证措施 | score=0.0407",
+        "C2 | COLLECT | real_69c60b0ad4242eda8c47c944:L519 | 组织保障措施 | score=0.0312",
+        "D2 | DISPATCH | real_69c60b0ad4242eda8c47c944:L519 | 组织保障措施 | score=0.0312",
+        "C3 | COLLECT | real_69c60b0ad4242eda8c47c944:L520 | 坚决执行企业管生产必须管安全的原则。必须坚持“安全第一，预防为主，综合治理”的方针。肯定安全在建筑生产活动中为首要位置和重要性。当安全与生产发生矛盾的时候，应该服从安全，消灭隐患，保证建设工程在安全的条件下生产。 | score=0.0312",
+        "C4 | COLLECT | real_69c60b0ad4242eda8c47c944:L568 | 技术措施 | score=0.0398",
+        "D3 | DISPATCH | real_69c60b0ad4242eda8c47c944:L568 | 技术措施 | score=0.0398",
+        "C5 | COLLECT | real_69c60b0ad4242eda8c47c944:L569 | 安全保证措施 | score=0.0398",
+        "D4 | DISPATCH | real_69c60b0ad4242eda8c47c944:L569 | 安全保证措施 | score=0.0398",
+        "C6 | COLLECT | real_69c60b0ad4242eda8c47c944:L570 | 危险源辨识及风险评价 | score=0.0398",
+        "D5 | DISPATCH | real_69c60b0ad4242eda8c47c944:L570 | 危险源辨识及风险评价 | score=0.0398",
+        "C7 | COLLECT | real_69c60b0ad4242eda8c47c944:L571 | 本工程安全薄弱环节主要集中在深基坑支护工程、深基坑土方开挖及外运、基坑检测、降水工程、基坑安全防护、起重设备安装使用、加工棚机械作业、动火作业等。具体表现在以下几个方面： | score=0.0379",
+        "C8 | COLLECT | real_69c60b0ad4242eda8c47c944:L580 | 土方开挖运输施工保护措施 | score=0.0398",
+        "D6 | DISPATCH | real_69c60b0ad4242eda8c47c944:L580 | 土方开挖运输施工保护措施 | score=0.0398",
+        "C9 | COLLECT | real_69c60b0ad4242eda8c47c944:L584 | 项目部编制专项的交通策划方案，针对本工程地理位置，策划项目东侧有一个主出入口，南侧有一个次出入口，主出入口和次出入口全部作为土方开挖施工阶段的车辆出土口，制定专门的土方运输路线，确保土方开挖过程中的交通运输安全。如下图： | score=0.0398",
+        "C10 | COLLECT | real_69c60b0ad4242eda8c47c944:L629 | 各类地上地下管线及设施的安全保护 | score=0.0355"
+      ],
+      "projection_chars": 3632
+    }
+  ]
+}

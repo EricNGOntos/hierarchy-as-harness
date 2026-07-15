@@ -1,0 +1,271 @@
+{
+  "inspect_id": "latest_clean_scope_0097",
+  "task_type": "scope_collection",
+  "doc_id": "real_69c60abfd4242eda8c47c8da",
+  "query": "列举《安徽一 医防完工复盘报告6.13》中“7、不足L3（材料损耗过大）的原因分析”部分的主要条目。",
+  "gold_nodes": [
+    "real_69c60abfd4242eda8c47c8da:L49",
+    "real_69c60abfd4242eda8c47c8da:L50",
+    "real_69c60abfd4242eda8c47c8da:L59",
+    "real_69c60abfd4242eda8c47c8da:L61",
+    "real_69c60abfd4242eda8c47c8da:L62"
+  ],
+  "elapsed_sec": 15.2,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 486,
+    "n_retrieved_nodes": 5,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60abfd4242eda8c47c8da:L49",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60abfd4242eda8c47c8da:L50",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60abfd4242eda8c47c8da:L59",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60abfd4242eda8c47c8da:L61",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60abfd4242eda8c47c8da:L62",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n7、不足L3（材料损耗过大）的原因分析\n\n[E2]\n分析指出因现场管理不到位导致木工、钢管及抹灰砂浆等材料严重浪费和损耗，分别造成18万、14万及14万的超目标成本损失。\n\n[E3]\n四.复盘萃取、提炼\n\n[E4]\n文章总结了项目管理的四大核心经验：加强工程量清单核对、通过商务与技术策划创效、强化安全与质量管理，并详细阐述了工期管控、分包班组及材料管理的具体措施与教训。\n\n[E5]\n五.复盘转化、应用\n\n[E6]\n[§ 7、不足L3（材料损耗过大）的原因分析]\n五.复盘转化、应用\n\n[E7]\n[§ 7、不足L3（材料损耗过大）的原因分析]\n四.复盘萃取、提炼\n\n[E8]\n[§ 7、不足L3（材料损耗过大）的原因分析]\n分析指出因现场管理不到位导致木工、钢管及抹灰砂浆等材料严重浪费和损耗，分别造成18万、14万及14万的超目标成本损失。\n\n[E9]\n[§ 7、不足L3（材料损耗过大）的原因分析]\n文章总结了项目管理的四大核心经验：加强工程量清单核对、通过商务与技术策划创效、强化安全与质量管理，并详细阐述了工期管控、分包班组及材料管理的具体措施与教训。"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 445,
+    "n_retrieved_nodes": 9,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60abfd4242eda8c47c8da:L49",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60abfd4242eda8c47c8da:L50",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60abfd4242eda8c47c8da:L59",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60abfd4242eda8c47c8da:L61",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60abfd4242eda8c47c8da:L62",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 7、不足L3（材料损耗过大）的原因分析]\n  分析指出因现场管理不到位导致木工、钢管及抹灰砂浆等材料严重浪费和损耗，分别造成18万、14万及14万的超目标成本损失。\n  四.复盘萃取、提炼\n  文章总结了项目管理的四大核心经验：加强工程量清单核对、通过商务与技术策划创效、强化安全与质量管理，并详细阐述了工期管控、分包班组及材料管理的具体措施与教训。\n  五.复盘转化、应用\n\n[E2]\n[§ 5、不足L1（工期滞后）的原因分析]\n  客观原因\n  主观原因\n  本文分析了导致工期滞后的三大核心问题：一是业主方分包单位进场慢、配合差及我方计划缺乏弹性；二是劳务班组和材料资源选择不当，导致施工延误；三是业主资金链断裂影响工程款支付，进而阻碍项目生产。\n\n[E3]\n[§ 6、不足L2（木工班组管理不善）的原因分析]\n项目亏损主因：一是招标前未做市场调研，定标过度参考最低价且忽视班组实力；二是过程管理重进度轻成本，清退及零星用工费用高，导致最终造价超原合同174.3万元。",
+    "trajectory_length": 4,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60abfd4242eda8c47c8da:L21",
+      "real_69c60abfd4242eda8c47c8da:L22",
+      "real_69c60abfd4242eda8c47c8da:L23",
+      "real_69c60abfd4242eda8c47c8da:L24",
+      "real_69c60abfd4242eda8c47c8da:L15",
+      "real_69c60abfd4242eda8c47c8da:L16",
+      "real_69c60abfd4242eda8c47c8da:L17",
+      "real_69c60abfd4242eda8c47c8da:L18",
+      "real_69c60abfd4242eda8c47c8da:L19"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C20",
+      "kind": "collect",
+      "section_id": "real_69c60abfd4242eda8c47c8da:L20",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect section 7 to retrieve the main items regarding material loss causes.",
+      "llm_raw": "{\"action_id\":\"C20\",\"ids\":[\"C20\"],\"confidence\":{\"C20\":0.9},\"reason\":\"Collect section 7 to retrieve the main items regarding material loss causes.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60abfd4242eda8c47c8da:L20"
+      ],
+      "n_added": 5,
+      "n_hits": 5,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": false,
+      "group_rank": null,
+      "n_legal_actions": 47,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60abfd4242eda8c47c8da:L1 | 1、目标回顾 | score=0.0560",
+        "D1 | DISPATCH | real_69c60abfd4242eda8c47c8da:L1 | 1、目标回顾 | score=0.0560",
+        "C2 | COLLECT | real_69c60abfd4242eda8c47c8da:L2 | 项目利润目标完成，超额收益36.40万元；工期严重滞后，超期427天；质量和安全文明施工目标均完成，并创建市标准化工地。 | score=0.0560",
+        "C3 | COLLECT | real_69c60abfd4242eda8c47c8da:L3 | 实际过程 | score=0.0525",
+        "C4 | COLLECT | real_69c60abfd4242eda8c47c8da:L4 | 3、亮点与不足 | score=0.0675",
+        "D2 | DISPATCH | real_69c60abfd4242eda8c47c8da:L4 | 3、亮点与不足 | score=0.0675",
+        "C5 | COLLECT | real_69c60abfd4242eda8c47c8da:L5 | 项目通过清单核对及设计优化实现净增收入524.2万元，并获安全质量双标化工地。但工期严重超期427天，导致间接费、机械费等增加273万元；木工班组及材料损耗管理不善，分别超目标成本33.3万和46万元。 | score=0.0675",
+        "C6 | COLLECT | real_69c60abfd4242eda8c47c8da:L6 | 三.复盘反思、分析 | score=0.0660",
+        "C7 | COLLECT | real_69c60abfd4242eda8c47c8da:L7 | 1、亮点H1（清单核对、增加收入）的原因分析 | score=0.0638",
+        "C8 | COLLECT | real_69c60abfd4242eda8c47c8da:L8 | 2、亮点H2（设计及技术策划增加收入）的原因分析 | score=0.0681",
+        "D3 | DISPATCH | real_69c60abfd4242eda8c47c8da:L8 | 2、亮点H2（设计及技术策划增加收入）的原因分析 | score=0.0681",
+        "C9 | COLLECT | real_69c60abfd4242eda8c47c8da:L9 | 内容分析了项目变更的客观与主观原因。客观上需建立信任；主观上针对亏损项目集中策划并寻找需求促成变更，同时参考医疗项目经验重点策划变更与答疑。 | score=0.0681",
+        "C10 | COLLECT | real_69c60abfd4242eda8c47c8da:L10 | 3、亮点H2（质量目标：工程质量验收合格）的原因分析 | score=0.0610",
+        "D4 | DISPATCH | real_69c60abfd4242eda8c47c8da:L10 | 3、亮点H2（质量目标：工程质量验收合格）的原因分析 | score=0.0610",
+        "C11 | COLLECT | real_69c60abfd4242eda8c47c8da:L11 | 内容阐述了四项工程质量管控措施：提前制定策划、材料进场举牌验收、实行样板先行制度以及落实三检与隐蔽工程联合验收，旨在提升施工工艺质量。 | score=0.0610",
+        "C12 | COLLECT | real_69c60abfd4242eda8c47c8da:L12 | 4、亮点H2（安全文明施工目标：杜绝重伤以上生产安全事故）的原因分析 | score=0.0582"
+      ],
+      "projection_chars": 3414
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_collect",
+      "action_id": "C14",
+      "kind": "collect",
+      "section_id": "real_69c60abfd4242eda8c47c8da:L14",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect section 7 (L3 material loss) to retrieve the required cause analysis items.",
+      "llm_raw": "{\"action_id\":\"C14\",\"ids\":[\"C14\"],\"confidence\":{\"C14\":0.9},\"reason\":\"Collect section 7 (L3 material loss) to retrieve the required cause analysis items.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60abfd4242eda8c47c8da:L14"
+      ],
+      "n_added": 4,
+      "n_hits": 4,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": false,
+      "group_rank": null,
+      "n_legal_actions": 48,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60abfd4242eda8c47c8da:L1 | 1、目标回顾 | score=0.0560",
+        "D1 | DISPATCH | real_69c60abfd4242eda8c47c8da:L1 | 1、目标回顾 | score=0.0560",
+        "C2 | COLLECT | real_69c60abfd4242eda8c47c8da:L2 | 项目利润目标完成，超额收益36.40万元；工期严重滞后，超期427天；质量和安全文明施工目标均完成，并创建市标准化工地。 | score=0.0560",
+        "C3 | COLLECT | real_69c60abfd4242eda8c47c8da:L3 | 实际过程 | score=0.0525",
+        "C4 | COLLECT | real_69c60abfd4242eda8c47c8da:L4 | 3、亮点与不足 | score=0.0675",
+        "D2 | DISPATCH | real_69c60abfd4242eda8c47c8da:L4 | 3、亮点与不足 | score=0.0675",
+        "C5 | COLLECT | real_69c60abfd4242eda8c47c8da:L5 | 项目通过清单核对及设计优化实现净增收入524.2万元，并获安全质量双标化工地。但工期严重超期427天，导致间接费、机械费等增加273万元；木工班组及材料损耗管理不善，分别超目标成本33.3万和46万元。 | score=0.0675",
+        "C6 | COLLECT | real_69c60abfd4242eda8c47c8da:L6 | 三.复盘反思、分析 | score=0.0660",
+        "C7 | COLLECT | real_69c60abfd4242eda8c47c8da:L7 | 1、亮点H1（清单核对、增加收入）的原因分析 | score=0.0638",
+        "C8 | COLLECT | real_69c60abfd4242eda8c47c8da:L8 | 2、亮点H2（设计及技术策划增加收入）的原因分析 | score=0.0681",
+        "D3 | DISPATCH | real_69c60abfd4242eda8c47c8da:L8 | 2、亮点H2（设计及技术策划增加收入）的原因分析 | score=0.0681",
+        "C9 | COLLECT | real_69c60abfd4242eda8c47c8da:L9 | 内容分析了项目变更的客观与主观原因。客观上需建立信任；主观上针对亏损项目集中策划并寻找需求促成变更，同时参考医疗项目经验重点策划变更与答疑。 | score=0.0681",
+        "C10 | COLLECT | real_69c60abfd4242eda8c47c8da:L10 | 3、亮点H2（质量目标：工程质量验收合格）的原因分析 | score=0.0610",
+        "D4 | DISPATCH | real_69c60abfd4242eda8c47c8da:L10 | 3、亮点H2（质量目标：工程质量验收合格）的原因分析 | score=0.0610",
+        "C11 | COLLECT | real_69c60abfd4242eda8c47c8da:L11 | 内容阐述了四项工程质量管控措施：提前制定策划、材料进场举牌验收、实行样板先行制度以及落实三检与隐蔽工程联合验收，旨在提升施工工艺质量。 | score=0.0610",
+        "C12 | COLLECT | real_69c60abfd4242eda8c47c8da:L12 | 4、亮点H2（安全文明施工目标：杜绝重伤以上生产安全事故）的原因分析 | score=0.0582"
+      ],
+      "projection_chars": 3400
+    },
+    {
+      "step_idx": 3,
+      "action": "nav_collect",
+      "action_id": "C14",
+      "kind": "collect",
+      "section_id": "real_69c60abfd4242eda8c47c8da:L18",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Dispatch D6 to retrieve the full content of section 7 regarding material loss causes.",
+      "llm_raw": "{\"action_id\":\"C14\",\"ids\":[\"C14\"],\"confidence\":{\"C14\":0.9},\"reason\":\"Dispatch D6 to retrieve the full content of section 7 regarding material loss causes.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60abfd4242eda8c47c8da:L18"
+      ],
+      "n_added": 1,
+      "n_hits": 1,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 47,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60abfd4242eda8c47c8da:L1 | 1、目标回顾 | score=0.0560",
+        "D1 | DISPATCH | real_69c60abfd4242eda8c47c8da:L1 | 1、目标回顾 | score=0.0560",
+        "C2 | COLLECT | real_69c60abfd4242eda8c47c8da:L2 | 项目利润目标完成，超额收益36.40万元；工期严重滞后，超期427天；质量和安全文明施工目标均完成，并创建市标准化工地。 | score=0.0560",
+        "C3 | COLLECT | real_69c60abfd4242eda8c47c8da:L3 | 实际过程 | score=0.0525",
+        "C4 | COLLECT | real_69c60abfd4242eda8c47c8da:L4 | 3、亮点与不足 | score=0.0675",
+        "D2 | DISPATCH | real_69c60abfd4242eda8c47c8da:L4 | 3、亮点与不足 | score=0.0675",
+        "C5 | COLLECT | real_69c60abfd4242eda8c47c8da:L5 | 项目通过清单核对及设计优化实现净增收入524.2万元，并获安全质量双标化工地。但工期严重超期427天，导致间接费、机械费等增加273万元；木工班组及材料损耗管理不善，分别超目标成本33.3万和46万元。 | score=0.0675",
+        "C6 | COLLECT | real_69c60abfd4242eda8c47c8da:L6 | 三.复盘反思、分析 | score=0.0660",
+        "C7 | COLLECT | real_69c60abfd4242eda8c47c8da:L7 | 1、亮点H1（清单核对、增加收入）的原因分析 | score=0.0638",
+        "C8 | COLLECT | real_69c60abfd4242eda8c47c8da:L8 | 2、亮点H2（设计及技术策划增加收入）的原因分析 | score=0.0681",
+        "D3 | DISPATCH | real_69c60abfd4242eda8c47c8da:L8 | 2、亮点H2（设计及技术策划增加收入）的原因分析 | score=0.0681",
+        "C9 | COLLECT | real_69c60abfd4242eda8c47c8da:L9 | 内容分析了项目变更的客观与主观原因。客观上需建立信任；主观上针对亏损项目集中策划并寻找需求促成变更，同时参考医疗项目经验重点策划变更与答疑。 | score=0.0681",
+        "C10 | COLLECT | real_69c60abfd4242eda8c47c8da:L10 | 3、亮点H2（质量目标：工程质量验收合格）的原因分析 | score=0.0610",
+        "D4 | DISPATCH | real_69c60abfd4242eda8c47c8da:L10 | 3、亮点H2（质量目标：工程质量验收合格）的原因分析 | score=0.0610",
+        "C11 | COLLECT | real_69c60abfd4242eda8c47c8da:L11 | 内容阐述了四项工程质量管控措施：提前制定策划、材料进场举牌验收、实行样板先行制度以及落实三检与隐蔽工程联合验收，旨在提升施工工艺质量。 | score=0.0610",
+        "C12 | COLLECT | real_69c60abfd4242eda8c47c8da:L12 | 4、亮点H2（安全文明施工目标：杜绝重伤以上生产安全事故）的原因分析 | score=0.0582"
+      ],
+      "projection_chars": 3316
+    },
+    {
+      "step_idx": 4,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence G1 contains the specific section §7 regarding material loss causes as requested.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Evidence G1 contains the specific section §7 regarding material loss causes as requested.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "n_legal_actions": 47,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60abfd4242eda8c47c8da:L1 | 1、目标回顾 | score=0.0560",
+        "D1 | DISPATCH | real_69c60abfd4242eda8c47c8da:L1 | 1、目标回顾 | score=0.0560",
+        "C2 | COLLECT | real_69c60abfd4242eda8c47c8da:L2 | 项目利润目标完成，超额收益36.40万元；工期严重滞后，超期427天；质量和安全文明施工目标均完成，并创建市标准化工地。 | score=0.0560",
+        "C3 | COLLECT | real_69c60abfd4242eda8c47c8da:L3 | 实际过程 | score=0.0525",
+        "C4 | COLLECT | real_69c60abfd4242eda8c47c8da:L4 | 3、亮点与不足 | score=0.0675",
+        "D2 | DISPATCH | real_69c60abfd4242eda8c47c8da:L4 | 3、亮点与不足 | score=0.0675",
+        "C5 | COLLECT | real_69c60abfd4242eda8c47c8da:L5 | 项目通过清单核对及设计优化实现净增收入524.2万元，并获安全质量双标化工地。但工期严重超期427天，导致间接费、机械费等增加273万元；木工班组及材料损耗管理不善，分别超目标成本33.3万和46万元。 | score=0.0675",
+        "C6 | COLLECT | real_69c60abfd4242eda8c47c8da:L6 | 三.复盘反思、分析 | score=0.0660",
+        "C7 | COLLECT | real_69c60abfd4242eda8c47c8da:L7 | 1、亮点H1（清单核对、增加收入）的原因分析 | score=0.0638",
+        "C8 | COLLECT | real_69c60abfd4242eda8c47c8da:L8 | 2、亮点H2（设计及技术策划增加收入）的原因分析 | score=0.0681",
+        "D3 | DISPATCH | real_69c60abfd4242eda8c47c8da:L8 | 2、亮点H2（设计及技术策划增加收入）的原因分析 | score=0.0681",
+        "C9 | COLLECT | real_69c60abfd4242eda8c47c8da:L9 | 内容分析了项目变更的客观与主观原因。客观上需建立信任；主观上针对亏损项目集中策划并寻找需求促成变更，同时参考医疗项目经验重点策划变更与答疑。 | score=0.0681",
+        "C10 | COLLECT | real_69c60abfd4242eda8c47c8da:L10 | 3、亮点H2（质量目标：工程质量验收合格）的原因分析 | score=0.0610",
+        "D4 | DISPATCH | real_69c60abfd4242eda8c47c8da:L10 | 3、亮点H2（质量目标：工程质量验收合格）的原因分析 | score=0.0610",
+        "C11 | COLLECT | real_69c60abfd4242eda8c47c8da:L11 | 内容阐述了四项工程质量管控措施：提前制定策划、材料进场举牌验收、实行样板先行制度以及落实三检与隐蔽工程联合验收，旨在提升施工工艺质量。 | score=0.0610",
+        "C12 | COLLECT | real_69c60abfd4242eda8c47c8da:L12 | 4、亮点H2（安全文明施工目标：杜绝重伤以上生产安全事故）的原因分析 | score=0.0582"
+      ],
+      "projection_chars": 3291
+    }
+  ]
+}

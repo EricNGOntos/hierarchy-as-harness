@@ -1,0 +1,204 @@
+{
+  "inspect_id": "latest_clean_multi_0568",
+  "task_type": "multi_hop",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“附件5.2.2 施工现场安全负面清单（2019版）”相关内容，分别说明两处相邻证据给出的要点。",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L545",
+    "real_69c60974d4242eda8c47c615:L547"
+  ],
+  "elapsed_sec": 6.19,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 18,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L545",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L547",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 附件_安全管理规定（2020版）.docx / 第二章　安全检查及隐患排查规定 / 2.2  安全检查及隐患排查内容 / 2.2.2班组安全检查的内容：]\n3、施工工具、设备是否完好无损；\n\n[E2]\n[§ 附件_安全管理规定（2020版）.docx / 第八章　附　则 / 3.2 生产安全事故快报 / 6.7.3 安全技术交底记录 / 附表1.2-3]\n工程名称\n\n[E3]\n[§ 附件_安全管理规定（2020版）.docx / 第八章　附　则 / 3.2 生产安全事故快报 / 6.7.3 安全技术交底记录 / 附表3.2]\n单位名称：\n\n[E4]\n[§ 附件_安全管理规定（2020版）.docx / 第二章　安全检查及隐患排查规定 / 2.3安全检查及隐患排查的方法 / 2.3.3 定期安全检查]\n附表2-3-3《项目周检查标准化表格》\n\n[E5]\n[§ 附件_安全管理规定（2020版）.docx / 第三章　生产安全事故报告处理规定 / 3.2 事故报告]\n1 事故的时间、地点和工程项目有关单位名称；\n\n[E6]\n[§ 附件_安全管理规定（2020版）.docx /"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 413,
+    "n_retrieved_nodes": 4,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L545",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L547",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 附表5.2.2：《施工现场安全负面清单（2019版）》]\n  5.2.3 租赁机械设备必须签订租赁和安装、拆卸合同，合同应使用集团公司合同示范文本，同时签订安全协议书（集团公司示范文本，明确总包、使用、租赁、安拆各方的安全责任）。\n  租赁、安装单位应提供加盖单位公章的营业执照、资质证书、安全生产许可证、施工机械租赁行业确认书、行业推荐证书等企业资质文件；以及拟租赁设备制造许可证、产品合格证、制造监督检验证明、备案登记、自检合格证明、安装使用说明书等产品证明文件。\n  5.2.4 租赁施工升降机和800KN·m及以下的塔式起重机时，应选用租赁安装维修保养一体化的专业承包企业；对800KN·m以上的塔式起重机出租单位，当其不具备相应的起重设备安装工程专业承包资质的，项目经理部必须在签订租赁合同的同时，与出租、安装单位共同签订三方安全管理协议书，并与安装单位签订安拆合同，并明确各方的安全生产权利与义务。",
+    "trajectory_length": 4,
+    "reports_context": "=== Investigate results (1 region(s)) ===\n[region 1] real_69c60974d4242eda8c47c615:L193 (ok)\ncollected 4 branch node(s); explicit roots=['real_69c60974d4242eda8c47c615:L193']\ncollected: real_69c60974d4242eda8c47c615:L193, real_69c60974d4242eda8c47c615:L194, real_69c60974d4242eda8c47c615:L195, real_69c60974d4242eda8c47c615:L196\nreason: Collected section L193 contains the required negative list content to answer the query.\n---\n=== End Investigate ===",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L193",
+      "real_69c60974d4242eda8c47c615:L194",
+      "real_69c60974d4242eda8c47c615:L195",
+      "real_69c60974d4242eda8c47c615:L196"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C1",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L193",
+      "scope": "real_69c60974d4242eda8c47c615:L193",
+      "depth": 1,
+      "llm_reason": "Collects the full section 5.2.2 to extract the two adjacent evidence points requested.",
+      "llm_raw": "{\"action_id\":\"C1\",\"ids\":[\"C1\"],\"confidence\":{\"C1\":0.9},\"reason\":\"Collects the full section 5.2.2 to extract the two adjacent evidence points requested.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L193"
+      ],
+      "n_added": 3,
+      "n_hits": 3,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 4,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L193 | 附表5.2.2：《施工现场安全负面清单（2019版）》 | score=0.0613",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L194 | 5.2.3 租赁机械设备必须签订租赁和安装、拆卸合同，合同应使用集团公司合同示范文本，同时签订安全协议书（集团公司示范文本，明确总包、使用、租赁、安拆各方的安全责任）。 | score=0.0429",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L195 | 租赁、安装单位应提供加盖单位公章的营业执照、资质证书、安全生产许可证、施工机械租赁行业确认书、行业推荐证书等企业资质文件；以及拟租赁设备制造许可证、产品合格证、制造监督检验证明、备案登记、自检合格证明、安装使用说明书等产品证明文件。 | score=0.0613",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L196 | 5.2.4 租赁施工升降机和800KN·m及以下的塔式起重机时，应选用租赁安装维修保养一体化的专业承包企业；对800KN·m以上的塔式起重机出租单位，当其不具备相应的起重设备安装工程专业承包资质的，项目经理部必须在签订租赁合同的同时，与出租、安装单位共同签订三方安全管理协议书，并与安装单位签订安拆合同，并明确各方的安全生产权利与义务。 | score=0.0437"
+      ],
+      "projection_chars": 1251
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": "real_69c60974d4242eda8c47c615:L193",
+      "depth": 1,
+      "llm_reason": "Collected section L193 contains the required negative list content to answer the query.",
+      "llm_raw": "{\"action_id\":\"F1\",\"reason\":\"Collected section L193 contains the required negative list content to answer the query.\",\"confidence\":0.9}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": null,
+      "n_legal_actions": 1,
+      "legal_actions_preview": [
+        "F1 | FINISH | finish navigation and pack final evidence budget"
+      ],
+      "projection_chars": 190
+    },
+    {
+      "step_idx": 3,
+      "action": "nav_dispatch",
+      "action_id": "D10",
+      "kind": "dispatch",
+      "section_id": "real_69c60974d4242eda8c47c615:L193",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Dispatch to retrieve the full content of Appendix 5.2.2 Negative List.",
+      "llm_raw": "{\"action_id\":\"D10\",\"reason\":\"Dispatch to retrieve the full content of Appendix 5.2.2 Negative List.\"}",
+      "dispatch_regions": [
+        "real_69c60974d4242eda8c47c615:L193"
+      ],
+      "n_child_reports": 1,
+      "n_child_skipped": 0,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": null,
+      "n_legal_actions": 55,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0619",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0619",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0611",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0611",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0611",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0611",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L49 | 5、施工现场管理行为和实物状况（安全隐患排查、安全设施及安全防护等各项措施和落实情况）； | score=0.0611",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0619",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0619",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L63 | 2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。 | score=0.0619",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0560",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0560",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0560",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0560",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L102 | 2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐患排除前或者排除过程中无法保证安全的，应当从危险区域内撤出作业人员，并疏散可能危及的其他人员，设置警戒标志，暂时停工；对暂时难以停工或者停止使用的相关生产储存装置、设施、设备，应当加强维护和保养，防止事故发生。 | score=0.0560",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0670"
+      ],
+      "projection_chars": 3430
+    },
+    {
+      "step_idx": 4,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence G1 contains the required negative list content to answer the query.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Evidence G1 contains the required negative list content to answer the query.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "n_legal_actions": 57,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0619",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0619",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0611",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0611",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0611",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0611",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L49 | 5、施工现场管理行为和实物状况（安全隐患排查、安全设施及安全防护等各项措施和落实情况）； | score=0.0611",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0619",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0619",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L63 | 2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。 | score=0.0619",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0560",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0560",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0560",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0560",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L102 | 2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐患排除前或者排除过程中无法保证安全的，应当从危险区域内撤出作业人员，并疏散可能危及的其他人员，设置警戒标志，暂时停工；对暂时难以停工或者停止使用的相关生产储存装置、设施、设备，应当加强维护和保养，防止事故发生。 | score=0.0560",
+        "D7 | DISPATCH | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0670"
+      ],
+      "projection_chars": 3557
+    }
+  ]
+}

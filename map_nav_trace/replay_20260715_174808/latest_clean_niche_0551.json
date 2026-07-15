@@ -1,0 +1,197 @@
+{
+  "inspect_id": "latest_clean_niche_0551",
+  "task_type": "niche_fact",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“3.2 生产安全事故快报”相关内容，该处明确写出的规定或事实是什么？",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L493"
+  ],
+  "elapsed_sec": 5.47,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 11,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L493",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 3.2 事故报告]\n生产安全事故报告后出现新情况的，应及时补报。\n\n[E2]\n[§ 3.2 事故报告]\n在报告的同时，应当及时编制《生产安全事故快报表》（见附表3.2）报陕建集团总公司安全监管部门。\n\n[E3]\n[§ 3.2 事故报告]\n5 事故发生后采取的措施及事故控制情况；\n\n[E4]\n[§ 3.2 事故报告]\n生产安全事故报告的内容应包括：\n\n[E5]\n[§ 3.2 事故报告]\n1 事故的时间、地点和工程项目有关单位名称；\n\n[E6]\n[§ 3.2 事故报告]\n事故发生后，事故现场负责人应当立即向集团公司负责人报告；集团公司负责人接到报告后，按照《生产安全事故报告和调查处理条例》的规定，在1小时内向事故发生地安全生产监督管理局、建设主管部门、陕建集团总公司等部门逐级报告。\n\n[E7]\n[§ 3.2 事故报告]\n3 事故已经造成或者可能造成的伤亡人数（包括下落不明的人数）和初步估计的直接经济损失；\n\n[E8]\n[§ 3.2 事故报告]\n6 事故报告单位或报告人员；\n\n[E9]\n[§ 3.2 事故报告]\n2 事故的简要经过；\n\n[E10]\n[§ 3.2 事故报告]\n4"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 498,
+    "n_retrieved_nodes": 21,
+    "gold_node_recall": 1.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L493",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 3.2 事故报告]\n  事故发生后，事故现场负责人应当立即向集团公司负责人报告；集团公司负责人接到报告后，按照《生产安全事故报告和调查处理条例》的规定，在1小时内向事故发生地安全生产监督管理局、建设主管部门、陕建集团总公司等部门逐级报告。\n  在报告的同时，应当及时编制《生产安全事故快报表》（见附表3.2）报陕建集团总公司安全监管部门。\n  生产安全事故报告的内容应包括：\n  1 事故的时间、地点和工程项目有关单位名称；\n  2 事故的简要经过；\n  3 事故已经造成或者可能造成的伤亡人数（包括下落不明的人数）和初步估计的直接经济损失；\n  4 事故的初步原因；\n  5 事故发生后采取的措施及事故控制情况；\n  6 事故报告单位或报告人员；\n  生产安全事故报告后出现新情况的，应及时补报。\n\n[E2]\n[§ 附表3.2]\n  生产安全事故快报\n  单位名称：\n\n[E3]\n[§ 3.2 生产安全事故快报]\n  3.7-1 职工伤亡事故月（年）报表\n  3.7-3 安全生产信息季（年）度报表\n  4.3.1 应急预案演练方案\n\n[E4]\n[§ 附表1.2-3]\n工程名称",
+    "trajectory_length": 3,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L116",
+      "real_69c60974d4242eda8c47c615:L117",
+      "real_69c60974d4242eda8c47c615:L118",
+      "real_69c60974d4242eda8c47c615:L119",
+      "real_69c60974d4242eda8c47c615:L120",
+      "real_69c60974d4242eda8c47c615:L121",
+      "real_69c60974d4242eda8c47c615:L122",
+      "real_69c60974d4242eda8c47c615:L123",
+      "real_69c60974d4242eda8c47c615:L124",
+      "real_69c60974d4242eda8c47c615:L125",
+      "real_69c60974d4242eda8c47c615:L126",
+      "real_69c60974d4242eda8c47c615:L492",
+      "real_69c60974d4242eda8c47c615:L501",
+      "real_69c60974d4242eda8c47c615:L534",
+      "real_69c60974d4242eda8c47c615:L535",
+      "real_69c60974d4242eda8c47c615:L536",
+      "real_69c60974d4242eda8c47c615:L493",
+      "real_69c60974d4242eda8c47c615:L494",
+      "real_69c60974d4242eda8c47c615:L495",
+      "real_69c60974d4242eda8c47c615:L522",
+      "real_69c60974d4242eda8c47c615:L524"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C33",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L492",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Section 3.2 explicitly contains the 'Production Safety Accident Quick Report' content requested.",
+      "llm_raw": "{\"action_id\":\"C33\",\"ids\":[\"C33\"],\"confidence\":{\"C33\":0.9},\"reason\":\"Section 3.2 explicitly contains the 'Production Safety Accident Quick Report' content requested.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L492"
+      ],
+      "n_added": 51,
+      "n_hits": 51,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 55,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0629",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0629",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0545",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0545",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0545",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0505",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0505",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0505",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0505",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L54 | 10、各类事故是否按“四不放过”的原则进行处理，是否有隐瞒不报情况。 | score=0.0505",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0629",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0629",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L89 | 2.4.3 一般事故隐患整改、复查、销项 | score=0.0540",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L89 | 2.4.3 一般事故隐患整改、复查、销项 | score=0.0540",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L90 | 1、一般事故隐患的治理由各项目部根据事故隐患的实际情况，制定针对性的治理措施，落实相关责任人，限期进行整改； | score=0.0540",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0629"
+      ],
+      "projection_chars": 3481
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_collect",
+      "action_id": "C15",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L116",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect section 3.2 to retrieve specific regulations on production safety accident rapid reporting.",
+      "llm_raw": "{\"action_id\":\"C15\",\"ids\":[\"C15\"],\"confidence\":{\"C15\":0.9},\"reason\":\"Collect section 3.2 to retrieve specific regulations on production safety accident rapid reporting.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L116"
+      ],
+      "n_added": 10,
+      "n_hits": 10,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 53,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0629",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0629",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0545",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0545",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0545",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0505",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0505",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0505",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0505",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L54 | 10、各类事故是否按“四不放过”的原则进行处理，是否有隐瞒不报情况。 | score=0.0505",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0629",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0629",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L89 | 2.4.3 一般事故隐患整改、复查、销项 | score=0.0540",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L89 | 2.4.3 一般事故隐患整改、复查、销项 | score=0.0540",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L90 | 1、一般事故隐患的治理由各项目部根据事故隐患的实际情况，制定针对性的治理措施，落实相关责任人，限期进行整改； | score=0.0540",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0629"
+      ],
+      "projection_chars": 3527
+    },
+    {
+      "step_idx": 3,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence G1 and G2 contain the specific regulations for '3.2 生产安全事故快报' including reporting content and the fast report form.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\",\"G2\"],\"reason\":\"Evidence G1 and G2 contain the specific regulations for '3.2 生产安全事故快报' including reporting content and the fast report form.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1",
+        "G2"
+      ],
+      "n_legal_actions": 50,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0629",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0629",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0545",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0545",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0545",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0505",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0505",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0505",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L44 | 2.2.1集团公司、二级单位、项目部安全检查的主要内容： | score=0.0505",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L54 | 10、各类事故是否按“四不放过”的原则进行处理，是否有隐瞒不报情况。 | score=0.0505",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0629",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0629",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L89 | 2.4.3 一般事故隐患整改、复查、销项 | score=0.0540",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L89 | 2.4.3 一般事故隐患整改、复查、销项 | score=0.0540",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L90 | 1、一般事故隐患的治理由各项目部根据事故隐患的实际情况，制定针对性的治理措施，落实相关责任人，限期进行整改； | score=0.0540",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0629"
+      ],
+      "projection_chars": 3576
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "inspect_id": "latest_clean_multi_0521",
+  "task_type": "multi_hop",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“7.7.1 施工现场用火管理”相关内容，分别说明两处相邻证据给出的要点。",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L449",
+    "real_69c60974d4242eda8c47c615:L450"
+  ],
+  "elapsed_sec": 4.94,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 10,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L449",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L450",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 第七章　施工现场消防安全管理暂行规定 / 7.7 用火、用电、用气管理 / 7.7.2 施工现场用电管理]\n2、电气设备与可燃、易燃易爆和腐蚀性物品保持一定的安全距离；\n\n[E2]\n[§ 第七章　施工现场消防安全管理暂行规定 / 7.1 总  则]\n7.1.6 定期对施工的各类人员进行消防安全教育，提高防火灭火技能。定期进行防火安全大检查，消除火险隐患。\n\n[E3]\n[§ 第七章　施工现场消防安全管理暂行规定 / 7.1 总  则]\n7.1.1 本规定适用于集团公司所有在建项目工程施工现场的消防安全管理。\n\n[E4]\n[§ 第七章　施工现场消防安全管理暂行规定 / 7.5 防火管理一般规定]\n7.5.6 施工单位(项目部)必须做好并保存施工现场消防安全管理的相关文件和记录，建立现场消防安全管理档案。\n\n[E5]\n[§ 第七章　施工现场消防安全管理暂行规定 / 7.5 防火管理一般规定]\n7.5.1 施工现场的消防安全管理由责任单位统一管理，项目部具体负责落实。\n\n[E6]\n[§ 第七章　施工现场消防安全管理暂行规定 / 7.7 用火、用电、用气管理 / 7.7.1 施工"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 356,
+    "n_retrieved_nodes": 7,
+    "gold_node_recall": 1.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L449",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L450",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 7.7.1 施工现场用火管理]\n  1、施工现场动火作业必须办理动火许可证；动火操作人员必须具有相应资格；\n  2、施工现场在进行焊接、切割、烘烤或加热等动火作业前，必须对作业现场的可燃物进行清理；对于作业现场及其附近无法移走的可燃物，必须采用不燃材料对其覆盖或隔离；裸露的可燃材料上严禁直接进行动火作业；\n  3、焊接、切割、烘烤或加热等动火作业，必须配备灭火器材，并设动火监护人进行现场一对一监护；\n  4、五级（含五级）以上风力时，必须停止焊接、切割等室外动火作业，否则必须采取可靠的挡风措施；\n  5、动火作业后，必须对现场进行检查，确认无火灾危险后，动火操作人员方可离开；\n  6、施工现场不应采用明火取暖；厨房操作间炉灶使用完毕后，必须将炉火熄灭，排油烟机及油烟管道必须定期清理油垢。",
+    "trajectory_length": 2,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L448",
+      "real_69c60974d4242eda8c47c615:L449",
+      "real_69c60974d4242eda8c47c615:L450",
+      "real_69c60974d4242eda8c47c615:L451",
+      "real_69c60974d4242eda8c47c615:L452",
+      "real_69c60974d4242eda8c47c615:L453",
+      "real_69c60974d4242eda8c47c615:L454"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C31",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L448",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect section 7.7.1 and its leaf nodes to extract key points on fire management as requested.",
+      "llm_raw": "{\"action_id\":\"C31\",\"ids\":[\"C32\",\"C33\"],\"confidence\":{\"C31\":0.9,\"C32\":0.95,\"C33\":0.95},\"reason\":\"Collect section 7.7.1 and its leaf nodes to extract key points on fire management as requested.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L448",
+        "real_69c60974d4242eda8c47c615:L449",
+        "real_69c60974d4242eda8c47c615:L450"
+      ],
+      "n_added": 6,
+      "n_hits": 8,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": false,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 50,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0601",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0601",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L178 | 5.1 总则 | score=0.0601",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L178 | 5.1 总则 | score=0.0601",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L185 | 根据工程特点及周围环境制定机械设备安全技术操作规程，设置安全警示标志；安全技术操作规程及警示标志应按照《施工现场标准化管理手册》要求制成标志牌悬挂在相应机械设备的醒目位置。 | score=0.0601",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L186 | 5.2机械设备管理 | score=0.0519",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L186 | 5.2机械设备管理 | score=0.0519",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L193 | 附表5.2.2：《施工现场安全负面清单（2019版）》 | score=0.0519",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L193 | 附表5.2.2：《施工现场安全负面清单（2019版）》 | score=0.0519",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L195 | 租赁、安装单位应提供加盖单位公章的营业执照、资质证书、安全生产许可证、施工机械租赁行业确认书、行业推荐证书等企业资质文件；以及拟租赁设备制造许可证、产品合格证、制造监督检验证明、备案登记、自检合格证明、安装使用说明书等产品证明文件。 | score=0.0519",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L233 | 5.4 职责 | score=0.0592",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L233 | 5.4 职责 | score=0.0592",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L234 | 5.4.1 项目部（使用单位）应当履行下列职责： | score=0.0592",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L234 | 5.4.1 项目部（使用单位）应当履行下列职责： | score=0.0592",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L241 | 7、根据不同施工阶段、周围环境以及季节、气候的变化，及时督促出租单位采取相应的安全防护措施； | score=0.0592",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L262 | 第六章　项目安全管理规定 | score=0.0580"
+      ],
+      "projection_chars": 3487
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence G1 contains all required points for section 7.7.1 regarding fire management.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Evidence G1 contains all required points for section 7.7.1 regarding fire management.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "n_legal_actions": 48,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0601",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0601",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L178 | 5.1 总则 | score=0.0601",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L178 | 5.1 总则 | score=0.0601",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L185 | 根据工程特点及周围环境制定机械设备安全技术操作规程，设置安全警示标志；安全技术操作规程及警示标志应按照《施工现场标准化管理手册》要求制成标志牌悬挂在相应机械设备的醒目位置。 | score=0.0601",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L186 | 5.2机械设备管理 | score=0.0519",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L186 | 5.2机械设备管理 | score=0.0519",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L193 | 附表5.2.2：《施工现场安全负面清单（2019版）》 | score=0.0519",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L193 | 附表5.2.2：《施工现场安全负面清单（2019版）》 | score=0.0519",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L195 | 租赁、安装单位应提供加盖单位公章的营业执照、资质证书、安全生产许可证、施工机械租赁行业确认书、行业推荐证书等企业资质文件；以及拟租赁设备制造许可证、产品合格证、制造监督检验证明、备案登记、自检合格证明、安装使用说明书等产品证明文件。 | score=0.0519",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L233 | 5.4 职责 | score=0.0592",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L233 | 5.4 职责 | score=0.0592",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L234 | 5.4.1 项目部（使用单位）应当履行下列职责： | score=0.0592",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L234 | 5.4.1 项目部（使用单位）应当履行下列职责： | score=0.0592",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L241 | 7、根据不同施工阶段、周围环境以及季节、气候的变化，及时督促出租单位采取相应的安全防护措施； | score=0.0592",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L262 | 第六章　项目安全管理规定 | score=0.0580"
+      ],
+      "projection_chars": 3431
+    }
+  ]
+}

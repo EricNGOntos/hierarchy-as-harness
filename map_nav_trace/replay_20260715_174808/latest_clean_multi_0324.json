@@ -1,0 +1,265 @@
+{
+  "inspect_id": "latest_clean_multi_0324",
+  "task_type": "multi_hop",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“5.3.2 按陕建监总发[2014]04号文要求：”相关内容，分别说明两处相邻证据给出的要点。",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L211",
+    "real_69c60974d4242eda8c47c615:L212"
+  ],
+  "elapsed_sec": 8.0,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 19,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L211",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L212",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 附件_安全管理规定（2020版）.docx]\n陕西建工第十一建设集团有限公司\n\n[E2]\n[§ 附件_安全管理规定（2020版）.docx / 第二章　安全检查及隐患排查规定 / 2.4 隐患整改 / 2.4.4 重大事故隐患整改、复查、销项]\n3、经费和物资的落实；\n\n[E3]\n[§ 附件_安全管理规定（2020版）.docx / 第八章　附　则 / 3.2 生产安全事故快报 / 6.7.3 安全技术交底记录 / 附表3.2]\n单位名称：\n\n[E4]\n[§ 附件_安全管理规定（2020版）.docx / 第二章　安全检查及隐患排查规定 / 2.3安全检查及隐患排查的方法 / 2.3.3 定期安全检查]\n附表2-3-3《项目周检查标准化表格》\n\n[E5]\n[§ 附件_安全管理规定（2020版）.docx / 第六章　项目安全管理规定 / 6.11 安全标志]\n附表6.7.3：安全技术交底记录。\n\n[E6]\n[§ 附件_安全管理规定（2020版）.docx / 第二章　安全检查及隐患排查规定 / 2.2  安全检查及隐患排查内容 / 2.2.1集团公司、二级单位、项目部安"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 10,
+    "gold_node_recall": 1.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L211",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L212",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 5.3.2 按陕建监总发[2014]04号文要求：]\n  自2015年1月1日起，附着式升降脚手架外立面、底板、脚手板必须使用具有防火功能的防护产品；\n  吊篮的安/拆（包括二次移位）工作，均应由出租单位负责完成，使用单位不得安拆、转租吊篮；\n  5.3.3 附着式升降脚手架、高空作业吊篮等工具式脚手架的专项方案由专业分包单位组织编制，方案应符合《建筑施工工具式脚手架安全技术规范》JGJ202-2010（以下简称JGJ202-2010）的相关规定。并经过分包单位具有法人资格企业的技术负责人批准。再按照专项方案审批程序履行审批手续。\n\n[E2]\n[§ 6.6 危险性较大的分部分项工程管理]\n  危险性较大的分部分项工程识别清单（见附表6.6.1-1）；超过一定规模的危险性较大的分部分项工程识别清单（见附表6.6.1-2）。\n  6.6.2 专项方案编制应当包括的内容，应当组织专家论证的相关内容，参见《危险性较大的分部分项工程安全管理规定》（建办质[2018]31号）执行。审核审批执行集团公司相关要求。\n\n[E3]\n[§ 6.5 分包方安全管理]\n3、分包单位安全生产绩效。",
+    "trajectory_length": 5,
+    "reports_context": "=== Investigate results (1 region(s)) ===\n[region 1] real_69c60974d4242eda8c47c615:L262 (ok)\ncollected 152 branch node(s); explicit roots=['real_69c60974d4242eda8c47c615:L262']\ncollected: real_69c60974d4242eda8c47c615:L262, real_69c60974d4242eda8c47c615:L263, real_69c60974d4242eda8c47c615:L264, real_69c60974d4242eda8c47c615:L265, real_69c60974d4242eda8c47c615:L266, real_69c60974d4242eda8c47c615:L267, real_69c60974d4242eda8c47c615:L268, real_69c60974d4242eda8c47c615:L269, real_69c60974d4242eda8c47c615:L270, real_69c60974d4242eda8c47c615:L271, real_69c60974d4242eda8c47c615:L272, real_69c60974d4242eda8c47c615:L273, real_69c60974d4242eda8c47c615:L274, real_69c60974d4242eda8c47c615:L275, real_69c60974d4242eda8c47c615:L276, real_69c60974d4242eda8c47c615:L277, real_69c60974d4242eda8c47c615:L278, real_69c60974d4242eda8c47c615:L279, real_69c60974d4242eda8c47c615:L280, real_69c60974d4242eda8c47c615:L281\nreason: Collected section L262 contains the required content to answer the query about adjacent evidence points.\n---\n=== End Investigate ===",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L210",
+      "real_69c60974d4242eda8c47c615:L211",
+      "real_69c60974d4242eda8c47c615:L212",
+      "real_69c60974d4242eda8c47c615:L213",
+      "real_69c60974d4242eda8c47c615:L262",
+      "real_69c60974d4242eda8c47c615:L362",
+      "real_69c60974d4242eda8c47c615:L365",
+      "real_69c60974d4242eda8c47c615:L366",
+      "real_69c60974d4242eda8c47c615:L354",
+      "real_69c60974d4242eda8c47c615:L361"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C1",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L262",
+      "scope": "real_69c60974d4242eda8c47c615:L262",
+      "depth": 1,
+      "llm_reason": "Collect Chapter 6 to locate section 5.3.2 and its referenced documents.",
+      "llm_raw": "{\"action_id\":\"C1\",\"ids\":[\"C1\"],\"confidence\":{\"C1\":0.9},\"reason\":\"Collect Chapter 6 to locate section 5.3.2 and its referenced documents.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L262"
+      ],
+      "n_added": 64,
+      "n_hits": 64,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": false,
+      "group_rank": null,
+      "n_legal_actions": 17,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L262 | 第六章　项目安全管理规定 | score=0.0693",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L263 | 6.1 总则 | score=0.0434",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L269 | 6.1.5 项目开工前，项目部必须向当地政府建设主管部门办理安全备案手续和团体意外伤害保险（陕西省内强制购买建筑施工安全责任保险代替团体意外伤害保险）。 | score=0.0434",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L282 | 6.2 专职安全生产管理人员配备 | score=0.0491",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L283 | 6.2.1 根据建设部《建筑施工企业安全生产管理机构设置及专职安全生产管理人员配备办法》（建质[2008]91号）规定，项目部按照如下标准配备专职安全管理人员。 | score=0.0491",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L314 | 6.4 安全生产违章行为处罚 | score=0.0454",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L337 | 6.4.4 项目部管理人员或作业人员有下列行为之一的，按“违反安全相关规定”论处，责令改正，并处以罚款500～1000元罚款。 | score=0.0454",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L343 | 7、未按规定在施工现场危险部位设置明显的安全警示标志； | score=0.0417",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L354 | 6.5 分包方安全管理 | score=0.0429",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L357 | 6.5.2 项目部必须与分包单位签订《安全协议》（集团公司示范文本），明确各自的安全生产责任和义务。 | score=0.0429",
+        "C11 | COLLECT | real_69c60974d4242eda8c47c615:L362 | 6.6 危险性较大的分部分项工程管理 | score=0.0693",
+        "C12 | COLLECT | real_69c60974d4242eda8c47c615:L366 | 6.6.2 专项方案编制应当包括的内容，应当组织专家论证的相关内容，参见《危险性较大的分部分项工程安全管理规定》（建办质[2018]31号）执行。审核审批执行集团公司相关要求。 | score=0.0693",
+        "C13 | COLLECT | real_69c60974d4242eda8c47c615:L367 | 6.6.3 在施工过程中，项目部必须严格执行经批准的安全专项施工方案，不得擅自修改，现场专职安全生产管理人员现场监督实施，项目部指定专人按规定进行监测，若发现现场施工条件和施工环境发生较大改变时，应当立即停止施工，撤离作业人员，并将有关情况及时上报监理单位和方案的审批部门，在采取可靠措施后方可恢复施工。 | score=0.0457",
+        "C14 | COLLECT | real_69c60974d4242eda8c47c615:L383 | 6.9 安全设施、安全防护用品管理 | score=0.0677",
+        "C15 | COLLECT | real_69c60974d4242eda8c47c615:L389 | 办公、宿舍、库房等临时设施的消防、安全管理应符合《陕西建工集团施工现场临时建筑物安全管理暂行规定》（陕建总通[2013]143号）的要求。 | score=0.0677",
+        "C16 | COLLECT | real_69c60974d4242eda8c47c615:L400 | 6.11 安全标志 | score=0.0503"
+      ],
+      "projection_chars": 3577
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": "real_69c60974d4242eda8c47c615:L262",
+      "depth": 1,
+      "llm_reason": "Collected section L262 contains the required content to answer the query about adjacent evidence points.",
+      "llm_raw": "{\"action_id\":\"F1\",\"reason\":\"Collected section L262 contains the required content to answer the query about adjacent evidence points.\",\"confidence\":0.9}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": null,
+      "n_legal_actions": 1,
+      "legal_actions_preview": [
+        "F1 | FINISH | finish navigation and pack final evidence budget"
+      ],
+      "projection_chars": 190
+    },
+    {
+      "step_idx": 3,
+      "action": "nav_dispatch",
+      "action_id": "D18",
+      "kind": "dispatch",
+      "section_id": "real_69c60974d4242eda8c47c615:L262",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Dispatch Chapter 6 to locate section 5.3.2 and adjacent evidence.",
+      "llm_raw": "{\"action_id\":\"D18\",\"reason\":\"Dispatch Chapter 6 to locate section 5.3.2 and adjacent evidence.\"}",
+      "dispatch_regions": [
+        "real_69c60974d4242eda8c47c615:L262"
+      ],
+      "n_child_reports": 1,
+      "n_child_skipped": 0,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": null,
+      "n_legal_actions": 57,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0556",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0556",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0556",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0556",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0556",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0556",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L11 | 1、二级单位（集团公司级）教育培训的主要内容：国家有关安全生产的法律法规、标准规范和集团公司的安全规章制度；建筑施工的特点和易发生的五大伤害，典型事故案例分析； | score=0.0556",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0620",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0620",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0568",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0568",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0568",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0620",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0620",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L63 | 2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。 | score=0.0620",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0585"
+      ],
+      "projection_chars": 3598
+    },
+    {
+      "step_idx": 4,
+      "action": "nav_collect",
+      "action_id": "C26",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L210",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Section C26 (5.3.2) contains the specific content regarding 'Shan Jian Jian Zong Fa [2014] No. 04' required by the query.",
+      "llm_raw": "{\"action_id\":\"C26\",\"confidence\":0.9,\"reason\":\"Section C26 (5.3.2) contains the specific content regarding 'Shan Jian Jian Zong Fa [2014] No. 04' required by the query.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L210"
+      ],
+      "n_added": 3,
+      "n_hits": 3,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 56,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0556",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0556",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0556",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0556",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0556",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0556",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L11 | 1、二级单位（集团公司级）教育培训的主要内容：国家有关安全生产的法律法规、标准规范和集团公司的安全规章制度；建筑施工的特点和易发生的五大伤害，典型事故案例分析； | score=0.0556",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0620",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0620",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0568",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0568",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0568",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0620",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0620",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L63 | 2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。 | score=0.0620",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0585"
+      ],
+      "projection_chars": 3596
+    },
+    {
+      "step_idx": 5,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Query specifically asks for points from section 5.3.2, which is fully contained in G3.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G3\"],\"reason\":\"Query specifically asks for points from section 5.3.2, which is fully contained in G3.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G3"
+      ],
+      "n_legal_actions": 54,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0556",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0556",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0556",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0556",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0556",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0556",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L11 | 1、二级单位（集团公司级）教育培训的主要内容：国家有关安全生产的法律法规、标准规范和集团公司的安全规章制度；建筑施工的特点和易发生的五大伤害，典型事故案例分析； | score=0.0556",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0620",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0620",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0568",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0568",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0568",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0620",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0620",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L63 | 2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。 | score=0.0620",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0585"
+      ],
+      "projection_chars": 3490
+    }
+  ]
+}

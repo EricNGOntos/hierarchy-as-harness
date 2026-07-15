@@ -1,0 +1,213 @@
+{
+  "inspect_id": "real_69c6ef4e4cca74801cb63bc6_scope_collection_auto_0061",
+  "task_type": "scope_collection",
+  "doc_id": "real_69c6ef4e4cca74801cb63bc6",
+  "query": "列出文档中提到的所有竖向钢立柱安装的具体步骤及技术要求。",
+  "gold_nodes": [
+    "real_69c6ef4e4cca74801cb63bc6:L79",
+    "real_69c6ef4e4cca74801cb63bc6:L80",
+    "real_69c6ef4e4cca74801cb63bc6:L82"
+  ],
+  "elapsed_sec": 23.02,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 8,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L79",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L80",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L82",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 5.施工工艺流程及操作要点 / 5.2 操作要点 / 图 **5-2-3-3** 现场预埋件拉拔试验]\n（1）、竖向钢立柱安装时，应先将立柱与转接件连接，立柱应带 有活动接头，接头通过芯套连接上下柱，芯套与立柱紧密相接。上 下柱用螺栓固定，上下柱之间留有20mm 的空隙。\n\n[E2]\n[§ 5.施工工艺流程及操作要点 / 5.2 操作要点 / 5.2.5 横向龙骨（钢托板）安装与调整]\n（1）、横向龙骨（钢托板）安装时，应先在立柱上准确标出横梁 的精确位置，钻出孔位，在角钢上打出连接点的孔位，用角码及螺 栓将角钢横梁与立柱连接在一起，并紧固螺栓。\n\n[E3]\n[§ 5.施工工艺流程及操作要点 / 5.2 操作要点 / 图 **5-2-3-3** 现场预埋件拉拔试验]\n- 5.2.4 竖向龙骨安装与调整\n\n[E4]\n[§ 5.施工工艺流程及操作要点 / 5.2 操作要点 / 5.2.5 横向龙骨（钢托板）安装与调整]\n图 **5-2-5-1** 横向龙骨（钢托板）安装 **CAD** 优化图\n\n[E5]\n[§ 5.施工工艺流程及操作要点 / 5.2 操作要点]\n图 **5"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 494,
+    "n_retrieved_nodes": 13,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L79",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L80",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L82",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 图 **5-2-3-3** 现场预埋件拉拔试验]\n  - 2、转接件的安装\n  - （1）、根据控制线确定转接件位置，施工时将其焊在预埋件上\n  - ，然后对其三维方向尺寸进行复核（垂直误差2mm、水平误差2mm、 进深误差3mm）在复核无误后，进行焊接固定。\n  图 **5-2-3-4** 现场预埋件防腐处理\n  - 5.2.4 竖向龙骨安装与调整\n  （1）、竖向钢立柱安装时，应先将立柱与转接件连接，立柱应带 有活动接头，接头通过芯套连接上下柱，芯套与立柱紧密相接。上 下柱用螺栓固定，上下柱之间留有20mm 的空隙。\n  图 **5-2-4-1** 立柱与芯柱连接 （2）、通过镀锌螺栓将竖向龙骨与转接件链接，根据提前策划的 基准线，对竖向龙骨进行调整固定，确保在镂空部位龙骨不外漏， 并使其处于最佳受力状态。\n  图 **5-2-4-2** 现场立柱与转接件连接\n  - （3）、用多功能水平尺或经纬仪校正钢龙骨的垂直度，必要时将 螺栓松开调整，如仍调整不好必须重新安装。\n\n[E2]\n[§ 5.2.7 铝板安装]\n图 **5-2-7-1** 铝板固定龙骨位置",
+    "trajectory_length": 3,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c6ef4e4cca74801cb63bc6:L32",
+      "real_69c6ef4e4cca74801cb63bc6:L57",
+      "real_69c6ef4e4cca74801cb63bc6:L58",
+      "real_69c6ef4e4cca74801cb63bc6:L59",
+      "real_69c6ef4e4cca74801cb63bc6:L60",
+      "real_69c6ef4e4cca74801cb63bc6:L61",
+      "real_69c6ef4e4cca74801cb63bc6:L62",
+      "real_69c6ef4e4cca74801cb63bc6:L63",
+      "real_69c6ef4e4cca74801cb63bc6:L64",
+      "real_69c6ef4e4cca74801cb63bc6:L65",
+      "real_69c6ef4e4cca74801cb63bc6:L66",
+      "real_69c6ef4e4cca74801cb63bc6:L95",
+      "real_69c6ef4e4cca74801cb63bc6:L98"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C15",
+      "kind": "collect",
+      "section_id": "real_69c6ef4e4cca74801cb63bc6:L62",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collecting specific steps and technical requirements for vertical steel column installation found in sections C15-C18.",
+      "llm_raw": "{\n\"action_id\":\"C15\",\n\"ids\":[\"C15\",\"C16\",\"C17\",\"C18\"],\n\"confidence\":{\"C15\":0.9,\"C16\":0.95,\"C17\":0.95,\"C18\":0.9},\n\"reason\":\"Collecting specific steps and technical requirements for vertical steel column installation found in sections C15-C18.\"\n}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c6ef4e4cca74801cb63bc6:L62",
+        "real_69c6ef4e4cca74801cb63bc6:L63",
+        "real_69c6ef4e4cca74801cb63bc6:L64",
+        "real_69c6ef4e4cca74801cb63bc6:L66"
+      ],
+      "n_added": 4,
+      "n_hits": 4,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 46,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L12 | 1.前言 | score=0.0633",
+        "D1 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L12 | 1.前言 | score=0.0633",
+        "C2 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L13 | 非承重清水烧结陶土砖镂空幕墙体系中镂空幕墙对整体性、牢固性 及测量精度要求特别高。实际施工中往往采用单一的结构体系会造成施 工困难、日常维护局限性大、对施工人员技术要求高。陕西建工沣西建 设有限公司依据多年对此类工程的施工，并总结形成了非承重清水烧结 陶土砖镂空幕墙施工方法。在多个项目得到成功应用的同时，还获得国 家专利1 项《一种外墙砌筑镂空陶土砖的结构》专利申请号： | score=0.0633",
+        "C3 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L15 | 2.工法特点 | score=0.0585",
+        "D2 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L15 | 2.工法特点 | score=0.0585",
+        "C4 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L16 | 2.1 工厂化加工 | score=0.0585",
+        "D3 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L16 | 2.1 工厂化加工 | score=0.0585",
+        "C5 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L17 | 陶土砖采用先进的工艺设备，采用流水线加工，使得每一块具有精 准的外形，降低人工损耗，降低对工人的技术要求。 2.2 构造方式的独特性 | score=0.0585",
+        "C6 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L26 | 4.工艺原理 | score=0.0661",
+        "D4 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L26 | 4.工艺原理 | score=0.0661",
+        "C7 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L27 | 采用构件式幕墙系统，根据镂空幕墙分隔将龙骨与主体结构上的连 接件、清水陶土砖的砌筑单元构件、铝板等进行连接固定，形成安全可 靠的外墙装饰和围护结构。纵、横主龙骨采用应力消减支座进行连接， 陶土砖有自带的空腔，其内设有锚固钢筋，并形成砌筑单元构件，在利 用孔内竖向钢筋固定在龙骨上且竖向需设有分封胶条。通过铝板与固定 角钢连接，保证幕墙与建筑物交界处的封口闭合。 | score=0.0661",
+        "C8 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L28 | 5.施工工艺流程及操作要点 | score=0.0738",
+        "D5 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L28 | 5.施工工艺流程及操作要点 | score=0.0738",
+        "C9 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L32 | 5.2 操作要点 | score=0.0738",
+        "D6 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L32 | 5.2 操作要点 | score=0.0738",
+        "C10 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L41 | 图 **5-2-1-2-2 BIM** 对镂空部分进行建模 | score=0.0599"
+      ],
+      "projection_chars": 3606
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_collect",
+      "action_id": "C10",
+      "kind": "collect",
+      "section_id": "real_69c6ef4e4cca74801cb63bc6:L32",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect section 5.2 Operation Points to find all vertical steel column installation steps and requirements.",
+      "llm_raw": "{\"action_id\":\"C10\",\"ids\":[\"C10\"],\"confidence\":{\"C10\":0.9},\"reason\":\"Collect section 5.2 Operation Points to find all vertical steel column installation steps and requirements.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c6ef4e4cca74801cb63bc6:L32"
+      ],
+      "n_added": 64,
+      "n_hits": 64,
+      "n_purged_descendant_evidence": 4,
+      "branch_selected": true,
+      "collect_full": false,
+      "group_rank": null,
+      "n_legal_actions": 48,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L12 | 1.前言 | score=0.0633",
+        "D1 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L12 | 1.前言 | score=0.0633",
+        "C2 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L13 | 非承重清水烧结陶土砖镂空幕墙体系中镂空幕墙对整体性、牢固性 及测量精度要求特别高。实际施工中往往采用单一的结构体系会造成施 工困难、日常维护局限性大、对施工人员技术要求高。陕西建工沣西建 设有限公司依据多年对此类工程的施工，并总结形成了非承重清水烧结 陶土砖镂空幕墙施工方法。在多个项目得到成功应用的同时，还获得国 家专利1 项《一种外墙砌筑镂空陶土砖的结构》专利申请号： | score=0.0633",
+        "C3 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L15 | 2.工法特点 | score=0.0585",
+        "D2 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L15 | 2.工法特点 | score=0.0585",
+        "C4 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L16 | 2.1 工厂化加工 | score=0.0585",
+        "D3 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L16 | 2.1 工厂化加工 | score=0.0585",
+        "C5 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L17 | 陶土砖采用先进的工艺设备，采用流水线加工，使得每一块具有精 准的外形，降低人工损耗，降低对工人的技术要求。 2.2 构造方式的独特性 | score=0.0585",
+        "C6 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L18 | 外叶砌体墙采用清水陶土砖砌筑，内叶墙根据工程的位置不同采用 混凝土实体墙或加气混凝土砌块砌筑。在内叶墙的外侧有连续的防水层， 外叶墙作为装饰和雨屏墙（采用自保温砌体只在混凝土构件上按照图纸 要求做保温）。 | score=0.0524",
+        "C7 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L26 | 4.工艺原理 | score=0.0661",
+        "D4 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L26 | 4.工艺原理 | score=0.0661",
+        "C8 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L27 | 采用构件式幕墙系统，根据镂空幕墙分隔将龙骨与主体结构上的连 接件、清水陶土砖的砌筑单元构件、铝板等进行连接固定，形成安全可 靠的外墙装饰和围护结构。纵、横主龙骨采用应力消减支座进行连接， 陶土砖有自带的空腔，其内设有锚固钢筋，并形成砌筑单元构件，在利 用孔内竖向钢筋固定在龙骨上且竖向需设有分封胶条。通过铝板与固定 角钢连接，保证幕墙与建筑物交界处的封口闭合。 | score=0.0661",
+        "C9 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L28 | 5.施工工艺流程及操作要点 | score=0.0738",
+        "D5 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L28 | 5.施工工艺流程及操作要点 | score=0.0738",
+        "C10 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L32 | 5.2 操作要点 | score=0.0738",
+        "D6 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L32 | 5.2 操作要点 | score=0.0738"
+      ],
+      "projection_chars": 3600
+    },
+    {
+      "step_idx": 3,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence G1 contains the specific steps and technical requirements for vertical steel column installation.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Evidence G1 contains the specific steps and technical requirements for vertical steel column installation.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "n_legal_actions": 50,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L12 | 1.前言 | score=0.0633",
+        "D1 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L12 | 1.前言 | score=0.0633",
+        "C2 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L13 | 非承重清水烧结陶土砖镂空幕墙体系中镂空幕墙对整体性、牢固性 及测量精度要求特别高。实际施工中往往采用单一的结构体系会造成施 工困难、日常维护局限性大、对施工人员技术要求高。陕西建工沣西建 设有限公司依据多年对此类工程的施工，并总结形成了非承重清水烧结 陶土砖镂空幕墙施工方法。在多个项目得到成功应用的同时，还获得国 家专利1 项《一种外墙砌筑镂空陶土砖的结构》专利申请号： | score=0.0633",
+        "C3 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L14 | 202021699897.9；2021 年3 月份《陕西省住房和城乡建设厅关于下达 2021 年度工程建设标准制定计划的通知》且同意立项，进行陕西省地 方标准的编制。在此基础上，经过进一步提炼，形成了《非承重清水烧 结陶土砖镂空幕墙施工工法》。 | score=0.0469",
+        "C4 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L15 | 2.工法特点 | score=0.0585",
+        "D2 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L15 | 2.工法特点 | score=0.0585",
+        "C5 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L16 | 2.1 工厂化加工 | score=0.0585",
+        "D3 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L16 | 2.1 工厂化加工 | score=0.0585",
+        "C6 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L17 | 陶土砖采用先进的工艺设备，采用流水线加工，使得每一块具有精 准的外形，降低人工损耗，降低对工人的技术要求。 2.2 构造方式的独特性 | score=0.0585",
+        "C7 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L18 | 外叶砌体墙采用清水陶土砖砌筑，内叶墙根据工程的位置不同采用 混凝土实体墙或加气混凝土砌块砌筑。在内叶墙的外侧有连续的防水层， 外叶墙作为装饰和雨屏墙（采用自保温砌体只在混凝土构件上按照图纸 要求做保温）。 | score=0.0524",
+        "C8 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L21 | 2.3 工艺简单、施工方便 | score=0.0408",
+        "D4 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L21 | 2.3 工艺简单、施工方便 | score=0.0408",
+        "C9 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L22 | 镂空陶土砖幕墙施工采用应力消减支座与竖向龙骨进行可靠连接， 从而降低应力变形产生的位移量。 | score=0.0408",
+        "C10 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L23 | 3.适用范围 | score=0.0386",
+        "D5 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L23 | 3.适用范围 | score=0.0386",
+        "C11 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L24 | 本工法适用于50m 以下的住宅、纪念馆、中、小学校建筑的外墙饰 | score=0.0386"
+      ],
+      "projection_chars": 3409
+    }
+  ]
+}

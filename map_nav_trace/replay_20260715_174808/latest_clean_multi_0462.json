@@ -1,0 +1,157 @@
+{
+  "inspect_id": "latest_clean_multi_0462",
+  "task_type": "multi_hop",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“6.8 危险源监控管理”相关内容，分别说明两处相邻证据给出的要点。",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L376",
+    "real_69c60974d4242eda8c47c615:L377"
+  ],
+  "elapsed_sec": 5.19,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 14,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L376",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L377",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 附件_安全管理规定（2020版）.docx / 第八章　附　则 / 3.2 生产安全事故快报 / 6.7.3 安全技术交底记录 / 附表1.1.1]\n编号：\n\n[E2]\n[§ 附件_安全管理规定（2020版）.docx / 第八章　附　则 / 3.2 生产安全事故快报 / 6.7.3 安全技术交底记录 / 附表1.1.1]\n安全教育记录\n\n[E3]\n[§ 附件_安全管理规定（2020版）.docx / 第八章　附　则 / 3.2 生产安全事故快报 / 6.7.3 安全技术交底记录 / 附表6.7.3]\n安全技术交底记录\n\n[E4]\n附件_安全管理规定（2020版）.docx\n\n[E5]\n[§ 附件_安全管理规定（2020版）.docx / 第二章　安全检查及隐患排查规定 / 2.2  安全检查及隐患排查内容 / 2.2.2班组安全检查的内容：]\n6、其他应检查的内容。\n\n[E6]\n[§ 附件_安全管理规定（2020版）.docx / 第八章　附　则 / 3.2 生产安全事故快报 / 6.7.3 安全技术交底记录 / 附表6.6.1-1]\n备注： 本表中所列工程，若本工程"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 473,
+    "n_retrieved_nodes": 7,
+    "gold_node_recall": 0.5,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L376",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L377",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 6.8 危险源监控管理]\n  6.8.2 危险源辨识应根据施工作业活动、施工作业流程和施工工艺，采用科学合理的辨识方法，辨识方法见《危险源辨识、风险评价与控制程序》，项目部对管辖区域和施工现场可能存在的危险源进行分析辨识，列出危险源清单。\n  6.8.3 对已辨识出来的危险源采用定性和定量评价，分析导致事故发生的可能性和事故后果，确定风险等级及重大危险源，列出重大危险源清单。\n  6.8.4 根据重大危险源清单，制定管理方案，明确重大危险源的目标、指标、控制措施，并落实相关部门及专人负责监督、管理。\n  6.8.5 加强对重大危险源的巡查和监控，采取相应的预防及控制措施，消除或降低其影响，使其达到可接受的程度，保证集团公司职业健康安全管理目标的实现。\n  6.8.6 项目部应在工地醒目位置设立“不可接受风险公示牌”（见集团公司《施工现场标准化管理手册》），公示牌应注明危险源、存在部位、作业时间、防护措施和责任人等内容。\n  6.8.7二级单位、项目部应随所管区域变化和工程施工的进度及时进行更新对危险源辨识和风险评价。",
+    "trajectory_length": 2,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L375",
+      "real_69c60974d4242eda8c47c615:L377",
+      "real_69c60974d4242eda8c47c615:L378",
+      "real_69c60974d4242eda8c47c615:L379",
+      "real_69c60974d4242eda8c47c615:L380",
+      "real_69c60974d4242eda8c47c615:L381",
+      "real_69c60974d4242eda8c47c615:L382"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C24",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L375",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect section 6.8 and all its subsections to extract points on hazard source monitoring management.",
+      "llm_raw": "{\"action_id\":\"C24\",\"ids\":[\"C25\",\"C26\",\"C27\",\"C28\",\"C29\",\"C30\",\"C31\"],\"confidence\":{\"C24\":0.9,\"C25\":0.95,\"C26\":0.95,\"C27\":0.95,\"C28\":0.95,\"C29\":0.95,\"C30\":0.95,\"C31\":0.95},\"reason\":\"Collect section 6.8 and all its subsections to extract points on hazard source monitoring management.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L375",
+        "real_69c60974d4242eda8c47c615:L376",
+        "real_69c60974d4242eda8c47c615:L377",
+        "real_69c60974d4242eda8c47c615:L378",
+        "real_69c60974d4242eda8c47c615:L379",
+        "real_69c60974d4242eda8c47c615:L380",
+        "real_69c60974d4242eda8c47c615:L381",
+        "real_69c60974d4242eda8c47c615:L382"
+      ],
+      "n_added": 7,
+      "n_hits": 14,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": false,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 51,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0496",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0496",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0496",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0496",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0496",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0496",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L11 | 1、二级单位（集团公司级）教育培训的主要内容：国家有关安全生产的法律法规、标准规范和集团公司的安全规章制度；建筑施工的特点和易发生的五大伤害，典型事故案例分析； | score=0.0496",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0619",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0619",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0619",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0619",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0619",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0619",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L102 | 2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐患排除前或者排除过程中无法保证安全的，应当从危险区域内撤出作业人员，并疏散可能危及的其他人员，设置警戒标志，暂时停工；对暂时难以停工或者停止使用的相关生产储存装置、设施、设备，应当加强维护和保养，防止事故发生。 | score=0.0619",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L104 | 2.4.7 隐患整改（控制或变更降低安全风险）措施的优先顺序： | score=0.0518",
+        "D7 | DISPATCH | real_69c60974d4242eda8c47c615:L104 | 2.4.7 隐患整改（控制或变更降低安全风险）措施的优先顺序： | score=0.0518"
+      ],
+      "projection_chars": 3547
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence G1 contains all required points from section 6.8 regarding hazard monitoring management.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Evidence G1 contains all required points from section 6.8 regarding hazard monitoring management.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "n_legal_actions": 52,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0496",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L3 | 第一章　安全教育培训规定 | score=0.0496",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0496",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L7 | 1.2 三级安全教育 | score=0.0496",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0496",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L10 | 1.2.2 三级安全教育的内容 | score=0.0496",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L11 | 1、二级单位（集团公司级）教育培训的主要内容：国家有关安全生产的法律法规、标准规范和集团公司的安全规章制度；建筑施工的特点和易发生的五大伤害，典型事故案例分析； | score=0.0496",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L12 | 2、项目部教育培训的主要内容：观看《生命之鉴》安全教育警示片，观看率达到100％；施工现场的环境、施工特点及可能存在的危害等；违章指挥、违章作业、违反劳动纪律产生的后果；预防、减少安全风险以及紧急情况下应急救援的基本措施； | score=0.0449",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0619",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0619",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0476",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0476",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0476",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0491",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0491",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L63 | 2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。 | score=0.0491"
+      ],
+      "projection_chars": 3453
+    }
+  ]
+}

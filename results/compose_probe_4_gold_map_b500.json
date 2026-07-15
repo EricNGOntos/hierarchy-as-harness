@@ -1,0 +1,792 @@
+{
+  "summary": {
+    "config": {
+      "adapter": "single_hier_bodyrich_v2",
+      "tree_source": "gold",
+      "test_jsonl": "data/corpus/test_data_full_realdata_clean_latest.jsonl",
+      "tasks": "/tmp/compose_probe_4.jsonl",
+      "pred_jsonl": null,
+      "budget_chars": 500,
+      "hier_policy": "nav",
+      "nav_scope_collect_strategy": "multi_band",
+      "nav_synthetic_root_sections": "1",
+      "nav_hybrid_direct_search": "auto"
+    },
+    "hierarchical_gold_map": {
+      "evidence_chars_actual_mean": 384.5,
+      "trajectory_length_mean": 3.0,
+      "truncated_last_mean": 0.0,
+      "evidence_coverage_mean": 0.9583333333333334,
+      "evidence_hit@1_mean": 0.75,
+      "keyword_recall_mean": 0.0,
+      "process_efficiency_mean": 0.9166666666666666,
+      "process_recovery_mean": 1.0,
+      "score_task_mean": 0.29165,
+      "score_evidence_mean": 0.958325,
+      "score_process_mean": 0.9166666666666666,
+      "task_success_mean": 0.29165,
+      "inspect_content_score_mean": 0.29165,
+      "inspect_evidence_score_mean": 0.958325,
+      "inspect_fact_1_score_mean": 0.0,
+      "inspect_fact_2_score_mean": 0.5,
+      "inspect_judge_used_mean": 1.0
+    },
+    "per_type_hierarchical_gold_map": {
+      "niche_fact": {
+        "n": 1,
+        "evidence_chars_actual_mean": 453.0,
+        "trajectory_length_mean": 3.0,
+        "truncated_last_mean": 0.0,
+        "evidence_coverage_mean": 1.0,
+        "evidence_hit@1_mean": 1.0,
+        "keyword_recall_mean": 0.0,
+        "process_efficiency_mean": 0.9166666666666666,
+        "process_recovery_mean": 1.0,
+        "score_task_mean": 0.0,
+        "score_evidence_mean": 1.0,
+        "score_process_mean": 0.9166666666666666,
+        "task_success_mean": 0.0
+      },
+      "multi_hop": {
+        "n": 2,
+        "evidence_chars_actual_mean": 332.5,
+        "trajectory_length_mean": 3.0,
+        "truncated_last_mean": 0.0,
+        "evidence_coverage_mean": 1.0,
+        "evidence_hit@1_mean": 1.0,
+        "keyword_recall_mean": 0.0,
+        "process_efficiency_mean": 0.9166666666666666,
+        "process_recovery_mean": 1.0,
+        "score_task_mean": 0.16665,
+        "score_evidence_mean": 1.0,
+        "score_process_mean": 0.9166666666666666,
+        "task_success_mean": 0.16665
+      },
+      "scope_collection": {
+        "n": 1,
+        "evidence_chars_actual_mean": 420.0,
+        "trajectory_length_mean": 3.0,
+        "truncated_last_mean": 0.0,
+        "evidence_coverage_mean": 0.8333333333333334,
+        "evidence_hit@1_mean": 0.0,
+        "keyword_recall_mean": 0.0,
+        "process_efficiency_mean": 0.9166666666666666,
+        "process_recovery_mean": 1.0,
+        "score_task_mean": 0.8333,
+        "score_evidence_mean": 0.8333,
+        "score_process_mean": 0.9166666666666666,
+        "task_success_mean": 0.8333
+      }
+    },
+    "cost": {
+      "hierarchical_gold_map": {
+        "total_seconds": 80.66992658202071,
+        "api_seconds": 80.66992658202071,
+        "cold_start_seconds": 0.47429820799152367,
+        "data_load_seconds": 0.15307424998900387,
+        "index_build_seconds": 0.3212239580025198,
+        "retrieval_framework_seconds": 47.94553666700085,
+        "compose_seconds": 7.53579029199318,
+        "online_response_seconds": 55.48132695899403,
+        "retry_wait_seconds": 0.0,
+        "judge_eval_seconds": 25.188599623026676,
+        "warm_end_to_end_eval_seconds": 80.66992658202071,
+        "end_to_end_eval_seconds": 81.14422479001223,
+        "token_usage_by_purpose": {
+          "compose": {
+            "prompt_tokens": 3059,
+            "completion_tokens": 528,
+            "total_tokens": 3587,
+            "api_calls": 4,
+            "cache_hits": 0,
+            "retry_wait_seconds": 0.0
+          },
+          "nav": {
+            "prompt_tokens": 21125,
+            "completion_tokens": 350,
+            "total_tokens": 21475,
+            "api_calls": 8,
+            "cache_hits": 0,
+            "retry_wait_seconds": 0.0
+          },
+          "judge": {
+            "prompt_tokens": 1435,
+            "completion_tokens": 524,
+            "total_tokens": 1959,
+            "api_calls": 7,
+            "cache_hits": 0,
+            "retry_wait_seconds": 0.0
+          }
+        },
+        "token_usage_total": {
+          "prompt_tokens": 25619,
+          "completion_tokens": 1402,
+          "total_tokens": 27021,
+          "api_calls": 19,
+          "cache_hits": 0,
+          "retry_wait_seconds": 0.0
+        }
+      }
+    }
+  },
+  "rows": [
+    {
+      "task_idx": 1,
+      "query": "根据《线上学习平台学习管理方案（修订）》中“一、管理机构及其职责”相关内容，该处明确写出的规定或事实是什么？",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L4"
+      ],
+      "gold_answer": "{\"final_answer\": \"线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\", \"evidence_line_ids\": [4]}",
+      "inspect_id": "latest_clean_niche_0002",
+      "hierarchical_gold_map": {
+        "n_scored_candidates": 10,
+        "evidence_chars_actual": 453,
+        "evidence_text": "[E1]\n[§ 一、管理机构及其职责]\n  线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\n  （ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。\n  （ 二）各专家组：负责各领域内员工培训需求征集，教材、课件及习题开发，课件修改、适时更新、审核，业务答疑，题库组建等工作，集团对口业务部门负责人为各专业课程开发责任人，统筹推进本业务系统课程开发工作。\n  （ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟\n  踪和定期调研，反馈十一在线平台中心。",
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"十一在线平台中心负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。\"}",
+        "trajectory_length": 3,
+        "truncated_last": false,
+        "section_ids": [
+          "real_69c6095ed4242eda8c47c5b2:L1"
+        ],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L3",
+          "real_69c6095ed4242eda8c47c5b2:L4",
+          "real_69c6095ed4242eda8c47c5b2:L5",
+          "real_69c6095ed4242eda8c47c5b2:L6",
+          "real_69c6095ed4242eda8c47c5b2:L7",
+          "real_69c6095ed4242eda8c47c5b2:L8"
+        ],
+        "refusal_events": [],
+        "metrics": {
+          "budget": {
+            "chunk_hit@1": 1.0,
+            "mrr_chunks": 1.0,
+            "coverage_budget_lenient": 1.0,
+            "n_chunks_kept": 5.0
+          },
+          "line_retrieval": {
+            "coverage": 1.0,
+            "mrr": 0.5,
+            "ndcg@10": 1.0,
+            "hit@5": 1.0,
+            "precision@1": 0.0,
+            "precision@3": 0.3333333333333333,
+            "precision@5": 0.2,
+            "precision@8": 0.16666666666666666
+          },
+          "keyword_recall": 0.0,
+          "task_success": 0.0,
+          "score_task": 0.0,
+          "score_evidence": 1.0,
+          "score_process": 0.9166666666666666,
+          "evidence_hit@1": 1.0,
+          "evidence_coverage": 1.0,
+          "process_recovery": 1.0,
+          "process_efficiency": 0.9166666666666666,
+          "process_efficiency_mode": "nav_hierarchical",
+          "effective_task_type": "niche_fact",
+          "inspect_judge_used": true,
+          "inspect_id": "latest_clean_niche_0002",
+          "inspect_evidence_score": 1.0,
+          "inspect_content_score": 0.0
+        },
+        "steps": [
+          {
+            "step_idx": 1,
+            "action": "nav_collect",
+            "detail": {
+              "action_id": "C3",
+              "kind": "collect",
+              "section_id": "real_69c6095ed4242eda8c47c5b2:L3",
+              "scope": null,
+              "llm_reason": "Collect section '一、管理机构及其职责' to extract the specific regulations and facts requested.",
+              "llm_raw": "{\"action_id\":\"C3\",\"ids\":[\"C3\"],\"confidence\":{\"C3\":1.0},\"reason\":\"Collect section '一、管理机构及其职责' to extract the specific regulations and facts requested.\"}",
+              "depth": 0,
+              "n_legal_actions": 46,
+              "legal_actions_preview": [
+                "C1 | COLLECT | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0716",
+                "D1 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0716",
+                "C2 | COLLECT | real_69c6095ed4242eda8c47c5b2:L2 | 为进一步深化学习型组织建设，整合学习资源，传播最佳实践，有效助力员工工作技能提升和绩效改善。为进一步强化学习效果，规范线上学习管理，特制订本方案。 | score=0.0595",
+                "C3 | COLLECT | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0716",
+                "D2 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0716",
+                "C4 | COLLECT | real_69c6095ed4242eda8c47c5b2:L4 | 线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下： | score=0.0716",
+                "C5 | COLLECT | real_69c6095ed4242eda8c47c5b2:L5 | （ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。 | score=0.0692",
+                "C6 | COLLECT | real_69c6095ed4242eda8c47c5b2:L7 | （ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟 | score=0.0695",
+                "C7 | COLLECT | real_69c6095ed4242eda8c47c5b2:L9 | （ 四）平台管理员 | score=0.0663",
+                "D3 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L9 | （ 四）平台管理员 | score=0.0663",
+                "C8 | COLLECT | real_69c6095ed4242eda8c47c5b2:L10 | 1.各专家组平台管理员：负责本专家组课件和考试习题的上传、维护、更新、删除、学习任务下发和指派相关岗位学习等工作。 | score=0.0628",
+                "C9 | COLLECT | real_69c6095ed4242eda8c47c5b2:L11 | 2.各二级单位平台管理员：负责督促本单位各类课件指定人员在线学习，按时完成学习计划，并向各专家组及十一在线平台中心办公室反馈学习情况。 | score=0.0663",
+                "C10 | COLLECT | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0682",
+                "D4 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0682",
+                "C11 | COLLECT | real_69c6095ed4242eda8c47c5b2:L13 | 1.协同做好线上学习平台的推广、使用和维护等日常管理工作，配合各专家组完成本业务条线培训课程开发、选配工作。 | score=0.0629",
+                "C12 | COLLECT | real_69c6095ed4242eda8c47c5b2:L14 | 2.督促本部室及本单位员工开展在线学习，并结合线上学习内容和业务实际，组织本部室及本单位开展线下探讨、分享、集中培训等。 | score=0.0682"
+              ],
+              "projection_chars": 3555,
+              "collect_section_ids": [
+                "real_69c6095ed4242eda8c47c5b2:L3"
+              ],
+              "n_added": 10,
+              "n_hits": 10,
+              "n_purged_descendant_evidence": 0,
+              "collect_full": true,
+              "branch_selected": true,
+              "scope_evidence_locked": false,
+              "n_collected_sections": 14,
+              "n_blocked_ancestor_collects": 2
+            }
+          },
+          {
+            "step_idx": 2,
+            "action": "nav_finish",
+            "detail": {
+              "action_id": "F1",
+              "kind": "finish",
+              "section_id": null,
+              "scope": null,
+              "llm_reason": "The assembled evidence G1 contains the complete content of 'Section I: Management Institutions and Their Responsibilities' as requested.",
+              "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"The assembled evidence G1 contains the complete content of 'Section I: Management Institutions and Their Responsibilities' as requested.\"}",
+              "depth": 0,
+              "n_legal_actions": 43,
+              "legal_actions_preview": [
+                "D1 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0716",
+                "C1 | COLLECT | real_69c6095ed4242eda8c47c5b2:L2 | 为进一步深化学习型组织建设，整合学习资源，传播最佳实践，有效助力员工工作技能提升和绩效改善。为进一步强化学习效果，规范线上学习管理，特制订本方案。 | score=0.0595",
+                "C2 | COLLECT | real_69c6095ed4242eda8c47c5b2:L17 | 二、课程及指派管理 | score=0.0648",
+                "D2 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L17 | 二、课程及指派管理 | score=0.0648",
+                "C3 | COLLECT | real_69c6095ed4242eda8c47c5b2:L18 | （ 一）课程类别 | score=0.0615",
+                "D3 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L18 | （ 一）课程类别 | score=0.0615",
+                "C4 | COLLECT | real_69c6095ed4242eda8c47c5b2:L19 | 1.必修课程。必修课程需涵盖各专业系统内所有一般管理岗位。 由各专家组主持，根据所辖领域内各岗位职责制定课程开发计划、确定各系统岗位的必修课。课程开发计划需 | score=0.0615",
+                "C5 | COLLECT | real_69c6095ed4242eda8c47c5b2:L20 | 明确课程名称、课程类别、必修岗位、课程开发负责人等信息（见附件），提交十一在线平台中心审批后按计划开发。 | score=0.0600",
+                "C6 | COLLECT | real_69c6095ed4242eda8c47c5b2:L21 | 必修课程的开发数量各专家组结合业务和岗位需求实际确定，课程包含内部自主开发和外部引进，保证课程内容的实用性和有效性。 | score=0.0580",
+                "C7 | COLLECT | real_69c6095ed4242eda8c47c5b2:L22 | 岗位必修课程为各岗位年底技能测评的内容和依据。 | score=0.0522",
+                "C8 | COLLECT | real_69c6095ed4242eda8c47c5b2:L23 | 2.选修课程。员工自行选择需要学习的课程。 由员工结合本岗位履职需要、个人兴趣和其他能力提升需要， 自行选择相应选修课程学习。 | score=0.0525",
+                "C9 | COLLECT | real_69c6095ed4242eda8c47c5b2:L24 | （ 二）课程设置 | score=0.0541",
+                "D4 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L24 | （ 二）课程设置 | score=0.0541",
+                "C10 | COLLECT | real_69c6095ed4242eda8c47c5b2:L25 | 1.视频类课程。视频类课程上传时须开启“观看监控”设置功能，在课程中添加课程观看提示，在相应节点点击“提示”方可继续学习，首次课程播放不允许拖动。所有上传课程需添加随堂小测试，测试通过后该门课程学习完成。 同时为便于学员学习， 内部录制时的PPT 文档（如有）随同视频一并上传。 | score=0.0515",
+                "C11 | COLLECT | real_69c6095ed4242eda8c47c5b2:L26 | 2.文档类课程。纯文档类课程上传时需根据课程内容设置最短学习时间，并添加随堂小测试，达到课程最低学时长且通过随堂小测试，该课程学习完成。 | score=0.0541",
+                "C12 | COLLECT | real_69c6095ed4242eda8c47c5b2:L28 | （ 三）指派管理 | score=0.0648"
+              ],
+              "projection_chars": 3461,
+              "group_rank": [
+                "G1"
+              ]
+            }
+          },
+          {
+            "step_idx": 3,
+            "action": "compose_answer",
+            "detail": {
+              "evidence_chars": 453,
+              "n_chunks_kept": 5,
+              "truncated_last": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "task_idx": 2,
+      "query": "针对煤矿企业，若其开采具有冲击倾向性的煤层，应遵循什么原则并采取哪些综合性措施？同时，对于容易自燃煤层的矿井，应当建立何种系统以符合安全规定？",
+      "doc_id": "real_69c6f1d94cca74801cb63e0c",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c6f1d94cca74801cb63e0c:L98",
+        "real_69c6f1d94cca74801cb63e0c:L100"
+      ],
+      "gold_answer": "{\"fact_1\": \"开采具有冲击倾向性的煤层，应当进行冲击危险性评价；开采冲击地压煤层应当采取冲击地压危险性预测、监测预警、防范治理、效果检验和安全防护等综合性措施，坚持区域先行、局部跟进、分区管理、分类防治的原则。\", \"fact_2\": \"煤矿开采容易自燃和自燃煤层的矿井，应当建立注浆系统或者注惰性气体防火系统，并建立煤矿自然发火监测系统。\", \"final_answer\": \"针对具有冲击倾向性的煤层，应坚持区域先行、局部跟进、分区管理、分类防治的原则，进行冲击危险性评价，并采取预测、监测预警、防范治理、效果检验和安全防护等综合性措施；对于容易自燃煤层的矿井，应当建立注浆系统或者注惰性气体防火系统，并建立煤矿自然发火监测系统。\", \"evidence_line_ids\": [98, 100]}",
+      "inspect_id": "real_69c6f1d94cca74801cb63e0c_multi_hop_auto_0041",
+      "hierarchical_gold_map": {
+        "n_scored_candidates": 2,
+        "evidence_chars_actual": 212,
+        "evidence_text": "[E1]\n[§ 第二十一条　生产经营单位进行爆破、吊装、动火、临时用电和危险装置设备试生产、重大]\n  冲击地压矿井应当坚持区域先行、局部跟进、分区管理、分类防治的原则。开采具有冲击倾向性的煤层，应当进行冲击危险性评价。开采冲击地压煤层应当采取冲击地压危险性预测、监测预警、防范治理、效果检验和安全防护等综合性措施。\n  煤矿开采容易自燃和自燃煤层的矿井，应当建立注浆系统或者注惰性气体防火系统，并建立煤矿自然发火监测系统。",
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"开采具有冲击倾向性的煤层应当进行冲击危险性评价，并坚持区域先行、局部跟进、分区管理、分类防治的原则。\", \"fact_2\": \"煤矿开采容易自燃和自燃煤层的矿井，应当建立注浆系统或者注惰性气体防火系统，并建立煤矿自然发火监测系统。\", \"final_answer\": \"针对开采具有冲击倾向性煤层的煤矿企业，应遵循区域先行、局部跟进、分区管理、分类防治原则并采取冲击地压危险性预测、监测预警、防范治理、效果检验和安全防护等综合性措施；对于容易自燃煤层的矿井，应当建立注浆系统或者注惰性气体防火系统，并建立煤矿自然发火监测系统。\"}",
+        "trajectory_length": 3,
+        "truncated_last": false,
+        "section_ids": [
+          "real_69c6f1d94cca74801cb63e0c:L1",
+          "real_69c6f1d94cca74801cb63e0c:L155",
+          "real_69c6f1d94cca74801cb63e0c:L191",
+          "real_69c6f1d94cca74801cb63e0c:L218",
+          "real_69c6f1d94cca74801cb63e0c:L230"
+        ],
+        "retrieved_nodes": [
+          "real_69c6f1d94cca74801cb63e0c:L98",
+          "real_69c6f1d94cca74801cb63e0c:L100"
+        ],
+        "refusal_events": [],
+        "metrics": {
+          "budget": {
+            "chunk_hit@1": 1.0,
+            "mrr_chunks": 1.0,
+            "coverage_budget_lenient": 1.0,
+            "n_chunks_kept": 2.0
+          },
+          "line_retrieval": {
+            "coverage": 1.0,
+            "mrr": 1.0,
+            "ndcg@10": 1.0,
+            "hit@5": 1.0,
+            "precision@1": 1.0,
+            "precision@3": 1.0,
+            "precision@5": 1.0,
+            "precision@8": 1.0
+          },
+          "keyword_recall": 0.0,
+          "task_success": 0.3333,
+          "score_task": 0.3333,
+          "score_evidence": 1.0,
+          "score_process": 0.9166666666666666,
+          "evidence_hit@1": 1.0,
+          "evidence_coverage": 1.0,
+          "process_recovery": 1.0,
+          "process_efficiency": 0.9166666666666666,
+          "process_efficiency_mode": "nav_hierarchical",
+          "effective_task_type": "multi_hop",
+          "inspect_judge_used": true,
+          "inspect_id": "real_69c6f1d94cca74801cb63e0c_multi_hop_auto_0041",
+          "inspect_evidence_score": 1.0,
+          "inspect_content_score": 0.3333,
+          "inspect_fact_1_score": 0.0,
+          "inspect_fact_2_score": 1.0
+        },
+        "steps": [
+          {
+            "step_idx": 1,
+            "action": "nav_collect",
+            "detail": {
+              "action_id": "C18",
+              "kind": "collect",
+              "section_id": "real_69c6f1d94cca74801cb63e0c:L98",
+              "scope": null,
+              "llm_reason": "Nodes C18 and C20 directly address the user's query regarding impact-prone coal mining principles/measures and spontaneous combustion fire prevention systems.",
+              "llm_raw": "{\"action_id\":\"C18\",\"ids\":[\"C18\",\"C20\"],\"confidence\":{\"C18\":1.0,\"C20\":1.0},\"reason\":\"Nodes C18 and C20 directly address the user's query regarding impact-prone coal mining principles/measures and spontaneous combustion fire prevention systems.\"}",
+              "depth": 0,
+              "n_legal_actions": 32,
+              "legal_actions_preview": [
+                "C1 | COLLECT | real_69c6f1d94cca74801cb63e0c:L1 | ​ | score=0.0738",
+                "D1 | DISPATCH | real_69c6f1d94cca74801cb63e0c:L1 | ​ | score=0.0738",
+                "C2 | COLLECT | real_69c6f1d94cca74801cb63e0c:L34 | 第二章　生产经营单位的安全生产保障 | score=0.0738",
+                "D2 | DISPATCH | real_69c6f1d94cca74801cb63e0c:L34 | 第二章　生产经营单位的安全生产保障 | score=0.0738",
+                "C3 | COLLECT | real_69c6f1d94cca74801cb63e0c:L41 | 第十五条　矿山、金属冶炼、建筑施工、运输单位和危险物品的生产、经营、储存、装卸单位，应当按照下列规定设置安全生产管理机构或者配备专职安全生产管理人员： | score=0.0598",
+                "D3 | DISPATCH | real_69c6f1d94cca74801cb63e0c:L41 | 第十五条　矿山、金属冶炼、建筑施工、运输单位和危险物品的生产、经营、储存、装卸单位，应当按照下列规定设置安全生产管理机构或者配备专职安全生产管理人员： | score=0.0598",
+                "C4 | COLLECT | real_69c6f1d94cca74801cb63e0c:L59 | 属于重大或者较大风险的，应当制定专项管控方案，采取限制或者禁止人员进入、定期巡查检查等安全风险管控措施。 | score=0.0490",
+                "C5 | COLLECT | real_69c6f1d94cca74801cb63e0c:L61 | 生产经营单位应当建立健全生产安全事故隐患排查治理制度，对事故隐患进行排查并及时采取措施予以消除；事故隐患排除前和排除过程中无法保证安全的，应当从危险区域内撤出人员，疏散周边可能危及的其他人员，并设置警戒标志。生产经营单位应当将事故隐患排查治理情况向从业人员通报。 | score=0.0598",
+                "C6 | COLLECT | real_69c6f1d94cca74801cb63e0c:L62 | 对排查出的重大事故隐患，生产经营单位应当按照规定立即报告，并采取有效的安全防范和监控措施，制定和落实治理方案。治理方案、治理结果等情况应当及时向负有安全生产监督管理职责的部门和职工大会或者职工代表大会报告。 | score=0.0578",
+                "C7 | COLLECT | real_69c6f1d94cca74801cb63e0c:L72 | 第二十一条　生产经营单位进行爆破、吊装、动火、临时用电和危险装置设备试生产、重大危险源作业、有毒有害、受限空间、高处作业以及临近高压输电线路、临近输油（气）管线作业、建筑物和构筑物拆除等危险作业的，应当遵守下列规定： | score=0.0738",
+                "D4 | DISPATCH | real_69c6f1d94cca74801cb63e0c:L72 | 第二十一条　生产经营单位进行爆破、吊装、动火、临时用电和危险装置设备试生产、重大危险源作业、有毒有害、受限空间、高处作业以及临近高压输电线路、临近输油（气）管线作业、建筑物和构筑物拆除等危险作业的，应当遵守下列规定： | score=0.0738",
+                "C8 | COLLECT | real_69c6f1d94cca74801cb63e0c:L78 | 生产经营单位进行前款规定危险作业，发现直接危及人身安全的紧急情况时，应当采取应急措施，停止作业，撤出作业人员。 | score=0.0524",
+                "C9 | COLLECT | real_69c6f1d94cca74801cb63e0c:L79 | 生产经营单位委托其他有专业资质的单位进行危险作业的，应当在作业前与受托方签订安全生产管理协议，明确各自的安全生产职责，并对受托方安全生产工作统一协调管理。 | score=0.0521",
+                "C10 | COLLECT | real_69c6f1d94cca74801cb63e0c:L86 | 第二十五条煤矿、非煤矿山、危险化学品、烟花爆竹、交通运输、建筑施工、民用爆炸物品、金属冶炼、渔业生产等高危行业、领域的生产经营单位应当投保安全生产责任保险。 | score=0.0543",
+                "C11 | COLLECT | real_69c6f1d94cca74801cb63e0c:L89 | 第二十六条危险化学品生产、经营、储存、运输和使用单位，应当装配安全检测、监控和报警系统，进行实时监管；涉及易燃易爆、有毒有害气体的生产、储存装置应当装备易燃易爆、有毒有害气体泄漏报警系统；涉及重点监管的危险化工工艺、重点监管的危险化学品和危险化学品重大危险源的化工装置、储运设施应当装备自动化控制系统、重大危险源在线监测监控系统。 | score=0.0625",
+                "C12 | COLLECT | real_69c6f1d94cca74801cb63e0c:L91 | 第二十七条危险物品输送管道运营单位应当建立实施管道日常巡护制度，及时发现并处理管道沿线的异常情况；发现直接占压、不符合管道保护安全距离的建筑物、构筑物等事故隐患，无法自行排除的，应当向危险物品输送管道主管部门报告。 | score=0.0579"
+              ],
+              "projection_chars": 3743,
+              "collect_section_ids": [
+                "real_69c6f1d94cca74801cb63e0c:L98",
+                "real_69c6f1d94cca74801cb63e0c:L100"
+              ],
+              "n_added": 2,
+              "n_hits": 2,
+              "n_purged_descendant_evidence": 0,
+              "collect_full": true,
+              "branch_selected": true,
+              "scope_evidence_locked": false,
+              "n_collected_sections": 2,
+              "n_blocked_ancestor_collects": 0
+            }
+          },
+          {
+            "step_idx": 2,
+            "action": "nav_finish",
+            "detail": {
+              "action_id": "F1",
+              "kind": "finish",
+              "section_id": null,
+              "scope": null,
+              "llm_reason": "Assembled evidence G1 fully addresses both query parts: impact-prone coal mining principles/measures and spontaneous combustion system requirements.",
+              "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Assembled evidence G1 fully addresses both query parts: impact-prone coal mining principles/measures and spontaneous combustion system requirements.\"}",
+              "depth": 0,
+              "n_legal_actions": 33,
+              "legal_actions_preview": [
+                "C1 | COLLECT | real_69c6f1d94cca74801cb63e0c:L1 | ​ | score=0.0738",
+                "D1 | DISPATCH | real_69c6f1d94cca74801cb63e0c:L1 | ​ | score=0.0738",
+                "C2 | COLLECT | real_69c6f1d94cca74801cb63e0c:L34 | 第二章　生产经营单位的安全生产保障 | score=0.0738",
+                "D2 | DISPATCH | real_69c6f1d94cca74801cb63e0c:L34 | 第二章　生产经营单位的安全生产保障 | score=0.0738",
+                "C3 | COLLECT | real_69c6f1d94cca74801cb63e0c:L41 | 第十五条　矿山、金属冶炼、建筑施工、运输单位和危险物品的生产、经营、储存、装卸单位，应当按照下列规定设置安全生产管理机构或者配备专职安全生产管理人员： | score=0.0598",
+                "D3 | DISPATCH | real_69c6f1d94cca74801cb63e0c:L41 | 第十五条　矿山、金属冶炼、建筑施工、运输单位和危险物品的生产、经营、储存、装卸单位，应当按照下列规定设置安全生产管理机构或者配备专职安全生产管理人员： | score=0.0598",
+                "C4 | COLLECT | real_69c6f1d94cca74801cb63e0c:L59 | 属于重大或者较大风险的，应当制定专项管控方案，采取限制或者禁止人员进入、定期巡查检查等安全风险管控措施。 | score=0.0490",
+                "C5 | COLLECT | real_69c6f1d94cca74801cb63e0c:L61 | 生产经营单位应当建立健全生产安全事故隐患排查治理制度，对事故隐患进行排查并及时采取措施予以消除；事故隐患排除前和排除过程中无法保证安全的，应当从危险区域内撤出人员，疏散周边可能危及的其他人员，并设置警戒标志。生产经营单位应当将事故隐患排查治理情况向从业人员通报。 | score=0.0598",
+                "C6 | COLLECT | real_69c6f1d94cca74801cb63e0c:L62 | 对排查出的重大事故隐患，生产经营单位应当按照规定立即报告，并采取有效的安全防范和监控措施，制定和落实治理方案。治理方案、治理结果等情况应当及时向负有安全生产监督管理职责的部门和职工大会或者职工代表大会报告。 | score=0.0578",
+                "C7 | COLLECT | real_69c6f1d94cca74801cb63e0c:L72 | 第二十一条　生产经营单位进行爆破、吊装、动火、临时用电和危险装置设备试生产、重大危险源作业、有毒有害、受限空间、高处作业以及临近高压输电线路、临近输油（气）管线作业、建筑物和构筑物拆除等危险作业的，应当遵守下列规定： | score=0.0738",
+                "D4 | DISPATCH | real_69c6f1d94cca74801cb63e0c:L72 | 第二十一条　生产经营单位进行爆破、吊装、动火、临时用电和危险装置设备试生产、重大危险源作业、有毒有害、受限空间、高处作业以及临近高压输电线路、临近输油（气）管线作业、建筑物和构筑物拆除等危险作业的，应当遵守下列规定： | score=0.0738",
+                "C8 | COLLECT | real_69c6f1d94cca74801cb63e0c:L78 | 生产经营单位进行前款规定危险作业，发现直接危及人身安全的紧急情况时，应当采取应急措施，停止作业，撤出作业人员。 | score=0.0524",
+                "C9 | COLLECT | real_69c6f1d94cca74801cb63e0c:L79 | 生产经营单位委托其他有专业资质的单位进行危险作业的，应当在作业前与受托方签订安全生产管理协议，明确各自的安全生产职责，并对受托方安全生产工作统一协调管理。 | score=0.0521",
+                "C10 | COLLECT | real_69c6f1d94cca74801cb63e0c:L86 | 第二十五条煤矿、非煤矿山、危险化学品、烟花爆竹、交通运输、建筑施工、民用爆炸物品、金属冶炼、渔业生产等高危行业、领域的生产经营单位应当投保安全生产责任保险。 | score=0.0543",
+                "C11 | COLLECT | real_69c6f1d94cca74801cb63e0c:L89 | 第二十六条危险化学品生产、经营、储存、运输和使用单位，应当装配安全检测、监控和报警系统，进行实时监管；涉及易燃易爆、有毒有害气体的生产、储存装置应当装备易燃易爆、有毒有害气体泄漏报警系统；涉及重点监管的危险化工工艺、重点监管的危险化学品和危险化学品重大危险源的化工装置、储运设施应当装备自动化控制系统、重大危险源在线监测监控系统。 | score=0.0625",
+                "C12 | COLLECT | real_69c6f1d94cca74801cb63e0c:L91 | 第二十七条危险物品输送管道运营单位应当建立实施管道日常巡护制度，及时发现并处理管道沿线的异常情况；发现直接占压、不符合管道保护安全距离的建筑物、构筑物等事故隐患，无法自行排除的，应当向危险物品输送管道主管部门报告。 | score=0.0579"
+              ],
+              "projection_chars": 3783,
+              "group_rank": [
+                "G1"
+              ]
+            }
+          },
+          {
+            "step_idx": 3,
+            "action": "compose_answer",
+            "detail": {
+              "evidence_chars": 212,
+              "n_chunks_kept": 2,
+              "truncated_last": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "task_idx": 3,
+      "query": "根据《线上学习平台学习管理方案（修订）》中“一、管理机构及其职责”相关内容，分别说明两处相邻证据给出的要点。",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "multi_hop",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L4",
+        "real_69c6095ed4242eda8c47c5b2:L5"
+      ],
+      "gold_answer": "{\"fact_1\": \"线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\", \"fact_2\": \"（ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。\", \"final_answer\": \"第一处要点：线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下： 第二处要点：（ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。\", \"evidence_line_ids\": [4, 5]}",
+      "inspect_id": "latest_clean_multi_0011",
+      "hierarchical_gold_map": {
+        "n_scored_candidates": 10,
+        "evidence_chars_actual": 453,
+        "evidence_text": "[E1]\n[§ 一、管理机构及其职责]\n  线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\n  （ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。\n  （ 二）各专家组：负责各领域内员工培训需求征集，教材、课件及习题开发，课件修改、适时更新、审核，业务答疑，题库组建等工作，集团对口业务部门负责人为各专业课程开发责任人，统筹推进本业务系统课程开发工作。\n  （ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟\n  踪和定期调研，反馈十一在线平台中心。",
+        "composed_answer": "{\"task_type\": \"multi_hop\", \"fact_1\": \"十一在线平台中心负责课程体系设计、课程开发计划审批、课程考核标准设定及平台建设费用审批。\", \"fact_2\": \"各专家组负责培训需求征集、教材课件习题开发与更新审核、业务答疑及题库组建，由集团对口业务部门负责人统筹。\", \"final_answer\": \"管理机构职责包括：十一在线平台中心负责体系设计、计划审批、标准设定及费用审批；各专家组负责需求征集、内容开发更新审核、答疑及题库组建，并由对口负责人统筹。\"}",
+        "trajectory_length": 3,
+        "truncated_last": false,
+        "section_ids": [
+          "real_69c6095ed4242eda8c47c5b2:L1"
+        ],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L3",
+          "real_69c6095ed4242eda8c47c5b2:L4",
+          "real_69c6095ed4242eda8c47c5b2:L5",
+          "real_69c6095ed4242eda8c47c5b2:L6",
+          "real_69c6095ed4242eda8c47c5b2:L7",
+          "real_69c6095ed4242eda8c47c5b2:L8"
+        ],
+        "refusal_events": [],
+        "metrics": {
+          "budget": {
+            "chunk_hit@1": 1.0,
+            "mrr_chunks": 1.0,
+            "coverage_budget_lenient": 1.0,
+            "n_chunks_kept": 5.0
+          },
+          "line_retrieval": {
+            "coverage": 1.0,
+            "mrr": 0.5,
+            "ndcg@10": 0.8154648767857288,
+            "hit@5": 1.0,
+            "precision@1": 0.0,
+            "precision@3": 0.6666666666666666,
+            "precision@5": 0.4,
+            "precision@8": 0.3333333333333333
+          },
+          "keyword_recall": 0.0,
+          "task_success": 0.0,
+          "score_task": 0.0,
+          "score_evidence": 1.0,
+          "score_process": 0.9166666666666666,
+          "evidence_hit@1": 1.0,
+          "evidence_coverage": 1.0,
+          "process_recovery": 1.0,
+          "process_efficiency": 0.9166666666666666,
+          "process_efficiency_mode": "nav_hierarchical",
+          "effective_task_type": "multi_hop",
+          "inspect_judge_used": true,
+          "inspect_id": "latest_clean_multi_0011",
+          "inspect_evidence_score": 1.0,
+          "inspect_content_score": 0.0,
+          "inspect_fact_1_score": 0.0,
+          "inspect_fact_2_score": 0.0
+        },
+        "steps": [
+          {
+            "step_idx": 1,
+            "action": "nav_collect",
+            "detail": {
+              "action_id": "C3",
+              "kind": "collect",
+              "section_id": "real_69c6095ed4242eda8c47c5b2:L3",
+              "scope": null,
+              "llm_reason": "Collect section '一、管理机构及其职责' to find the two adjacent evidence points requested.",
+              "llm_raw": "{\"action_id\":\"C3\",\"ids\":[\"C3\"],\"confidence\":{\"C3\":0.9},\"reason\":\"Collect section '一、管理机构及其职责' to find the two adjacent evidence points requested.\"}",
+              "depth": 0,
+              "n_legal_actions": 47,
+              "legal_actions_preview": [
+                "C1 | COLLECT | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0731",
+                "D1 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0731",
+                "C2 | COLLECT | real_69c6095ed4242eda8c47c5b2:L2 | 为进一步深化学习型组织建设，整合学习资源，传播最佳实践，有效助力员工工作技能提升和绩效改善。为进一步强化学习效果，规范线上学习管理，特制订本方案。 | score=0.0576",
+                "C3 | COLLECT | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0731",
+                "D2 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0731",
+                "C4 | COLLECT | real_69c6095ed4242eda8c47c5b2:L4 | 线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下： | score=0.0731",
+                "C5 | COLLECT | real_69c6095ed4242eda8c47c5b2:L5 | （ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。 | score=0.0658",
+                "C6 | COLLECT | real_69c6095ed4242eda8c47c5b2:L7 | （ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟 | score=0.0709",
+                "C7 | COLLECT | real_69c6095ed4242eda8c47c5b2:L8 | 踪和定期调研，反馈十一在线平台中心。 | score=0.0574",
+                "C8 | COLLECT | real_69c6095ed4242eda8c47c5b2:L9 | （ 四）平台管理员 | score=0.0686",
+                "D3 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L9 | （ 四）平台管理员 | score=0.0686",
+                "C9 | COLLECT | real_69c6095ed4242eda8c47c5b2:L10 | 1.各专家组平台管理员：负责本专家组课件和考试习题的上传、维护、更新、删除、学习任务下发和指派相关岗位学习等工作。 | score=0.0624",
+                "C10 | COLLECT | real_69c6095ed4242eda8c47c5b2:L11 | 2.各二级单位平台管理员：负责督促本单位各类课件指定人员在线学习，按时完成学习计划，并向各专家组及十一在线平台中心办公室反馈学习情况。 | score=0.0686",
+                "C11 | COLLECT | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0718",
+                "D4 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0718",
+                "C12 | COLLECT | real_69c6095ed4242eda8c47c5b2:L13 | 1.协同做好线上学习平台的推广、使用和维护等日常管理工作，配合各专家组完成本业务条线培训课程开发、选配工作。 | score=0.0639"
+              ],
+              "projection_chars": 3473,
+              "collect_section_ids": [
+                "real_69c6095ed4242eda8c47c5b2:L3"
+              ],
+              "n_added": 10,
+              "n_hits": 10,
+              "n_purged_descendant_evidence": 0,
+              "collect_full": true,
+              "branch_selected": true,
+              "scope_evidence_locked": false,
+              "n_collected_sections": 14,
+              "n_blocked_ancestor_collects": 2
+            }
+          },
+          {
+            "step_idx": 2,
+            "action": "nav_finish",
+            "detail": {
+              "action_id": "F1",
+              "kind": "finish",
+              "section_id": null,
+              "scope": null,
+              "llm_reason": "Query asks for adjacent evidence points on management responsibilities. G1 and G2 cover the first two adjacent sections.",
+              "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\",\"G2\"],\"reason\":\"Query asks for adjacent evidence points on management responsibilities. G1 and G2 cover the first two adjacent sections.\"}",
+              "depth": 0,
+              "n_legal_actions": 44,
+              "legal_actions_preview": [
+                "D1 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0731",
+                "C1 | COLLECT | real_69c6095ed4242eda8c47c5b2:L2 | 为进一步深化学习型组织建设，整合学习资源，传播最佳实践，有效助力员工工作技能提升和绩效改善。为进一步强化学习效果，规范线上学习管理，特制订本方案。 | score=0.0576",
+                "C2 | COLLECT | real_69c6095ed4242eda8c47c5b2:L17 | 二、课程及指派管理 | score=0.0642",
+                "D2 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L17 | 二、课程及指派管理 | score=0.0642",
+                "C3 | COLLECT | real_69c6095ed4242eda8c47c5b2:L18 | （ 一）课程类别 | score=0.0610",
+                "D3 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L18 | （ 一）课程类别 | score=0.0610",
+                "C4 | COLLECT | real_69c6095ed4242eda8c47c5b2:L19 | 1.必修课程。必修课程需涵盖各专业系统内所有一般管理岗位。 由各专家组主持，根据所辖领域内各岗位职责制定课程开发计划、确定各系统岗位的必修课。课程开发计划需 | score=0.0578",
+                "C5 | COLLECT | real_69c6095ed4242eda8c47c5b2:L20 | 明确课程名称、课程类别、必修岗位、课程开发负责人等信息（见附件），提交十一在线平台中心审批后按计划开发。 | score=0.0610",
+                "C6 | COLLECT | real_69c6095ed4242eda8c47c5b2:L21 | 必修课程的开发数量各专家组结合业务和岗位需求实际确定，课程包含内部自主开发和外部引进，保证课程内容的实用性和有效性。 | score=0.0552",
+                "C7 | COLLECT | real_69c6095ed4242eda8c47c5b2:L22 | 岗位必修课程为各岗位年底技能测评的内容和依据。 | score=0.0556",
+                "C8 | COLLECT | real_69c6095ed4242eda8c47c5b2:L23 | 2.选修课程。员工自行选择需要学习的课程。 由员工结合本岗位履职需要、个人兴趣和其他能力提升需要， 自行选择相应选修课程学习。 | score=0.0574",
+                "C9 | COLLECT | real_69c6095ed4242eda8c47c5b2:L24 | （ 二）课程设置 | score=0.0541",
+                "D4 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L24 | （ 二）课程设置 | score=0.0541",
+                "C10 | COLLECT | real_69c6095ed4242eda8c47c5b2:L25 | 1.视频类课程。视频类课程上传时须开启“观看监控”设置功能，在课程中添加课程观看提示，在相应节点点击“提示”方可继续学习，首次课程播放不允许拖动。所有上传课程需添加随堂小测试，测试通过后该门课程学习完成。 同时为便于学员学习， 内部录制时的PPT 文档（如有）随同视频一并上传。 | score=0.0541",
+                "C11 | COLLECT | real_69c6095ed4242eda8c47c5b2:L26 | 2.文档类课程。纯文档类课程上传时需根据课程内容设置最短学习时间，并添加随堂小测试，达到课程最低学时长且通过随堂小测试，该课程学习完成。 | score=0.0535",
+                "C12 | COLLECT | real_69c6095ed4242eda8c47c5b2:L28 | （ 三）指派管理 | score=0.0642"
+              ],
+              "projection_chars": 3571,
+              "group_rank": [
+                "G1",
+                "G2"
+              ]
+            }
+          },
+          {
+            "step_idx": 3,
+            "action": "compose_answer",
+            "detail": {
+              "evidence_chars": 453,
+              "n_chunks_kept": 5,
+              "truncated_last": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "task_idx": 4,
+      "query": "列举《十公司 彬州市城区智慧停车建设项目完工交付复盘报告-6.29》中“亮点H2项目商务策划管理实施落地，达到策划预期目标的原因分析”部分的主要条目。",
+      "doc_id": "real_69c60abfd4242eda8c47c8d9",
+      "task_type": "scope_collection",
+      "gold_nodes": [
+        "real_69c60abfd4242eda8c47c8d9:L23",
+        "real_69c60abfd4242eda8c47c8d9:L24",
+        "real_69c60abfd4242eda8c47c8d9:L25",
+        "real_69c60abfd4242eda8c47c8d9:L26",
+        "real_69c60abfd4242eda8c47c8d9:L27",
+        "real_69c60abfd4242eda8c47c8d9:L29"
+      ],
+      "gold_answer": "{\"final_answer\": \"1）临建设施使用业主收购场地遗留部分临建，包括卫生间一间、K式房12间用做项目库房、劳务办公室等功能用房，节约成本。；2）现场施工大门及市政围挡使用业主收购场地遗留，符合现场施工要求，节约成本。；3）场地内使用原场地内已硬化基础作为项目部办公室基础，未硬化部分采用烧结砖铺设作为临时硬化，该部分烧结砖后期用于室外砖井砌筑，节约成本。；4）场地内绿化使用临近项目业主遗弃冬青，保证项目文明施工的同时，节约成本。；5）现场基坑施工因水位过高，需使用降水井抽水。因项目卫生间形式可采用外部水直接进行冲洗，故策划使用降水井抽排水进行日常卫生间冲洗及现场道路冲洗，达到节水效果并节约成本。；1）现场模板使用周边项目剩余模板进行周转。使用前绘制模板排布图，避免大面积开模，使用过程中严格把控拆模施工，确保模板完整率，使用完成后将模板调出，极大节约项目周转材成本。。\", \"table\": [{\"序号\": 1, \"项\": \"1）临建设施使用业主收购场地遗留部分临建，包括卫生间一间、K式房12间用做项目库房、劳务办公室等功能用房，节约成本。\", \"对应证据行\": 23, \"备注\": \"\"}, {\"序号\": 2, \"项\": \"2）现场施工大门及市政围挡使用业主收购场地遗留，符合现场施工要求，节约成本。\", \"对应证据行\": 24, \"备注\": \"\"}, {\"序号\": 3, \"项\": \"3）场地内使用原场地内已硬化基础作为项目部办公室基础，未硬化部分采用烧结砖铺设作为临时硬化，该部分烧结砖后期用于室外砖井砌筑，节约成本。\", \"对应证据行\": 25, \"备注\": \"\"}, {\"序号\": 4, \"项\": \"4）场地内绿化使用临近项目业主遗弃冬青，保证项目文明施工的同时，节约成本。\", \"对应证据行\": 26, \"备注\": \"\"}, {\"序号\": 5, \"项\": \"5）现场基坑施工因水位过高，需使用降水井抽水。因项目卫生间形式可采用外部水直接进行冲洗，故策划使用降水井抽排水进行日常卫生间冲洗及现场道路冲洗，达到节水效果并节约成本。\", \"对应证据行\": 27, \"备注\": \"\"}, {\"序号\": 6, \"项\": \"1）现场模板使用周边项目剩余模板进行周转。使用前绘制模板排布图，避免大面积开模，使用过程中严格把控拆模施工，确保模板完整率，使用完成后将模板调出，极大节约项目周转材成本。\", \"对应证据行\": 29, \"备注\": \"\"}], \"summary\": {\"total_items\": 6, \"completeness\": \"complete\"}, \"evidence_line_ids\": [23, 24, 25, 26, 27, 29]}",
+      "inspect_id": "latest_clean_scope_0091",
+      "hierarchical_gold_map": {
+        "n_scored_candidates": 10,
+        "evidence_chars_actual": 420,
+        "evidence_text": "[E1]\n[§ 亮点H2项目商务策划管理实施落地，达到策划预期目标的原因分析]\n  ①临建策划\n  1）临建设施使用业主收购场地遗留部分临建，包括卫生间一间、K式房12间用做项目库房、劳务办公室等功能用房，节约成本。\n  2）现场施工大门及市政围挡使用业主收购场地遗留，符合现场施工要求，节约成本。\n  3）场地内使用原场地内已硬化基础作为项目部办公室基础，未硬化部分采用烧结砖铺设作为临时硬化，该部分烧结砖后期用于室外砖井砌筑，节约成本。\n  4）场地内绿化使用临近项目业主遗弃冬青，保证项目文明施工的同时，节约成本。\n  5）现场基坑施工因水位过高，需使用降水井抽水。因项目卫生间形式可采用外部水直接进行冲洗，故策划使用降水井抽排水进行日常卫生间冲洗及现场道路冲洗，达到节水效果并节约成本。\n  ②周转材管理\n  2）现场钢筋棚周转周边项目，使用完成后立即周转出场。\n  3）现场办公家具及箱式房使用之前项目剩余，使用完成后立即周转出场",
+        "composed_answer": "{\"task_type\": \"scope_collection\", \"items\": [\"①临建策划\", \"1）临建设施使用业主收购场地遗留部分临建，包括卫生间一间、K式房12间用做项目库房、劳务办公室等功能用房，节约成本。\", \"2）现场施工大门及市政围挡使用业主收购场地遗留，符合现场施工要求，节约成本。\", \"3）场地内使用原场地内已硬化基础作为项目部办公室基础，未硬化部分采用烧结砖铺设作为临时硬化，该部分烧结砖后期用于室外砖井砌筑，节约成本。\", \"4）场地内绿化使用临近项目业主遗弃冬青，保证项目文明施工的同时，节约成本。\", \"5）现场基坑施工因水位过高，需使用降水井抽水。因项目卫生间形式可采用外部水直接进行冲洗，故策划使用降水井抽排水进行日常卫生间冲洗及现场道路冲洗，达到节水效果并节约成本。\", \"②周转材管理\", \"2）现场钢筋棚周转周边项目，使用完成后立即周转出场。\", \"3）现场办公家具及箱式房使用之前项目剩余，使用完成后立即周转出场\"]}",
+        "trajectory_length": 3,
+        "truncated_last": false,
+        "section_ids": [
+          "real_69c60abfd4242eda8c47c8d9:L1",
+          "real_69c60abfd4242eda8c47c8d9:L2",
+          "real_69c60abfd4242eda8c47c8d9:L9",
+          "real_69c60abfd4242eda8c47c8d9:L14",
+          "real_69c60abfd4242eda8c47c8d9:L15",
+          "real_69c60abfd4242eda8c47c8d9:L21",
+          "real_69c60abfd4242eda8c47c8d9:L32",
+          "real_69c60abfd4242eda8c47c8d9:L37",
+          "real_69c60abfd4242eda8c47c8d9:L43",
+          "real_69c60abfd4242eda8c47c8d9:L55",
+          "real_69c60abfd4242eda8c47c8d9:L71",
+          "real_69c60abfd4242eda8c47c8d9:L81",
+          "real_69c60abfd4242eda8c47c8d9:L82",
+          "real_69c60abfd4242eda8c47c8d9:L83",
+          "real_69c60abfd4242eda8c47c8d9:L84",
+          "real_69c60abfd4242eda8c47c8d9:L87",
+          "real_69c60abfd4242eda8c47c8d9:L88",
+          "real_69c60abfd4242eda8c47c8d9:L91",
+          "real_69c60abfd4242eda8c47c8d9:L94",
+          "real_69c60abfd4242eda8c47c8d9:L96",
+          "real_69c60abfd4242eda8c47c8d9:L98",
+          "real_69c60abfd4242eda8c47c8d9:L99"
+        ],
+        "retrieved_nodes": [
+          "real_69c60abfd4242eda8c47c8d9:L22",
+          "real_69c60abfd4242eda8c47c8d9:L23",
+          "real_69c60abfd4242eda8c47c8d9:L24",
+          "real_69c60abfd4242eda8c47c8d9:L25",
+          "real_69c60abfd4242eda8c47c8d9:L26",
+          "real_69c60abfd4242eda8c47c8d9:L27",
+          "real_69c60abfd4242eda8c47c8d9:L28",
+          "real_69c60abfd4242eda8c47c8d9:L30",
+          "real_69c60abfd4242eda8c47c8d9:L31"
+        ],
+        "refusal_events": [],
+        "metrics": {
+          "budget": {
+            "chunk_hit@1": 0.0,
+            "mrr_chunks": 0.5,
+            "coverage_budget_lenient": 0.8333333333333334,
+            "n_chunks_kept": 9.0
+          },
+          "line_retrieval": {
+            "coverage": 0.8333333333333334,
+            "mrr": 0.5,
+            "ndcg@10": 0.7467366458934469,
+            "hit@5": 1.0,
+            "precision@1": 0.0,
+            "precision@3": 0.6666666666666666,
+            "precision@5": 0.8,
+            "precision@8": 0.625
+          },
+          "keyword_recall": 0.0,
+          "task_success": 0.8333,
+          "score_task": 0.8333,
+          "score_evidence": 0.8333,
+          "score_process": 0.9166666666666666,
+          "evidence_hit@1": 0.0,
+          "evidence_coverage": 0.8333333333333334,
+          "process_recovery": 1.0,
+          "process_efficiency": 0.9166666666666666,
+          "process_efficiency_mode": "nav_hierarchical",
+          "effective_task_type": "scope_collection",
+          "inspect_judge_used": true,
+          "inspect_id": "latest_clean_scope_0091",
+          "inspect_evidence_score": 0.8333,
+          "inspect_content_score": 0.8333,
+          "inspect_matched_item_recall": 0.8333
+        },
+        "steps": [
+          {
+            "step_idx": 1,
+            "action": "nav_collect",
+            "detail": {
+              "action_id": "C11",
+              "kind": "collect",
+              "section_id": "real_69c60abfd4242eda8c47c8d9:L21",
+              "scope": null,
+              "llm_reason": "Collect section H2 to retrieve main items regarding business planning implementation reasons.",
+              "llm_raw": "{\"action_id\":\"C11\",\"ids\":[\"C11\"],\"confidence\":{\"C11\":0.9},\"reason\":\"Collect section H2 to retrieve main items regarding business planning implementation reasons.\"}",
+              "depth": 0,
+              "n_legal_actions": 47,
+              "legal_actions_preview": [
+                "C1 | COLLECT | real_69c60abfd4242eda8c47c8d9:L2 | 项目完工交付复盘报告 | score=0.0625",
+                "D1 | DISPATCH | real_69c60abfd4242eda8c47c8d9:L2 | 项目完工交付复盘报告 | score=0.0625",
+                "C2 | COLLECT | real_69c60abfd4242eda8c47c8d9:L3 | 单位/项目:彬州市城区智慧停车建设项目 | score=0.0544",
+                "C3 | COLLECT | real_69c60abfd4242eda8c47c8d9:L4 | 2024年6月27日，彬州市城区智慧停车建设项目完工交付复盘会在集团公司607会议室举行。会议由解博学引导，蔡伦组织，项目部主要管理人员参与，蔡伦、刘首安、李宝珺编写报告。 | score=0.0625",
+                "C4 | COLLECT | real_69c60abfd4242eda8c47c8d9:L8 | 背景阐述：本项目为彬州市政府专项债，项目承包模式为EPC项目，入场时未达到“三通一平”条件。合同签订计划施工日期2022年9月20日，实际进场日期为2022年10月1日，计划完工日期为2023年9月20日，实际完工日期为2024年4月3日，合同总工期为365天。项目劳务分包、专业分包为项目部自行选择，汽车升降设备、客用电梯安装为甲指分包。但项目实际超出计划工期，现针对项目过程实施中的优缺点进行“回 | score=0.0597",
+                "C5 | COLLECT | real_69c60abfd4242eda8c47c8d9:L9 | 二.复盘回顾、评估 | score=0.0653",
+                "D2 | DISPATCH | real_69c60abfd4242eda8c47c8d9:L9 | 二.复盘回顾、评估 | score=0.0653",
+                "C6 | COLLECT | real_69c60abfd4242eda8c47c8d9:L12 | 3、亮点与不足 | score=0.0653",
+                "D3 | DISPATCH | real_69c60abfd4242eda8c47c8d9:L12 | 3、亮点与不足 | score=0.0653",
+                "C7 | COLLECT | real_69c60abfd4242eda8c47c8d9:L13 | 亮点包括资金确权回收良好、商务策划落地及主体工期提前32天。不足在于汽车升降设备分包管理失控导致延误185天，且质量过程管控效果不佳。 | score=0.0653",
+                "C8 | COLLECT | real_69c60abfd4242eda8c47c8d9:L15 | 三.复盘反思、分析 | score=0.0572",
+                "D4 | DISPATCH | real_69c60abfd4242eda8c47c8d9:L15 | 三.复盘反思、分析 | score=0.0572",
+                "C9 | COLLECT | real_69c60abfd4242eda8c47c8d9:L16 | 1、亮点H1资金确权及回收情况良好的原因分析 | score=0.0572",
+                "C10 | COLLECT | real_69c60abfd4242eda8c47c8d9:L20 | 项目施工过程中，每达到付款条件，项目及时报送进度款支付申请，对应收进度款及时催清，应收账款符合当期申请金额。 | score=0.0531",
+                "C11 | COLLECT | real_69c60abfd4242eda8c47c8d9:L21 | 亮点H2项目商务策划管理实施落地，达到策划预期目标的原因分析 | score=0.0662",
+                "D5 | DISPATCH | real_69c60abfd4242eda8c47c8d9:L21 | 亮点H2项目商务策划管理实施落地，达到策划预期目标的原因分析 | score=0.0662"
+              ],
+              "projection_chars": 3486,
+              "collect_section_ids": [
+                "real_69c60abfd4242eda8c47c8d9:L21"
+              ],
+              "n_added": 11,
+              "n_hits": 11,
+              "n_purged_descendant_evidence": 0,
+              "collect_full": false,
+              "branch_selected": true,
+              "scope_evidence_locked": false,
+              "n_collected_sections": 11,
+              "n_blocked_ancestor_collects": 1
+            }
+          },
+          {
+            "step_idx": 2,
+            "action": "nav_finish",
+            "detail": {
+              "action_id": "F1",
+              "kind": "finish",
+              "section_id": null,
+              "scope": null,
+              "llm_reason": "The assembled evidence G1 fully contains the main items for 'Highlight H2' as requested.",
+              "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"The assembled evidence G1 fully contains the main items for 'Highlight H2' as requested.\"}",
+              "depth": 0,
+              "n_legal_actions": 47,
+              "legal_actions_preview": [
+                "C1 | COLLECT | real_69c60abfd4242eda8c47c8d9:L2 | 项目完工交付复盘报告 | score=0.0625",
+                "D1 | DISPATCH | real_69c60abfd4242eda8c47c8d9:L2 | 项目完工交付复盘报告 | score=0.0625",
+                "C2 | COLLECT | real_69c60abfd4242eda8c47c8d9:L3 | 单位/项目:彬州市城区智慧停车建设项目 | score=0.0544",
+                "C3 | COLLECT | real_69c60abfd4242eda8c47c8d9:L4 | 2024年6月27日，彬州市城区智慧停车建设项目完工交付复盘会在集团公司607会议室举行。会议由解博学引导，蔡伦组织，项目部主要管理人员参与，蔡伦、刘首安、李宝珺编写报告。 | score=0.0625",
+                "C4 | COLLECT | real_69c60abfd4242eda8c47c8d9:L6 | 本项目彬州市智慧停车建设项目，位于彬州市实验小学以北老消防队，处于北大街与创新西路交汇处.基地东西长约36米，南北长约53米.项目总用地面积为1820.00平方米，地块基本为长方形。总建筑面积6146.94平方米，共7层，结构为框架结构，内含车位100个。项目周边东侧、西侧均为老旧小区，南侧为彬州市实验小学，北侧为市政道路。 | score=0.0518",
+                "C5 | COLLECT | real_69c60abfd4242eda8c47c8d9:L8 | 背景阐述：本项目为彬州市政府专项债，项目承包模式为EPC项目，入场时未达到“三通一平”条件。合同签订计划施工日期2022年9月20日，实际进场日期为2022年10月1日，计划完工日期为2023年9月20日，实际完工日期为2024年4月3日，合同总工期为365天。项目劳务分包、专业分包为项目部自行选择，汽车升降设备、客用电梯安装为甲指分包。但项目实际超出计划工期，现针对项目过程实施中的优缺点进行“回 | score=0.0597",
+                "C6 | COLLECT | real_69c60abfd4242eda8c47c8d9:L9 | 二.复盘回顾、评估 | score=0.0653",
+                "D2 | DISPATCH | real_69c60abfd4242eda8c47c8d9:L9 | 二.复盘回顾、评估 | score=0.0653",
+                "C7 | COLLECT | real_69c60abfd4242eda8c47c8d9:L12 | 3、亮点与不足 | score=0.0653",
+                "D3 | DISPATCH | real_69c60abfd4242eda8c47c8d9:L12 | 3、亮点与不足 | score=0.0653",
+                "C8 | COLLECT | real_69c60abfd4242eda8c47c8d9:L13 | 亮点包括资金确权回收良好、商务策划落地及主体工期提前32天。不足在于汽车升降设备分包管理失控导致延误185天，且质量过程管控效果不佳。 | score=0.0653",
+                "C9 | COLLECT | real_69c60abfd4242eda8c47c8d9:L15 | 三.复盘反思、分析 | score=0.0572",
+                "D4 | DISPATCH | real_69c60abfd4242eda8c47c8d9:L15 | 三.复盘反思、分析 | score=0.0572",
+                "C10 | COLLECT | real_69c60abfd4242eda8c47c8d9:L16 | 1、亮点H1资金确权及回收情况良好的原因分析 | score=0.0572",
+                "C11 | COLLECT | real_69c60abfd4242eda8c47c8d9:L20 | 项目施工过程中，每达到付款条件，项目及时报送进度款支付申请，对应收进度款及时催清，应收账款符合当期申请金额。 | score=0.0531",
+                "C12 | COLLECT | real_69c60abfd4242eda8c47c8d9:L32 | 亮点H3通过优化工期，地基基础及主体阶段工期提前32天的原因分析 | score=0.0524"
+              ],
+              "projection_chars": 3526,
+              "group_rank": [
+                "G1"
+              ]
+            }
+          },
+          {
+            "step_idx": 3,
+            "action": "compose_answer",
+            "detail": {
+              "evidence_chars": 420,
+              "n_chunks_kept": 9,
+              "truncated_last": false
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

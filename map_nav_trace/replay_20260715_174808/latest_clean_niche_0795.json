@@ -1,0 +1,208 @@
+{
+  "inspect_id": "latest_clean_niche_0795",
+  "task_type": "niche_fact",
+  "doc_id": "real_69c6097ad4242eda8c47c62c",
+  "query": "根据《陕西建工第十一建集团有限公司生产安全事故综合应急预案（2025版）》中“3.5 应急支援”相关内容，该处明确写出的规定或事实是什么？",
+  "gold_nodes": [
+    "real_69c6097ad4242eda8c47c62c:L280"
+  ],
+  "elapsed_sec": 6.38,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 483,
+    "n_retrieved_nodes": 11,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c6097ad4242eda8c47c62c:L280",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 3.3 响应启动]\n批准的生产安全事故应急预案，实施现场救援，并根据事故情况，必要时请求事故发生地政府、集团应急救援组织支援。\n\n[E2]\n[§ 3.1 信息报告]\n限公司应急救援指挥部\n\n[E3]\n[§ 1.3 适用范围]\n本《预案》适用于集团公司、二级单位及项目经理部所承建工程施工现场发生的坍塌、高处坠落、物体打击、触电、起重伤害、机械伤害、车辆伤害、中毒与窒息、火灾、灼烫、容器爆炸、其他伤害等较大及其以上各类生产安全事故，同时包括有重大社会影响、涉及公共安全或突发事件应急处置工作的应急救援。\n\n[E4]\n[§ 2.5 二级单位应急救援领导小组成员职责]\n4 、监督、检查项目部对施工场区生产过程各危险源进行风险辨识、评价，以及对重大危险源进行有效管控；\n\n[E5]\n[§ 3.1 信息报告]\n陕西建工股份集团有\n\n[E6]\n[§ 3.5  应急支援]\n（ 1 ）当Ⅲ 级（项目经理部）响应事故存在失控可能时，应向事故发生项目所在二级单位应急救援领导小组报告请求支援。在集团公司应急救援指挥部赶到现场后，项目经理部将指挥权移交现场最高领导。"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 492,
+    "n_retrieved_nodes": 8,
+    "gold_node_recall": 1.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c6097ad4242eda8c47c62c:L280",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 3.5  应急支援]\n  当事态无法控制时，应立即寻求外部力量支持，如当地应急管理部门、 质量安全监督站、医院、公安、消防、救援中心等。\n  （ 1 ）当Ⅲ 级（项目经理部）响应事故存在失控可能时，应向事故发生项目所在二级单位应急救援领导小组报告请求支援。在集团公司应急救援指挥部赶到现场后，项目经理部将指挥权移交现场最高领导。\n  （3 ） 当I 级（集团公司级）响应事故存在失控可能，由集团公司应急救援办公室按信息报告相关规定报告属地政府应急管理部门，政府应急指挥组织机构赶到现场后，现场指挥权应立即移交政府，并汇报事故情况、 进展、风险以及影响控制事态的关键因素等问题，服从政府统一指挥。\n\n[E2]\n[§ 6.0 其他事项]\n  （ 一）本预案是集团公司针对可能发生的生产安全事故，组织实施应急救援工作并协助政府有关部门进行事故调查处理的指导性文件，在实施过程中可根据现场实际情况进行必要的调整。\n  （ 二）各项目部必须在开工前，根据各自的实际，分析施工过程中可能发生的生产安全事故的性质、类别，制定针对性的生产安全事故应急预案，上报二级单位、集团公司备案。",
+    "trajectory_length": 4,
+    "reports_context": "=== Investigate results (1 region(s)) ===\n[region 1] real_69c6097ad4242eda8c47c62c:L219 (ok)\ncollected 150 branch node(s); explicit roots=['real_69c6097ad4242eda8c47c62c:L219']\ncollected: real_69c6097ad4242eda8c47c62c:L219, real_69c6097ad4242eda8c47c62c:L220, real_69c6097ad4242eda8c47c62c:L221, real_69c6097ad4242eda8c47c62c:L222, real_69c6097ad4242eda8c47c62c:L223, real_69c6097ad4242eda8c47c62c:L224, real_69c6097ad4242eda8c47c62c:L225, real_69c6097ad4242eda8c47c62c:L226, real_69c6097ad4242eda8c47c62c:L227, real_69c6097ad4242eda8c47c62c:L228, real_69c6097ad4242eda8c47c62c:L229, real_69c6097ad4242eda8c47c62c:L230, real_69c6097ad4242eda8c47c62c:L231, real_69c6097ad4242eda8c47c62c:L232, real_69c6097ad4242eda8c47c62c:L233, real_69c6097ad4242eda8c47c62c:L234, real_69c6097ad4242eda8c47c62c:L235, real_69c6097ad4242eda8c47c62c:L236, real_69c6097ad4242eda8c47c62c:L237, real_69c6097ad4242eda8c47c62c:L238\nreason: The current scope L219 contains the '3.5 应急支援' section, and evidence has been collected to answer the query.\n---\n=== End Investigate ===",
+    "retrieved_nodes": [
+      "real_69c6097ad4242eda8c47c62c:L219",
+      "real_69c6097ad4242eda8c47c62c:L279",
+      "real_69c6097ad4242eda8c47c62c:L280",
+      "real_69c6097ad4242eda8c47c62c:L281",
+      "real_69c6097ad4242eda8c47c62c:L283",
+      "real_69c6097ad4242eda8c47c62c:L337",
+      "real_69c6097ad4242eda8c47c62c:L338",
+      "real_69c6097ad4242eda8c47c62c:L339"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C1",
+      "kind": "collect",
+      "section_id": "real_69c6097ad4242eda8c47c62c:L219",
+      "scope": "real_69c6097ad4242eda8c47c62c:L219",
+      "depth": 1,
+      "llm_reason": "Collect section 3 to access subsection 3.5 '应急支援' as requested.",
+      "llm_raw": "{\"action_id\":\"C1\",\"confidence\":0.9,\"reason\":\"Collect section 3 to access subsection 3.5 '应急支援' as requested.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c6097ad4242eda8c47c62c:L219"
+      ],
+      "n_added": 64,
+      "n_hits": 64,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": false,
+      "group_rank": null,
+      "n_legal_actions": 15,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6097ad4242eda8c47c62c:L219 | 3.应急响应 | score=0.0692",
+        "C2 | COLLECT | real_69c6097ad4242eda8c47c62c:L220 | 3.1 信息报告 | score=0.0491",
+        "C3 | COLLECT | real_69c6097ad4242eda8c47c62c:L222 | 值班人员在接到事故报告信息后，及时确认事故信息， 并在第一时间向应急救援总指挥报告， 由总指挥根据事故情况决定是否启动本预案和通知人员的范围。 | score=0.0491",
+        "C4 | COLLECT | real_69c6097ad4242eda8c47c62c:L224 | 救援指挥部办公室和总指挥， 由集团根据事故分级，在1 小时内上报事故发生地县级以上应急管理部门负有安全生产监督管理职责的有关部门。事故信息发生变化时，应及时以书面形式补报有关变化情况。 | score=0.0475",
+        "C5 | COLLECT | real_69c6097ad4242eda8c47c62c:L246 | 3.2 预警 | score=0.0560",
+        "C6 | COLLECT | real_69c6097ad4242eda8c47c62c:L255 | 应急救援指挥部办公室根据集团公司发布的事故响应级别( Ⅰ 、 Ⅱ 、 Ⅲ级），结合现场应急事件的危害程度、紧急程度和发展趋势，做出是否启动的判断。 | score=0.0560",
+        "C7 | COLLECT | real_69c6097ad4242eda8c47c62c:L267 | 3.3 响应启动 | score=0.0638",
+        "C8 | COLLECT | real_69c6097ad4242eda8c47c62c:L268 | （ 1 ）集团应急救援指挥部办公室接到I 级生产安全事故响应报告后， 应立即报告集团公司应急救援指挥部总指挥， 由总指挥按照规定程序启动本预案。集团公司应急救援指挥部办公室负责通知各应急救援小组组长迅速到位履行职责，总指挥与各部门联系人及时组织实施相应事故应急预案， 通知有关成员迅速赶赴事故现场，指导实施现场救援，并根据事故情况必要时请求事故发生地政府专业应急救援组织支援。 | score=0.0589",
+        "C9 | COLLECT | real_69c6097ad4242eda8c47c62c:L270 | 批准的生产安全事故应急预案，实施现场救援，并根据事故情况，必要时请求事故发生地政府、集团应急救援组织支援。 | score=0.0638",
+        "C10 | COLLECT | real_69c6097ad4242eda8c47c62c:L337 | 6.0 其他事项 | score=0.0692",
+        "C11 | COLLECT | real_69c6097ad4242eda8c47c62c:L338 | （ 一）本预案是集团公司针对可能发生的生产安全事故，组织实施应急救援工作并协助政府有关部门进行事故调查处理的指导性文件，在实施过程中可根据现场实际情况进行必要的调整。 | score=0.0692",
+        "C12 | COLLECT | real_69c6097ad4242eda8c47c62c:L339 | （ 二）各项目部必须在开工前，根据各自的实际，分析施工过程中可能发生的生产安全事故的性质、类别，制定针对性的生产安全事故应急预案，上报二级单位、集团公司备案。 | score=0.0539",
+        "C13 | COLLECT | real_69c6097ad4242eda8c47c62c:L340 | （ 三）各二级单位、项目部要根据条件和环境的变化及时修改补充和完善预案的内容，并组织有关人员认真学习，掌握预案的内容和相关措施， 定期组织演练，确保在紧急情况下按照预案的要求，有条不紊地开展事故应急救援工作。 | score=0.0679",
+        "C14 | COLLECT | real_69c6097ad4242eda8c47c62c:L364 | 7.4  应急预案备案 | score=0.0627",
+        "C15 | COLLECT | real_69c6097ad4242eda8c47c62c:L365 | 按照陕西省安全生产委员会《关于印发〈陕西省生产安全事故应急预案管理工作实施意见〉的通知》（陕安委会发[2010]9 号）要求，本应急预案经集团主要负责人批准实施后，按规定报上级行政主管部门及陕西建工集团股份有限公司备案。 | score=0.0627"
+      ],
+      "projection_chars": 3530
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": "real_69c6097ad4242eda8c47c62c:L219",
+      "depth": 1,
+      "llm_reason": "The current scope L219 contains the '3.5 应急支援' section, and evidence has been collected to answer the query.",
+      "llm_raw": "{\"action_id\":\"F1\",\"confidence\":0.9,\"reason\":\"The current scope L219 contains the '3.5 应急支援' section, and evidence has been collected to answer the query.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": null,
+      "n_legal_actions": 1,
+      "legal_actions_preview": [
+        "F1 | FINISH | finish navigation and pack final evidence budget"
+      ],
+      "projection_chars": 190
+    },
+    {
+      "step_idx": 3,
+      "action": "nav_dispatch",
+      "action_id": "D10",
+      "kind": "dispatch",
+      "section_id": "real_69c6097ad4242eda8c47c62c:L219",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Dispatch to section 3应急响应 to locate subsection 3.5 应急支援.",
+      "llm_raw": "{\"action_id\":\"D10\",\"reason\":\"Dispatch to section 3应急响应 to locate subsection 3.5 应急支援.\"}",
+      "dispatch_regions": [
+        "real_69c6097ad4242eda8c47c62c:L219"
+      ],
+      "n_child_reports": 1,
+      "n_child_skipped": 0,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": null,
+      "n_legal_actions": 48,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6097ad4242eda8c47c62c:L1 | 1 总则 | score=0.0678",
+        "D1 | DISPATCH | real_69c6097ad4242eda8c47c62c:L1 | 1 总则 | score=0.0678",
+        "C2 | COLLECT | real_69c6097ad4242eda8c47c62c:L4 | 1.2 编制依据 | score=0.0486",
+        "D2 | DISPATCH | real_69c6097ad4242eda8c47c62c:L4 | 1.2 编制依据 | score=0.0486",
+        "C3 | COLLECT | real_69c6097ad4242eda8c47c62c:L13 | 9 、《陕西建工集团股份有限公司生产安全事故综合应急预案》 | score=0.0486",
+        "C4 | COLLECT | real_69c6097ad4242eda8c47c62c:L16 | 1.3 适用范围 | score=0.0558",
+        "D3 | DISPATCH | real_69c6097ad4242eda8c47c62c:L16 | 1.3 适用范围 | score=0.0558",
+        "C5 | COLLECT | real_69c6097ad4242eda8c47c62c:L17 | 本《预案》适用于集团公司、二级单位及项目经理部所承建工程施工现场发生的坍塌、高处坠落、物体打击、触电、起重伤害、机械伤害、车辆伤害、中毒与窒息、火灾、灼烫、容器爆炸、其他伤害等较大及其以上各类生产安全事故，同时包括有重大社会影响、涉及公共安全或突发事件应急处置工作的应急救援。 | score=0.0558",
+        "C6 | COLLECT | real_69c6097ad4242eda8c47c62c:L18 | 1.4 响应分级 | score=0.0678",
+        "D4 | DISPATCH | real_69c6097ad4242eda8c47c62c:L18 | 1.4 响应分级 | score=0.0678",
+        "C7 | COLLECT | real_69c6097ad4242eda8c47c62c:L19 | 根据国务院第493 号令《生产安全事故报告和调查处理条例》规定， 结合集团公司实际，按照“企业自救、行业互救、社会联动、逐级响应、分级负责”的原则，建立集团公司、二级单位、项目经理部三级响应的应急救援体系。 | score=0.0678",
+        "C8 | COLLECT | real_69c6097ad4242eda8c47c62c:L29 | （3 ）超出自身应急救援能力范围的事故，上级部门要求集团公司配合进行应急处置的各类安全生产事故。 | score=0.0555",
+        "C9 | COLLECT | real_69c6097ad4242eda8c47c62c:L37 | 2.应急组织机构及职责 | score=0.0655",
+        "D5 | DISPATCH | real_69c6097ad4242eda8c47c62c:L37 | 2.应急组织机构及职责 | score=0.0655",
+        "C10 | COLLECT | real_69c6097ad4242eda8c47c62c:L60 | 2.2 集团公司应急救援总指挥的职责 | score=0.0655",
+        "D6 | DISPATCH | real_69c6097ad4242eda8c47c62c:L60 | 2.2 集团公司应急救援总指挥的职责 | score=0.0655"
+      ],
+      "projection_chars": 3477
+    },
+    {
+      "step_idx": 4,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Section G10 (§3.5 应急支援) contains the specific regulations requested by the user.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G10\"],\"reason\":\"Section G10 (§3.5 应急支援) contains the specific regulations requested by the user.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G10"
+      ],
+      "n_legal_actions": 51,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6097ad4242eda8c47c62c:L1 | 1 总则 | score=0.0678",
+        "D1 | DISPATCH | real_69c6097ad4242eda8c47c62c:L1 | 1 总则 | score=0.0678",
+        "C2 | COLLECT | real_69c6097ad4242eda8c47c62c:L4 | 1.2 编制依据 | score=0.0486",
+        "D2 | DISPATCH | real_69c6097ad4242eda8c47c62c:L4 | 1.2 编制依据 | score=0.0486",
+        "C3 | COLLECT | real_69c6097ad4242eda8c47c62c:L9 | 5 、《陕西省突发公共事件总体应急预案》 | score=0.0429",
+        "C4 | COLLECT | real_69c6097ad4242eda8c47c62c:L13 | 9 、《陕西建工集团股份有限公司生产安全事故综合应急预案》 | score=0.0486",
+        "C5 | COLLECT | real_69c6097ad4242eda8c47c62c:L14 | 10 、《陕西建工第十一建设集团有限公司生产安全事故风险评估报告》 | score=0.0439",
+        "C6 | COLLECT | real_69c6097ad4242eda8c47c62c:L15 | 11 、《陕西建工第十一建设集团有限公司生产安全事故应急资源调查报告》 | score=0.0466",
+        "C7 | COLLECT | real_69c6097ad4242eda8c47c62c:L16 | 1.3 适用范围 | score=0.0558",
+        "D3 | DISPATCH | real_69c6097ad4242eda8c47c62c:L16 | 1.3 适用范围 | score=0.0558",
+        "C8 | COLLECT | real_69c6097ad4242eda8c47c62c:L17 | 本《预案》适用于集团公司、二级单位及项目经理部所承建工程施工现场发生的坍塌、高处坠落、物体打击、触电、起重伤害、机械伤害、车辆伤害、中毒与窒息、火灾、灼烫、容器爆炸、其他伤害等较大及其以上各类生产安全事故，同时包括有重大社会影响、涉及公共安全或突发事件应急处置工作的应急救援。 | score=0.0558",
+        "C9 | COLLECT | real_69c6097ad4242eda8c47c62c:L18 | 1.4 响应分级 | score=0.0678",
+        "D4 | DISPATCH | real_69c6097ad4242eda8c47c62c:L18 | 1.4 响应分级 | score=0.0678",
+        "C10 | COLLECT | real_69c6097ad4242eda8c47c62c:L19 | 根据国务院第493 号令《生产安全事故报告和调查处理条例》规定， 结合集团公司实际，按照“企业自救、行业互救、社会联动、逐级响应、分级负责”的原则，建立集团公司、二级单位、项目经理部三级响应的应急救援体系。 | score=0.0678",
+        "C11 | COLLECT | real_69c6097ad4242eda8c47c62c:L25 | （4）超出自身应急救援能力范围的事故，上级部门要求集团公司配合进行应急处置的各类安全生产事故。 | score=0.0457",
+        "C12 | COLLECT | real_69c6097ad4242eda8c47c62c:L29 | （3 ）超出自身应急救援能力范围的事故，上级部门要求集团公司配合进行应急处置的各类安全生产事故。 | score=0.0555"
+      ],
+      "projection_chars": 3417
+    }
+  ]
+}

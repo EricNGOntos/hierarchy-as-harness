@@ -1,0 +1,183 @@
+{
+  "inspect_id": "real_69c6ef4e4cca74801cb63bc6_scope_collection_auto_0063",
+  "task_type": "scope_collection",
+  "doc_id": "real_69c6ef4e4cca74801cb63bc6",
+  "query": "列出摞底排砖、挂线砌筑阶段涉及的所有具体施工工艺要求。",
+  "gold_nodes": [
+    "real_69c6ef4e4cca74801cb63bc6:L96",
+    "real_69c6ef4e4cca74801cb63bc6:L100",
+    "real_69c6ef4e4cca74801cb63bc6:L102",
+    "real_69c6ef4e4cca74801cb63bc6:L105",
+    "real_69c6ef4e4cca74801cb63bc6:L107"
+  ],
+  "elapsed_sec": 3.53,
+  "old": {
+    "score_task": 0.1429,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 6,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L96",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L100",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L102",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L105",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L107",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 5.施工工艺流程及操作要点 / 5.2 操作要点 / 5.2.6 摞底排砖、挂线砌筑]\n- 图 **5-2-6-1** 现场选砖、打磨及灰缝的均匀性\n\n[E2]\n[§ 5.施工工艺流程及操作要点 / 5.2 操作要点 / 5.2.6 摞底排砖、挂线砌筑]\n图 **5-2-6-3** 现场挂线砌筑以及砌筑模数\n\n[E3]\n[§ 5.施工工艺流程及操作要点 / 5.2 操作要点 / 5.2.6 摞底排砖、挂线砌筑]\n备注：（1）陶土砖本体、（2）左侧壁固定连接左限位块，所述（3） 砖体（1）下表面固定连接下限位块，所述（4）砖体（1）右侧壁固定 连接有右限位块，所述（7）砖体（1）上表面固定连接有上限位块，所 述（5）砖体（1）表面开设有第一镂空花纹、第二镂空花纹（6）和第 三\n\n[E4]\n[§ 5.施工工艺流程及操作要点 / 5.2 操作要点 / 5.2.6 摞底排砖、挂线砌筑]\n3、挂线、立批数杆，开始砌筑。砌筑过程控制线，水平线长度不 宜超过12 米，以防线绳自重下垂影响水平，且墙面长度超过12m 时， 应设置10mm 宽的马牙槎形垂直变形缝，变形缝内采用防水密封胶处"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 489,
+    "n_retrieved_nodes": 7,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L96",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L100",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L102",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L105",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6ef4e4cca74801cb63bc6:L107",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 5.2.6 摞底排砖、挂线砌筑]\n  与水平灰缝均衡性。\n  - 2、根据排砖位置焊接竖向拉结筋，确保自陶土砖孔穿出。\n  3、挂线、立批数杆，开始砌筑。砌筑过程控制线，水平线长度不 宜超过12 米，以防线绳自重下垂影响水平，且墙面长度超过12m 时， 应设置10mm 宽的马牙槎形垂直变形缝，变形缝内采用防水密封胶处 理；考虑一砖一缝，理论尺寸为75mm/250mm，砌筑过程中应先盘头 4/8 层，根据准确盘头放线砌筑，任意4 批砖高度应为300mm。\n  图 **5-2-6-3** 现场挂线砌筑以及砌筑模数\n  5、镂空砖幕墙部位应考虑主龙骨与镂空部位排砖要求，以保证主 龙骨轮廓不暴露在镂空部位（对于镂空砖位置，内侧墙面需要做JS2 型防水涂料1.5mm 左右）；\n  备注：（1）陶土砖本体、（2）左侧壁固定连接左限位块，所述（3） 砖体（1）下表面固定连接下限位块，所述（4）砖体（1）右侧壁固定 连接有右限位块，所述（7）砖体（1）上表面固定连接有上限位块，所 述（5）砖体（1）表面开设有第一镂空花纹、第二镂空花纹（6）和第 三镂空花纹（8）。",
+    "trajectory_length": 2,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c6ef4e4cca74801cb63bc6:L77",
+      "real_69c6ef4e4cca74801cb63bc6:L79",
+      "real_69c6ef4e4cca74801cb63bc6:L81",
+      "real_69c6ef4e4cca74801cb63bc6:L83",
+      "real_69c6ef4e4cca74801cb63bc6:L84",
+      "real_69c6ef4e4cca74801cb63bc6:L87",
+      "real_69c6ef4e4cca74801cb63bc6:L91"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C18",
+      "kind": "collect",
+      "section_id": "real_69c6ef4e4cca74801cb63bc6:L77",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Section 5.2.6 covers stacking, lining, and masonry requirements as requested.",
+      "llm_raw": "{\"action_id\":\"C18\",\"ids\":[\"C18\"],\"confidence\":{\"C18\":0.95},\"reason\":\"Section 5.2.6 covers stacking, lining, and masonry requirements as requested.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c6ef4e4cca74801cb63bc6:L77"
+      ],
+      "n_added": 15,
+      "n_hits": 15,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 44,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L12 | 1.前言 | score=0.0587",
+        "D1 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L12 | 1.前言 | score=0.0587",
+        "C2 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L13 | 非承重清水烧结陶土砖镂空幕墙体系中镂空幕墙对整体性、牢固性 及测量精度要求特别高。实际施工中往往采用单一的结构体系会造成施 工困难、日常维护局限性大、对施工人员技术要求高。陕西建工沣西建 设有限公司依据多年对此类工程的施工，并总结形成了非承重清水烧结 陶土砖镂空幕墙施工方法。在多个项目得到成功应用的同时，还获得国 家专利1 项《一种外墙砌筑镂空陶土砖的结构》专利申请号： | score=0.0587",
+        "C3 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L15 | 2.工法特点 | score=0.0637",
+        "D2 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L15 | 2.工法特点 | score=0.0637",
+        "C4 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L16 | 2.1 工厂化加工 | score=0.0637",
+        "D3 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L16 | 2.1 工厂化加工 | score=0.0637",
+        "C5 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L17 | 陶土砖采用先进的工艺设备，采用流水线加工，使得每一块具有精 准的外形，降低人工损耗，降低对工人的技术要求。 2.2 构造方式的独特性 | score=0.0637",
+        "C6 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L18 | 外叶砌体墙采用清水陶土砖砌筑，内叶墙根据工程的位置不同采用 混凝土实体墙或加气混凝土砌块砌筑。在内叶墙的外侧有连续的防水层， 外叶墙作为装饰和雨屏墙（采用自保温砌体只在混凝土构件上按照图纸 要求做保温）。 | score=0.0614",
+        "C7 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L26 | 4.工艺原理 | score=0.0561",
+        "D4 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L26 | 4.工艺原理 | score=0.0561",
+        "C8 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L27 | 采用构件式幕墙系统，根据镂空幕墙分隔将龙骨与主体结构上的连 接件、清水陶土砖的砌筑单元构件、铝板等进行连接固定，形成安全可 靠的外墙装饰和围护结构。纵、横主龙骨采用应力消减支座进行连接， 陶土砖有自带的空腔，其内设有锚固钢筋，并形成砌筑单元构件，在利 用孔内竖向钢筋固定在龙骨上且竖向需设有分封胶条。通过铝板与固定 角钢连接，保证幕墙与建筑物交界处的封口闭合。 | score=0.0561",
+        "C9 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L28 | 5.施工工艺流程及操作要点 | score=0.0698",
+        "D5 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L28 | 5.施工工艺流程及操作要点 | score=0.0698",
+        "C10 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L30 | 图 **5-1** 深化设计工艺流程图 | score=0.0605",
+        "D6 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L30 | 图 **5-1** 深化设计工艺流程图 | score=0.0605"
+      ],
+      "projection_chars": 3625
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Assembled evidence G1 fully covers the specific construction requirements for stacking bricks and string masonry.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Assembled evidence G1 fully covers the specific construction requirements for stacking bricks and string masonry.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "n_legal_actions": 53,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L12 | 1.前言 | score=0.0587",
+        "D1 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L12 | 1.前言 | score=0.0587",
+        "C2 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L13 | 非承重清水烧结陶土砖镂空幕墙体系中镂空幕墙对整体性、牢固性 及测量精度要求特别高。实际施工中往往采用单一的结构体系会造成施 工困难、日常维护局限性大、对施工人员技术要求高。陕西建工沣西建 设有限公司依据多年对此类工程的施工，并总结形成了非承重清水烧结 陶土砖镂空幕墙施工方法。在多个项目得到成功应用的同时，还获得国 家专利1 项《一种外墙砌筑镂空陶土砖的结构》专利申请号： | score=0.0587",
+        "C3 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L15 | 2.工法特点 | score=0.0637",
+        "D2 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L15 | 2.工法特点 | score=0.0637",
+        "C4 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L16 | 2.1 工厂化加工 | score=0.0637",
+        "D3 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L16 | 2.1 工厂化加工 | score=0.0637",
+        "C5 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L17 | 陶土砖采用先进的工艺设备，采用流水线加工，使得每一块具有精 准的外形，降低人工损耗，降低对工人的技术要求。 2.2 构造方式的独特性 | score=0.0637",
+        "C6 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L18 | 外叶砌体墙采用清水陶土砖砌筑，内叶墙根据工程的位置不同采用 混凝土实体墙或加气混凝土砌块砌筑。在内叶墙的外侧有连续的防水层， 外叶墙作为装饰和雨屏墙（采用自保温砌体只在混凝土构件上按照图纸 要求做保温）。 | score=0.0614",
+        "C7 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L26 | 4.工艺原理 | score=0.0561",
+        "D4 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L26 | 4.工艺原理 | score=0.0561",
+        "C8 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L27 | 采用构件式幕墙系统，根据镂空幕墙分隔将龙骨与主体结构上的连 接件、清水陶土砖的砌筑单元构件、铝板等进行连接固定，形成安全可 靠的外墙装饰和围护结构。纵、横主龙骨采用应力消减支座进行连接， 陶土砖有自带的空腔，其内设有锚固钢筋，并形成砌筑单元构件，在利 用孔内竖向钢筋固定在龙骨上且竖向需设有分封胶条。通过铝板与固定 角钢连接，保证幕墙与建筑物交界处的封口闭合。 | score=0.0561",
+        "D5 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L28 | 5.施工工艺流程及操作要点 | score=0.0698",
+        "C9 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L29 | - 5.1 施工工艺流程 | score=0.0483",
+        "C10 | COLLECT | real_69c6ef4e4cca74801cb63bc6:L30 | 图 **5-1** 深化设计工艺流程图 | score=0.0605",
+        "D6 | DISPATCH | real_69c6ef4e4cca74801cb63bc6:L30 | 图 **5-1** 深化设计工艺流程图 | score=0.0605"
+      ],
+      "projection_chars": 3422
+    }
+  ]
+}

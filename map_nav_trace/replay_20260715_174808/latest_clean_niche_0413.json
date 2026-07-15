@@ -1,0 +1,143 @@
+{
+  "inspect_id": "latest_clean_niche_0413",
+  "task_type": "niche_fact",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“6.4 安全生产违章行为处罚”相关内容，该处明确写出的规定或事实是什么？",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L315"
+  ],
+  "elapsed_sec": 4.08,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 500,
+    "n_retrieved_nodes": 10,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L315",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 6.4 安全生产违章行为处罚]\n项目部在检查中发现的违章行为，对项目管理人员或作业班组（人员）进行处罚。\n\n[E2]\n安全管理规定（2020版）\n\n[E3]\n[§ 6.4 安全生产违章行为处罚]\n6.4.4 项目部管理人员或作业人员有下列行为之一的，按“违反安全相关规定”论处，责令改正，并处以罚款500～1000元罚款。\n\n[E4]\n[§ 6.4 安全生产违章行为处罚]\n二级单位在检查中发现项目的违章行为，对项目部进行处罚；\n\n[E5]\n[§ 6.4 安全生产违章行为处罚]\n6.4.5 集团公司在检查中发现项目的违章行为，对二级单位和项目部同时进行处罚；\n\n[E6]\n[§ 6.4 安全生产违章行为处罚]\n1、在安全条件不具备的情况下，强令作业人员冒险作业的；\n\n[E7]\n[§ 6.4 安全生产违章行为处罚]\n5、易燃易爆品未单独设置仓库的；或未按有关规定在施工现场设置消防通道、配备消防设施和灭火器材的；\n\n[E8]\n[§ 6.4 安全生产违章行为处罚]\n7、未按规定在施工现场危险部位设置明显的安全警示标志；\n\n[E9]\n[§ 6.4 安全生产违章行为处罚]\n1、未对本项"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 497,
+    "n_retrieved_nodes": 11,
+    "gold_node_recall": 1.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L315",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 6.4 安全生产违章行为处罚]\n  6.4.1 项目部管理人员或作业队伍班组长有下列行为之一的，按“违章指挥”论处，责令整改，并处以罚款500～1000元罚款。\n  6.4.2 项目部管理人员或作业人员有下列行为之一的，按“违章作业”论处，责令立即停止作业，并处以罚款50～500元罚款。\n  4、私自拆除、损坏安全设施，或施工中拆除安全设施未及时恢复的；\n  6.4.3 项目部管理人员或作业人员有下列行为之一的，按“违反劳动纪律“论处，责令改正，并处以罚款100～500元罚款。\n  6.4.4 项目部管理人员或作业人员有下列行为之一的，按“违反安全相关规定”论处，责令改正，并处以罚款500～1000元罚款。\n  9、对政府行政主管部门、上级及相关方安全检查或项目安全员发现的事故隐患不及时采取措施整改的；\n  10、其他违反安全规范的现象或行为。\n  6.4.5 集团公司在检查中发现项目的违章行为，对二级单位和项目部同时进行处罚；\n  二级单位在检查中发现项目的违章行为，对项目部进行处罚；\n  项目部在检查中发现的违章行为，对项目管理人员或作业班组（人员）进行处罚。",
+    "trajectory_length": 2,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L314",
+      "real_69c60974d4242eda8c47c615:L315",
+      "real_69c60974d4242eda8c47c615:L320",
+      "real_69c60974d4242eda8c47c615:L324",
+      "real_69c60974d4242eda8c47c615:L329",
+      "real_69c60974d4242eda8c47c615:L337",
+      "real_69c60974d4242eda8c47c615:L345",
+      "real_69c60974d4242eda8c47c615:L346",
+      "real_69c60974d4242eda8c47c615:L347",
+      "real_69c60974d4242eda8c47c615:L348",
+      "real_69c60974d4242eda8c47c615:L349"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C17",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L314",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Section 6.4 contains the specific penalties for safety violations as requested.",
+      "llm_raw": "{\"action_id\":\"C17\",\"ids\":[\"C17\"],\"confidence\":{\"C17\":0.95},\"reason\":\"Section 6.4 contains the specific penalties for safety violations as requested.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L314"
+      ],
+      "n_added": 39,
+      "n_hits": 39,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 44,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0544",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0544",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0544",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0544",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0544",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0507",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0507",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0507",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0507",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L102 | 2.4.5 各项目在事故隐患治理过程中，应当采取相应的安全防范措施，防止事故发生。事故隐患排除前或者排除过程中无法保证安全的，应当从危险区域内撤出作业人员，并疏散可能危及的其他人员，设置警戒标志，暂时停工；对暂时难以停工或者停止使用的相关生产储存装置、设施、设备，应当加强维护和保养，防止事故发生。 | score=0.0507",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L113 | 第三章　生产安全事故报告处理规定 | score=0.0609",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L113 | 第三章　生产安全事故报告处理规定 | score=0.0609",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L130 | 3.4 事故处理 | score=0.0609",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L130 | 3.4 事故处理 | score=0.0609",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L131 | 3.4.1 依据事故调查报告，陕建股份《安全生产监督管理暂行办法》，集团公司《管理人员责任追究暂行规定》以及本条相关规定，由集集团公司董事会做出事故处理决定。对于上级组织的事故调查报告未涉及的责任人，由集团公司董事会根据责任人在事故中的具体责任做出处理决定。 | score=0.0607",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L139 | 1 发生较大及以上事故或暂扣集团公司安全生产许可证的一般事故，对项目部、二级单位、集团公司安全管理部相关责任人进行追责处理。 | score=0.0537"
+      ],
+      "projection_chars": 3518
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Section G1 contains all relevant content from 6.4 regarding penalties for safety violations.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Section G1 contains all relevant content from 6.4 regarding penalties for safety violations.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "n_legal_actions": 49,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0544",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0544",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0544",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L40 | 2.1总则 | score=0.0544",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L41 | 2.1.1为进一步规范集团公司安全检查及隐患排查治理工作，防止和减少事故发生，贯彻国家“安全第一、预防为主、综合治理”的方针，依据《中华人民共和国安全生产法》、《建设工程安全生产管理条例》、《生产安全事故隐患排查治理暂行规定》等有关法律法规及集团公司相关规定，制定本制度。 | score=0.0544",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0453",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0453",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L77 | 2.3.6 日常安全检查 | score=0.0453",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L77 | 2.3.6 日常安全检查 | score=0.0453",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L78 | 1、项目施工管理人员应对施工区域内的安全措施落实情况和作业人员遵章守纪情况进行巡查，对发现的违章行为和事故隐患应及时纠正和整改； | score=0.0453",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0507",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L81 | 2.4 隐患整改 | score=0.0507",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L89 | 2.4.3 一般事故隐患整改、复查、销项 | score=0.0442",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L89 | 2.4.3 一般事故隐患整改、复查、销项 | score=0.0442",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L90 | 1、一般事故隐患的治理由各项目部根据事故隐患的实际情况，制定针对性的治理措施，落实相关责任人，限期进行整改； | score=0.0442",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L92 | 2.4.4 重大事故隐患整改、复查、销项 | score=0.0507"
+      ],
+      "projection_chars": 3653
+    }
+  ]
+}

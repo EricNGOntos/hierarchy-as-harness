@@ -1,0 +1,144 @@
+{
+  "inspect_id": "latest_clean_niche_0821",
+  "task_type": "niche_fact",
+  "doc_id": "real_69c6097ad4242eda8c47c62c",
+  "query": "根据《陕西建工第十一建集团有限公司生产安全事故综合应急预案（2025版）》中“5.5 其他保障”相关内容，该处明确写出的规定或事实是什么？",
+  "gold_nodes": [
+    "real_69c6097ad4242eda8c47c62c:L327"
+  ],
+  "elapsed_sec": 3.53,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 496,
+    "n_retrieved_nodes": 18,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c6097ad4242eda8c47c62c:L327",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 1 总则 / 1.2 编制依据]\n9 、《陕西建工集团股份有限公司生产安全事故综合应急预案》\n\n[E2]\n[§ 3.应急响应 / 5.5 其他保障]\n5.5.1 经费保障\n\n[E3]\n[§ 3.应急响应 / 3.1 信息报告]\n陕西建工股份集团有\n\n[E4]\n[§ 1 总则 / 1.2 编制依据]\n10 、《陕西建工第十一建设集团有限公司生产安全事故风险评估报告》\n\n[E5]\n[§ 1 总则 / 1.2 编制依据]\n5 、《陕西省突发公共事件总体应急预案》\n\n[E6]\n[§ 3.应急响应 / 5.5 其他保障]\n5.5.5 后勤保障\n\n[E7]\n[§ 1 总则 / 1.2 编制依据]\n11 、《陕西建工第十一建设集团有限公司生产安全事故应急资源调查报告》\n\n[E8]\n[§ 3.应急响应 / 5.5 其他保障]\n5.5.2 交通运输保障\n\n[E9]\n[§ 3.应急响应]\n5.0 应急保障\n\n[E10]\n[§ 8 附件 / 8.1  单位概况]\n隶属关系：陕西建工集团股份有限公司子集团。\n\n[E11]\n[§ 3.应急响应 / 5.5 其他保障]\n5.5.3 治安保障"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 497,
+    "n_retrieved_nodes": 12,
+    "gold_node_recall": 1.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c6097ad4242eda8c47c62c:L327",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 5.5 其他保障]\n  5.5.1 经费保障\n  集团公司财务管理服务中心负责保障应急状态时应急经费的及时到位， 并对事故应急保障资金的使用效果进行监管和评估。在应急状态下资金无法及时到位的情况下，应及时申请动用企业安全生产风险抵押金应急，确保应急资金到位。\n  5.5.2 交通运输保障\n  集团公司应急救援总指挥部组织和调集足够的交通运输工具，为应急救援工作提供交通运输保障。集团公司保卫部协助当地交管部门对事故现场进行交通管制，确保应急救援车辆优先通行。\n  5.5.3 治安保障\n  集团公司党政办公室组织安保人员做好事故现场的治安警戒和治安管\n  理，加强对重点区域、重点场所、重点人群、重要物资和设备的保护，维持现场秩序，及时疏散群众，动员和组织群众开展群防联防，协助当地公安部门做好治安保卫工作。\n  5.5.4 医疗卫生保障\n  施工现场按照规定配备专兼职急救人员和必需的急救药品，急救人员组织应急救援队伍和当地医疗机构进入事故现场开展救援。\n  5.5.5 后勤保障\n  事故发生项目的责任管理单位，负责伤者家属、调查组和应急人员的住宿、用餐及交通等保障工作。",
+    "trajectory_length": 2,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c6097ad4242eda8c47c62c:L325",
+      "real_69c6097ad4242eda8c47c62c:L326",
+      "real_69c6097ad4242eda8c47c62c:L327",
+      "real_69c6097ad4242eda8c47c62c:L328",
+      "real_69c6097ad4242eda8c47c62c:L329",
+      "real_69c6097ad4242eda8c47c62c:L330",
+      "real_69c6097ad4242eda8c47c62c:L331",
+      "real_69c6097ad4242eda8c47c62c:L332",
+      "real_69c6097ad4242eda8c47c62c:L333",
+      "real_69c6097ad4242eda8c47c62c:L334",
+      "real_69c6097ad4242eda8c47c62c:L335",
+      "real_69c6097ad4242eda8c47c62c:L336"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C25",
+      "kind": "collect",
+      "section_id": "real_69c6097ad4242eda8c47c62c:L325",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Target section 5.5 'Other Guarantees' identified; collect to retrieve specific regulations.",
+      "llm_raw": "{\"action_id\":\"C25\",\"ids\":[\"C25\"],\"confidence\":{\"C25\":0.9},\"reason\":\"Target section 5.5 'Other Guarantees' identified; collect to retrieve specific regulations.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c6097ad4242eda8c47c62c:L325"
+      ],
+      "n_added": 11,
+      "n_hits": 11,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 53,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6097ad4242eda8c47c62c:L1 | 1 总则 | score=0.0629",
+        "D1 | DISPATCH | real_69c6097ad4242eda8c47c62c:L1 | 1 总则 | score=0.0629",
+        "C2 | COLLECT | real_69c6097ad4242eda8c47c62c:L2 | 1.1 编制目的 | score=0.0511",
+        "D2 | DISPATCH | real_69c6097ad4242eda8c47c62c:L2 | 1.1 编制目的 | score=0.0511",
+        "C3 | COLLECT | real_69c6097ad4242eda8c47c62c:L3 | 为加强集团公司处置生产安全事故的能力，提高应对突发事件的反应速度和协调水平，确保集团公司应急体系有效运行，及时迅速处置各类生产安全事故，将损失降至最低程度，保障人员生命财产安全，维护集团公司正常的生产秩序和社会秩序，促进企业可持续发展，特制定本《预案》。 | score=0.0511",
+        "C4 | COLLECT | real_69c6097ad4242eda8c47c62c:L4 | 1.2 编制依据 | score=0.0514",
+        "D3 | DISPATCH | real_69c6097ad4242eda8c47c62c:L4 | 1.2 编制依据 | score=0.0514",
+        "C5 | COLLECT | real_69c6097ad4242eda8c47c62c:L13 | 9 、《陕西建工集团股份有限公司生产安全事故综合应急预案》 | score=0.0514",
+        "C6 | COLLECT | real_69c6097ad4242eda8c47c62c:L16 | 1.3 适用范围 | score=0.0629",
+        "D4 | DISPATCH | real_69c6097ad4242eda8c47c62c:L16 | 1.3 适用范围 | score=0.0629",
+        "C7 | COLLECT | real_69c6097ad4242eda8c47c62c:L17 | 本《预案》适用于集团公司、二级单位及项目经理部所承建工程施工现场发生的坍塌、高处坠落、物体打击、触电、起重伤害、机械伤害、车辆伤害、中毒与窒息、火灾、灼烫、容器爆炸、其他伤害等较大及其以上各类生产安全事故，同时包括有重大社会影响、涉及公共安全或突发事件应急处置工作的应急救援。 | score=0.0629",
+        "C8 | COLLECT | real_69c6097ad4242eda8c47c62c:L18 | 1.4 响应分级 | score=0.0587",
+        "D5 | DISPATCH | real_69c6097ad4242eda8c47c62c:L18 | 1.4 响应分级 | score=0.0587",
+        "C9 | COLLECT | real_69c6097ad4242eda8c47c62c:L19 | 根据国务院第493 号令《生产安全事故报告和调查处理条例》规定， 结合集团公司实际，按照“企业自救、行业互救、社会联动、逐级响应、分级负责”的原则，建立集团公司、二级单位、项目经理部三级响应的应急救援体系。 | score=0.0587",
+        "C10 | COLLECT | real_69c6097ad4242eda8c47c62c:L37 | 2.应急组织机构及职责 | score=0.0657",
+        "D6 | DISPATCH | real_69c6097ad4242eda8c47c62c:L37 | 2.应急组织机构及职责 | score=0.0657"
+      ],
+      "projection_chars": 3501
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Section 5.5 content fully collected and assembled in evidence.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Section 5.5 content fully collected and assembled in evidence.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "n_legal_actions": 52,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6097ad4242eda8c47c62c:L1 | 1 总则 | score=0.0629",
+        "D1 | DISPATCH | real_69c6097ad4242eda8c47c62c:L1 | 1 总则 | score=0.0629",
+        "C2 | COLLECT | real_69c6097ad4242eda8c47c62c:L2 | 1.1 编制目的 | score=0.0511",
+        "D2 | DISPATCH | real_69c6097ad4242eda8c47c62c:L2 | 1.1 编制目的 | score=0.0511",
+        "C3 | COLLECT | real_69c6097ad4242eda8c47c62c:L3 | 为加强集团公司处置生产安全事故的能力，提高应对突发事件的反应速度和协调水平，确保集团公司应急体系有效运行，及时迅速处置各类生产安全事故，将损失降至最低程度，保障人员生命财产安全，维护集团公司正常的生产秩序和社会秩序，促进企业可持续发展，特制定本《预案》。 | score=0.0511",
+        "C4 | COLLECT | real_69c6097ad4242eda8c47c62c:L4 | 1.2 编制依据 | score=0.0514",
+        "D3 | DISPATCH | real_69c6097ad4242eda8c47c62c:L4 | 1.2 编制依据 | score=0.0514",
+        "C5 | COLLECT | real_69c6097ad4242eda8c47c62c:L13 | 9 、《陕西建工集团股份有限公司生产安全事故综合应急预案》 | score=0.0514",
+        "C6 | COLLECT | real_69c6097ad4242eda8c47c62c:L14 | 10 、《陕西建工第十一建设集团有限公司生产安全事故风险评估报告》 | score=0.0477",
+        "C7 | COLLECT | real_69c6097ad4242eda8c47c62c:L15 | 11 、《陕西建工第十一建设集团有限公司生产安全事故应急资源调查报告》 | score=0.0475",
+        "C8 | COLLECT | real_69c6097ad4242eda8c47c62c:L16 | 1.3 适用范围 | score=0.0629",
+        "D4 | DISPATCH | real_69c6097ad4242eda8c47c62c:L16 | 1.3 适用范围 | score=0.0629",
+        "C9 | COLLECT | real_69c6097ad4242eda8c47c62c:L17 | 本《预案》适用于集团公司、二级单位及项目经理部所承建工程施工现场发生的坍塌、高处坠落、物体打击、触电、起重伤害、机械伤害、车辆伤害、中毒与窒息、火灾、灼烫、容器爆炸、其他伤害等较大及其以上各类生产安全事故，同时包括有重大社会影响、涉及公共安全或突发事件应急处置工作的应急救援。 | score=0.0629",
+        "C10 | COLLECT | real_69c6097ad4242eda8c47c62c:L18 | 1.4 响应分级 | score=0.0587",
+        "D5 | DISPATCH | real_69c6097ad4242eda8c47c62c:L18 | 1.4 响应分级 | score=0.0587",
+        "C11 | COLLECT | real_69c6097ad4242eda8c47c62c:L19 | 根据国务院第493 号令《生产安全事故报告和调查处理条例》规定， 结合集团公司实际，按照“企业自救、行业互救、社会联动、逐级响应、分级负责”的原则，建立集团公司、二级单位、项目经理部三级响应的应急救援体系。 | score=0.0587"
+      ],
+      "projection_chars": 3561
+    }
+  ]
+}

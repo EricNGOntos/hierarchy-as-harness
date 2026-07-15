@@ -1,0 +1,201 @@
+{
+  "inspect_id": "latest_clean_scope_0129",
+  "task_type": "scope_collection",
+  "doc_id": "real_69c60b0ad4242eda8c47c944",
+  "query": "列举《华侨城坪山综合体项目基坑支护工程专项施工方案》中“施工管理及作业人员配备和分工”部分的主要条目。",
+  "gold_nodes": [
+    "real_69c60b0ad4242eda8c47c944:L810",
+    "real_69c60b0ad4242eda8c47c944:L815",
+    "real_69c60b0ad4242eda8c47c944:L817",
+    "real_69c60b0ad4242eda8c47c944:L821",
+    "real_69c60b0ad4242eda8c47c944:L823",
+    "real_69c60b0ad4242eda8c47c944:L825"
+  ],
+  "elapsed_sec": 5.83,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 286,
+    "n_retrieved_nodes": 11,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L810",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L815",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L817",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L821",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L823",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L825",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n施工管理及作业人员配备和分工\n\n[E2]\n施工管理人员\n施工项目管理组织机构\n图6.1.1 施工项目管理组织机构\n\n[E3]\n专职安全人员\n表6.2-1 专职安全人员及职责表\n\n[E4]\n特种作业人员\n表6.3 特种作业人员表\n\n[E5]\n项目经理部的部门设置和人员配备\n图6.1.2-1 施工项目部人员组成分布图\n表6.1.2-1项目经理部的部门设置和人员配备\n\n[E6]\n施工项目管理组织机构\n图6.1.1 施工项目管理组织机构\n\n[E7]\n[§ 特种作业人员]\n表6.3 特种作业人员表\n\n[E8]\n[§ 专职安全人员]\n表6.2-1 专职安全人员及职责表"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 181,
+    "n_retrieved_nodes": 9,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L810",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L815",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L817",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L821",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L823",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60b0ad4242eda8c47c944:L825",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 施工管理人员]\n  施工项目管理组织机构\n  图6.1.1 施工项目管理组织机构\n  项目经理部的部门设置和人员配备\n  图6.1.2-1 施工项目部人员组成分布图\n  表6.1.2-1项目经理部的部门设置和人员配备\n\n[E2]\n[§ 专职安全人员]\n表6.2-1 专职安全人员及职责表\n\n[E3]\n[§ 特种作业人员]\n表6.3 特种作业人员表",
+    "trajectory_length": 2,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60b0ad4242eda8c47c944:L782",
+      "real_69c60b0ad4242eda8c47c944:L783",
+      "real_69c60b0ad4242eda8c47c944:L784",
+      "real_69c60b0ad4242eda8c47c944:L785",
+      "real_69c60b0ad4242eda8c47c944:L786",
+      "real_69c60b0ad4242eda8c47c944:L787",
+      "real_69c60b0ad4242eda8c47c944:L788",
+      "real_69c60b0ad4242eda8c47c944:L789",
+      "real_69c60b0ad4242eda8c47c944:L790"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C27",
+      "kind": "collect",
+      "section_id": "real_69c60b0ad4242eda8c47c944:L780",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect the main section and its subsections on personnel allocation and division of labor.",
+      "llm_raw": "{\"action_id\":\"C27\",\"ids\":[\"C28\",\"C34\",\"C36\"],\"confidence\":{\"C27\":0.9,\"C28\":0.95,\"C34\":0.95,\"C36\":0.95},\"reason\":\"Collect the main section and its subsections on personnel allocation and division of labor.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60b0ad4242eda8c47c944:L780",
+        "real_69c60b0ad4242eda8c47c944:L781",
+        "real_69c60b0ad4242eda8c47c944:L787",
+        "real_69c60b0ad4242eda8c47c944:L789"
+      ],
+      "n_added": 8,
+      "n_hits": 9,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 61,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60b0ad4242eda8c47c944:L1 | 工程概况 | score=0.0616",
+        "D1 | DISPATCH | real_69c60b0ad4242eda8c47c944:L1 | 工程概况 | score=0.0616",
+        "C2 | COLLECT | real_69c60b0ad4242eda8c47c944:L88 | 施工平面布置 | score=0.0616",
+        "D2 | DISPATCH | real_69c60b0ad4242eda8c47c944:L88 | 施工平面布置 | score=0.0616",
+        "C3 | COLLECT | real_69c60b0ad4242eda8c47c944:L89 | 布置原则 | score=0.0616",
+        "D3 | DISPATCH | real_69c60b0ad4242eda8c47c944:L89 | 布置原则 | score=0.0616",
+        "C4 | COLLECT | real_69c60b0ad4242eda8c47c944:L92 | （3）根据现场实际情况和工期要求，基坑支护、土方挖运采用分层分段施工。配备足够的劳动力和施工管理人员，做到连续、均衡施工。 | score=0.0616",
+        "C5 | COLLECT | real_69c60b0ad4242eda8c47c944:L94 | 1.2.2 施工部署综述 | score=0.0552",
+        "D4 | DISPATCH | real_69c60b0ad4242eda8c47c944:L94 | 1.2.2 施工部署综述 | score=0.0552",
+        "C6 | COLLECT | real_69c60b0ad4242eda8c47c944:L97 | 从各工序的逻辑关系和机械、设备、材料、人员的相互关联关系出发，使各工种、工序以及各协调配合专业单位都能实现紧密的交叉流水搭接施工，我们将整个地基基础施工划分为五个施工阶段施工，如下表： | score=0.0552",
+        "C7 | COLLECT | real_69c60b0ad4242eda8c47c944:L113 | 1.4 风险辨识与分级 | score=0.0496",
+        "D5 | DISPATCH | real_69c60b0ad4242eda8c47c944:L113 | 1.4 风险辨识与分级 | score=0.0496",
+        "C8 | COLLECT | real_69c60b0ad4242eda8c47c944:L120 | 依据设计图纸要求，根据建办质［2018］31号文及我单位关于《危险性较大的分部分项工程安全专项施工方案管理制度》 的要求：1、开挖深度超过5m（含5m）的基坑（槽）的土方开挖、支护、降水工程；2、开挖深度虽未超过5m，但地质条件、周围环境和地下管线复杂或影响毗邻建筑（构筑）物安全的基坑（槽）的土方开挖、支护、降水工程；这两项都属于“超过一定规模的危险性较大的分部分项工程”，拟建工程基坑开挖深度为2 | score=0.0482",
+        "C9 | COLLECT | real_69c60b0ad4242eda8c47c944:L121 | 综上可知，根据住房城乡建设部办公厅关于实施《危险性较大的分部分项工程安全管理规定》有关问题的通知建办质（2018）31号，此基坑工程属“超过一定规模的危险性较大的分部分项工程”，住建部37号令条文规定：施工单位应当组织专家对专项方案进行论证。施工单位应当根据论证报告修改完善专项方案，专项施工方案应当由施工单位技术负责人审核签字、加盖单位公章，并由总监理工程师审查签字、加盖执业印章后方可实施。 | score=0.0496",
+        "C10 | COLLECT | real_69c60b0ad4242eda8c47c944:L124 | 编制依据 | score=0.0483",
+        "D6 | DISPATCH | real_69c60b0ad4242eda8c47c944:L124 | 编制依据 | score=0.0483"
+      ],
+      "projection_chars": 3227
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Assembled evidence covers all required personnel categories: management, safety, and special operations.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G3\",\"G2\",\"G1\"],\"reason\":\"Assembled evidence covers all required personnel categories: management, safety, and special operations.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G3",
+        "G2",
+        "G1"
+      ],
+      "n_legal_actions": 59,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60b0ad4242eda8c47c944:L1 | 工程概况 | score=0.0616",
+        "D1 | DISPATCH | real_69c60b0ad4242eda8c47c944:L1 | 工程概况 | score=0.0616",
+        "C2 | COLLECT | real_69c60b0ad4242eda8c47c944:L88 | 施工平面布置 | score=0.0616",
+        "D2 | DISPATCH | real_69c60b0ad4242eda8c47c944:L88 | 施工平面布置 | score=0.0616",
+        "C3 | COLLECT | real_69c60b0ad4242eda8c47c944:L89 | 布置原则 | score=0.0616",
+        "D3 | DISPATCH | real_69c60b0ad4242eda8c47c944:L89 | 布置原则 | score=0.0616",
+        "C4 | COLLECT | real_69c60b0ad4242eda8c47c944:L92 | （3）根据现场实际情况和工期要求，基坑支护、土方挖运采用分层分段施工。配备足够的劳动力和施工管理人员，做到连续、均衡施工。 | score=0.0616",
+        "C5 | COLLECT | real_69c60b0ad4242eda8c47c944:L94 | 1.2.2 施工部署综述 | score=0.0552",
+        "D4 | DISPATCH | real_69c60b0ad4242eda8c47c944:L94 | 1.2.2 施工部署综述 | score=0.0552",
+        "C6 | COLLECT | real_69c60b0ad4242eda8c47c944:L97 | 从各工序的逻辑关系和机械、设备、材料、人员的相互关联关系出发，使各工种、工序以及各协调配合专业单位都能实现紧密的交叉流水搭接施工，我们将整个地基基础施工划分为五个施工阶段施工，如下表： | score=0.0552",
+        "C7 | COLLECT | real_69c60b0ad4242eda8c47c944:L113 | 1.4 风险辨识与分级 | score=0.0496",
+        "D5 | DISPATCH | real_69c60b0ad4242eda8c47c944:L113 | 1.4 风险辨识与分级 | score=0.0496",
+        "C8 | COLLECT | real_69c60b0ad4242eda8c47c944:L120 | 依据设计图纸要求，根据建办质［2018］31号文及我单位关于《危险性较大的分部分项工程安全专项施工方案管理制度》 的要求：1、开挖深度超过5m（含5m）的基坑（槽）的土方开挖、支护、降水工程；2、开挖深度虽未超过5m，但地质条件、周围环境和地下管线复杂或影响毗邻建筑（构筑）物安全的基坑（槽）的土方开挖、支护、降水工程；这两项都属于“超过一定规模的危险性较大的分部分项工程”，拟建工程基坑开挖深度为2 | score=0.0482",
+        "C9 | COLLECT | real_69c60b0ad4242eda8c47c944:L121 | 综上可知，根据住房城乡建设部办公厅关于实施《危险性较大的分部分项工程安全管理规定》有关问题的通知建办质（2018）31号，此基坑工程属“超过一定规模的危险性较大的分部分项工程”，住建部37号令条文规定：施工单位应当组织专家对专项方案进行论证。施工单位应当根据论证报告修改完善专项方案，专项施工方案应当由施工单位技术负责人审核签字、加盖单位公章，并由总监理工程师审查签字、加盖执业印章后方可实施。 | score=0.0496",
+        "C10 | COLLECT | real_69c60b0ad4242eda8c47c944:L124 | 编制依据 | score=0.0483",
+        "D6 | DISPATCH | real_69c60b0ad4242eda8c47c944:L124 | 编制依据 | score=0.0483"
+      ],
+      "projection_chars": 3545
+    }
+  ]
+}

@@ -1,0 +1,204 @@
+{
+  "inspect_id": "latest_clean_multi_0555",
+  "task_type": "multi_hop",
+  "doc_id": "real_69c60974d4242eda8c47c615",
+  "query": "根据《附件_安全管理规定（2020版）》中“6.7.3 安全技术交底记录”相关内容，分别说明两处相邻证据给出的要点。",
+  "gold_nodes": [
+    "real_69c60974d4242eda8c47c615:L505",
+    "real_69c60974d4242eda8c47c615:L506"
+  ],
+  "elapsed_sec": 6.24,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 79,
+    "n_retrieved_nodes": 1,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L505",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L506",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n6.7.3 安全技术交底应由交底人、被交底人、专职安全员进行签字确认。并由项目部专职安全员保存安全技术交底记录（附表6.7.3 安全技术交底记录）。"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 488,
+    "n_retrieved_nodes": 16,
+    "gold_node_recall": 1.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c60974d4242eda8c47c615:L505",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c60974d4242eda8c47c615:L506",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ 6.7 安全技术交底管理]\n6.7.3 安全技术交底应由交底人、被交底人、专职安全员进行签字确认。并由项目部专职安全员保存安全技术交底记录（附表6.7.3 安全技术交底记录）。\n\n[E2]\n[§ 附表6.7.3]\n  安全技术交底记录\n  工程名称：\n\n[E3]\n[§ 附表1.1.1]\n  安全教育记录\n  编号：\n  注：1、本表适用于岗前教育、日常安全教育、年度继续教育等使用。\n  2、安全教育形式分为：岗前教育；日常安全教育（班前安全活动、雨季安全教育、暑期安全教育、冬季安全教育、节假日安全教育、消防安全教育、安全警示教育等）；年度继续教育等。\n\n[E4]\n[§ 附件5.2.2                     施工现场安全负面清单（2]\n文档列出使用不合格防坠器、超年限设备及维护不到位等问题的分包单位名单，并详细规定了塔吊、升降机、脚手架及临电设施等禁止或淘汰的技术标准与依据。\n\n[E5]\n[§ 附表1.2-3]\n  分包单位操作人员三级安全教育记录表\n  工程名称\n  2、本表适用于公司总承包项目的分包企业操作人员的三级安全教育。",
+    "trajectory_length": 3,
+    "reports_context": "",
+    "retrieved_nodes": [
+      "real_69c60974d4242eda8c47c615:L374",
+      "real_69c60974d4242eda8c47c615:L501",
+      "real_69c60974d4242eda8c47c615:L559",
+      "real_69c60974d4242eda8c47c615:L560",
+      "real_69c60974d4242eda8c47c615:L561",
+      "real_69c60974d4242eda8c47c615:L502",
+      "real_69c60974d4242eda8c47c615:L503",
+      "real_69c60974d4242eda8c47c615:L504",
+      "real_69c60974d4242eda8c47c615:L505",
+      "real_69c60974d4242eda8c47c615:L506",
+      "real_69c60974d4242eda8c47c615:L544",
+      "real_69c60974d4242eda8c47c615:L545",
+      "real_69c60974d4242eda8c47c615:L522",
+      "real_69c60974d4242eda8c47c615:L523",
+      "real_69c60974d4242eda8c47c615:L524",
+      "real_69c60974d4242eda8c47c615:L528"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C24",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L374",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect section 6.7.3 text and the specific record form to answer the query about adjacent evidence points.",
+      "llm_raw": "{\"action_id\":\"C24\",\"ids\":[\"C24\",\"C39\"],\"confidence\":{\"C24\":0.9,\"C39\":0.9},\"reason\":\"Collect section 6.7.3 text and the specific record form to answer the query about adjacent evidence points.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L374",
+        "real_69c60974d4242eda8c47c615:L560"
+      ],
+      "n_added": 2,
+      "n_hits": 2,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 61,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0565",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0565",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0565",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0565",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0565",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0565",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L56 | 1、安全技术交底、安全措施是否落实到施工作业中； | score=0.0565",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0527",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0527",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L178 | 5.1 总则 | score=0.0499",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L178 | 5.1 总则 | score=0.0499",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L185 | 根据工程特点及周围环境制定机械设备安全技术操作规程，设置安全警示标志；安全技术操作规程及警示标志应按照《施工现场标准化管理手册》要求制成标志牌悬挂在相应机械设备的醒目位置。 | score=0.0499",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L207 | 5.3 工具式脚手架管理 | score=0.0527",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L207 | 5.3 工具式脚手架管理 | score=0.0527",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L214 | 5.3.4 附着式升降脚手架、高空作业吊篮等管理程序： | score=0.0527",
+        "D7 | DISPATCH | real_69c60974d4242eda8c47c615:L214 | 5.3.4 附着式升降脚手架、高空作业吊篮等管理程序： | score=0.0527"
+      ],
+      "projection_chars": 3391
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_collect",
+      "action_id": "C28",
+      "kind": "collect",
+      "section_id": "real_69c60974d4242eda8c47c615:L501",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Collect section 6.7.3 to retrieve the full content of the safety technical disclosure record form.",
+      "llm_raw": "{\"action_id\":\"C28\",\"ids\":[\"C28\"],\"confidence\":{\"C28\":0.9},\"reason\":\"Collect section 6.7.3 to retrieve the full content of the safety technical disclosure record form.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c60974d4242eda8c47c615:L501"
+      ],
+      "n_added": 47,
+      "n_hits": 47,
+      "n_purged_descendant_evidence": 1,
+      "branch_selected": true,
+      "collect_full": true,
+      "group_rank": null,
+      "n_legal_actions": 63,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0565",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0565",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0565",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0565",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0565",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0565",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L56 | 1、安全技术交底、安全措施是否落实到施工作业中； | score=0.0565",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0527",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L177 | 第五章　施工机械设备管理规定 | score=0.0527",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L178 | 5.1 总则 | score=0.0499",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L178 | 5.1 总则 | score=0.0499",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L185 | 根据工程特点及周围环境制定机械设备安全技术操作规程，设置安全警示标志；安全技术操作规程及警示标志应按照《施工现场标准化管理手册》要求制成标志牌悬挂在相应机械设备的醒目位置。 | score=0.0499",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L207 | 5.3 工具式脚手架管理 | score=0.0527",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L207 | 5.3 工具式脚手架管理 | score=0.0527",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L214 | 5.3.4 附着式升降脚手架、高空作业吊篮等管理程序： | score=0.0527",
+        "D7 | DISPATCH | real_69c60974d4242eda8c47c615:L214 | 5.3.4 附着式升降脚手架、高空作业吊篮等管理程序： | score=0.0527"
+      ],
+      "projection_chars": 3357
+    },
+    {
+      "step_idx": 3,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "The query asks for points from section 6.7.3 and the associated form (附表6.7.3). G1 contains the text of 6.7.3, and G2 contains the form title/structure. These are the two adjacent relevant sections.",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\",\"G2\"],\"reason\":\"The query asks for points from section 6.7.3 and the associated form (附表6.7.3). G1 contains the text of 6.7.3, and G2 contains the form title/structure. These are the two adjacent relevant sections.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1",
+        "G2"
+      ],
+      "n_legal_actions": 58,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0565",
+        "D1 | DISPATCH | real_69c60974d4242eda8c47c615:L39 | 第二章　安全检查及隐患排查规定 | score=0.0565",
+        "C2 | COLLECT | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0565",
+        "D2 | DISPATCH | real_69c60974d4242eda8c47c615:L43 | 2.2  安全检查及隐患排查内容 | score=0.0565",
+        "C3 | COLLECT | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0565",
+        "D3 | DISPATCH | real_69c60974d4242eda8c47c615:L55 | 2.2.2班组安全检查的内容： | score=0.0565",
+        "C4 | COLLECT | real_69c60974d4242eda8c47c615:L56 | 1、安全技术交底、安全措施是否落实到施工作业中； | score=0.0565",
+        "C5 | COLLECT | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0477",
+        "D4 | DISPATCH | real_69c60974d4242eda8c47c615:L62 | 2.3安全检查及隐患排查的方法 | score=0.0477",
+        "C6 | COLLECT | real_69c60974d4242eda8c47c615:L63 | 2.3.1安全检查及隐患排查依据《建筑施工安全检查标准》JGJ59-2011、现行建筑施工安全技术规范、标准、规章制度及《集团公司项目综合大检查考核评分标准》相关管理规定。 | score=0.0477",
+        "C7 | COLLECT | real_69c60974d4242eda8c47c615:L113 | 第三章　生产安全事故报告处理规定 | score=0.0471",
+        "D5 | DISPATCH | real_69c60974d4242eda8c47c615:L113 | 第三章　生产安全事故报告处理规定 | score=0.0471",
+        "C8 | COLLECT | real_69c60974d4242eda8c47c615:L130 | 3.4 事故处理 | score=0.0462",
+        "D6 | DISPATCH | real_69c60974d4242eda8c47c615:L130 | 3.4 事故处理 | score=0.0462",
+        "C9 | COLLECT | real_69c60974d4242eda8c47c615:L131 | 3.4.1 依据事故调查报告，陕建股份《安全生产监督管理暂行办法》，集团公司《管理人员责任追究暂行规定》以及本条相关规定，由集集团公司董事会做出事故处理决定。对于上级组织的事故调查报告未涉及的责任人，由集团公司董事会根据责任人在事故中的具体责任做出处理决定。 | score=0.0462",
+        "C10 | COLLECT | real_69c60974d4242eda8c47c615:L143 | 3.5 分析改进 | score=0.0471"
+      ],
+      "projection_chars": 3304
+    }
+  ]
+}
