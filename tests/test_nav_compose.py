@@ -14,6 +14,7 @@ for source_dir in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
 
 from agent_delivery.code.index_retrieval import Chunk  # noqa: E402
 from nav_compose import (  # noqa: E402
+    build_compose_preview,
     pack_nav_evidence,
     parse_collect_confidence,
 )
@@ -49,7 +50,7 @@ class NavComposePackTests(unittest.TestCase):
         }
         self.ts = MagicMock()
         self.ts._idx = idx
-        self.cfg = NavConfig(compose_confidence_weight=0.1)
+        self.cfg = NavConfig(compose_confidence_weight=0.5)
 
     def _chunk(self, lid: int, text: str) -> Chunk:
         return Chunk(
@@ -143,8 +144,81 @@ class NavComposePackTests(unittest.TestCase):
         fill = pack_nav_evidence(
             collected, self.ts, state, self.cfg, budget_chars=500
         )
-        # L94 group score = 0.05+0.09=0.14 > L84 0.08 → L92 group first
+        # L94 group score = 0.05+0.5*0.9=0.50 > L84 0.08 → L92 group first
         self.assertTrue(fill.evidence_text.index("治理") < fill.evidence_text.index("重大事故隐患定义"))
+
+    def test_pack_skips_oversized_keeps_later_short(self) -> None:
+        """Within a group: skip a too-large high-score child; pack later short ones."""
+        state = NavState(doc_id="doc", query="q", task_type="scope_collection")
+        state.unit_scores = {
+            "doc:L102": 0.09,
+            "doc:L94": 0.05,
+            "doc:L95": 0.04,
+        }
+        state.collect_confidence = {
+            "doc:L102": 0.9,
+            "doc:L94": 0.9,
+            "doc:L95": 0.9,
+        }
+        collected = [
+            (
+                self._chunk(
+                    102,
+                    "[§ 2.4.4]\n2.4.5 很长很长很长的无关段落" + ("哈" * 200),
+                ),
+                1.0,
+            ),
+            (self._chunk(94, "[§ 2.4.4]\n1、治理的目标和任务；"), 1.0),
+            (self._chunk(95, "[§ 2.4.4]\n2、采取的方法和措施；"), 1.0),
+        ]
+        fill = pack_nav_evidence(
+            collected, self.ts, state, self.cfg, budget_chars=120
+        )
+        text = fill.evidence_text
+        self.assertIn("治理的目标和任务", text)
+        self.assertIn("采取的方法和措施", text)
+        self.assertNotIn("2.4.5", text)
+
+    def test_group_priority_overrides_unit_score_order(self) -> None:
+        """External group_rank priority packs low-unit gold group before high-unit intro."""
+        state = NavState(doc_id="doc", query="q", task_type="scope_collection")
+        state.unit_scores = {
+            "doc:L94": 0.04,
+            "doc:L84": 0.09,
+        }
+        state.collect_confidence = {"doc:L94": 0.0, "doc:L84": 0.0}
+        # Prefer the L92-parented gold group over the L81-parented intro group.
+        state.group_priority = {
+            "doc:L92": 2.0,
+            "doc:L81": 1.0,
+        }
+        collected = [
+            (self._chunk(94, "1、治理的目标和任务；"), 1.0),
+            (self._chunk(84, "2、重大事故隐患定义" + ("X" * 80)), 1.0),
+        ]
+        fill = pack_nav_evidence(
+            collected, self.ts, state, self.cfg, budget_chars=120
+        )
+        self.assertIn("治理的目标和任务", fill.evidence_text)
+        # Intro may be dropped under tight budget; if present it must follow gold.
+        if "重大事故隐患定义" in fill.evidence_text:
+            self.assertTrue(
+                fill.evidence_text.index("治理")
+                < fill.evidence_text.index("重大事故隐患定义")
+            )
+
+    def test_build_compose_preview_emits_g_ids(self) -> None:
+        state = NavState(doc_id="doc", query="q")
+        state.unit_scores = {"doc:L94": 0.05, "doc:L84": 0.08}
+        collected = [
+            (self._chunk(94, "1、治理的目标和任务；"), 1.0),
+            (self._chunk(84, "2、重大事故隐患定义"), 1.0),
+        ]
+        text, g_map = build_compose_preview(collected, self.ts, state, self.cfg)
+        self.assertIn("[G1]", text)
+        self.assertTrue(g_map)
+        self.assertTrue(all(k.startswith("G") for k in g_map))
+        self.assertTrue(all(":" in v for v in g_map.values()))
 
 
 if __name__ == "__main__":

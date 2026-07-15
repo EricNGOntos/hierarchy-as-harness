@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Replay a few failing tasks under map-nav and dump step traces to Desktop."""
+"""Replay map-nav tasks (evidence-only) and dump step traces.
+
+Usage:
+  python bin/56_replay_map_nav_traces.py                     # DEFAULT_IDS
+  python bin/56_replay_map_nav_traces.py id1 id2
+  python bin/56_replay_map_nav_traces.py --ids-file path.txt
+  python bin/56_replay_map_nav_traces.py @path.txt
+
+Always runs with compose_answer=False (EVIDENCE only, no TASK Q&A).
+"""
 
 from __future__ import annotations
 
@@ -180,12 +189,42 @@ def _format_trace_md(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _parse_ids(argv: list[str]) -> list[str]:
+    """CLI: [--ids-file PATH] [id ...]  or  @PATH  or bare ids (default DEFAULT_IDS)."""
+    if not argv:
+        return list(DEFAULT_IDS)
+    ids: list[str] = []
+    i = 0
+    while i < len(argv):
+        arg = argv[i]
+        if arg in ("--ids-file", "-f") and i + 1 < len(argv):
+            path = Path(argv[i + 1]).expanduser()
+            ids.extend(
+                line.strip()
+                for line in path.read_text(encoding="utf-8").splitlines()
+                if line.strip() and not line.strip().startswith("#")
+            )
+            i += 2
+            continue
+        if arg.startswith("@") and len(arg) > 1:
+            path = Path(arg[1:]).expanduser()
+            ids.extend(
+                line.strip()
+                for line in path.read_text(encoding="utf-8").splitlines()
+                if line.strip() and not line.strip().startswith("#")
+            )
+            i += 1
+            continue
+        if arg.strip():
+            ids.append(arg.strip())
+        i += 1
+    return ids or list(DEFAULT_IDS)
+
+
 def main() -> int:
     _env_setup()
     load_llm_env()
-    ids = list(DEFAULT_IDS)
-    if len(sys.argv) > 1:
-        ids = [x.strip() for x in sys.argv[1:] if x.strip()]
+    ids = _parse_ids(sys.argv[1:])
 
     tasks_path = ROOT / "data/tasks/tasks_realdata_bodyrich_latest_clean_400.jsonl"
     corpus = ROOT / "data/corpus/test_data_full_realdata_clean_latest.jsonl"
@@ -309,6 +348,7 @@ def main() -> int:
                     ),
                     "branch_selected": detail.get("branch_selected"),
                     "collect_full": detail.get("collect_full"),
+                    "group_rank": detail.get("group_rank"),
                     "n_legal_actions": detail.get("n_legal_actions"),
                     "legal_actions_preview": list(
                         detail.get("legal_actions_preview") or []

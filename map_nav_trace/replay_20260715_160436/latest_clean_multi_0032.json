@@ -1,0 +1,212 @@
+{
+  "inspect_id": "latest_clean_multi_0032",
+  "task_type": "multi_hop",
+  "doc_id": "real_69c6095ed4242eda8c47c5b2",
+  "query": "根据《线上学习平台学习管理方案（修订）》中“（ 一）课程开发管理”相关内容，分别说明两处相邻证据给出的要点。",
+  "gold_nodes": [
+    "real_69c6095ed4242eda8c47c5b2:L34",
+    "real_69c6095ed4242eda8c47c5b2:L35"
+  ],
+  "elapsed_sec": 0.14,
+  "old": {
+    "score_task": 0.0,
+    "score_evidence": 0.0,
+    "evidence_chars": 142,
+    "n_retrieved_nodes": 2,
+    "gold_node_recall": 0.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c6095ed4242eda8c47c5b2:L34",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6095ed4242eda8c47c5b2:L35",
+        "in_retrieved": false,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n明确课程名称、课程类别、必修岗位、课程开发负责人等信息（见附件），提交十一在线平台中心审批后按计划开发。\n\n[E2]\n1.必修课程。必修课程需涵盖各专业系统内所有一般管理岗位。 由各专家组主持，根据所辖领域内各岗位职责制定课程开发计划、确定各系统岗位的必修课。课程开发计划需"
+  },
+  "new": {
+    "score_task": null,
+    "score_evidence": null,
+    "evidence_chars": 405,
+    "n_retrieved_nodes": 5,
+    "gold_node_recall": 1.0,
+    "gold_node_hits": [
+      {
+        "node": "real_69c6095ed4242eda8c47c5b2:L34",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      },
+      {
+        "node": "real_69c6095ed4242eda8c47c5b2:L35",
+        "in_retrieved": true,
+        "in_evidence_text": false
+      }
+    ],
+    "evidence_text": "[E1]\n[§ （ 一）课程开发管理]\n  1.课程开发。课程开发依托专家组、各业务线要从有利于组织目标达成、员工履职能力提升等方面，本着“简单、实用、明了”原则进行课程开发。各专家组、各部门应按年度既定课程开发计划，督促、跟进课程开发负责人按时完成课件开发任务。计划外课程开发须明确开发课程名称、学习对象等，经各专家组审核后开发，并向平台中心办公室备案。\n  2.课件评审。课件开发完成后，根据课程类别提交各专家组审核，专家组从课件选材、专业度、实用性等方面对课件进行评审，课程评审管理参照《十一在线——员工赋能一体化平台管理办法》执行。\n  3.课件上传。评审通过后，平台管理员需在课程计划提交截止时间5 日内完成课件上传和必修岗位指派。计划外开发的课程经各专家组评审通过后5 日完成上传和必修岗位指派。\n  4.课酬兑现。开发的课程根据《十一在线——员工赋能一体化平台管理办法》相关规定标准兑现相应课酬。",
+    "trajectory_length": 4,
+    "reports_context": "=== Investigate results (1 region(s)) ===\n[region 1] real_69c6095ed4242eda8c47c5b2:L33 (ok)\ncollected 5 branch node(s); explicit roots=['real_69c6095ed4242eda8c47c5b2:L33']\ncollected: real_69c6095ed4242eda8c47c5b2:L33, real_69c6095ed4242eda8c47c5b2:L34, real_69c6095ed4242eda8c47c5b2:L35, real_69c6095ed4242eda8c47c5b2:L36, real_69c6095ed4242eda8c47c5b2:L37\nreason: The current scope L33 contains the relevant section on course development management. No further collection is needed as the evidence is sufficient to address the query about adjacent points.\n---\n=== End Investigate ===",
+    "retrieved_nodes": [
+      "real_69c6095ed4242eda8c47c5b2:L33",
+      "real_69c6095ed4242eda8c47c5b2:L34",
+      "real_69c6095ed4242eda8c47c5b2:L35",
+      "real_69c6095ed4242eda8c47c5b2:L36",
+      "real_69c6095ed4242eda8c47c5b2:L37"
+    ]
+  },
+  "steps": [
+    {
+      "step_idx": 1,
+      "action": "nav_collect",
+      "action_id": "C1",
+      "kind": "collect",
+      "section_id": "real_69c6095ed4242eda8c47c5b2:L33",
+      "scope": "real_69c6095ed4242eda8c47c5b2:L33",
+      "depth": 1,
+      "llm_reason": "Collect adjacent sections C2 (Course Development) and C3 (Courseware Review) under 'Course Development Management' to answer the query.",
+      "llm_raw": "{\"action_id\":\"C1\",\"ids\":[\"C2\",\"C3\"],\"confidence\":{\"C2\":0.9,\"C3\":0.9},\"reason\":\"Collect adjacent sections C2 (Course Development) and C3 (Courseware Review) under 'Course Development Management' to answer the query.\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": [
+        "real_69c6095ed4242eda8c47c5b2:L33",
+        "real_69c6095ed4242eda8c47c5b2:L34",
+        "real_69c6095ed4242eda8c47c5b2:L35"
+      ],
+      "n_added": 4,
+      "n_hits": 6,
+      "n_purged_descendant_evidence": 0,
+      "branch_selected": false,
+      "collect_full": true,
+      "group_rank": null,
+      "group_rank_partial": null,
+      "n_legal_actions": 5,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6095ed4242eda8c47c5b2:L33 | （ 一）课程开发管理 | score=0.0694",
+        "C2 | COLLECT | real_69c6095ed4242eda8c47c5b2:L34 | 1.课程开发。课程开发依托专家组、各业务线要从有利于组织目标达成、员工履职能力提升等方面，本着“简单、实用、明了”原则进行课程开发。各专家组、各部门应按年度既定课程开发计划，督促、跟进课程开发负责人按时完成课件开发任务。计划外课程开发须明确开发课程名称、学习对象等，经各专家组审核后开发，并向平台中心办公室备案。 | score=0.0673",
+        "C3 | COLLECT | real_69c6095ed4242eda8c47c5b2:L35 | 2.课件评审。课件开发完成后，根据课程类别提交各专家组审核，专家组从课件选材、专业度、实用性等方面对课件进行评审，课程评审管理参照《十一在线——员工赋能一体化平台管理办法》执行。 | score=0.0635",
+        "C4 | COLLECT | real_69c6095ed4242eda8c47c5b2:L36 | 3.课件上传。评审通过后，平台管理员需在课程计划提交截止时间5 日内完成课件上传和必修岗位指派。计划外开发的课程经各专家组评审通过后5 日完成上传和必修岗位指派。 | score=0.0551",
+        "C5 | COLLECT | real_69c6095ed4242eda8c47c5b2:L37 | 4.课酬兑现。开发的课程根据《十一在线——员工赋能一体化平台管理办法》相关规定标准兑现相应课酬。 | score=0.0694"
+      ],
+      "projection_chars": 1325
+    },
+    {
+      "step_idx": 2,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": "real_69c6095ed4242eda8c47c5b2:L33",
+      "depth": 1,
+      "llm_reason": "The current scope L33 contains the relevant section on course development management. No further collection is needed as the evidence is sufficient to address the query about adjacent points.",
+      "llm_raw": "{\"action_id\":\"F1\",\"reason\":\"The current scope L33 contains the relevant section on course development management. No further collection is needed as the evidence is sufficient to address the query about adjacent points.\",\"confidence\":0.9}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": null,
+      "group_rank_partial": null,
+      "n_legal_actions": 1,
+      "legal_actions_preview": [
+        "F1 | FINISH | finish navigation and pack final evidence budget"
+      ],
+      "projection_chars": 189
+    },
+    {
+      "step_idx": 3,
+      "action": "nav_dispatch",
+      "action_id": "D10",
+      "kind": "dispatch",
+      "section_id": "real_69c6095ed4242eda8c47c5b2:L33",
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Dispatch to 'Course Development Management' section to find adjacent evidence points.",
+      "llm_raw": "{\"action_id\":\"D10\",\"reason\":\"Dispatch to 'Course Development Management' section to find adjacent evidence points.\"}",
+      "dispatch_regions": [
+        "real_69c6095ed4242eda8c47c5b2:L33"
+      ],
+      "n_child_reports": 1,
+      "n_child_skipped": 0,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": null,
+      "group_rank_partial": null,
+      "n_legal_actions": 46,
+      "legal_actions_preview": [
+        "C1 | COLLECT | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0703",
+        "D1 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0703",
+        "C2 | COLLECT | real_69c6095ed4242eda8c47c5b2:L2 | 为进一步深化学习型组织建设，整合学习资源，传播最佳实践，有效助力员工工作技能提升和绩效改善。为进一步强化学习效果，规范线上学习管理，特制订本方案。 | score=0.0578",
+        "C3 | COLLECT | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0628",
+        "D2 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0628",
+        "C4 | COLLECT | real_69c6095ed4242eda8c47c5b2:L4 | 线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下： | score=0.0610",
+        "C5 | COLLECT | real_69c6095ed4242eda8c47c5b2:L5 | （ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。 | score=0.0583",
+        "C6 | COLLECT | real_69c6095ed4242eda8c47c5b2:L7 | （ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟 | score=0.0628",
+        "C7 | COLLECT | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0619",
+        "D3 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0619",
+        "C8 | COLLECT | real_69c6095ed4242eda8c47c5b2:L14 | 2.督促本部室及本单位员工开展在线学习，并结合线上学习内容和业务实际，组织本部室及本单位开展线下探讨、分享、集中培训等。 | score=0.0619",
+        "C9 | COLLECT | real_69c6095ed4242eda8c47c5b2:L15 | （ 六 ）学员 | score=0.0596",
+        "D4 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L15 | （ 六 ）学员 | score=0.0596",
+        "C10 | COLLECT | real_69c6095ed4242eda8c47c5b2:L16 | 根据课程设置及时完成相应必修课程学习，根据岗位和个人能力的发展规划，合理选修相应课程，积极学以致用，改进工作绩效。 | score=0.0596",
+        "C11 | COLLECT | real_69c6095ed4242eda8c47c5b2:L17 | 二、课程及指派管理 | score=0.0703",
+        "D5 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L17 | 二、课程及指派管理 | score=0.0703"
+      ],
+      "projection_chars": 3592
+    },
+    {
+      "step_idx": 4,
+      "action": "nav_finish",
+      "action_id": "F1",
+      "kind": "finish",
+      "section_id": null,
+      "scope": null,
+      "depth": 0,
+      "llm_reason": "Evidence G1 contains the complete 'Course Development Management' section with all adjacent points (development, review, upload, remuneration).",
+      "llm_raw": "{\"action_id\":\"F1\",\"group_rank\":[\"G1\"],\"reason\":\"Evidence G1 contains the complete 'Course Development Management' section with all adjacent points (development, review, upload, remuneration).\"}",
+      "dispatch_regions": null,
+      "n_child_reports": null,
+      "n_child_skipped": null,
+      "collect_section_ids": null,
+      "n_added": null,
+      "n_hits": null,
+      "n_purged_descendant_evidence": null,
+      "branch_selected": null,
+      "collect_full": null,
+      "group_rank": [
+        "G1"
+      ],
+      "group_rank_partial": null,
+      "n_legal_actions": 44,
+      "legal_actions_preview": [
+        "D1 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L1 | 十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订） | score=0.0703",
+        "C1 | COLLECT | real_69c6095ed4242eda8c47c5b2:L2 | 为进一步深化学习型组织建设，整合学习资源，传播最佳实践，有效助力员工工作技能提升和绩效改善。为进一步强化学习效果，规范线上学习管理，特制订本方案。 | score=0.0578",
+        "C2 | COLLECT | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0628",
+        "D2 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L3 | 一、管理机构及其职责 | score=0.0628",
+        "C3 | COLLECT | real_69c6095ed4242eda8c47c5b2:L4 | 线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下： | score=0.0610",
+        "C4 | COLLECT | real_69c6095ed4242eda8c47c5b2:L5 | （ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。 | score=0.0583",
+        "C5 | COLLECT | real_69c6095ed4242eda8c47c5b2:L7 | （ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟 | score=0.0628",
+        "C6 | COLLECT | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0619",
+        "D3 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L12 | （ 五）机关各部室及各二级单位 | score=0.0619",
+        "C7 | COLLECT | real_69c6095ed4242eda8c47c5b2:L13 | 1.协同做好线上学习平台的推广、使用和维护等日常管理工作，配合各专家组完成本业务条线培训课程开发、选配工作。 | score=0.0570",
+        "C8 | COLLECT | real_69c6095ed4242eda8c47c5b2:L14 | 2.督促本部室及本单位员工开展在线学习，并结合线上学习内容和业务实际，组织本部室及本单位开展线下探讨、分享、集中培训等。 | score=0.0619",
+        "C9 | COLLECT | real_69c6095ed4242eda8c47c5b2:L15 | （ 六 ）学员 | score=0.0596",
+        "D4 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L15 | （ 六 ）学员 | score=0.0596",
+        "C10 | COLLECT | real_69c6095ed4242eda8c47c5b2:L16 | 根据课程设置及时完成相应必修课程学习，根据岗位和个人能力的发展规划，合理选修相应课程，积极学以致用，改进工作绩效。 | score=0.0596",
+        "C11 | COLLECT | real_69c6095ed4242eda8c47c5b2:L17 | 二、课程及指派管理 | score=0.0703",
+        "D5 | DISPATCH | real_69c6095ed4242eda8c47c5b2:L17 | 二、课程及指派管理 | score=0.0703"
+      ],
+      "projection_chars": 3507
+    }
+  ]
+}

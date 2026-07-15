@@ -51,6 +51,7 @@ def _fork_nav_state(state: NavState) -> NavState:
         investigated_section_ids=set(),
         dismissed_section_ids=set(state.dismissed_section_ids),
         collect_confidence=dict(state.collect_confidence),
+        group_priority=dict(state.group_priority),
     )
 
 
@@ -69,6 +70,7 @@ def _merge_nav_state(parent: NavState, child: NavState) -> None:
     parent.refusal_events.extend(child.refusal_events)
     parent.action_history.extend(child.action_history)
     parent.collect_confidence.update(child.collect_confidence)
+    parent.group_priority.update(child.group_priority)
     if child.scope_evidence_locked:
         parent.scope_evidence_locked = True
     if child.reports_context:
@@ -313,6 +315,22 @@ def navigate(
             )
             projection.text = obs
 
+            group_map: Dict[str, str] = {}
+            assembled_preview = ""
+            if (
+                depth == 0
+                and bool(getattr(config, "enable_external_rerank", True))
+                and state.collected
+            ):
+                from nav_compose import build_compose_preview, dedupe_scored
+
+                assembled_preview, group_map = build_compose_preview(
+                    dedupe_scored(list(state.collected)),
+                    ts,
+                    state,
+                    config,
+                )
+
             if (config.policy or "").strip().lower() == "llm":
                 chosen, meta = choose_llm_action(
                     state,
@@ -322,6 +340,8 @@ def navigate(
                     config=config,
                     depth=depth,
                     max_steps=max_steps,
+                    group_map=group_map or None,
+                    assembled_preview=assembled_preview or None,
                 )
             else:
                 chosen = choose_rule_action(
@@ -341,6 +361,8 @@ def navigate(
                 "legal_actions_preview": [a.prompt_line() for a in actions[:16]],
                 "projection_chars": len(obs),
             }
+            if meta.get("group_rank"):
+                detail["group_rank"] = meta.get("group_rank")
 
             if chosen.kind == ActionKind.FINISH:
                 report.reason = str(meta.get("reason") or "finish")

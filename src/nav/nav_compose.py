@@ -1,8 +1,9 @@
 """Nav COMPOSE packing: parent-scoped rank + one-level indent tree.
 
 Parent sections are path headers only (not competing evidence units).
-Child score = own_unit + w_conf * collect_confidence.
-Group order key = max(child final scores) within the parent scope.
+Child score = own_unit + w_conf * collect_confidence (default w_conf=0.5).
+Group order: group_priority (external rank), then max child score, then doc order.
+Within a group, skip oversized children and keep packing shorter ones that fit.
 """
 from __future__ import annotations
 
@@ -159,6 +160,7 @@ class _ParentGroup:
     parent_id: Optional[str]
     parent_title: str
     children: List[_ChildItem]
+    priority: float = 0.0
 
     @property
     def group_key(self) -> float:
@@ -173,13 +175,28 @@ class _ParentGroup:
         return min(c.line_key for c in self.children)
 
 
+def dedupe_scored(scored: Sequence[Tuple[Chunk, float]]) -> List[Tuple[Chunk, float]]:
+    """Keep highest score per chunk.node_id; sort by score descending."""
+    best: Dict[str, Tuple[Chunk, float]] = {}
+    for c, score in scored:
+        nid = str(getattr(c, "node_id", "") or "")
+        if not nid:
+            continue
+        prev = best.get(nid)
+        if prev is None or float(score) > float(prev[1]):
+            best[nid] = (c, float(score))
+    out = list(best.values())
+    out.sort(key=lambda x: -x[1])
+    return out
+
+
 def _build_groups(
     scored: Sequence[Tuple[Chunk, float]],
     ts: ToolSpace,
     state: NavState,
     config: NavConfig,
 ) -> List[_ParentGroup]:
-    w_conf = float(getattr(config, "compose_confidence_weight", 0.1) or 0.1)
+    w_conf = float(getattr(config, "compose_confidence_weight", 0.5) or 0.5)
     seen_ids: set[str] = set()
     items: List[Tuple[Chunk, str, float]] = []
     for chunk, _bag in scored:
@@ -209,7 +226,10 @@ def _build_groups(
         if parent_id not in groups:
             title = _section_title(ts, parent_id, state.doc_id, max_chars=40)
             groups[parent_id] = _ParentGroup(
-                parent_id=parent_id, parent_title=title, children=[]
+                parent_id=parent_id,
+                parent_title=title,
+                children=[],
+                priority=float((state.group_priority or {}).get(parent_id, 0.0) or 0.0),
             )
         groups[parent_id].children.append(
             _ChildItem(
@@ -220,6 +240,54 @@ def _build_groups(
             )
         )
     return list(groups.values())
+
+
+def build_compose_preview(
+    collected: Sequence[Tuple[Chunk, float]],
+    ts: ToolSpace,
+    state: NavState,
+    config: NavConfig,
+) -> Tuple[str, Dict[str, str]]:
+    """Assemble current pool into [G*] parent-group preview.
+
+    Reuses _build_groups. G* numbering follows (-group_key, doc_order_key) for
+    stable ids. Returns (preview_text, {G_id: parent_id}).
+    """
+    scored = dedupe_scored(list(collected))
+    groups = _build_groups(scored, ts, state, config)
+    groups.sort(key=lambda g: (-g.group_key, g.doc_order_key))
+
+    snippet_n = max(0, int(getattr(config, "compose_preview_snippet_chars", 60) or 0))
+    max_children = max(0, int(getattr(config, "compose_preview_max_children", 0) or 0))
+
+    lines: List[str] = []
+    g_map: Dict[str, str] = {}
+    for i, g in enumerate(groups, 1):
+        gid = f"G{i}"
+        if g.parent_id:
+            g_map[gid] = str(g.parent_id)
+        title = g.parent_title or (g.parent_id or "").split(":")[-1] or gid
+        lines.append(f"[{gid}] §{title}")
+        children = sorted(g.children, key=lambda c: (-c.score, c.line_key))
+        if max_children > 0:
+            shown = children[:max_children]
+            omitted = len(children) - len(shown)
+        else:
+            shown = children
+            omitted = 0
+        for child in shown:
+            body = _chunk_body(child.chunk)
+            first = body.splitlines()[0].strip() if body else ""
+            if snippet_n > 0 and len(first) > snippet_n:
+                first = first[:snippet_n].rstrip() + "…"
+            unit = unit_score_for_evidence_chunk(child.chunk, dict(state.unit_scores or {}))
+            owner_short = (child.owner or "").split(":")[-1] or "?"
+            lines.append(
+                f"  - {owner_short} u={unit:.3f} | {first} ({len(body)} chars)"
+            )
+        if omitted > 0:
+            lines.append(f"  - … (+{omitted} more)")
+    return "\n".join(lines), g_map
 
 
 def _render_group(
@@ -260,7 +328,7 @@ def pack_nav_evidence(
         return ComposeFillResult([], "", 0, 0, False, [])
 
     groups = _build_groups(collected, ts, state, config)
-    groups.sort(key=lambda g: (-g.group_key, g.doc_order_key))
+    groups.sort(key=lambda g: (-g.priority, -g.group_key, g.doc_order_key))
 
     scored_flat: List[Tuple[Chunk, float]] = []
     for g in groups:
@@ -288,8 +356,12 @@ def pack_nav_evidence(
             add = len(block) + (len(sep) if parts else 0)
             if used + add <= budget_chars:
                 selected = trial
-                continue
-            if not selected and not parts:
+            # else: skip oversized child; try later (often shorter) candidates
+
+        if not selected:
+            # Nothing fit whole: last-resort truncate the top-scored child alone.
+            if not parts and by_score:
+                child = by_score[0]
                 one = [child]
                 block = _render_group(g, one, evidence_index=1, indent=False)
                 if len(block) > budget_chars and budget_chars >= min_partial_chars:
@@ -305,10 +377,8 @@ def pack_nav_evidence(
                         truncated_last,
                         scored_flat,
                     )
-            break
-
-        if not selected:
             continue
+
         selected_doc = sorted(selected, key=lambda x: x.line_key)
         indent = len(selected_doc) >= 2
         block = _render_group(

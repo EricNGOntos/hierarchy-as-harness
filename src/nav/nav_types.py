@@ -54,7 +54,12 @@ class NavConfig:
     dispatch_max_workers: int = 4
     subagent_model_env: str = "NAV_SUBAGENT_MODEL"
     # COMPOSE: child_score = own_unit + compose_confidence_weight * collect_confidence
-    compose_confidence_weight: float = 0.1
+    compose_confidence_weight: float = 0.5
+    # Depth-0 external relative rerank of parent groups (compose preview + group_rank).
+    enable_external_rerank: bool = True
+    compose_preview_snippet_chars: int = 60
+    # 0 = show every child in the preview (no per-group child cap).
+    compose_preview_max_children: int = 0
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "NavConfig":
@@ -176,3 +181,6 @@ class NavState:
     dismissed_section_ids: set[str] = field(default_factory=set)
     # Explicit COLLECT confidence by section_id; hydration-only descendants stay 0.
     collect_confidence: Dict[str, float] = field(default_factory=dict)
+    # External agent relative priority over nearest-parent groups: parent_id -> score
+    # (higher packs first). Empty = no external rerank yet.
+    group_priority: Dict[str, float] = field(default_factory=dict)

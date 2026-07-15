@@ -1,0 +1,120 @@
+[replay] tasks=['latest_clean_multi_0010', 'latest_clean_niche_0068', 'latest_clean_scope_0101', 'real_69c6ef484cca74801cb63bb9_multi_hop_auto_0006', 'real_69cb12d0919452cda2225a0b_scope_collection_auto_0076', 'real_69c60974d4242eda8c47c615_scope_collection_auto_0030', 'latest_clean_multi_0032', 'latest_clean_multi_0048'] docs=['real_69c6095ed4242eda8c47c5b2', 'real_69c60970d4242eda8c47c5fd', 'real_69c60971d4242eda8c47c605', 'real_69c60974d4242eda8c47c615', 'real_69c60aeed4242eda8c47c925', 'real_69c6ef484cca74801cb63bb9', 'real_69cb12d0919452cda2225a0b']
+[replay] loaded bundles in 0.1s
+[replay] index ready in 0.3s
+[replay] running latest_clean_multi_0010 ...
+[dense] backend=remote model=text-embedding-v3 dimensions=default
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69c6095ed4242eda8c47c5b2/path.npz (36 units)
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69c6095ed4242eda8c47c5b2/content.npz (36 units)
+[llm-cache] hit purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[replay] done latest_clean_multi_0010: old_recall=0.00 new_recall=0.00 chars=476 steps=4 (3.0s)
+[replay] running latest_clean_niche_0068 ...
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69c60971d4242eda8c47c605/path.npz (120 units)
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69c60971d4242eda8c47c605/content.npz (120 units)
+[llm-cache] hit purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] api retry 1/8 purpose=nav_navigate_v1 model=qwen3.5-flash: Connection error.
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[replay] done latest_clean_niche_0068: old_recall=0.00 new_recall=0.00 chars=492 steps=24 (18.3s)
+[replay] running latest_clean_scope_0101 ...
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69c60aeed4242eda8c47c925/path.npz (1991 units)
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69c60aeed4242eda8c47c925/content.npz (1991 units)
+[llm-cache] hit purpose=nav_navigate_v1 model=qwen3.5-flash
+[dense] backend=remote model=text-embedding-v3 dimensions=default
+[dense] loaded embedding cache: cache/embeddings/1863d9ff8e0e9780f8ba816c1500c8965a5fe09c7d9065c5641c36e06dc897cd.npy
+[llm-cache] hit purpose=nav_navigate_v1 model=qwen3.5-flash
+[dense] loaded embedding cache: cache/embeddings/3e13a293dd5636c992653e50278fbfab6bea8767687b07aaf123b81f487e2efb.npy
+[llm-cache] hit purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] hit purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] hit purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] hit purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[replay] done latest_clean_scope_0101: old_recall=0.00 new_recall=0.00 chars=158 steps=11 (26.2s)
+[replay] running real_69c6ef484cca74801cb63bb9_multi_hop_auto_0006 ...
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69c6ef484cca74801cb63bb9/path.npz (139 units)
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69c6ef484cca74801cb63bb9/content.npz (139 units)
+[llm-cache] hit purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] hit purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] hit purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[replay] done real_69c6ef484cca74801cb63bb9_multi_hop_auto_0006: old_recall=0.00 new_recall=0.00 chars=486 steps=10 (8.7s)
+[replay] running real_69cb12d0919452cda2225a0b_scope_collection_auto_0076 ...
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69cb12d0919452cda2225a0b/path.npz (514 units)
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69cb12d0919452cda2225a0b/content.npz (514 units)
+[llm-cache] hit purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[replay] done real_69cb12d0919452cda2225a0b_scope_collection_auto_0076: old_recall=0.00 new_recall=0.00 chars=401 steps=5 (7.3s)
+[replay] running real_69c60974d4242eda8c47c615_scope_collection_auto_0030 ...
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69c60974d4242eda8c47c615/path.npz (466 units)
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69c60974d4242eda8c47c615/content.npz (466 units)
+[llm-cache] hit purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[replay] done real_69c60974d4242eda8c47c615_scope_collection_auto_0030: old_recall=0.00 new_recall=1.00 chars=499 steps=13 (17.1s)
+[replay] running latest_clean_multi_0032 ...
+[llm-cache] hit purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[replay] done latest_clean_multi_0032: old_recall=0.00 new_recall=0.50 chars=484 steps=8 (9.0s)
+[replay] running latest_clean_multi_0048 ...
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69c60970d4242eda8c47c5fd/path.npz (39 units)
+[dense] loaded map unit cache: cache/embeddings/map_units/text-embedding-v3/default/real_69c60970d4242eda8c47c5fd/content.npz (39 units)
+[llm-cache] hit purpose=nav_navigate_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_subagent_v1 model=qwen3.5-flash
+[llm-cache] saved purpose=nav_navigate_v1 model=qwen3.5-flash
+[replay] done latest_clean_multi_0048: old_recall=0.00 new_recall=1.00 chars=491 steps=4 (3.1s)
+[replay] wrote traces to /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/map_nav_trace/replay_20260715_150803
+[replay] wrote report to /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/map_nav_trace/replay_20260715_150803/REPORT.md
+/Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/map_nav_trace/replay_20260715_150803

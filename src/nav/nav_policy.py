@@ -67,6 +67,7 @@ def _extract_action_id_fallback(text: str) -> str:
 
 
 def _normalize_id_list(obj: dict, primary_aid: str) -> List[str]:
+    """Union of action_id and optional ids into one ordered selected set."""
     ids_raw = obj.get("ids") or obj.get("action_ids") or obj.get("action_args", {})
     ids: List[str] = []
     if isinstance(ids_raw, dict):
@@ -143,19 +144,90 @@ def _format_agent_state(
     return "\n".join(lines)
 
 
-def _system_prompt(*, depth: int = 0) -> str:
+def _system_prompt(
+    *,
+    depth: int = 0,
+    dispatch_available: bool = True,
+    has_preview: bool = False,
+) -> str:
     """Observe-act navigate prompt (COLLECT / DISPATCH / FINISH).
 
+    The prompt is state-adaptive: when no DISPATCH action is legal at this layer
+    (e.g. recursion off and depth>0), all DISPATCH semantics/examples/preferences
+    are removed and the model is told this layer is COLLECT/FINISH only. This
+    prevents the model from emitting illegal D* that would trigger rule fallback.
+
+    When has_preview is True (depth-0 with assembled evidence groups), FINISH must
+    include a relative group_rank over [G*] ids.
+
     Style follows KNOWHERE collector rules (action IDs on node lines, English
-    reason, no invented targets) adapted to recursive DISPATCH instead of
-    EXPAND/BACK. TODO(knowhere-align): restore SEARCH_IMAGES / SEARCH_TABLES
-    and outline:true side-effects when migrating back.
+    reason, no invented targets). TODO(knowhere-align): restore SEARCH_IMAGES /
+    SEARCH_TABLES and outline:true side-effects when migrating back.
     """
     role = (
         "You are a document navigation agent running an observe-act loop."
         if depth == 0
         else "You are a region subagent investigating one assigned document subtree."
     )
+
+    ids_hint = (
+        '"ids": ["C1","C3",...] or ["D1","D2",...]'
+        if dispatch_available
+        else '"ids": ["C1","C3",...]'
+    )
+
+    action_semantics = [
+        "Action semantics:",
+        "  - collect=C*: add each selected section to evidence. A parent section "
+        "hydrates its full subtree; a leaf adds only that section. "
+        "For every selected collect id, provide confidence in [0,1] "
+        "(object map keyed by action id, or a single scalar for one id).",
+    ]
+    if dispatch_available:
+        action_semantics.append(
+            "  - dispatch=D*: hand the listed region(s) to concurrent subagent "
+            "explorers; you receive their reports without moving your own viewpoint."
+        )
+    action_semantics.append("  - finish=F*: end navigation for this scope / document.")
+
+    scope_rule = (
+        "  - This layer is COLLECT/FINISH only: there is NO dispatch action here. "
+        "Do not output any D* id; COLLECT the relevant sections directly.\n"
+        if not dispatch_available
+        else ""
+    )
+    prefer_rule = (
+        "  - Prefer DISPATCH for large internal sections when available; prefer "
+        "COLLECT for leaves or small clearly-relevant sections.\n"
+        if dispatch_available
+        else "  - COLLECT the sections relevant to the query; use FINISH when done.\n"
+    )
+
+    preview_rule = ""
+    if has_preview:
+        preview_rule = (
+            "  - When Assembled Evidence ([G*] groups) is shown, FINISH MUST include "
+            '"group_rank": an ordered list of those G* ids, most relevant to the '
+            "query first (relative ranking, not absolute scores).\n"
+            "  - For list/coverage queries, FINISH only if the assembled groups already "
+            "cover ALL required items; otherwise COLLECT the missing ones first.\n"
+        )
+
+    examples = [
+        "Return ONLY one JSON object, e.g.:",
+        '{"action_id":"C1","confidence":0.8,"reason":"short reason"}',
+        'Batch: {"action_id":"C1","ids":["C1","C3"],'
+        '"confidence":{"C1":0.7,"C3":0.9},"reason":"..."}',
+    ]
+    if dispatch_available:
+        examples.append(
+            'Batch: {"action_id":"D1","ids":["D1","D2"],"reason":"..."}'
+        )
+    if has_preview:
+        examples.append(
+            'Finish with rank: {"action_id":"F1","group_rank":["G2","G1"],"reason":"..."}'
+        )
+
     return (
         f"{role}\n\n"
         "The observation is a folded hierarchy map. Each visible node lists only the "
@@ -163,29 +235,24 @@ def _system_prompt(*, depth: int = 0) -> str:
         "the map. At document-root the map is title-only; inside a dispatched region, "
         "node summaries are inlined.\n\n"
         "=== Rules ===\n\n"
-        "Each step chooses exactly ONE primary action_id. For multi-select of the same "
-        'kind, include "ids": ["C1","C3",...] or ["D1","D2",...].\n\n'
-        "Action semantics:\n"
-        "  - collect=C*: add a listed section AND all its descendant content to evidence.\n"
-        "    For every collected action id, provide confidence in [0,1] "
-        '(object map keyed by action id, or a single scalar for one id).\n'
-        "  - dispatch=D*: hand the listed region(s) to concurrent subagent explorers; "
-        "you receive their reports without moving your own viewpoint.\n"
-        "  - finish=F*: end navigation for this scope / document.\n\n"
+        f"Select one or more action IDs of the same kind. Put them in action_id and "
+        f"optional {ids_hint}; the final selection is their union. "
+        "Hydration is decided by hierarchy after selection "
+        "(parent COLLECT = full subtree; leaf COLLECT = that section only).\n\n"
+        + "\n".join(action_semantics)
+        + "\n\n"
         "  - Use only action IDs shown on a node line or under Global actions. "
         "Never invent IDs or write raw section paths as targets.\n"
-        "  - Prefer DISPATCH for large internal sections when available; prefer "
-        "COLLECT for leaves or small clearly-relevant sections.\n"
-        "  - Do NOT re-collect a section already listed under Evidence collected.\n"
+        + scope_rule
+        + prefer_rule
+        + preview_rule
+        + "  - Do NOT re-collect a section already listed under Evidence collected.\n"
         "  - FINISH only when collected evidence is sufficient for the user's query. "
         "The system will not infer missing evidence for you.\n"
         "  - When steps remaining <= 2, prioritize COLLECT or FINISH.\n\n"
         "=== End Rules ===\n\n"
-        "Return ONLY one JSON object, e.g.:\n"
-        '{"action_id":"C1","confidence":0.8,"reason":"short reason"}\n'
-        'Multi collect: {"action_id":"C1","ids":["C1","C3"],'
-        '"confidence":{"C1":0.7,"C3":0.9},"reason":"..."}\n'
-        'Multi dispatch: {"action_id":"D1","ids":["D1","D2"],"reason":"..."}\n'
+        + "\n".join(examples)
+        + "\n"
         "Do not include any explanation outside the JSON.\n\n"
         "IMPORTANT:\n"
         "1. All agent-generated text (reason) MUST be in English.\n"
@@ -204,6 +271,8 @@ def choose_llm_action(
     config: NavConfig,
     depth: int = 0,
     max_steps: Optional[int] = None,
+    group_map: Optional[dict[str, str]] = None,
+    assembled_preview: Optional[str] = None,
 ) -> tuple[LegalAction, dict]:
     from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
     from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
@@ -222,13 +291,26 @@ def choose_llm_action(
     agent_state = _format_agent_state(
         state, step_idx, config, max_steps=max_steps
     )
-    system = _system_prompt(depth=depth)
+    has_preview = bool(assembled_preview and group_map)
+    dispatch_available = any(a.kind == ActionKind.DISPATCH for a in actions)
+    system = _system_prompt(
+        depth=depth,
+        dispatch_available=dispatch_available,
+        has_preview=has_preview,
+    )
 
     reports_block = ""
     if state.reports_context:
         reports_block = (
             f"\n=== Subagent Reports ===\n{state.reports_context}\n"
             f"=== End Subagent Reports ===\n"
+        )
+    preview_block = ""
+    if has_preview:
+        preview_block = (
+            f"\n=== Assembled Evidence (rank these on FINISH) ===\n"
+            f"{assembled_preview}\n"
+            f"=== End Assembled Evidence ===\n"
         )
 
     user = (
@@ -238,7 +320,8 @@ def choose_llm_action(
         f"=== Actionable Observation ===\n"
         f"{projection.text}\n"
         f"=== End Actionable Observation ===\n"
-        f"{reports_block}\n"
+        f"{reports_block}"
+        f"{preview_block}\n"
         'Return: {"action_id":"...","reason":"..."}'
     )
 
@@ -294,6 +377,19 @@ def choose_llm_action(
                         meta["confidence_by_action"] = conf_by_aid
                         meta["confidence_by_section"] = conf_by_sid
                         primary.metadata["confidence_by_section"] = conf_by_sid
+                if primary.kind == ActionKind.FINISH and group_map:
+                    rank_raw = obj.get("group_rank") or obj.get("groups") or []
+                    if isinstance(rank_raw, list) and rank_raw:
+                        n = len(rank_raw)
+                        applied: List[str] = []
+                        for i, g in enumerate(rank_raw):
+                            gid = str(g).strip().upper()
+                            pid = group_map.get(gid)
+                            if pid:
+                                state.group_priority[pid] = float(n - i)
+                                applied.append(gid)
+                        if applied:
+                            meta["group_rank"] = applied
                 return primary, meta
             last_error = RuntimeError(
                 "Nav Agent LLM 返回了非法 action_id="

@@ -43,14 +43,9 @@ def _chunks_to_retrieved_nodes(chunks: List[Chunk]) -> List[str]:
 
 
 def _dedupe_scored(scored: List[Tuple[Chunk, float]]) -> List[Tuple[Chunk, float]]:
-    best: Dict[str, Tuple[Chunk, float]] = {}
-    for c, score in scored:
-        prev = best.get(c.node_id)
-        if prev is None or float(score) > float(prev[1]):
-            best[c.node_id] = (c, float(score))
-    out = list(best.values())
-    out.sort(key=lambda x: -x[1])
-    return out
+    from nav_compose import dedupe_scored
+
+    return dedupe_scored(scored)
 
 
 def _add_scored(state: NavState, scored: List[Tuple[Chunk, float]]) -> int:

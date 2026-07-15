@@ -25,5 +25,8 @@
   "dispatch_group_size": 5,
   "dispatch_max_workers": 4,
   "subagent_model_env": "NAV_SUBAGENT_MODEL",
-  "compose_confidence_weight": 0.1
+  "compose_confidence_weight": 0.5,
+  "enable_external_rerank": true,
+  "compose_preview_snippet_chars": 60,
+  "compose_preview_max_children": 0
 }
