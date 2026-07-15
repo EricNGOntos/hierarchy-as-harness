@@ -13,6 +13,10 @@ cache/*
 # 审计/清洗临时日志（可重跑生成）
 results/task_clean_log.json
 
+# Map-nav 实验回放 / evidence / 合并产物（本地保留，勿提交）
+map_nav_trace/*
+!map_nav_trace/.gitkeep
+
 # 51 题 dev 任务与结果（仅本地保留，不入库）
 data/tasks/tasks_realdata_bodyrich_fair_clean*
 results/fair_clean_goldpred_robust_v1b_dev51*
