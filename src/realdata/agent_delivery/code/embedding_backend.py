@@ -85,7 +85,7 @@ class RemoteOpenAIEncoder:
         dimensions: Optional[int] = None,
         batch_size: int = 10,
     ) -> None:
-        from .llm_config import load_llm_env, make_openai_client, require_llm_env, resolve_llm_credentials
+        from .llm_config import load_llm_env, make_openai_client, require_llm_env
 
         load_llm_env()
         require_llm_env(context="Remote embeddings")
@@ -93,7 +93,8 @@ class RemoteOpenAIEncoder:
         self.dimensions = dimensions
         self.batch_size = max(1, int(batch_size))
         self._dim: Optional[int] = int(dimensions) if dimensions else None
-        api_key, base_url = resolve_llm_credentials(self.model_name)
+        api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+        base_url = os.environ.get("OPENAI_BASE_URL", "").strip() or None
         self._client = make_openai_client(api_key=api_key, base_url=base_url)
 
     def get_sentence_embedding_dimension(self) -> int:

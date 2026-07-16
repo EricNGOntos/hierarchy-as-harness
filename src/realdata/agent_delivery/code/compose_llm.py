@@ -17,7 +17,7 @@ from typing import List, Optional, Sequence
 
 from .index_retrieval import Chunk
 from .llm_api_cache import cached_chat_completion
-from .llm_config import load_llm_env, make_openai_client, resolve_llm_credentials
+from .llm_config import load_llm_env, make_openai_client
 from .llm_usage import record_usage
 
 load_llm_env()
@@ -514,11 +514,10 @@ def compose_answer_llm(
     调用 OpenAI 兼容 Chat Completions，输出 **仅一行 JSON**（与 compose_structured_string 同 schema）。
     evidence_text 缺省时由 chunks 按 budget_chars 拼接。
     """
-    model = os.environ.get("COMPOSE_MODEL", "gpt-4o-mini").strip()
-    key, base = resolve_llm_credentials(model)
+    key = os.environ.get("OPENAI_API_KEY", "").strip()
     if not key:
         raise RuntimeError(
-            "compose_answer_llm 需要 OPENAI_API_KEY 或 ALI_API_KEYS/DS_KEY；请配置 llm_api.env。"
+            "compose_answer_llm 需要 OPENAI_API_KEY（及可选 OPENAI_BASE_URL）；请配置 llm_api.env 或环境变量。"
         )
     try:
         from openai import OpenAI  # type: ignore
@@ -531,6 +530,8 @@ def compose_answer_llm(
     else:
         ev = ev[: max(1, budget_chars)]
 
+    base = os.environ.get("OPENAI_BASE_URL", "").strip() or None
+    model = os.environ.get("COMPOSE_MODEL", "gpt-4o-mini").strip()
     client = make_openai_client(api_key=key, base_url=base)
     tt = (task_type or "niche_fact").lower()
     schema_hint = {

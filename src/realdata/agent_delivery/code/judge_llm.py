@@ -24,7 +24,7 @@ import os
 import re
 from typing import Any, Dict, List, Optional, Sequence, Set
 
-from .llm_config import load_llm_env, make_openai_client, resolve_llm_credentials
+from .llm_config import load_llm_env, make_openai_client
 from .llm_api_cache import cached_chat_completion
 from .llm_usage import record_usage
 
@@ -62,11 +62,9 @@ def _semantic_primary_enabled() -> bool:
 def _require_semantic_api() -> None:
     """语义主评测开启时必须有 OpenAI 兼容客户端，否则立即失败。"""
     load_llm_env()
-    model = os.environ.get("JUDGE_MODEL", "gpt-4o-mini").strip()
-    key, _base = resolve_llm_credentials(model)
-    if not key:
+    if not os.environ.get("OPENAI_API_KEY", "").strip():
         raise RuntimeError(
-            "JUDGE_SEMANTIC_PRIMARY 已开启但未配置 OPENAI_API_KEY / DS_KEY / ALI_API_KEYS，语义评测无法运行。"
+            "JUDGE_SEMANTIC_PRIMARY 已开启但未配置 OPENAI_API_KEY，语义评测无法运行。"
         )
     try:
         import openai  # noqa: F401
@@ -85,11 +83,10 @@ def _semantic_score_json_llm(
 ) -> Optional[float]:
     """调用 OpenAI 兼容接口，要求模型只输出含 score 的 JSON。hard=True 时任何失败抛 RuntimeError。"""
     load_llm_env()
-    model = os.environ.get("JUDGE_MODEL", "gpt-4o-mini").strip()
-    key, base = resolve_llm_credentials(model)
+    key = os.environ.get("OPENAI_API_KEY", "").strip()
     if not key:
         if hard:
-            raise RuntimeError("语义评测需要 OPENAI_API_KEY 或 DS_KEY/ALI_API_KEYS。")
+            raise RuntimeError("语义评测需要 OPENAI_API_KEY。")
         return None
     try:
         from openai import OpenAI  # type: ignore
@@ -97,6 +94,8 @@ def _semantic_score_json_llm(
         if hard:
             raise RuntimeError("语义评测需要安装 openai 包。") from e
         return None
+    base = os.environ.get("OPENAI_BASE_URL", "").strip() or None
+    model = os.environ.get("JUDGE_MODEL", "gpt-4o-mini").strip()
     client = make_openai_client(api_key=key, base_url=base)
     try:
         cached = cached_chat_completion(
@@ -346,14 +345,15 @@ def _llm_conflict_label(pred_text: str, gold_text: str) -> Optional[bool]:
     用 LLM 判断 pred 与 gold 的冲突标签语义是否一致，返回 gold 语义标签（True/False）或 None。
     仅在规则难以判断时启用。
     """
-    model = os.environ.get("JUDGE_MODEL", "gpt-4o-mini").strip()
-    key, base = resolve_llm_credentials(model)
+    key = os.environ.get("OPENAI_API_KEY", "").strip()
     if not key:
         return None
     try:
         from openai import OpenAI  # type: ignore
     except ImportError:
         return None
+    base = os.environ.get("OPENAI_BASE_URL", "").strip() or None
+    model = os.environ.get("JUDGE_MODEL", "gpt-4o-mini").strip()
     client = make_openai_client(api_key=key, base_url=base)
     try:
         cached = cached_chat_completion(
@@ -589,14 +589,15 @@ def _keyword_overlap(pred: str, gold: str) -> float:
 
 
 def _semantic_match_llm(pred: str, gold: str) -> float:
-    model = os.environ.get("JUDGE_MODEL", "gpt-4o-mini").strip()
-    key, base = resolve_llm_credentials(model)
+    key = os.environ.get("OPENAI_API_KEY", "").strip()
     if not key or not gold.strip():
         return 0.0
     try:
         from openai import OpenAI  # type: ignore
     except ImportError:
         return 0.0
+    base = os.environ.get("OPENAI_BASE_URL", "").strip() or None
+    model = os.environ.get("JUDGE_MODEL", "gpt-4o-mini").strip()
     client = make_openai_client(api_key=key, base_url=base)
     cached = cached_chat_completion(
         client,
