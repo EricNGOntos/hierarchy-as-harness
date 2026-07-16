@@ -16,7 +16,12 @@ from agent_delivery.code.index_retrieval import Chunk  # noqa: E402
 from agent_delivery.code.compose_llm import _multi_hop_anchor_guidance  # noqa: E402
 from agent_delivery.code.load_data import DocBundle, LineRecord  # noqa: E402
 from nav_actions import build_legal_actions  # noqa: E402
-from nav_agent import _collect_subtree, _update_collect_coverage  # noqa: E402
+from nav_agent import (  # noqa: E402
+    _collect_subtree,
+    _scope_collect_outline,
+    _scope_collect_scored,
+    _update_collect_coverage,
+)
 from nav_policy import _format_agent_state  # noqa: E402
 from nav_types import (  # noqa: E402
     ActionKind,
@@ -108,7 +113,9 @@ class ScopeCollectTests(unittest.TestCase):
             {"doc:L30__path": 0.2, "doc:L10__path": 0.8, "doc:L20__path": 0.8},
         )
         with patch.dict(os.environ, {"NAV_SCOPE_COLLECT_STRATEGY": "local_band"}):
-            scored = _collect_subtree(tools, self.action, self.state, NavConfig(collect_k=2))
+            scored = _scope_collect_scored(
+                tools._idx, self.chunks, self.action, self.state, NavConfig(collect_k=2)
+            )
 
         self.assertEqual([chunk.node_id for chunk, _ in scored], ["doc:L10__path", "doc:L20__path"])
 
@@ -129,7 +136,9 @@ class ScopeCollectTests(unittest.TestCase):
                 "NAV_SCOPE_LOCAL_BAND_CONTEXT_BEFORE": "1",
             },
         ):
-            scored = _collect_subtree(tools, self.action, self.state, NavConfig(collect_k=8))
+            scored = _scope_collect_scored(
+                tools._idx, chunks, self.action, self.state, NavConfig(collect_k=8)
+            )
 
         self.assertEqual(
             [chunk.node_id for chunk, _ in scored],
@@ -161,7 +170,9 @@ class ScopeCollectTests(unittest.TestCase):
                 "NAV_SCOPE_MULTI_BAND_ANCHORS": "3",
             },
         ):
-            scored = _collect_subtree(tools, self.action, self.state, NavConfig(collect_k=8))
+            scored = _scope_collect_scored(
+                tools._idx, chunks, self.action, self.state, NavConfig(collect_k=8)
+            )
 
         self.assertEqual(
             {chunk.node_id for chunk, _ in scored},
@@ -181,7 +192,9 @@ class ScopeCollectTests(unittest.TestCase):
             {"doc:L30__path": 1.0, "doc:L10__path": 0.1, "doc:L20__path": 0.5},
         )
         with patch.dict(os.environ, {"NAV_SCOPE_COLLECT_STRATEGY": "relevance"}):
-            scored = _collect_subtree(tools, self.action, self.state, NavConfig(collect_k=2))
+            scored = _scope_collect_scored(
+                tools._idx, self.chunks, self.action, self.state, NavConfig(collect_k=2)
+            )
 
         self.assertEqual([chunk.node_id for chunk, _ in scored], ["doc:L30__path", "doc:L20__path"])
 
@@ -191,9 +204,32 @@ class ScopeCollectTests(unittest.TestCase):
             {"doc:L30__path": 1.0, "doc:L10__path": 0.1, "doc:L20__path": 0.5},
         )
         with patch.dict(os.environ, {"NAV_SCOPE_COLLECT_STRATEGY": "line_order"}):
-            scored = _collect_subtree(tools, self.action, self.state, NavConfig(collect_k=2))
+            scored = _scope_collect_scored(
+                tools._idx, self.chunks, self.action, self.state, NavConfig(collect_k=2)
+            )
 
         self.assertEqual([chunk.node_id for chunk, _ in scored], ["doc:L10__path", "doc:L20__path"])
+
+    def test_active_collect_is_task_type_agnostic_doc_order(self) -> None:
+        """Map-mode COLLECT ignores task_type / scope strategies; full doc-order hydrate."""
+        tools = _FakeToolSpace(
+            self.chunks,
+            {"doc:L30__path": 1.0, "doc:L10__path": 0.1, "doc:L20__path": 0.5},
+        )
+        state = NavState(
+            doc_id="doc",
+            query="列举该部分的主要条目。",
+            task_type="scope_collection",
+            unit_scores={"doc:L30": 1.0, "doc:L10": 0.1, "doc:L20": 0.5},
+        )
+        with patch.dict(os.environ, {"NAV_MAP_MODE": "1", "NAV_SCOPE_COLLECT_STRATEGY": "relevance"}):
+            scored = _collect_subtree(
+                tools, self.action, state, NavConfig(collect_k=2, map_mode=True)
+            )
+        self.assertEqual(
+            [chunk.node_id for chunk, _ in scored],
+            ["doc:L10__path", "doc:L20__path", "doc:L30__path"],
+        )
 
     def test_non_scope_collect_keeps_index_order(self) -> None:
         tools = _FakeToolSpace(
@@ -231,23 +267,34 @@ class ScopeCollectTests(unittest.TestCase):
             task_type="scope_collection",
         )
 
+        # Keyword OUTLINE is retired from the active COLLECT path: even with the
+        # legacy env flag, _collect_subtree hydrates the materialized branch.
         with patch.dict(
             os.environ,
             {
                 "NAV_SCOPE_OUTLINE_MODE": "1",
                 "NAV_SCOPE_OUTLINE_LINES_PER_CHILD": "2",
                 "NAV_SCOPE_OUTLINE_MIN_CHUNKS": "4",
+                "NAV_MAP_MODE": "1",
             },
         ):
-            scored = _collect_subtree(tools, self.action, state, NavConfig(collect_k=10))
+            state.unit_scores = {chunk.node_id: 0.1 for chunk in path_chunks}
+            scored = _collect_subtree(tools, self.action, state, NavConfig(collect_k=10, map_mode=True))
 
         self.assertEqual(
             [chunk.node_id for chunk, _ in scored],
+            ["doc:L3__path", "doc:L5__path"],
+        )
+        self.assertNotIn("__outline", "\n".join(chunk.node_id for chunk, _ in scored))
+
+        # Legacy helper still available for ablation/manual calls.
+        outline = _scope_collect_outline(
+            tools._idx, path_chunks, self.action, state, NavConfig(collect_k=10)
+        )
+        self.assertEqual(
+            [chunk.node_id for chunk, _ in outline],
             ["doc:L1__outline", "doc:L2__outline", "doc:L4__outline", "doc:L6__outline"],
         )
-        self.assertEqual(scored[1][0].line_ids, (2, 3))
-        self.assertEqual(scored[1][0].text, "Child A\nA detail")
-        self.assertNotIn("__path", "\n".join(chunk.node_id for chunk, _ in scored))
 
     def test_successful_collect_blocks_ancestors_and_marks_full_subtree(self) -> None:
         tools = _FakeToolSpace(
@@ -265,7 +312,7 @@ class ScopeCollectTests(unittest.TestCase):
         # collected = sid ∪ descendants (merged covered semantics)
         self.assertEqual(self.state.collected_section_ids, {"doc:L1", "doc:L2"})
         self.assertEqual(self.state.blocked_collect_section_ids, {"doc:L0"})
-        self.assertTrue(self.state.scope_evidence_locked)
+        self.assertFalse(self.state.scope_evidence_locked)
 
     def test_partial_collect_still_selects_whole_branch(self) -> None:
         """added>0 selects the branch even when hydrate is not full."""
@@ -320,9 +367,13 @@ class ScopeCollectTests(unittest.TestCase):
                 "NAV_SCOPE_POST_LOCK_SCORE_PENALTY": "2.0",
             },
         ):
-            initial = _collect_subtree(tools, self.action, self.state, NavConfig(collect_k=2))
+            initial = _scope_collect_scored(
+                tools._idx, self.chunks, self.action, self.state, NavConfig(collect_k=2)
+            )
             self.state.scope_evidence_locked = True
-            later = _collect_subtree(tools, self.action, self.state, NavConfig(collect_k=2))
+            later = _scope_collect_scored(
+                tools._idx, self.chunks, self.action, self.state, NavConfig(collect_k=2)
+            )
 
         self.assertAlmostEqual(initial[0][1] - later[0][1], 2.0)
 

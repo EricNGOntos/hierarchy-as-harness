@@ -274,19 +274,22 @@ def choose_llm_action(
     group_map: Optional[dict[str, str]] = None,
     assembled_preview: Optional[str] = None,
 ) -> tuple[LegalAction, dict]:
-    from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
+    from agent_delivery.code.llm_config import (  # type: ignore
+        make_openai_client,
+        require_llm_env,
+        resolve_llm_credentials,
+    )
     from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
     from agent_delivery.code.llm_usage import record_usage  # type: ignore
 
     require_llm_env(context="Nav Agent")
-    key = os.environ.get("OPENAI_API_KEY", "").strip()
     model_env = config.subagent_model_env if depth > 0 else config.llm_model_env
     model = (
         os.environ.get(model_env, "").strip()
         or os.environ.get(config.llm_model_env, "").strip()
         or os.environ.get("COMPOSE_MODEL", "gpt-4o-mini")
     )
-    base_url = os.environ.get("OPENAI_BASE_URL", "").strip() or None
+    key, base_url = resolve_llm_credentials(model)
     client = make_openai_client(api_key=key, base_url=base_url)
     agent_state = _format_agent_state(
         state, step_idx, config, max_steps=max_steps

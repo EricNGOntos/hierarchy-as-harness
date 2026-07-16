@@ -51,6 +51,7 @@ def _fork_nav_state(state: NavState) -> NavState:
         investigated_section_ids=set(),
         dismissed_section_ids=set(state.dismissed_section_ids),
         collect_confidence=dict(state.collect_confidence),
+        explicit_collect_ids=set(state.explicit_collect_ids),
         group_priority=dict(state.group_priority),
     )
 
@@ -70,6 +71,7 @@ def _merge_nav_state(parent: NavState, child: NavState) -> None:
     parent.refusal_events.extend(child.refusal_events)
     parent.action_history.extend(child.action_history)
     parent.collect_confidence.update(child.collect_confidence)
+    parent.explicit_collect_ids.update(child.explicit_collect_ids)
     parent.group_priority.update(child.group_priority)
     if child.scope_evidence_locked:
         parent.scope_evidence_locked = True
@@ -112,7 +114,8 @@ def _apply_collect(
         sid = str(act.section_id or "").strip()
         if not sid:
             continue
-        # Explicit COLLECT root: overwrite confidence from LLM (missing => 0).
+        # Explicit COLLECT root: record target + confidence from LLM (missing => 0).
+        state.explicit_collect_ids.add(sid)
         conf = float(conf_by_sid.get(sid, 0.0) or 0.0)
         state.collect_confidence[sid] = max(0.0, min(1.0, conf))
         # Absorb prior child COLLECTs (e.g. L93) before parent hydrate (L92).
@@ -282,7 +285,7 @@ def navigate(
                 map_scores=state.map_scores,
                 collected_section_ids=state.collected_section_ids,
                 dismissed_section_ids=state.dismissed_section_ids,
-                highlight_ids=state.highlight_ids if depth == 0 else None,
+                highlight_ids=state.highlight_ids,
             )
             # Experimental non-recursive mode: if a deep region overflows the
             # map budget after folding, skip rather than invent hard truncation.

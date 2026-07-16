@@ -7,8 +7,10 @@
 | `map_mode` / `NAV_MAP_MODE` | env/config | 开启折叠标题图观测 |
 | `map_char_limit` | 5000 | **唯一**显示硬预算（折叠阈值） |
 | `collect_top_k` | 6 | highlight rescue-K，**不是**动作 top-K |
-| `enable_recursive_dispatch` | false | false → 仅 depth0 DISPATCH |
-| `max_dispatch_depth` | 3 | 递归开启时的深度上限 |
+| `enable_recursive_dispatch` | true | true → 深层可继续 DISPATCH；false 仅 depth0 |
+| `max_dispatch_depth` | 3 | 递归分派深度上限 |
+| `scope_inline_summary_char_limit` | 1500 | scoped map 预估超过该字符数改 title-only；run_nav_episode 用 `budget_chars×mult` 重算 |
+| `scope_inline_summary_budget_mult` | 3.0 | 阈值 = evidence 预算 × 该倍数（预算 500 → 1500） |
 | `navigate_max_steps` | 8 | 子 agent 步数 |
 | `max_steps` | 8 | 根 agent 步数 |
 | `dispatch_group_size` | 5 | 并发分组 |
@@ -23,6 +25,7 @@ Deprecated keys quietly dropped: `expand_top_k`, `map_peek_top_k`, `map_jump_top
 - **无** `covered_section_ids`  
 - `reports_context`：子 RegionReport 文本块给父看  
 - `investigated_section_ids`：已 DISPATCH 过的 region  
+- `explicit_collect_ids`：只记录 Agent 明确选择的 COLLECT 目标，供 COMPOSE 计算 `selection_count`
 - Agent State「Evidence collected」只列**主动 COLLECT 根**（action_history），不列后代
 
 ## ID resolution path
@@ -52,7 +55,7 @@ PYTHONPATH=src/nav:src/realdata python bin/56_replay_map_nav_traces.py \
 ## KNOWHERE migration TODOs (do not implement unless asked)
 
 - SEARCH_IMAGES / SEARCH_TABLES  
-- OUTLINE via `query_intent` instead of keyword heuristics  
+- OUTLINE via `query_intent` instead of keyword heuristics (keyword OUTLINE already retired from COLLECT)
 - Optionally expose outline as explicit COLLECT variant  
 
 ## Speaking checklist (before answering user)

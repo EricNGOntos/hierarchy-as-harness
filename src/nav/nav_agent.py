@@ -120,10 +120,11 @@ def _has_explicit_scope_collect_strategy() -> bool:
 
 
 def _is_scope_outline_query(query: str, task_type: str) -> bool:
-    """Scope_collection 查询是否为结构概览类（需要广度覆盖所有子节）。
+    """Legacy keyword OUTLINE detector (retired from active COLLECT path).
 
-    TODO(knowhere-align): replace keyword heuristics with query_intent labels
-    (MACRO_SUMMARY / STRUCTURE_OVERVIEW) when migrating back to KNOWHERE.
+    Kept for ablation/tests only. Retrieval no longer branches on task_type or
+    these keywords; compose still reads task_type from task data.
+    TODO(knowhere-align): replace with query_intent labels if OUTLINE returns.
     """
     if (task_type or "").strip().lower() not in ("scope_collection", "regulatory_coverage"):
         return False
@@ -145,7 +146,8 @@ def _scope_collect_outline(
     state: NavState,
     config: NavConfig,
 ) -> List[Tuple[Chunk, float]]:
-    """
+    """Legacy outline hydrate (ablation only; not called from _collect_subtree).
+
     Outline mode：对目标 section 的每个直接子节取首 N 行窗口。
     广度优先覆盖所有 child，而非只深入少数。
     """
@@ -240,7 +242,7 @@ def _scope_collect_outline(
     min_outline = max(1, int(os.environ.get("NAV_SCOPE_OUTLINE_MIN_CHUNKS", "3") or "3"))
     if len(outline_chunks) < min_outline:
         if map_mode_enabled(None) or bool(getattr(state, "unit_scores", None)):
-            return _collect_by_unit_scores(pool, state, config, action=action)
+            return _collect_in_doc_order(pool, config)
         return _scope_collect_scored(idx, pool, action, state, config)
 
     limit = min(len(outline_chunks), int(config.collect_k))
@@ -377,20 +379,17 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
     if callable(materialize) and idx is not None:
         pool = list(materialize(sid, state.doc_id))
         if pool:
-            task_type = (state.task_type or "").strip().lower()
-            # Map-first: hydrate by hybrid unit scores (BM25 ⊕ path/content dense).
+            # Retrieval/evidence assembly is task-type agnostic: always hydrate the
+            # full branch in document order. Keyword OUTLINE and scope-only collect
+            # paths are retired (task_type remains for compose answer format only).
             if map_mode_enabled(config) or bool(getattr(state, "unit_scores", None)):
-                if task_type in {"scope_collection", "regulatory_coverage"}:
-                    if _env_enabled("NAV_SCOPE_OUTLINE_MODE", "1") and _is_scope_outline_query(
-                        state.query, task_type
-                    ):
-                        return _scope_collect_outline(idx, pool, action, state, config)
-                return _collect_by_unit_scores(pool, state, config, action=action)
-            if task_type in {"scope_collection", "regulatory_coverage"}:
-                if _env_enabled("NAV_SCOPE_OUTLINE_MODE", "1") and _is_scope_outline_query(state.query, task_type):
-                    return _scope_collect_outline(idx, pool, action, state, config)
-                return _scope_collect_scored(idx, pool, action, state, config)
-            scored = idx.search(state.query, pool, min(len(pool), int(config.collect_k)), doc_id_filter=state.doc_id)
+                return _collect_in_doc_order(pool, config)
+            scored = idx.search(
+                state.query,
+                pool,
+                min(len(pool), int(config.collect_k)),
+                doc_id_filter=state.doc_id,
+            )
             return [(c, float(s) + float(config.read_score_bonus)) for c, s in scored]
     rc = ts.read_chunks(sid, state.query, doc_id=state.doc_id, k=int(config.collect_k))
     if isinstance(rc, Refusal):
@@ -432,11 +431,6 @@ def _mark_collected_branch(
         state.collected_section_ids.update(descendants)
         if len(pool) > 1:
             state.blocked_collect_section_ids.update(ancestors)
-        if is_full and len(pool) > 1 and (state.task_type or "").strip().lower() in {
-            "scope_collection",
-            "regulatory_coverage",
-        }:
-            state.scope_evidence_locked = True
     return {
         "collect_full": is_full,
         "branch_selected": added > 0,
@@ -450,29 +444,15 @@ def _mark_collected_branch(
 _update_collect_coverage = _mark_collected_branch
 
 
-def _collect_by_unit_scores(
+def _collect_in_doc_order(
     pool: List[Chunk],
-    state: NavState,
     config: NavConfig,
-    *,
-    action: LegalAction,
 ) -> List[Tuple[Chunk, float]]:
-    """Rank evidence chunks by own unit hybrid score (no branch MAX-pool)."""
-    del action
+    """Hydrate the complete branch in document order; COMPOSE truncates later."""
     if not pool:
         return []
-    unit_scores = dict(getattr(state, "unit_scores", {}) or {})
-    per_chunk = [_unit_score_for_evidence_chunk(c, unit_scores) for c in pool]
-    ranked = sorted(
-        zip(pool, per_chunk),
-        key=lambda item: (
-            -item[1],
-            min(item[0].line_ids or (10**9,)),
-            item[0].node_id,
-        ),
-    )
-    limit = min(len(ranked), int(config.collect_k))
-    return [(chunk, float(own)) for chunk, own in ranked[:limit]]
+    base = float(config.read_score_bonus)
+    return [(chunk, base) for chunk in _line_order(pool)]
 
 
 def _direct_child_ids(ts: ToolSpace, section_id: str, doc_id: str) -> List[str]:
@@ -559,6 +539,12 @@ def run_nav_episode(
             "请设置 --nav-policy llm 或删除 NAV_POLICY=rule。"
         )
     cfg.policy = "llm"
+    # Tie the large-scope title-only threshold to the real evidence budget
+    # (budget_chars x mult): a scope whose full summary map would dwarf the final
+    # evidence budget is shown title-only, nudging DISPATCH over broad COLLECT.
+    mult = float(getattr(cfg, "scope_inline_summary_budget_mult", 0.0) or 0.0)
+    if mult > 0.0 and int(budget_chars) > 0:
+        cfg.scope_inline_summary_char_limit = max(1, int(budget_chars * mult))
     retrieval_t0 = time.perf_counter()
     ts = ToolSpace(tools)
     state = NavState(doc_id=doc_id, query=query, task_type=task_type)

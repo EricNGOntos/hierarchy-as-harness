@@ -46,14 +46,22 @@ class NavConfig:
     map_mode: bool = False
     map_char_limit: int = 5000  # display budget (fold threshold); only hard display limit
     map_children_limit: int = 10000
-    # Recursive dispatch (default off for experiments: only depth-0 may DISPATCH).
-    enable_recursive_dispatch: bool = False
+    # Recursive dispatch.
+    enable_recursive_dispatch: bool = True
     max_dispatch_depth: int = 3
     navigate_max_steps: int = 8
     dispatch_group_size: int = 5
     dispatch_max_workers: int = 4
     subagent_model_env: str = "NAV_SUBAGENT_MODEL"
-    # COMPOSE: child_score = own_unit + compose_confidence_weight * collect_confidence
+    # Scoped maps whose estimated (with-summary) size exceeds this threshold drop
+    # inline summaries (title-only), nudging the agent to DISPATCH deeper rather
+    # than broadly COLLECT the whole parent. Default 1500 == evidence budget 500 x3.
+    # run_nav_episode re-derives it from the episode's evidence budget x mult below.
+    scope_inline_summary_char_limit: int = 1500
+    scope_inline_summary_budget_mult: float = 3.0
+    # Retained for config compatibility. Inactive in current packing.
+    # TODO(compose-tiebreak): wire as same-tier weight when confidence / subagent
+    # priors enter _removal_rank (see nav_compose._removal_rank).
     compose_confidence_weight: float = 0.5
     # Depth-0 external relative rerank of parent groups (compose preview + group_rank).
     enable_external_rerank: bool = True
@@ -181,6 +189,9 @@ class NavState:
     dismissed_section_ids: set[str] = field(default_factory=set)
     # Explicit COLLECT confidence by section_id; hydration-only descendants stay 0.
     collect_confidence: Dict[str, float] = field(default_factory=dict)
+    # Explicit COLLECT targets only (batch action sids); hydration descendants omitted.
+    # Drives COMPOSE selection_count (owner hit + any-ancestor hit → 0/1/2).
+    explicit_collect_ids: set[str] = field(default_factory=set)
     # External agent relative priority over nearest-parent groups: parent_id -> score
     # (higher packs first). Empty = no external rerank yet.
     group_priority: Dict[str, float] = field(default_factory=dict)

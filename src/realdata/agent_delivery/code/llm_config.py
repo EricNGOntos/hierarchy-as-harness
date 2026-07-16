@@ -60,6 +60,57 @@ def _env_bool(name: str, default: bool) -> bool:
     return raw not in {"0", "false", "no", "off"}
 
 
+def resolve_llm_credentials(model: str | None = None) -> tuple[str, str | None]:
+    """Pick API key + base_url by model family (aligned with KNOWHERE-MAIN).
+
+    - deepseek* → DS_KEY + DS_URL
+    - qwen* / text-embedding* → ALI_API_KEYS (first) + ALI_URL
+    - else → OPENAI_API_KEY + OPENAI_BASE_URL
+    """
+    load_llm_env()
+    m = (model or "").strip().lower()
+
+    def _first_key(raw: str) -> str:
+        return (raw or "").split(",")[0].strip()
+
+    if m.startswith("deepseek") or "deepseek" in m:
+        key = (
+            os.environ.get("DS_KEY", "").strip()
+            or os.environ.get("DEEPSEEK_API_KEY", "").strip()
+            or os.environ.get("OPENAI_API_KEY", "").strip()
+        )
+        base = (
+            os.environ.get("DS_URL", "").strip()
+            or os.environ.get("DEEPSEEK_BASE_URL", "").strip()
+            or os.environ.get("OPENAI_BASE_URL", "").strip()
+            or None
+        )
+        return key, base or None
+
+    if (
+        m.startswith("qwen")
+        or "qwen" in m
+        or m.startswith("text-embedding")
+        or "embedding" in m
+    ):
+        key = _first_key(
+            os.environ.get("ALI_API_KEYS", "").strip()
+            or os.environ.get("DASHSCOPE_API_KEY", "").strip()
+            or os.environ.get("OPENAI_API_KEY", "").strip()
+        )
+        base = (
+            os.environ.get("ALI_URL", "").strip()
+            or os.environ.get("DASHSCOPE_BASE_URL", "").strip()
+            or os.environ.get("OPENAI_BASE_URL", "").strip()
+            or None
+        )
+        return key, base or None
+
+    key = os.environ.get("OPENAI_API_KEY", "").strip()
+    base = os.environ.get("OPENAI_BASE_URL", "").strip() or None
+    return key, base
+
+
 def make_openai_client(*, api_key: str, base_url: str | None = None, timeout: float = 60.0):
     """Create an OpenAI-compatible client that respects SSL/proxy env toggles."""
     from openai import OpenAI  # type: ignore
@@ -78,9 +129,16 @@ def make_openai_client(*, api_key: str, base_url: str | None = None, timeout: fl
 
 
 def require_llm_env(*, context: str = "") -> None:
-    """未配置 OPENAI_API_KEY 时直接失败；compose/judge/nav/TreeRAG 均须 LLM。"""
+    """Require at least one usable LLM credential (OPENAI / ALI / DS)."""
     load_llm_env()
-    key = os.environ.get("OPENAI_API_KEY", "").strip()
+    key, _base = resolve_llm_credentials(os.environ.get("NAV_LLM_MODEL") or os.environ.get("COMPOSE_MODEL"))
+    if not key:
+        # Also accept DeepSeek-only or raw OPENAI.
+        key = (
+            os.environ.get("OPENAI_API_KEY", "").strip()
+            or _first_ali()
+            or os.environ.get("DS_KEY", "").strip()
+        )
     if key:
         try:
             import openai  # noqa: F401
@@ -91,7 +149,11 @@ def require_llm_env(*, context: str = "") -> None:
         return
     prefix = f"{context}: " if context else ""
     raise RuntimeError(
-        f"{prefix}必须配置 LLM API（OPENAI_API_KEY）。"
-        "请复制 src/realdata/agent_delivery/llm_api.env.example 为 llm_api.env 并填入密钥，"
-        "或通过环境变量导出 OPENAI_API_KEY（及可选 OPENAI_BASE_URL、COMPOSE_MODEL、JUDGE_MODEL、NAV_LLM_MODEL）。"
+        f"{prefix}必须配置 LLM API（OPENAI_API_KEY，或 KNOWHERE 风格的 ALI_API_KEYS / DS_KEY）。"
+        "请复制 src/realdata/agent_delivery/llm_api.env.example 为 llm_api.env 并填入密钥。"
     )
+
+
+def _first_ali() -> str:
+    raw = os.environ.get("ALI_API_KEYS", "").strip()
+    return raw.split(",")[0].strip() if raw else ""

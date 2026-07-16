@@ -76,14 +76,15 @@ navigate(scope, budget, depth) -> RegionReport
 
 ### 递归开关
 
-- `enable_recursive_dispatch=false`（实验默认）：**仅 depth=0** 可 DISPATCH；深层只有 COLLECT/FINISH；区域溢出可 skip+reason  
-- `true`：允许更深 DISPATCH，受 `max_dispatch_depth` 约束  
+- `enable_recursive_dispatch=true`（现行默认）：允许深层 DISPATCH，受 `max_dispatch_depth` 约束
+- `false`（消融）：**仅 depth=0** 可 DISPATCH；深层只有 COLLECT/FINISH；区域溢出可 skip+reason
+- scoped map 预估超过 `scope_inline_summary_char_limit`（= evidence 预算×`scope_inline_summary_budget_mult`，默认 500×3=1500）时改为 title-only，软促使继续分派
 
 ### 其它现行约定
 
-- **OUTLINE**：不暴露给 agent；`scope_collection` 等任务下关键词自动触发（`_is_scope_outline_query`）。TODO(knowhere-align): 迁回用 `query_intent`  
+- **OUTLINE**：已从检索 COLLECT 路径退役（不再按 `task_type`/关键词只采前几行）；答题阶段仍用任务数据里的 `task_type` 选答法模板。legacy helper 保留作消融。TODO(knowhere-align): 若恢复 OUTLINE，改用 `query_intent`  
 - **空 FINISH**：`collected` 空且剩余步数 >2 时不发 FINISH  
-- **证据收尾**：去重 → `pack_nav_evidence`（按最近父分组；组内 `own_unit+w_conf·conf`，默认 `w_conf=0.5`；组间优先 `group_priority`（外部 FINISH `group_rank`），回退 `max(子最终分)`；父只做上一层路径表头；组内文档序缩进树；**组内跳过放不下的大块，继续塞能进剩余预算的短块**）
+- **证据收尾**：去重 → `pack_nav_evidence`（按最近父分组；组间 `group_priority`（外部 FINISH `group_rank`）优先、再按文档序；组内文档序；超预算按 `selection_count` 升序、组优先级升序、文档倒序逐 chunk 剪尾；unit 不参与打包排序；父只做上一层路径表头）
 - **外部相对重排（depth0）**：有收集池时观测附 `Assembled Evidence` `[G*]` 预览；FINISH 须带 `group_rank`（序数相对排序）；写入 `NavState.group_priority`
 - **COLLECT confidence**：LLM 对每个 collect id 给 `[0,1]`；水合后代缺省 0；缺失 confidence=0（组间主判别已转交外部 `group_priority`）
 - **选中集**：`action_id ∪ ids` 合并为同一选中集；选完后按层级决定水合（父=整枝，叶=仅自身）

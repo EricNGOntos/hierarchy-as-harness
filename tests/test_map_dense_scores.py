@@ -19,10 +19,10 @@ from knowhere_hybrid import (  # noqa: E402
     score_rows_hybrid_all,
 )
 from nav_agent import (  # noqa: E402
-    _collect_by_unit_scores,
+    _collect_in_doc_order,
     _unit_score_for_evidence_chunk,
 )
-from nav_types import ActionKind, LegalAction, NavConfig, NavState  # noqa: E402
+from nav_types import NavConfig  # noqa: E402
 
 
 class DenseChannelTests(unittest.TestCase):
@@ -89,7 +89,7 @@ class DenseChannelTests(unittest.TestCase):
         self.assertGreater(by_id["u1"], by_id["u2"])
 
 
-class CollectUnitScoreTests(unittest.TestCase):
+class CollectHydrationTests(unittest.TestCase):
     def test_unit_score_for_path_and_intro(self) -> None:
         scores = {"doc:L3": 0.8, "doc:L1__self": 0.5}
         path = Chunk(
@@ -109,34 +109,29 @@ class CollectUnitScoreTests(unittest.TestCase):
         self.assertAlmostEqual(_unit_score_for_evidence_chunk(path, scores), 0.8)
         self.assertAlmostEqual(_unit_score_for_evidence_chunk(intro, scores), 0.5)
 
-    def test_collect_ranks_by_unit_scores(self) -> None:
-        state = NavState(doc_id="doc", query="q")
-        state.unit_scores = {"doc:L2": 0.1, "doc:L9": 0.9}
+    def test_collect_hydrates_all_chunks_in_doc_order(self) -> None:
         pool = [
-            Chunk(
-                node_id="doc:L2__path",
-                doc_id="doc",
-                text="low",
-                line_ids=(2,),
-                section_id="doc:L1",
-            ),
             Chunk(
                 node_id="doc:L9__path",
                 doc_id="doc",
-                text="high",
+                text="later",
                 line_ids=(9,),
                 section_id="doc:L1",
             ),
+            Chunk(
+                node_id="doc:L2__path",
+                doc_id="doc",
+                text="earlier",
+                line_ids=(2,),
+                section_id="doc:L1",
+            ),
         ]
-        action = LegalAction(
-            action_id="C1",
-            kind=ActionKind.COLLECT,
-            section_id="doc:L1",
-            score=0.0,
+        cfg = NavConfig(collect_k=1, read_score_bonus=0.0)
+        hydrated = _collect_in_doc_order(pool, cfg)
+        self.assertEqual(
+            [chunk.node_id for chunk, _score in hydrated],
+            ["doc:L2__path", "doc:L9__path"],
         )
-        cfg = NavConfig(collect_k=2, read_score_bonus=0.0)
-        ranked = _collect_by_unit_scores(pool, state, cfg, action=action)
-        self.assertEqual(ranked[0][0].node_id, "doc:L9__path")
 
     def test_emergency_guard_removed(self) -> None:
         import nav_agent

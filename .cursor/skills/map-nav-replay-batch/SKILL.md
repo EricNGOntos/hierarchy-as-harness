@@ -3,18 +3,19 @@ name: map-nav-replay-batch
 description: >-
   Batch replay map-nav evidence retrieval for subset or full 400 tasks: run
   bin/56_replay_map_nav_traces.py, resume interrupted runs, read gold_node_recall
-  coverage and evidence_text outputs. Use when the user asks to replay map-nav
+  coverage and evidence_text outputs. Also covers frozen-evidence compose+judge via
+  bin/59_compose_judge_from_evidence.py. Use when the user asks to replay map-nav
   traces, batch test 92/99/400 inspect_ids, resume replay, export evidence context
-  for downstream QA, or read map_nav_trace/replay_* results.
+  for downstream QA, compose/judge from replay evidence, or read map_nav_trace/replay_* results.
 ---
 
-# Map-Nav 批量 Replay（evidence-only）
+# Map-Nav 批量 Replay（evidence-only）+ 冻结 evidence QA
 
-本 skill 管 **批量跑导航、拿 evidence 上下文 + gold coverage**，不管问答 compose。
+本 skill 管 **批量跑导航、拿 evidence 上下文 + gold coverage**，以及 **用冻结 evidence 做 compose/Inspect 评分**。
 
 与 [`map-nav-recursive-dispatch`](../map-nav-recursive-dispatch/SKILL.md) 的分工：
 - **recursive-dispatch**：算法/TRACE 语义、单题因果分析
-- **本 skill**：批量基础设施、怎么跑、结果在哪、怎么续跑、怎么抽 evidence 给下游
+- **本 skill**：批量基础设施、怎么跑、结果在哪、怎么续跑、怎么抽 evidence、怎么接问答评估
 
 ## 核心脚本
 
@@ -22,16 +23,42 @@ description: >-
 |------|------|
 | [`bin/56_replay_map_nav_traces.py`](../../bin/56_replay_map_nav_traces.py) | **主入口**：evidence-only replay + 断点续跑 |
 | [`bin/58_report_map_nav_run.py`](../../bin/58_report_map_nav_run.py) | 离线读结果生成 `REPORT.md`（56 已自动调用） |
+| [`bin/59_compose_judge_from_evidence.py`](../../bin/59_compose_judge_from_evidence.py) | **冻结 evidence → compose + Inspect judge**（可断点续跑） |
 
-**不要**用 `bin/52_run_map_nav.sh` 做「只要 evidence」的批量——那是全链路 400 题（含 compose/评分），更重。
+**不要**用 `bin/52_run_map_nav.sh` 做「只要 evidence」的批量——那是全链路 400 题（含 compose/评分），更重，且会重跑导航。
 
 ## 快速决策
 
 ```
-要 evidence + coverage，可续跑？  → 56_replay_map_nav_traces.py
-要全量 400 含问答评分？          → 52_run_map_nav.sh
-只读已有 replay 目录？           → 58_report_map_nav_run.py
+要 evidence + coverage，可续跑？           → 56_replay_map_nav_traces.py
+要基于已有 replay evidence 做问答+评估？   → 59_compose_judge_from_evidence.py
+要全量 400 含问答（会重跑 nav）？          → 52_run_map_nav.sh
+只读已有 replay 目录？                     → 58_report_map_nav_run.py
 ```
+
+## 冻结 evidence → QA（59）
+
+```bash
+# 先 dry-run 校验接线（不调 LLM）
+python bin/59_compose_judge_from_evidence.py \
+  --replay-dir map_nav_trace/replay_20260716_173430 \
+  --max-tasks 2 --dry-run
+
+# 小批量冒烟后再全量
+python bin/59_compose_judge_from_evidence.py \
+  --replay-dir map_nav_trace/replay_20260716_173430 \
+  --max-tasks 2 \
+  --out results/smoke_compose_from_replay_b500.json
+
+# 全量（同 checkpoint 可中断续跑）
+python bin/59_compose_judge_from_evidence.py \
+  --replay-dir map_nav_trace/replay_20260716_173430 \
+  --out results/latest_clean400_map_nav_from_replay_b500.json
+```
+
+- 断点：`cache/compose_from_replay_<out_stem>/checkpoint.jsonl`（按 `inspect_id`）
+- 进度：同目录 `run_manifest.json`
+- 复用：`_make_composed_answer` / `_fill_agg`（与 `bin/44` 同一套）
 
 ## 三种批量规模
 
@@ -164,7 +191,7 @@ map_nav_trace/replay_YYYYMMDD_HHMMSS/
 3. 运行 56_replay（大批量建议 nohup/后台）
 4. 中断 → --resume-dir 同一目录
 5. 读 REPORT.md 或 all_cases.json 看 coverage 分布
-6. 抽 evidence_text → 下游 compose 评测（本 skill 不包 compose）
+6. 抽 evidence_text → `59_compose_judge_from_evidence.py`（先 `--dry-run` / `--max-tasks 2`）
 ```
 
 ## 清单文件索引

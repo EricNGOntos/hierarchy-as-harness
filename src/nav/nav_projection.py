@@ -444,8 +444,17 @@ def build_map(
     for hid in hits:
         must_keep.update(_ancestors_in_tree(roots, hid))
 
-    # Root (scope=None): title-only. Scoped region: inline summaries.
-    inline_summary = scope is not None
+    # Root is always title-only. A scoped region keeps summaries only while its
+    # full actionable map is small; large scopes become title-only so the agent
+    # can see more branches and choose another DISPATCH.
+    scope_summary_limit = max(
+        0, int(getattr(config, "scope_inline_summary_char_limit", 2000) or 0)
+    )
+    inline_summary = (
+        scope is not None
+        and _estimate_actionable_total(roots, with_summary=True)
+        <= scope_summary_limit
+    )
     char_limit = max(1, int(config.map_char_limit or config.projection_char_limit))
     _apply_budget_hide(
         roots,

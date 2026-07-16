@@ -1,0 +1,393 @@
+{
+  "summary": {
+    "config": {
+      "adapter": "compose_judge_from_frozen_evidence_v1",
+      "replay_dir": "/Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/map_nav_trace/replay_20260716_173430",
+      "evidence_jsonl": null,
+      "tasks": "/Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/data/tasks/tasks_realdata_bodyrich_latest_clean_400.jsonl",
+      "inspect_tasks": [
+        "/Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/data/tasks/tasks_realdata_bodyrich_latest_clean_400.inspect.jsonl"
+      ],
+      "budget_chars": 500,
+      "inspect_judge": true,
+      "arm_key": "hierarchical_gold_map",
+      "evidence_fingerprint": "fda83100890a3e3c197e3160b8d226df808a65446f9c47e77f34cc203f89bef0",
+      "checkpoint": "/Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/cache/compose_from_replay_smoke/checkpoint.jsonl",
+      "n_evidence": 2,
+      "n_rows": 2,
+      "n_failed": 0,
+      "failed": {},
+      "elapsed_sec": 0.0,
+      "generated_at": "2026-07-16T20:51:12"
+    },
+    "hierarchical_gold_map": {
+      "evidence_chars_actual_mean": 445.5,
+      "trajectory_length_mean": 2.0,
+      "truncated_last_mean": 0.0,
+      "evidence_coverage_mean": 0.0,
+      "evidence_hit@1_mean": 0.0,
+      "keyword_recall_mean": 0.0,
+      "process_efficiency_mean": 1.0,
+      "process_recovery_mean": 1.0,
+      "score_task_mean": 0.5,
+      "score_evidence_mean": 0.5,
+      "score_process_mean": 1.0,
+      "task_success_mean": 0.5,
+      "inspect_content_score_mean": 0.5,
+      "inspect_evidence_score_mean": 0.5,
+      "inspect_judge_used_mean": 1.0
+    },
+    "per_type_hierarchical_gold_map": {
+      "niche_fact": {
+        "n": 2,
+        "evidence_chars_actual_mean": 445.5,
+        "trajectory_length_mean": 2.0,
+        "truncated_last_mean": 0.0,
+        "evidence_coverage_mean": 0.0,
+        "evidence_hit@1_mean": 0.0,
+        "keyword_recall_mean": 0.0,
+        "process_efficiency_mean": 1.0,
+        "process_recovery_mean": 1.0,
+        "score_task_mean": 0.5,
+        "score_evidence_mean": 0.5,
+        "score_process_mean": 1.0,
+        "task_success_mean": 0.5
+      }
+    },
+    "cost": {
+      "hierarchical_gold_map": {
+        "total_seconds": 86.39569575000496,
+        "api_seconds": 0.0,
+        "cold_start_seconds": 0.0,
+        "data_load_seconds": 0.0,
+        "index_build_seconds": 0.0,
+        "retrieval_framework_seconds": 0.0,
+        "compose_seconds": 82.3600310000038,
+        "online_response_seconds": 82.3600310000038,
+        "retry_wait_seconds": 0.0,
+        "judge_eval_seconds": 4.03566475000116,
+        "warm_end_to_end_eval_seconds": 86.39569575000496,
+        "end_to_end_eval_seconds": 86.39569575000496,
+        "token_usage_by_purpose": {
+          "judge": {
+            "prompt_tokens": 410.0,
+            "completion_tokens": 124.0,
+            "total_tokens": 534.0,
+            "api_calls": 2.0,
+            "cache_hits": 0.0
+          },
+          "compose": {
+            "prompt_tokens": 1278.0,
+            "completion_tokens": 8382.0,
+            "total_tokens": 9660.0,
+            "api_calls": 2.0,
+            "cache_hits": 0.0
+          }
+        },
+        "token_usage_total": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "api_calls": 0,
+          "cache_hits": 0
+        }
+      }
+    }
+  },
+  "rows": [
+    {
+      "task_idx": 1,
+      "query": "根据《线上学习平台学习管理方案（修订）》中“十一在线——员工赋能一体化平台线上学习平台学习管理方案（修订）”相关内容，该处明确写出的规定或事实是什么？",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L2"
+      ],
+      "gold_answer": "{\"final_answer\": \"为进一步深化学习型组织建设，整合学习资源，传播最佳实践，有效助力员工工作技能提升和绩效改善。为进一步强化学习效果，规范线上学习管理，特制订本方案。\", \"evidence_line_ids\": [2]}",
+      "inspect_id": "latest_clean_niche_0001",
+      "hierarchical_gold_map": {
+        "n_scored_candidates": 0,
+        "evidence_chars_actual": 438,
+        "evidence_text": "[E1]\n[§ 2.学时统计范围与方式]\n规定各岗位年度52学时标准，含必修、选修（线上平台）、线下课及取证类学时。明确各类学时的定义与统计依据，如以平台后台数据或考试成绩为准。\n\n[E2]\n[§ 一、管理机构及其职责]\n线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\n\n[E3]\n[§ （ 一）课程开发管理]\n4.课酬兑现。开发的课程根据《十一在线——员工赋能一体化平台管理办法》相关规定标准兑现相应课酬。\n\n[E4]\n[§ 4.其他事项]\n（ 3 ）十一在线平台中心后期将根据后台创建的线下培训记录，不定期抽查相关学习资料，保证学习的真实性和有效性。如发现有不实情形，获得该门线下培训学时的学员，学时为不合格，并给予相关人员通报。",
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"规定各岗位年度52学时标准，含必修、选修（线上平台）、线下课及取证类学时。\"}",
+        "trajectory_length": 2,
+        "truncated_last": false,
+        "section_ids": [],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L44",
+          "real_69c6095ed4242eda8c47c5b2:L4",
+          "real_69c6095ed4242eda8c47c5b2:L37",
+          "real_69c6095ed4242eda8c47c5b2:L50"
+        ],
+        "refusal_events": [],
+        "metrics": {
+          "budget": {
+            "chunk_hit@1": 0.0,
+            "mrr_chunks": 0.0,
+            "coverage_budget_lenient": 0.0,
+            "n_chunks_kept": 0.0
+          },
+          "line_retrieval": {
+            "coverage": 0.0,
+            "mrr": 0.0,
+            "ndcg@10": 0.0,
+            "hit@5": 0.0,
+            "precision@1": 0.0,
+            "precision@3": 0.0,
+            "precision@5": 0.0,
+            "precision@8": 0.0
+          },
+          "keyword_recall": 0.0,
+          "task_success": 0.0,
+          "score_task": 0.0,
+          "score_evidence": 0.0,
+          "score_process": 1.0,
+          "evidence_hit@1": 0.0,
+          "evidence_coverage": 0.0,
+          "process_recovery": 1.0,
+          "process_efficiency": 1.0,
+          "process_efficiency_mode": "nav_hierarchical",
+          "effective_task_type": "niche_fact",
+          "inspect_judge_used": true,
+          "inspect_id": "latest_clean_niche_0001",
+          "inspect_evidence_score": 0.0,
+          "inspect_content_score": 0.0
+        },
+        "steps": [
+          {
+            "step_idx": 1,
+            "action": "compose_answer",
+            "detail": {
+              "evidence_chars": 438,
+              "frozen_evidence": true,
+              "gold_node_recall": 0.0
+            }
+          }
+        ],
+        "frozen_evidence": true,
+        "source_gold_node_recall": 0.0,
+        "phase_timings": {
+          "retrieval_framework_seconds": 0.0,
+          "compose_seconds": 39.21393750000425,
+          "online_response_seconds": 39.21393750000425
+        }
+      },
+      "hierarchical_gold": {
+        "n_scored_candidates": 0,
+        "evidence_chars_actual": 438,
+        "evidence_text": "[E1]\n[§ 2.学时统计范围与方式]\n规定各岗位年度52学时标准，含必修、选修（线上平台）、线下课及取证类学时。明确各类学时的定义与统计依据，如以平台后台数据或考试成绩为准。\n\n[E2]\n[§ 一、管理机构及其职责]\n线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\n\n[E3]\n[§ （ 一）课程开发管理]\n4.课酬兑现。开发的课程根据《十一在线——员工赋能一体化平台管理办法》相关规定标准兑现相应课酬。\n\n[E4]\n[§ 4.其他事项]\n（ 3 ）十一在线平台中心后期将根据后台创建的线下培训记录，不定期抽查相关学习资料，保证学习的真实性和有效性。如发现有不实情形，获得该门线下培训学时的学员，学时为不合格，并给予相关人员通报。",
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"规定各岗位年度52学时标准，含必修、选修（线上平台）、线下课及取证类学时。\"}",
+        "trajectory_length": 2,
+        "truncated_last": false,
+        "section_ids": [],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L44",
+          "real_69c6095ed4242eda8c47c5b2:L4",
+          "real_69c6095ed4242eda8c47c5b2:L37",
+          "real_69c6095ed4242eda8c47c5b2:L50"
+        ],
+        "refusal_events": [],
+        "metrics": {
+          "budget": {
+            "chunk_hit@1": 0.0,
+            "mrr_chunks": 0.0,
+            "coverage_budget_lenient": 0.0,
+            "n_chunks_kept": 0.0
+          },
+          "line_retrieval": {
+            "coverage": 0.0,
+            "mrr": 0.0,
+            "ndcg@10": 0.0,
+            "hit@5": 0.0,
+            "precision@1": 0.0,
+            "precision@3": 0.0,
+            "precision@5": 0.0,
+            "precision@8": 0.0
+          },
+          "keyword_recall": 0.0,
+          "task_success": 0.0,
+          "score_task": 0.0,
+          "score_evidence": 0.0,
+          "score_process": 1.0,
+          "evidence_hit@1": 0.0,
+          "evidence_coverage": 0.0,
+          "process_recovery": 1.0,
+          "process_efficiency": 1.0,
+          "process_efficiency_mode": "nav_hierarchical",
+          "effective_task_type": "niche_fact",
+          "inspect_judge_used": true,
+          "inspect_id": "latest_clean_niche_0001",
+          "inspect_evidence_score": 0.0,
+          "inspect_content_score": 0.0
+        },
+        "steps": [
+          {
+            "step_idx": 1,
+            "action": "compose_answer",
+            "detail": {
+              "evidence_chars": 438,
+              "frozen_evidence": true,
+              "gold_node_recall": 0.0
+            }
+          }
+        ],
+        "frozen_evidence": true,
+        "source_gold_node_recall": 0.0,
+        "phase_timings": {
+          "retrieval_framework_seconds": 0.0,
+          "compose_seconds": 39.21393750000425,
+          "online_response_seconds": 39.21393750000425
+        }
+      }
+    },
+    {
+      "task_idx": 2,
+      "query": "根据《线上学习平台学习管理方案（修订）》中“一、管理机构及其职责”相关内容，该处明确写出的规定或事实是什么？",
+      "doc_id": "real_69c6095ed4242eda8c47c5b2",
+      "task_type": "niche_fact",
+      "gold_nodes": [
+        "real_69c6095ed4242eda8c47c5b2:L4"
+      ],
+      "gold_answer": "{\"final_answer\": \"线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\", \"evidence_line_ids\": [4]}",
+      "inspect_id": "latest_clean_niche_0002",
+      "hierarchical_gold_map": {
+        "n_scored_candidates": 0,
+        "evidence_chars_actual": 453,
+        "evidence_text": "[E1]\n[§ 一、管理机构及其职责]\n  线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\n  （ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。\n  （ 二）各专家组：负责各领域内员工培训需求征集，教材、课件及习题开发，课件修改、适时更新、审核，业务答疑，题库组建等工作，集团对口业务部门负责人为各专业课程开发责任人，统筹推进本业务系统课程开发工作。\n  （ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟\n  踪和定期调研，反馈十一在线平台中心。",
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源，十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。\"}",
+        "trajectory_length": 2,
+        "truncated_last": false,
+        "section_ids": [],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L3",
+          "real_69c6095ed4242eda8c47c5b2:L4",
+          "real_69c6095ed4242eda8c47c5b2:L5",
+          "real_69c6095ed4242eda8c47c5b2:L6",
+          "real_69c6095ed4242eda8c47c5b2:L7",
+          "real_69c6095ed4242eda8c47c5b2:L8"
+        ],
+        "refusal_events": [],
+        "metrics": {
+          "budget": {
+            "chunk_hit@1": 0.0,
+            "mrr_chunks": 0.0,
+            "coverage_budget_lenient": 0.0,
+            "n_chunks_kept": 0.0
+          },
+          "line_retrieval": {
+            "coverage": 1.0,
+            "mrr": 0.5,
+            "ndcg@10": 1.0,
+            "hit@5": 1.0,
+            "precision@1": 0.0,
+            "precision@3": 0.3333333333333333,
+            "precision@5": 0.2,
+            "precision@8": 0.16666666666666666
+          },
+          "keyword_recall": 0.0,
+          "task_success": 1.0,
+          "score_task": 1.0,
+          "score_evidence": 1.0,
+          "score_process": 1.0,
+          "evidence_hit@1": 0.0,
+          "evidence_coverage": 0.0,
+          "process_recovery": 1.0,
+          "process_efficiency": 1.0,
+          "process_efficiency_mode": "nav_hierarchical",
+          "effective_task_type": "niche_fact",
+          "inspect_judge_used": true,
+          "inspect_id": "latest_clean_niche_0002",
+          "inspect_evidence_score": 1.0,
+          "inspect_content_score": 1.0
+        },
+        "steps": [
+          {
+            "step_idx": 1,
+            "action": "compose_answer",
+            "detail": {
+              "evidence_chars": 453,
+              "frozen_evidence": true,
+              "gold_node_recall": 1.0
+            }
+          }
+        ],
+        "frozen_evidence": true,
+        "source_gold_node_recall": 1.0,
+        "phase_timings": {
+          "retrieval_framework_seconds": 0.0,
+          "compose_seconds": 43.14609349999955,
+          "online_response_seconds": 43.14609349999955
+        }
+      },
+      "hierarchical_gold": {
+        "n_scored_candidates": 0,
+        "evidence_chars_actual": 453,
+        "evidence_text": "[E1]\n[§ 一、管理机构及其职责]\n  线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源。十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。各级机构及其职责具体如下：\n  （ 一）十一在线平台中心：负责课程体系设计、课程开发计划审批、课程考核标准设定、平台建设费用审批等相关事宜。\n  （ 二）各专家组：负责各领域内员工培训需求征集，教材、课件及习题开发，课件修改、适时更新、审核，业务答疑，题库组建等工作，集团对口业务部门负责人为各专业课程开发责任人，统筹推进本业务系统课程开发工作。\n  （ 三）十一在线平台中心办公室：负责线上学习平台搭建，维护平台基本信息，监督各专家组及相关部门及时更新学习内容，组织各专家组和二级单位平台管理员进行平台管理培训，并对各专家组课程开发情况、学员学习情况进行跟\n  踪和定期调研，反馈十一在线平台中心。",
+        "composed_answer": "{\"task_type\": \"niche_fact\", \"answer\": \"线上学习平台主要为除十一在线各研修班以外一般员工提供学习资源，十一在线平台中心为其最高管理机构负责把握学习方向、整合学习资源，各专家组负责学习内容开发，十一在线平台中心办公室主要负责日常运营管理，集团公司机关各部室及各二级单位负责组织本部室及本单位员工参加学习。\"}",
+        "trajectory_length": 2,
+        "truncated_last": false,
+        "section_ids": [],
+        "retrieved_nodes": [
+          "real_69c6095ed4242eda8c47c5b2:L3",
+          "real_69c6095ed4242eda8c47c5b2:L4",
+          "real_69c6095ed4242eda8c47c5b2:L5",
+          "real_69c6095ed4242eda8c47c5b2:L6",
+          "real_69c6095ed4242eda8c47c5b2:L7",
+          "real_69c6095ed4242eda8c47c5b2:L8"
+        ],
+        "refusal_events": [],
+        "metrics": {
+          "budget": {
+            "chunk_hit@1": 0.0,
+            "mrr_chunks": 0.0,
+            "coverage_budget_lenient": 0.0,
+            "n_chunks_kept": 0.0
+          },
+          "line_retrieval": {
+            "coverage": 1.0,
+            "mrr": 0.5,
+            "ndcg@10": 1.0,
+            "hit@5": 1.0,
+            "precision@1": 0.0,
+            "precision@3": 0.3333333333333333,
+            "precision@5": 0.2,
+            "precision@8": 0.16666666666666666
+          },
+          "keyword_recall": 0.0,
+          "task_success": 1.0,
+          "score_task": 1.0,
+          "score_evidence": 1.0,
+          "score_process": 1.0,
+          "evidence_hit@1": 0.0,
+          "evidence_coverage": 0.0,
+          "process_recovery": 1.0,
+          "process_efficiency": 1.0,
+          "process_efficiency_mode": "nav_hierarchical",
+          "effective_task_type": "niche_fact",
+          "inspect_judge_used": true,
+          "inspect_id": "latest_clean_niche_0002",
+          "inspect_evidence_score": 1.0,
+          "inspect_content_score": 1.0
+        },
+        "steps": [
+          {
+            "step_idx": 1,
+            "action": "compose_answer",
+            "detail": {
+              "evidence_chars": 453,
+              "frozen_evidence": true,
+              "gold_node_recall": 1.0
+            }
+          }
+        ],
+        "frozen_evidence": true,
+        "source_gold_node_recall": 1.0,
+        "phase_timings": {
+          "retrieval_framework_seconds": 0.0,
+          "compose_seconds": 43.14609349999955,
+          "online_response_seconds": 43.14609349999955
+        }
+      }
+    }
+  ]
+}

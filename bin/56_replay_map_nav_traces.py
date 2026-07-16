@@ -66,7 +66,7 @@ def _env_setup() -> None:
     os.environ.setdefault("NAV_MAP_MODE", "1")
     os.environ.setdefault("NAV_MAP_DENSE", "1")
     os.environ.setdefault("NAV_FILTER_COLLECTED_SECTIONS", "1")
-    os.environ.setdefault("NAV_SCOPE_OUTLINE_MODE", "1")
+    os.environ.setdefault("NAV_SCOPE_OUTLINE_MODE", "0")
     os.environ.setdefault("NAV_SCOPE_COLLECT_STRATEGY", "multi_band")
     os.environ.setdefault("BODYRICH_EMBEDDING_BACKEND", "remote")
     os.environ.setdefault("BODYRICH_EMBEDDING_MODEL", "text-embedding-v3")
