@@ -18,8 +18,6 @@ from agent_delivery.code.load_data import DocBundle, LineRecord  # noqa: E402
 from nav_actions import build_legal_actions  # noqa: E402
 from nav_agent import (  # noqa: E402
     _collect_subtree,
-    _scope_collect_outline,
-    _scope_collect_scored,
     _update_collect_coverage,
 )
 from nav_policy import _format_agent_state  # noqa: E402
@@ -107,109 +105,6 @@ class ScopeCollectTests(unittest.TestCase):
         )
         self.state = NavState(doc_id="doc", query="query", task_type="scope_collection")
 
-    def test_small_scope_collect_preserves_line_order(self) -> None:
-        tools = _FakeToolSpace(
-            self.chunks,
-            {"doc:L30__path": 0.2, "doc:L10__path": 0.8, "doc:L20__path": 0.8},
-        )
-        with patch.dict(os.environ, {"NAV_SCOPE_COLLECT_STRATEGY": "local_band"}):
-            scored = _scope_collect_scored(
-                tools._idx, self.chunks, self.action, self.state, NavConfig(collect_k=2)
-            )
-
-        self.assertEqual([chunk.node_id for chunk, _ in scored], ["doc:L10__path", "doc:L20__path"])
-
-    def test_large_scope_collect_uses_contiguous_local_band(self) -> None:
-        chunks = [
-            Chunk(f"doc:L{i}__path", "doc", str(i), (i,), "doc:L1")
-            for i in range(1, 26)
-        ]
-        scores = {chunk.node_id: 0.1 for chunk in chunks}
-        scores["doc:L15__path"] = 0.9
-        tools = _FakeToolSpace(chunks, scores)
-        with patch.dict(
-            os.environ,
-            {
-                "NAV_SCOPE_COLLECT_STRATEGY": "local_band",
-                "NAV_SCOPE_LOCAL_BAND_MIN_POOL": "20",
-                "NAV_SCOPE_LOCAL_BAND_K": "4",
-                "NAV_SCOPE_LOCAL_BAND_CONTEXT_BEFORE": "1",
-            },
-        ):
-            scored = _scope_collect_scored(
-                tools._idx, chunks, self.action, self.state, NavConfig(collect_k=8)
-            )
-
-        self.assertEqual(
-            [chunk.node_id for chunk, _ in scored],
-            ["doc:L14__path", "doc:L15__path", "doc:L16__path", "doc:L17__path"],
-        )
-
-    def test_large_scope_collect_can_use_multiple_local_bands(self) -> None:
-        chunks = [
-            Chunk(f"doc:L{i}__path", "doc", str(i), (i,), "doc:L1")
-            for i in range(1, 26)
-        ]
-        scores = {chunk.node_id: 0.1 for chunk in chunks}
-        scores.update(
-            {
-                "doc:L5__path": 0.9,
-                "doc:L15__path": 0.8,
-                "doc:L23__path": 0.7,
-            }
-        )
-        tools = _FakeToolSpace(chunks, scores)
-        with patch.dict(
-            os.environ,
-            {
-                "NAV_SCOPE_COLLECT_STRATEGY": "multi_band",
-                "NAV_SCOPE_LOCAL_BAND_MIN_POOL": "20",
-                "NAV_SCOPE_LOCAL_BAND_K": "6",
-                "NAV_SCOPE_LOCAL_BAND_CONTEXT_BEFORE": "0",
-                "NAV_SCOPE_MULTI_BAND_CONTEXT_AFTER": "1",
-                "NAV_SCOPE_MULTI_BAND_ANCHORS": "3",
-            },
-        ):
-            scored = _scope_collect_scored(
-                tools._idx, chunks, self.action, self.state, NavConfig(collect_k=8)
-            )
-
-        self.assertEqual(
-            {chunk.node_id for chunk, _ in scored},
-            {
-                "doc:L5__path",
-                "doc:L6__path",
-                "doc:L15__path",
-                "doc:L16__path",
-                "doc:L23__path",
-                "doc:L24__path",
-            },
-        )
-
-    def test_relevance_strategy_remains_available_for_ablation(self) -> None:
-        tools = _FakeToolSpace(
-            self.chunks,
-            {"doc:L30__path": 1.0, "doc:L10__path": 0.1, "doc:L20__path": 0.5},
-        )
-        with patch.dict(os.environ, {"NAV_SCOPE_COLLECT_STRATEGY": "relevance"}):
-            scored = _scope_collect_scored(
-                tools._idx, self.chunks, self.action, self.state, NavConfig(collect_k=2)
-            )
-
-        self.assertEqual([chunk.node_id for chunk, _ in scored], ["doc:L30__path", "doc:L20__path"])
-
-    def test_scope_collect_can_restore_line_order_ablation(self) -> None:
-        tools = _FakeToolSpace(
-            self.chunks,
-            {"doc:L30__path": 1.0, "doc:L10__path": 0.1, "doc:L20__path": 0.5},
-        )
-        with patch.dict(os.environ, {"NAV_SCOPE_COLLECT_STRATEGY": "line_order"}):
-            scored = _scope_collect_scored(
-                tools._idx, self.chunks, self.action, self.state, NavConfig(collect_k=2)
-            )
-
-        self.assertEqual([chunk.node_id for chunk, _ in scored], ["doc:L10__path", "doc:L20__path"])
-
     def test_active_collect_is_task_type_agnostic_doc_order(self) -> None:
         """Map-mode COLLECT ignores task_type / scope strategies; full doc-order hydrate."""
         tools = _FakeToolSpace(
@@ -287,15 +182,6 @@ class ScopeCollectTests(unittest.TestCase):
         )
         self.assertNotIn("__outline", "\n".join(chunk.node_id for chunk, _ in scored))
 
-        # Legacy helper still available for ablation/manual calls.
-        outline = _scope_collect_outline(
-            tools._idx, path_chunks, self.action, state, NavConfig(collect_k=10)
-        )
-        self.assertEqual(
-            [chunk.node_id for chunk, _ in outline],
-            ["doc:L1__outline", "doc:L2__outline", "doc:L4__outline", "doc:L6__outline"],
-        )
-
     def test_successful_collect_blocks_ancestors_and_marks_full_subtree(self) -> None:
         tools = _FakeToolSpace(
             self.chunks,
@@ -312,7 +198,6 @@ class ScopeCollectTests(unittest.TestCase):
         # collected = sid ∪ descendants (merged covered semantics)
         self.assertEqual(self.state.collected_section_ids, {"doc:L1", "doc:L2"})
         self.assertEqual(self.state.blocked_collect_section_ids, {"doc:L0"})
-        self.assertFalse(self.state.scope_evidence_locked)
 
     def test_partial_collect_still_selects_whole_branch(self) -> None:
         """added>0 selects the branch even when hydrate is not full."""
@@ -330,7 +215,6 @@ class ScopeCollectTests(unittest.TestCase):
         self.assertTrue(meta["branch_selected"])
         self.assertEqual(self.state.collected_section_ids, {"doc:L1", "doc:L2"})
         self.assertEqual(self.state.blocked_collect_section_ids, {"doc:L0"})
-        self.assertFalse(self.state.scope_evidence_locked)
 
     def test_single_leaf_collect_keeps_parent_collect_available(self) -> None:
         leaf = [Chunk("doc:L2__path", "doc", "leaf", (2,), "doc:L2")]
@@ -352,30 +236,6 @@ class ScopeCollectTests(unittest.TestCase):
 
         self.assertTrue(meta["collect_full"])
         self.assertFalse(state.blocked_collect_section_ids)
-        self.assertFalse(state.scope_evidence_locked)
-
-    def test_scope_evidence_lock_penalizes_later_collect_scores(self) -> None:
-        tools = _FakeToolSpace(
-            self.chunks,
-            {"doc:L30__path": 0.2, "doc:L10__path": 0.8, "doc:L20__path": 0.8},
-        )
-        with patch.dict(
-            os.environ,
-            {
-                "NAV_SCOPE_COLLECT_STRATEGY": "line_order",
-                "NAV_SCOPE_ACTION_SCORE_CAP": "1.0",
-                "NAV_SCOPE_POST_LOCK_SCORE_PENALTY": "2.0",
-            },
-        ):
-            initial = _scope_collect_scored(
-                tools._idx, self.chunks, self.action, self.state, NavConfig(collect_k=2)
-            )
-            self.state.scope_evidence_locked = True
-            later = _scope_collect_scored(
-                tools._idx, self.chunks, self.action, self.state, NavConfig(collect_k=2)
-            )
-
-        self.assertAlmostEqual(initial[0][1] - later[0][1], 2.0)
 
 
 class MultiHopComposeTests(unittest.TestCase):

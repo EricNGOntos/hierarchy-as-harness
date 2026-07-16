@@ -59,9 +59,8 @@ class NavConfig:
     # run_nav_episode re-derives it from the episode's evidence budget x mult below.
     scope_inline_summary_char_limit: int = 1500
     scope_inline_summary_budget_mult: float = 3.0
-    # Retained for config compatibility. Inactive in current packing.
-    # TODO(compose-tiebreak): wire as same-tier weight when confidence / subagent
-    # priors enter _removal_rank (see nav_compose._removal_rank).
+    # COMPOSE child score = own_unit + compose_confidence_weight * collect_confidence
+    # (see nav_compose._child_final_score); drives greedy budget-fill order.
     compose_confidence_weight: float = 0.5
     # Depth-0 external relative rerank of parent groups (compose preview + group_rank).
     enable_external_rerank: bool = True
@@ -180,7 +179,6 @@ class NavState:
     # "Branch done / removed from map" = COLLECT'd sid ∪ all descendants.
     collected_section_ids: set[str] = field(default_factory=set)
     blocked_collect_section_ids: set[str] = field(default_factory=set)
-    scope_evidence_locked: bool = False
     action_history: List[Dict[str, Any]] = field(default_factory=list)
     refusal_events: List[Dict[str, Any]] = field(default_factory=list)
     # Subagent / investigate reports shown to the parent agent.

@@ -44,7 +44,6 @@ def _fork_nav_state(state: NavState) -> NavState:
         highlight_ids=list(state.highlight_ids),
         collected_section_ids=set(state.collected_section_ids),
         blocked_collect_section_ids=set(state.blocked_collect_section_ids),
-        scope_evidence_locked=state.scope_evidence_locked,
         action_history=[],
         refusal_events=[],
         reports_context="",
@@ -73,8 +72,6 @@ def _merge_nav_state(parent: NavState, child: NavState) -> None:
     parent.collect_confidence.update(child.collect_confidence)
     parent.explicit_collect_ids.update(child.explicit_collect_ids)
     parent.group_priority.update(child.group_priority)
-    if child.scope_evidence_locked:
-        parent.scope_evidence_locked = True
     if child.reports_context:
         if parent.reports_context:
             parent.reports_context = parent.reports_context + "\n" + child.reports_context

@@ -1,4 +1,4 @@
-"""Tests for nav COMPOSE packing (doc-order + selection_count truncation)."""
+"""Tests for nav COMPOSE packing (confidence + parent-scoped tree)."""
 from __future__ import annotations
 
 import sys
@@ -17,7 +17,6 @@ from nav_compose import (  # noqa: E402
     build_compose_preview,
     pack_nav_evidence,
     parse_collect_confidence,
-    selection_count_for_owner,
 )
 from nav_types import ActionKind, LegalAction, NavConfig, NavState  # noqa: E402
 
@@ -78,33 +77,24 @@ class NavComposePackTests(unittest.TestCase):
         z = parse_collect_confidence({}, acts)
         self.assertEqual(z["C1"], 0.0)
 
-    def test_selection_count_owner_and_ancestor(self) -> None:
-        explicit = {"doc:L92"}
-        self.assertEqual(
-            selection_count_for_owner("doc:L94", explicit, self.ts, "doc"), 1
-        )
-        self.assertEqual(
-            selection_count_for_owner("doc:L92", explicit, self.ts, "doc"), 1
-        )
-        explicit2 = {"doc:L92", "doc:L94"}
-        self.assertEqual(
-            selection_count_for_owner("doc:L94", explicit2, self.ts, "doc"), 2
-        )
-        self.assertEqual(
-            selection_count_for_owner("doc:L84", explicit, self.ts, "doc"), 0
-        )
-
-    def test_pack_doc_order_keeps_early_gold_drops_late_noise(self) -> None:
-        """Parent COLLECT → children sel=1; tight budget trims doc-tail noise."""
+    def test_pack_prefers_confident_short_gold_over_long_noise(self) -> None:
         state = NavState(doc_id="doc", query="q", task_type="scope_collection")
-        state.explicit_collect_ids = {"doc:L92"}
         state.unit_scores = {
             "doc:L93": 0.073,
             "doc:L94": 0.045,
             "doc:L95": 0.038,
-            "doc:L102": 0.099,
-            "doc:L103": 0.098,
+            "doc:L102": 0.066,
+            "doc:L103": 0.064,
             "doc:L92": 0.073,
+        }
+        # Explicit gold conf; hydration noise conf=0
+        state.collect_confidence = {
+            "doc:L93": 0.8,
+            "doc:L94": 0.9,
+            "doc:L95": 0.9,
+            "doc:L102": 0.0,
+            "doc:L103": 0.0,
+            "doc:L92": 0.5,
         }
         collected = [
             (self._chunk(92, "[§ 2.4.4]\n2.4.4 重大事故隐患整改、复查、销项"), 1.0),
@@ -133,19 +123,20 @@ class NavComposePackTests(unittest.TestCase):
         self.assertIn("治理的目标和任务", text)
         self.assertIn("采取的方法和措施", text)
         self.assertIn("[§ 2.4.4", text)
+        # Parent is header only — should not keep L92 body as a competing peer.
         kept_owners = {c.section_id for c in fill.kept_chunks}
         self.assertNotIn("doc:L92", kept_owners)
+        # Long noise loses to confident short gold under a tight budget.
         self.assertNotIn("2.4.5", text)
         self.assertNotIn("2.4.6", text)
 
-    def test_pack_group_order_is_doc_order_not_unit(self) -> None:
-        """Without group_priority, earlier doc group packs before later (unit ignored)."""
+    def test_group_key_uses_child_final_score_with_confidence(self) -> None:
         state = NavState(doc_id="doc", query="q")
-        state.explicit_collect_ids = {"doc:L84", "doc:L94"}
         state.unit_scores = {
-            "doc:L94": 0.99,
-            "doc:L84": 0.01,
+            "doc:L94": 0.05,
+            "doc:L84": 0.08,
         }
+        state.collect_confidence = {"doc:L94": 0.9, "doc:L84": 0.0}
         collected = [
             (self._chunk(94, "1、治理的目标和任务；"), 1.0),
             (self._chunk(84, "2、重大事故隐患定义"), 1.0),
@@ -153,15 +144,22 @@ class NavComposePackTests(unittest.TestCase):
         fill = pack_nav_evidence(
             collected, self.ts, state, self.cfg, budget_chars=500
         )
-        self.assertTrue(
-            fill.evidence_text.index("重大事故隐患定义")
-            < fill.evidence_text.index("治理")
-        )
+        # L94 group score = 0.05+0.5*0.9=0.50 > L84 0.08 → L92 group first
+        self.assertTrue(fill.evidence_text.index("治理") < fill.evidence_text.index("重大事故隐患定义"))
 
-    def test_pack_trims_doc_tail_not_skip_mid_group(self) -> None:
-        """Over budget: drop late siblings first; early short gold stays."""
+    def test_pack_skips_oversized_keeps_later_short(self) -> None:
+        """Within a group: skip a too-large high-score child; pack later short ones."""
         state = NavState(doc_id="doc", query="q", task_type="scope_collection")
-        state.explicit_collect_ids = {"doc:L92"}
+        state.unit_scores = {
+            "doc:L102": 0.09,
+            "doc:L94": 0.05,
+            "doc:L95": 0.04,
+        }
+        state.collect_confidence = {
+            "doc:L102": 0.9,
+            "doc:L94": 0.9,
+            "doc:L95": 0.9,
+        }
         collected = [
             (
                 self._chunk(
@@ -181,10 +179,15 @@ class NavComposePackTests(unittest.TestCase):
         self.assertIn("采取的方法和措施", text)
         self.assertNotIn("2.4.5", text)
 
-    def test_group_priority_overrides_doc_order(self) -> None:
-        """External group_rank priority packs preferred group before earlier intro."""
+    def test_group_priority_overrides_unit_score_order(self) -> None:
+        """External group_rank priority packs low-unit gold group before high-unit intro."""
         state = NavState(doc_id="doc", query="q", task_type="scope_collection")
-        state.explicit_collect_ids = {"doc:L94", "doc:L84"}
+        state.unit_scores = {
+            "doc:L94": 0.04,
+            "doc:L84": 0.09,
+        }
+        state.collect_confidence = {"doc:L94": 0.0, "doc:L84": 0.0}
+        # Prefer the L92-parented gold group over the L81-parented intro group.
         state.group_priority = {
             "doc:L92": 2.0,
             "doc:L81": 1.0,
@@ -197,26 +200,12 @@ class NavComposePackTests(unittest.TestCase):
             collected, self.ts, state, self.cfg, budget_chars=120
         )
         self.assertIn("治理的目标和任务", fill.evidence_text)
+        # Intro may be dropped under tight budget; if present it must follow gold.
         if "重大事故隐患定义" in fill.evidence_text:
             self.assertTrue(
                 fill.evidence_text.index("治理")
                 < fill.evidence_text.index("重大事故隐患定义")
             )
-
-    def test_selection_count_tier_drops_lower_before_higher(self) -> None:
-        """Tier2 (sel=1) dropped before Tier1 (sel=2) under tight budget."""
-        state = NavState(doc_id="doc", query="q")
-        state.explicit_collect_ids = {"doc:L92", "doc:L94"}
-        long_tail = "噪声" + ("哈" * 80)
-        collected = [
-            (self._chunk(94, "1、治理的目标和任务；"), 1.0),
-            (self._chunk(95, f"2、采取的方法和措施；{long_tail}"), 1.0),
-        ]
-        fill = pack_nav_evidence(
-            collected, self.ts, state, self.cfg, budget_chars=60
-        )
-        self.assertIn("治理的目标和任务", fill.evidence_text)
-        self.assertNotIn("采取的方法和措施", fill.evidence_text)
 
     def test_build_compose_preview_emits_g_ids(self) -> None:
         state = NavState(doc_id="doc", query="q")
