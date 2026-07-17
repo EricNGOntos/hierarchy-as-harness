@@ -67,6 +67,12 @@ class NavConfig:
     compose_preview_snippet_chars: int = 60
     # 0 = show every child in the preview (no per-group child cap).
     compose_preview_max_children: int = 0
+    # Evidence packing: "greedy" (legacy fill) | "waterfill" (tiered full+snippet coverage).
+    compose_packing_mode: str = "greedy"
+    # Waterfill: fraction of budget reserved for cross-group snippet breadth (Tier2).
+    compose_coverage_budget_frac: float = 0.4
+    # Waterfill: max chars per snippet line when breadth-filling.
+    compose_snippet_chars: int = 80
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "NavConfig":

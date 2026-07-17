@@ -475,6 +475,12 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="stop the batch on first task failure (default: record failure and continue)",
     )
+    parser.add_argument(
+        "--nav-config",
+        type=Path,
+        default=None,
+        help="nav config JSON (default: config/nav_default.json); use config/nav_waterfill.json for packing A/B",
+    )
     return parser.parse_args(argv)
 
 
@@ -500,13 +506,25 @@ def main() -> int:
 
     tasks_path = ROOT / "data/tasks/tasks_realdata_bodyrich_latest_clean_400.jsonl"
     corpus = ROOT / "data/corpus/test_data_full_realdata_clean_latest.jsonl"
-    nav_cfg_path = ROOT / "config/nav_default.json"
+    nav_cfg_path = (
+        args.nav_config.expanduser()
+        if args.nav_config is not None
+        else ROOT / "config/nav_default.json"
+    )
+    if not nav_cfg_path.is_absolute():
+        nav_cfg_path = (ROOT / nav_cfg_path).resolve()
+    if not nav_cfg_path.is_file():
+        raise SystemExit(f"[replay] nav config not found: {nav_cfg_path}")
 
     _configure_nav_runtime(config_path=nav_cfg_path, policy="llm")
     cfg = NavConfig.from_dict(json.loads(nav_cfg_path.read_text(encoding="utf-8")))
     cfg.map_mode = True
     if cfg.llm_max_tokens < 256:
         cfg.llm_max_tokens = 256
+    print(
+        f"[replay] nav_config={nav_cfg_path} packing={cfg.compose_packing_mode}",
+        flush=True,
+    )
 
     # output directory + resume state (resolve before loading tasks)
     resume_mode = False

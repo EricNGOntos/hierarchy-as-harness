@@ -31,7 +31,7 @@
   "enable_external_rerank": true,
   "compose_preview_snippet_chars": 60,
   "compose_preview_max_children": 0,
-  "compose_packing_mode": "greedy",
+  "compose_packing_mode": "waterfill",
   "compose_coverage_budget_frac": 0.4,
   "compose_snippet_chars": 80
 }
