@@ -73,6 +73,11 @@ class NavConfig:
     compose_coverage_budget_frac: float = 0.4
     # Waterfill: max chars per snippet line when breadth-filling.
     compose_snippet_chars: int = 80
+    # Depth-0 hard rewrite: after agent chooses COLLECT, if branch text length
+    # exceeds the limit and the node has children, rewrite that sid to DISPATCH.
+    enable_depth0_oversize_to_dispatch: bool = False
+    # 0 = use episode evidence budget_chars (set in run_nav_episode).
+    depth0_oversize_char_limit: int = 0
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "NavConfig":

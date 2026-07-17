@@ -26,6 +26,107 @@ def _batch_actions(chosen: LegalAction) -> List[LegalAction]:
     return [chosen]
 
 
+def _chunk_plain_chars(chunk: Chunk) -> int:
+    text = (getattr(chunk, "text", None) or "").strip()
+    if not text:
+        return 0
+    lines = text.splitlines()
+    if lines and lines[0].strip().startswith("[§"):
+        text = "\n".join(lines[1:]).strip()
+    return len(text)
+
+
+def _estimate_branch_chars(ts: ToolSpace, section_id: str, doc_id: str) -> int:
+    """Evidence-sized estimate of hydrating section_id ∪ descendants."""
+    sid = str(section_id or "").strip()
+    if not sid:
+        return 0
+    materialize = getattr(ts, "_materialize_leaf_path_chunks", None)
+    if not callable(materialize):
+        return 0
+    try:
+        pool = list(materialize(sid, doc_id) or [])
+    except Exception:
+        return 0
+    return sum(_chunk_plain_chars(c) for c in pool)
+
+
+def _section_has_children(
+    ts: ToolSpace,
+    section_id: str,
+    doc_id: str,
+    projection: Any = None,
+) -> bool:
+    sid = str(section_id or "").strip()
+    if not sid:
+        return False
+    if projection is not None:
+        for view in list(getattr(projection, "tree_sections", None) or []) + list(
+            getattr(projection, "visible_sections", None) or []
+        ):
+            if str(getattr(view, "section_id", "") or "") == sid:
+                return bool(getattr(view, "has_children", False))
+    relations = getattr(ts, "section_relation_ids", None)
+    if callable(relations):
+        try:
+            _anc, desc = relations(sid, doc_id)
+            desc = {str(x).strip() for x in (desc or set()) if str(x).strip()}
+            desc.discard(sid)
+            return bool(desc)
+        except Exception:
+            pass
+    materialize = getattr(ts, "_materialize_leaf_path_chunks", None)
+    if callable(materialize):
+        try:
+            pool = list(materialize(sid, doc_id) or [])
+            return len(pool) > 1
+        except Exception:
+            return False
+    return False
+
+
+def _split_oversize_collect_actions(
+    ts: ToolSpace,
+    state: NavState,
+    chosen: LegalAction,
+    config: NavConfig,
+    projection: Any,
+) -> Tuple[List[LegalAction], List[LegalAction], List[Dict[str, Any]]]:
+    """Split a COLLECT batch into (keep_collect, rewrite_dispatch, rewrite_info)."""
+    limit = int(getattr(config, "depth0_oversize_char_limit", 0) or 0)
+    keep: List[LegalAction] = []
+    rewrite: List[LegalAction] = []
+    info: List[Dict[str, Any]] = []
+    for act in _batch_actions(chosen):
+        sid = str(act.section_id or "").strip()
+        if not sid:
+            continue
+        chars = _estimate_branch_chars(ts, sid, state.doc_id)
+        has_kids = _section_has_children(ts, sid, state.doc_id, projection)
+        if limit > 0 and chars > limit and has_kids:
+            rewrite.append(
+                LegalAction(
+                    action_id=str(act.action_id or ""),
+                    kind=ActionKind.DISPATCH,
+                    section_id=sid,
+                    label=str(act.label or ""),
+                    score=float(act.score or 0.0),
+                    metadata=dict(act.metadata or {}),
+                )
+            )
+            info.append(
+                {
+                    "section_id": sid,
+                    "branch_chars": chars,
+                    "limit": limit,
+                    "from_action_id": str(act.action_id or ""),
+                }
+            )
+        else:
+            keep.append(act)
+    return keep, rewrite, info
+
+
 def _estimate_region_chars(projection_text: str) -> int:
     return len(projection_text or "")
 
@@ -378,17 +479,103 @@ def navigate(
                 break
 
             if chosen.kind == ActionKind.COLLECT:
-                cdetail = _apply_collect(ts, state, chosen, config)
-                detail.update(cdetail)
-                if steps_out is not None:
-                    steps_out.append(
-                        AgentStep(
-                            step_idx=len(steps_out) + 1,
-                            action="nav_collect",
-                            detail=detail,
-                        )
+                keep_acts = _batch_actions(chosen)
+                rewrite_acts: List[LegalAction] = []
+                rewrite_info: List[Dict[str, Any]] = []
+                if depth == 0 and bool(
+                    getattr(config, "enable_depth0_oversize_to_dispatch", False)
+                ):
+                    keep_acts, rewrite_acts, rewrite_info = _split_oversize_collect_actions(
+                        ts, state, chosen, config, projection
                     )
-                state.action_history.append({**detail, "step_idx": step_idx})
+
+                # Oversized branches first: rewrite COLLECT -> DISPATCH.
+                if rewrite_acts:
+                    region_ids = [
+                        str(a.section_id or "").strip()
+                        for a in rewrite_acts
+                        if a.section_id
+                    ]
+                    child_reports = dispatch(
+                        ts,
+                        state,
+                        region_ids,
+                        query=query,
+                        config=config,
+                        depth=depth,
+                        budget=char_budget,
+                        steps_out=steps_out,
+                    )
+                    for rid in region_ids:
+                        state.investigated_section_ids.add(rid)
+                    block = _format_region_reports(child_reports)
+                    if block:
+                        if state.reports_context:
+                            state.reports_context = (
+                                state.reports_context + "\n" + block
+                            )
+                        else:
+                            state.reports_context = block
+                    ddetail = {
+                        **detail,
+                        "kind": "dispatch",
+                        "rewritten_collect_to_dispatch": True,
+                        "rewrite_info": rewrite_info,
+                        "dispatch_regions": region_ids,
+                        "n_child_reports": len(child_reports),
+                        "n_child_skipped": sum(1 for r in child_reports if r.skipped),
+                        "reports_snippet": (block or "")[:2000],
+                        "section_id": region_ids[0] if region_ids else chosen.section_id,
+                    }
+                    if steps_out is not None:
+                        steps_out.append(
+                            AgentStep(
+                                step_idx=len(steps_out) + 1,
+                                action="nav_dispatch",
+                                detail=ddetail,
+                            )
+                        )
+                    state.action_history.append({**ddetail, "step_idx": step_idx})
+
+                # Remaining non-oversize COLLECTs (if any).
+                if keep_acts:
+                    collect_chosen = keep_acts[0]
+                    base_meta = dict(chosen.metadata or {})
+                    # Drop the original full batch; rebuild from keep_acts only.
+                    base_meta.pop("batch_actions", None)
+                    if len(keep_acts) > 1:
+                        base_meta["batch_actions"] = keep_acts
+                    collect_chosen.metadata = base_meta
+                    cdetail = _apply_collect(ts, state, collect_chosen, config)
+                    cdetail_full = {
+                        **detail,
+                        **cdetail,
+                        "kind": "collect",
+                        "rewritten_collect_to_dispatch": bool(rewrite_info),
+                        "rewrite_info": rewrite_info or None,
+                    }
+                    if steps_out is not None:
+                        steps_out.append(
+                            AgentStep(
+                                step_idx=len(steps_out) + 1,
+                                action="nav_collect",
+                                detail=cdetail_full,
+                            )
+                        )
+                    state.action_history.append({**cdetail_full, "step_idx": step_idx})
+                elif not rewrite_acts:
+                    # Empty selection — should not happen; fall back to original.
+                    cdetail = _apply_collect(ts, state, chosen, config)
+                    detail.update(cdetail)
+                    if steps_out is not None:
+                        steps_out.append(
+                            AgentStep(
+                                step_idx=len(steps_out) + 1,
+                                action="nav_collect",
+                                detail=detail,
+                            )
+                        )
+                    state.action_history.append({**detail, "step_idx": step_idx})
                 continue
 
             if chosen.kind == ActionKind.DISPATCH:

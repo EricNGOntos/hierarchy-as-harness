@@ -343,6 +343,10 @@ def _build_steps_out(result: Any) -> list[dict[str, Any]]:
                 "branch_selected": detail.get("branch_selected"),
                 "collect_full": detail.get("collect_full"),
                 "group_rank": detail.get("group_rank"),
+                "rewritten_collect_to_dispatch": detail.get(
+                    "rewritten_collect_to_dispatch"
+                ),
+                "rewrite_info": detail.get("rewrite_info"),
                 "n_legal_actions": detail.get("n_legal_actions"),
                 "legal_actions_preview": list(detail.get("legal_actions_preview") or [])[:20],
                 "projection_chars": detail.get("projection_chars"),

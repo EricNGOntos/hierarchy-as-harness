@@ -251,6 +251,7 @@ def _signature(
     budget_chars: int,
     inspect_judge: bool,
     arm_key: str,
+    compose_only: bool = False,
 ) -> str:
     payload = {
         "adapter": "compose_judge_from_frozen_evidence_v1",
@@ -260,6 +261,7 @@ def _signature(
         "inspect_tasks": [str(p.resolve()) for p in inspect_tasks],
         "budget_chars": int(budget_chars),
         "inspect_judge": bool(inspect_judge),
+        "compose_only": bool(compose_only),
         "arm_key": arm_key,
         "compose_model": os.environ.get("COMPOSE_MODEL", "").strip(),
         "judge_model": os.environ.get("JUDGE_MODEL", "").strip(),
@@ -439,6 +441,26 @@ def _task_for_case(
     )
 
 
+def _metrics_compose_only(case: dict[str, Any], episode: EpisodeResult) -> dict[str, Any]:
+    """Skip Inspect/semantic judge; keep retrieval coverage from frozen replay."""
+    recall = case.get("gold_node_recall")
+    try:
+        score_evidence = float(recall) if recall is not None else float("nan")
+    except (TypeError, ValueError):
+        score_evidence = float("nan")
+    return {
+        "score_task": float("nan"),
+        "score_evidence": score_evidence,
+        "score_process": float("nan"),
+        "task_success": float("nan"),
+        "inspect_judge_used": False,
+        "compose_only": True,
+        "inspect_id": case.get("inspect_id"),
+        "source_gold_node_recall": recall,
+        "evidence_chars_actual": episode.evidence_chars_actual,
+    }
+
+
 def _episode_from_frozen(
     *,
     case: dict[str, Any],
@@ -535,6 +557,11 @@ def _build_argparser() -> argparse.ArgumentParser:
         "--no-inspect-judge",
         action="store_true",
         help="disable Inspect scoring (fallback semantic task_success)",
+    )
+    p.add_argument(
+        "--compose-only",
+        action="store_true",
+        help="only run compose LLM; skip Inspect and semantic judge (score_task=NaN)",
     )
     p.add_argument(
         "--stop-on-error",
@@ -654,7 +681,8 @@ def main() -> int:
     for w in _validate_cases(cases):
         print(f"[compose] warn: {w}", flush=True)
 
-    use_inspect = not bool(args.no_inspect_judge)
+    compose_only = bool(args.compose_only)
+    use_inspect = (not bool(args.no_inspect_judge)) and (not compose_only)
     if args.inspect_tasks:
         inspect_paths = [_resolve(p) for p in args.inspect_tasks]
     elif _DEFAULT_INSPECT.exists():
@@ -662,6 +690,7 @@ def main() -> int:
     else:
         inspect_paths = default_inspect_task_paths(ROOT)
     inspect_paths = [p for p in inspect_paths if p.exists()]
+    # Compose still needs inspect metadata for output format hints.
     inspect_by_id = load_inspect_registry(inspect_paths) if inspect_paths else None
 
     work_tasks = [_task_for_case(c, tasks_by_id) for c in cases]
@@ -673,13 +702,14 @@ def main() -> int:
             file=sys.stderr,
             flush=True,
         )
-    _require_inspect_registry_for_judge(
-        use_inspect_judge=use_inspect,
-        inspect_by_id=inspect_by_id,
-        inspect_paths_resolved=inspect_paths,
-        kit_root=ROOT,
-        tasks=work_tasks,
-    )
+    if not compose_only:
+        _require_inspect_registry_for_judge(
+            use_inspect_judge=use_inspect,
+            inspect_by_id=inspect_by_id,
+            inspect_paths_resolved=inspect_paths,
+            kit_root=ROOT,
+            tasks=work_tasks,
+        )
 
     evidence_fp = _evidence_fingerprint(cases)
     signature = _signature(
@@ -689,6 +719,7 @@ def main() -> int:
         budget_chars=int(args.budget_chars),
         inspect_judge=use_inspect,
         arm_key=_ARM_KEY,
+        compose_only=compose_only,
     )
     resumed = _load_checkpoint(ckpt_path, signature)
     pending_ids = [c["inspect_id"] for c in cases if c["inspect_id"] not in resumed]
@@ -713,6 +744,7 @@ def main() -> int:
             "n_pending": len(pending_ids),
             "pending_sample": pending_ids[:10],
             "inspect_judge": use_inspect,
+            "compose_only": compose_only,
             "dry_run": dry_run,
         },
     )
@@ -789,14 +821,18 @@ def main() -> int:
                 case=case, composed=composed, compose_seconds=compose_seconds
             )
             judge_t0 = time.perf_counter()
-            metrics = _fill_agg(
-                agg,
-                episode,
-                task,
-                hier_policy="nav",
-                inspect_by_id=inspect_by_id,
-                use_inspect_judge=use_inspect,
-            )
+            if compose_only:
+                metrics = _metrics_compose_only(case, episode)
+                _append_row_metrics_to_agg(agg, {"metrics": metrics})
+            else:
+                metrics = _fill_agg(
+                    agg,
+                    episode,
+                    task,
+                    hier_policy="nav",
+                    inspect_by_id=inspect_by_id,
+                    use_inspect_judge=use_inspect,
+                )
             judge_seconds = time.perf_counter() - judge_t0
             elapsed = time.perf_counter() - t0
             usage_after = snapshot_usage()
@@ -817,6 +853,7 @@ def main() -> int:
                 "frozen_evidence": True,
                 "source_gold_node_recall": case.get("gold_node_recall"),
                 "phase_timings": episode.phase_timings,
+                "compose_only": compose_only,
             }
             row = _build_row(task_idx=task_idx, task=task, iid=iid, arm_block=arm_block)
             cost_delta = {
@@ -840,8 +877,9 @@ def main() -> int:
             )
             newly_done += 1
             st = (metrics or {}).get("score_task")
+            mode = "compose_only" if compose_only else "compose+judge"
             print(
-                f"[compose] [{task_idx}/{len(cases)}] {iid} "
+                f"[compose] [{task_idx}/{len(cases)}] {iid} ({mode}) "
                 f"score_task={st} compose={compose_seconds:.1f}s judge={judge_seconds:.1f}s",
                 flush=True,
             )
@@ -876,6 +914,7 @@ def main() -> int:
                         "tasks": str(tasks_path),
                         "budget_chars": int(args.budget_chars),
                         "inspect_judge": use_inspect,
+                        "compose_only": compose_only,
                         "partial": True,
                         "n_rows": len(rows),
                         "n_failed": len(failed),
@@ -900,6 +939,7 @@ def main() -> int:
             "inspect_tasks": [str(p) for p in inspect_paths],
             "budget_chars": int(args.budget_chars),
             "inspect_judge": use_inspect,
+            "compose_only": compose_only,
             "arm_key": _ARM_KEY,
             "evidence_fingerprint": evidence_fp,
             "checkpoint": str(ckpt_path),

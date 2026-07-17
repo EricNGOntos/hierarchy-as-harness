@@ -277,6 +277,10 @@ def run_nav_episode(
     mult = float(getattr(cfg, "scope_inline_summary_budget_mult", 0.0) or 0.0)
     if mult > 0.0 and int(budget_chars) > 0:
         cfg.scope_inline_summary_char_limit = max(1, int(budget_chars * mult))
+    # Depth-0 oversize→DISPATCH threshold defaults to the evidence budget.
+    if bool(getattr(cfg, "enable_depth0_oversize_to_dispatch", False)):
+        if int(getattr(cfg, "depth0_oversize_char_limit", 0) or 0) <= 0:
+            cfg.depth0_oversize_char_limit = max(1, int(budget_chars))
     retrieval_t0 = time.perf_counter()
     ts = ToolSpace(tools)
     state = NavState(doc_id=doc_id, query=query, task_type=task_type)

@@ -1,0 +1,9 @@
+(eval):71: command not found: setsid
+WATCH_START 2026-07-17 12:16:30
+AGENT_COMPOSE_WATCH_START {"target":400}
+STOPPED 28/400 at 2026-07-17 12:16:51 — auto-resuming
+AGENT_COMPOSE_STOPPED {"n":28,"target":400,"action":"resume"}
+RESUMED pid=35368 n=28/400 2026-07-17 12:16:51
+AGENT_COMPOSE_RESUMED {"n":28,"pid":35368}
+DONE 401/400 at 2026-07-17 12:23:56
+AGENT_COMPOSE_DONE {"n":401,"target":400,"out":"results/latest_clean400_map_nav_waterfill_oversize_compose_only_b500.json"}

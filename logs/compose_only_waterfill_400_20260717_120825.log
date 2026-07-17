@@ -1,0 +1,35 @@
+[llm-cache] saved purpose=compose model=qwen3.5-flash
+[compose] [1/400] latest_clean_niche_0001 (compose_only) score_task=nan compose=1.1s judge=0.0s
+[llm-cache] saved purpose=compose model=qwen3.5-flash
+[compose] [2/400] latest_clean_niche_0002 (compose_only) score_task=nan compose=1.0s judge=0.0s
+[llm-cache] hit purpose=compose model=qwen3.5-flash
+[compose] [3/400] latest_clean_niche_0007 (compose_only) score_task=nan compose=0.0s judge=0.0s
+[llm-cache] hit purpose=compose model=qwen3.5-flash
+[compose] [4/400] latest_clean_niche_0009 (compose_only) score_task=nan compose=0.0s judge=0.0s
+[llm-cache] hit purpose=compose model=qwen3.5-flash
+[compose] [5/400] latest_clean_niche_0012 (compose_only) score_task=nan compose=0.0s judge=0.0s
+[llm-cache] hit purpose=compose model=qwen3.5-flash
+[compose] [6/400] latest_clean_niche_0017 (compose_only) score_task=nan compose=0.0s judge=0.0s
+[llm-cache] hit purpose=compose model=qwen3.5-flash
+[compose] [7/400] latest_clean_niche_0020 (compose_only) score_task=nan compose=0.0s judge=0.0s
+[llm-cache] hit purpose=compose model=qwen3.5-flash
+[compose] [8/400] latest_clean_niche_0023 (compose_only) score_task=nan compose=0.0s judge=0.0s
+[llm-cache] saved purpose=compose model=qwen3.5-flash
+[compose] [9/400] latest_clean_niche_0027 (compose_only) score_task=nan compose=0.8s judge=0.0s
+[llm-cache] hit purpose=compose model=qwen3.5-flash
+[compose] [10/400] latest_clean_niche_0028 (compose_only) score_task=nan compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_compose_only_b500.json
+[llm-cache] hit purpose=compose model=qwen3.5-flash
+[compose] [11/400] latest_clean_niche_0029 (compose_only) score_task=nan compose=0.0s judge=0.0s
+[llm-cache] hit purpose=compose model=qwen3.5-flash
+[compose] [12/400] latest_clean_niche_0036 (compose_only) score_task=nan compose=0.0s judge=0.0s
+[llm-cache] saved purpose=compose model=qwen3.5-flash
+[compose] [13/400] latest_clean_niche_0038 (compose_only) score_task=nan compose=1.1s judge=0.0s
+[llm-cache] saved purpose=compose model=qwen3.5-flash
+[compose] [14/400] latest_clean_niche_0040 (compose_only) score_task=nan compose=1.5s judge=0.0s
+[llm-cache] hit purpose=compose model=qwen3.5-flash
+[compose] [15/400] latest_clean_niche_0043 (compose_only) score_task=nan compose=0.0s judge=0.0s
+[llm-cache] hit purpose=compose model=qwen3.5-flash
+[compose] [16/400] latest_clean_niche_0047 (compose_only) score_task=nan compose=0.0s judge=0.0s
+[llm-cache] saved purpose=compose model=qwen3.5-flash
+[compose] [17/400] latest_clean_niche_0050 (compose_only) score_task=nan compose=0.8s judge=0.0s
