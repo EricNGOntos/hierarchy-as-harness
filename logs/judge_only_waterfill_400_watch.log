@@ -1,0 +1,928 @@
+[compose] reuse-compose-from /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_compose_only_b500.json: 400 answers
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [1/400] latest_clean_niche_0001 (judge_only) score_task=0.0 compose=0.0s judge=3.3s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [2/400] latest_clean_niche_0002 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [3/400] latest_clean_niche_0007 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [4/400] latest_clean_niche_0009 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [5/400] latest_clean_niche_0012 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [6/400] latest_clean_niche_0017 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [7/400] latest_clean_niche_0020 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [8/400] latest_clean_niche_0023 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [9/400] latest_clean_niche_0027 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [10/400] latest_clean_niche_0028 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [11/400] latest_clean_niche_0029 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [12/400] latest_clean_niche_0036 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [13/400] latest_clean_niche_0038 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [14/400] latest_clean_niche_0040 (judge_only) score_task=0.0 compose=0.0s judge=3.2s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [15/400] latest_clean_niche_0043 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [16/400] latest_clean_niche_0047 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [17/400] latest_clean_niche_0050 (judge_only) score_task=0.0 compose=0.0s judge=2.8s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [18/400] latest_clean_niche_0056 (judge_only) score_task=0.0 compose=0.0s judge=2.1s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [19/400] latest_clean_niche_0064 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [20/400] latest_clean_niche_0065 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [21/400] latest_clean_niche_0068 (judge_only) score_task=0.0 compose=0.0s judge=2.6s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [22/400] latest_clean_niche_0073 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [23/400] latest_clean_niche_0089 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [24/400] latest_clean_niche_0096 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [25/400] latest_clean_niche_0102 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [26/400] latest_clean_niche_0107 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [27/400] latest_clean_niche_0114 (judge_only) score_task=0.0 compose=0.0s judge=2.8s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [28/400] latest_clean_niche_0127 (judge_only) score_task=0.0 compose=0.0s judge=2.8s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [29/400] latest_clean_niche_0131 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [30/400] latest_clean_niche_0136 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [31/400] latest_clean_niche_0144 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [32/400] latest_clean_niche_0153 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [33/400] latest_clean_niche_0160 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [34/400] latest_clean_niche_0175 (judge_only) score_task=0.25 compose=0.0s judge=3.5s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [35/400] latest_clean_niche_0177 (judge_only) score_task=0.0 compose=0.0s judge=3.3s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [36/400] latest_clean_niche_0179 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [37/400] latest_clean_niche_0183 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [38/400] latest_clean_niche_0189 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [39/400] latest_clean_niche_0191 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [40/400] latest_clean_niche_0193 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [41/400] latest_clean_niche_0198 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [42/400] latest_clean_niche_0200 (judge_only) score_task=0.0 compose=0.0s judge=2.2s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [43/400] latest_clean_niche_0201 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [44/400] latest_clean_niche_0209 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [45/400] latest_clean_niche_0212 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [46/400] latest_clean_niche_0214 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [47/400] latest_clean_niche_0219 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [48/400] latest_clean_niche_0222 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [49/400] latest_clean_niche_0223 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [50/400] latest_clean_niche_0226 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [51/400] latest_clean_niche_0229 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [52/400] latest_clean_niche_0233 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [53/400] latest_clean_niche_0236 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [54/400] latest_clean_niche_0242 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [55/400] latest_clean_niche_0248 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [56/400] latest_clean_niche_0249 (judge_only) score_task=0.0 compose=0.0s judge=2.1s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [57/400] latest_clean_niche_0250 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [58/400] latest_clean_niche_0256 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [59/400] latest_clean_niche_0258 (judge_only) score_task=0.0 compose=0.0s judge=2.2s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [60/400] latest_clean_niche_0269 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [61/400] latest_clean_niche_0275 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [62/400] latest_clean_niche_0279 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [63/400] latest_clean_niche_0284 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [64/400] latest_clean_niche_0287 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [65/400] latest_clean_niche_0293 (judge_only) score_task=0.0 compose=0.0s judge=2.4s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [66/400] latest_clean_niche_0300 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [67/400] latest_clean_niche_0306 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [68/400] latest_clean_niche_0309 (judge_only) score_task=1.0 compose=0.0s judge=1.9s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [69/400] latest_clean_niche_0318 (judge_only) score_task=1.0 compose=0.0s judge=2.4s
+[compose] [70/400] latest_clean_niche_0321 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [71/400] latest_clean_niche_0325 (judge_only) score_task=0.0 compose=0.0s judge=2.4s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [72/400] latest_clean_niche_0344 (judge_only) score_task=0.0 compose=0.0s judge=2.5s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [73/400] latest_clean_niche_0355 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [74/400] latest_clean_niche_0359 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [75/400] latest_clean_niche_0367 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [76/400] latest_clean_niche_0370 (judge_only) score_task=0.0 compose=0.0s judge=3.4s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [77/400] latest_clean_niche_0380 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [78/400] latest_clean_niche_0385 (judge_only) score_task=0.0 compose=0.0s judge=2.2s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [79/400] latest_clean_niche_0401 (judge_only) score_task=0.0 compose=0.0s judge=2.1s
+[compose] [80/400] latest_clean_niche_0413 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [81/400] latest_clean_niche_0443 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [82/400] latest_clean_niche_0449 (judge_only) score_task=0.0 compose=0.0s judge=1.9s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [83/400] latest_clean_niche_0455 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [84/400] latest_clean_niche_0460 (judge_only) score_task=0.0 compose=0.0s judge=2.6s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [85/400] latest_clean_niche_0467 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [86/400] latest_clean_niche_0473 (judge_only) score_task=1.0 compose=0.0s judge=2.2s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [87/400] latest_clean_niche_0482 (judge_only) score_task=0.0 compose=0.0s judge=3.1s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [88/400] latest_clean_niche_0493 (judge_only) score_task=0.0 compose=0.0s judge=2.8s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [89/400] latest_clean_niche_0494 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [90/400] latest_clean_niche_0500 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [91/400] latest_clean_niche_0504 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [92/400] latest_clean_niche_0507 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [93/400] latest_clean_niche_0510 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [94/400] latest_clean_niche_0516 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [95/400] latest_clean_niche_0519 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [96/400] latest_clean_niche_0525 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [97/400] latest_clean_niche_0531 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [98/400] latest_clean_niche_0543 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [99/400] latest_clean_niche_0551 (judge_only) score_task=0.0 compose=0.0s judge=3.7s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [100/400] latest_clean_niche_0553 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [101/400] latest_clean_niche_0554 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [102/400] latest_clean_niche_0567 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [103/400] latest_clean_niche_0571 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [104/400] latest_clean_niche_0572 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [105/400] latest_clean_niche_0574 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [106/400] latest_clean_niche_0577 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [107/400] latest_clean_niche_0579 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [108/400] latest_clean_niche_0588 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [109/400] latest_clean_niche_0593 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [110/400] latest_clean_niche_0595 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [111/400] latest_clean_niche_0597 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [112/400] latest_clean_niche_0599 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [113/400] latest_clean_niche_0600 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [114/400] latest_clean_niche_0610 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [115/400] latest_clean_niche_0611 (judge_only) score_task=0.0 compose=0.0s judge=3.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [116/400] latest_clean_niche_0626 (judge_only) score_task=0.0 compose=0.0s judge=2.7s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [117/400] latest_clean_niche_0640 (judge_only) score_task=0.0 compose=0.0s judge=3.5s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [118/400] latest_clean_niche_0641 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [119/400] latest_clean_niche_0649 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [120/400] latest_clean_niche_0657 (judge_only) score_task=0.0 compose=0.0s judge=2.5s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [121/400] latest_clean_niche_0690 (judge_only) score_task=0.0 compose=0.0s judge=2.6s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [122/400] latest_clean_niche_0711 (judge_only) score_task=0.0 compose=0.0s judge=2.8s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [123/400] latest_clean_niche_0741 (judge_only) score_task=1.0 compose=0.0s judge=2.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [124/400] latest_clean_niche_0759 (judge_only) score_task=0.0 compose=0.0s judge=2.7s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [125/400] latest_clean_niche_0785 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [126/400] latest_clean_niche_0790 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [127/400] latest_clean_niche_0795 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [128/400] latest_clean_niche_0799 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [129/400] latest_clean_niche_0803 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [130/400] latest_clean_niche_0805 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [131/400] latest_clean_niche_0807 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [132/400] latest_clean_niche_0810 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [133/400] latest_clean_niche_0811 (judge_only) score_task=0.0 compose=0.0s judge=3.2s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [134/400] latest_clean_niche_0821 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [135/400] real_69c60971d4242eda8c47c605_multi_hop_1 (judge_only) score_task=0.0 compose=0.0s judge=2.3s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [136/400] real_69c6ef484cca74801cb63bb9_multi_hop_auto_0001 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [137/400] real_69c6ef484cca74801cb63bb9_multi_hop_auto_0003 (judge_only) score_task=0.0 compose=0.0s judge=8.4s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [138/400] real_69c6ef484cca74801cb63bb9_multi_hop_auto_0005 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [139/400] real_69c6ef484cca74801cb63bb9_multi_hop_auto_0006 (judge_only) score_task=0.0 compose=0.0s judge=2.4s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [140/400] real_69c6f1d94cca74801cb63e0c_multi_hop_auto_0041 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [141/400] real_69c6f1d94cca74801cb63e0c_multi_hop_auto_0042 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [142/400] real_69c6f1d94cca74801cb63e0c_multi_hop_auto_0043 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [143/400] real_69c6f1d94cca74801cb63e0c_multi_hop_auto_0044 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [144/400] latest_clean_multi_0010 (judge_only) score_task=0.0 compose=0.0s judge=7.2s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [145/400] latest_clean_multi_0011 (judge_only) score_task=0.0 compose=0.0s judge=10.7s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [146/400] latest_clean_multi_0016 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [147/400] latest_clean_multi_0018 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [148/400] latest_clean_multi_0021 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [149/400] latest_clean_multi_0026 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [150/400] latest_clean_multi_0029 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [151/400] latest_clean_multi_0032 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [152/400] latest_clean_multi_0036 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [153/400] latest_clean_multi_0037 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [154/400] latest_clean_multi_0038 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [155/400] latest_clean_multi_0044 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [156/400] latest_clean_multi_0046 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [157/400] latest_clean_multi_0048 (judge_only) score_task=0.0 compose=0.0s judge=5.2s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [158/400] latest_clean_multi_0051 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [159/400] latest_clean_multi_0055 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [160/400] latest_clean_multi_0058 (judge_only) score_task=0.0 compose=0.0s judge=10.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [161/400] latest_clean_multi_0064 (judge_only) score_task=0.0 compose=0.0s judge=2.7s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [162/400] latest_clean_multi_0072 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [163/400] latest_clean_multi_0073 (judge_only) score_task=0.0 compose=0.0s judge=8.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [164/400] latest_clean_multi_0075 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [165/400] latest_clean_multi_0080 (judge_only) score_task=0.0 compose=0.0s judge=6.5s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [166/400] latest_clean_multi_0096 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [167/400] latest_clean_multi_0103 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [168/400] latest_clean_multi_0109 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [169/400] latest_clean_multi_0114 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [170/400] latest_clean_multi_0120 (judge_only) score_task=0.0 compose=0.0s judge=8.8s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [171/400] latest_clean_multi_0133 (judge_only) score_task=0.0 compose=0.0s judge=9.4s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [172/400] latest_clean_multi_0137 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [173/400] latest_clean_multi_0142 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [174/400] latest_clean_multi_0150 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [175/400] latest_clean_multi_0158 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] [176/400] latest_clean_multi_0165 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [177/400] latest_clean_multi_0180 (judge_only) score_task=0.0 compose=0.0s judge=10.1s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [178/400] latest_clean_multi_0182 (judge_only) score_task=0.0 compose=0.0s judge=7.9s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [179/400] latest_clean_multi_0184 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [180/400] latest_clean_multi_0188 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [181/400] latest_clean_multi_0193 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [182/400] latest_clean_multi_0195 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [183/400] latest_clean_multi_0197 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [184/400] latest_clean_multi_0202 (judge_only) score_task=0.0 compose=0.0s judge=5.5s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [185/400] latest_clean_multi_0204 (judge_only) score_task=0.0 compose=0.0s judge=9.9s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [186/400] latest_clean_multi_0205 (judge_only) score_task=0.0 compose=0.0s judge=7.3s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [187/400] latest_clean_multi_0213 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [188/400] latest_clean_multi_0216 (judge_only) score_task=0.0 compose=0.0s judge=8.3s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [189/400] latest_clean_multi_0218 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [190/400] latest_clean_multi_0223 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [191/400] latest_clean_multi_0226 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [192/400] latest_clean_multi_0227 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [193/400] latest_clean_multi_0230 (judge_only) score_task=0.0 compose=0.0s judge=7.7s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [194/400] latest_clean_multi_0233 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [195/400] latest_clean_multi_0237 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [196/400] latest_clean_multi_0240 (judge_only) score_task=0.0 compose=0.0s judge=8.1s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [197/400] latest_clean_multi_0246 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [198/400] latest_clean_multi_0251 (judge_only) score_task=0.0 compose=0.0s judge=6.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [199/400] latest_clean_multi_0252 (judge_only) score_task=0.0 compose=0.0s judge=5.8s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [200/400] latest_clean_multi_0253 (judge_only) score_task=0.25 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [201/400] latest_clean_multi_0259 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [202/400] latest_clean_multi_0261 (judge_only) score_task=0.0 compose=0.0s judge=9.1s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [203/400] latest_clean_multi_0272 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [204/400] latest_clean_multi_0278 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [205/400] latest_clean_multi_0282 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [206/400] latest_clean_multi_0287 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [207/400] latest_clean_multi_0290 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [208/400] latest_clean_multi_0296 (judge_only) score_task=0.0 compose=0.0s judge=10.1s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [209/400] latest_clean_multi_0303 (judge_only) score_task=0.0 compose=0.0s judge=6.9s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [210/400] latest_clean_multi_0309 (judge_only) score_task=0.0 compose=0.0s judge=8.6s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [211/400] latest_clean_multi_0312 (judge_only) score_task=0.0 compose=0.0s judge=5.1s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [212/400] latest_clean_multi_0321 (judge_only) score_task=0.0 compose=0.0s judge=5.8s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [213/400] latest_clean_multi_0324 (judge_only) score_task=0.6667 compose=0.0s judge=2.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [214/400] latest_clean_multi_0328 (judge_only) score_task=0.3333 compose=0.0s judge=8.2s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [215/400] latest_clean_multi_0347 (judge_only) score_task=0.3333 compose=0.0s judge=7.8s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [216/400] latest_clean_multi_0358 (judge_only) score_task=0.0 compose=0.0s judge=8.7s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [217/400] latest_clean_multi_0362 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [218/400] latest_clean_multi_0369 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [219/400] latest_clean_multi_0372 (judge_only) score_task=0.0 compose=0.0s judge=8.7s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [220/400] latest_clean_multi_0382 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [221/400] latest_clean_multi_0387 (judge_only) score_task=0.0 compose=0.0s judge=8.5s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [222/400] latest_clean_multi_0403 (judge_only) score_task=0.3333 compose=0.0s judge=8.5s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [223/400] latest_clean_multi_0415 (judge_only) score_task=0.3333 compose=0.0s judge=2.2s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [224/400] latest_clean_multi_0445 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [225/400] latest_clean_multi_0451 (judge_only) score_task=0.0 compose=0.0s judge=7.7s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [226/400] latest_clean_multi_0457 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [227/400] latest_clean_multi_0462 (judge_only) score_task=0.0 compose=0.0s judge=7.9s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [228/400] latest_clean_multi_0469 (judge_only) score_task=0.0 compose=0.0s judge=5.6s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [229/400] latest_clean_multi_0475 (judge_only) score_task=0.0 compose=0.0s judge=8.5s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [230/400] latest_clean_multi_0484 (judge_only) score_task=0.0 compose=0.0s judge=6.1s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [231/400] latest_clean_multi_0495 (judge_only) score_task=0.0 compose=0.0s judge=8.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [232/400] latest_clean_multi_0496 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [233/400] latest_clean_multi_0502 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [234/400] latest_clean_multi_0506 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [235/400] latest_clean_multi_0509 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [236/400] latest_clean_multi_0512 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [237/400] latest_clean_multi_0518 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [238/400] latest_clean_multi_0521 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [239/400] latest_clean_multi_0527 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [240/400] latest_clean_multi_0533 (judge_only) score_task=0.0 compose=0.0s judge=3.1s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [241/400] latest_clean_multi_0544 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [242/400] latest_clean_multi_0552 (judge_only) score_task=0.0 compose=0.0s judge=8.2s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [243/400] latest_clean_multi_0554 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [244/400] latest_clean_multi_0555 (judge_only) score_task=0.0 compose=0.0s judge=5.2s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [245/400] latest_clean_multi_0568 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [246/400] latest_clean_multi_0572 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [247/400] latest_clean_multi_0573 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [248/400] latest_clean_multi_0575 (judge_only) score_task=0.0 compose=0.0s judge=3.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [249/400] latest_clean_multi_0578 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [250/400] latest_clean_multi_0580 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [251/400] latest_clean_multi_0589 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [252/400] latest_clean_multi_0594 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [253/400] latest_clean_multi_0596 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [254/400] latest_clean_multi_0598 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [255/400] latest_clean_multi_0600 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [256/400] latest_clean_multi_0601 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [257/400] latest_clean_multi_0611 (judge_only) score_task=0.0 compose=0.0s judge=8.1s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [258/400] latest_clean_multi_0612 (judge_only) score_task=0.0 compose=0.0s judge=7.9s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [259/400] latest_clean_multi_0627 (judge_only) score_task=0.0 compose=0.0s judge=5.7s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [260/400] latest_clean_multi_0641 (judge_only) score_task=0.0 compose=0.0s judge=8.7s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [261/400] latest_clean_multi_0642 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[compose] [262/400] latest_clean_multi_0650 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [263/400] latest_clean_multi_0658 (judge_only) score_task=0.0 compose=0.0s judge=8.4s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [264/400] latest_clean_multi_0691 (judge_only) score_task=0.0 compose=0.0s judge=8.3s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [265/400] latest_clean_multi_0712 (judge_only) score_task=0.0 compose=0.0s judge=11.5s
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [266/400] latest_clean_multi_0742 (judge_only) score_task=0.0 compose=0.0s judge=10.4s
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] hit purpose=judge model=deepseek-v4-pro
+[llm-cache] saved purpose=judge model=deepseek-v4-pro
+[compose] [267/400] latest_clean_multi_0760 (judge_only) score_task=0.0 compose=0.0s judge=3.4s
+[compose] [268/400] real_69c60974d4242eda8c47c615_scope_collection_auto_0029 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [269/400] real_69c60974d4242eda8c47c615_scope_collection_auto_0030 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [270/400] real_69c60974d4242eda8c47c615_scope_collection_auto_0031 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] [271/400] real_69c60974d4242eda8c47c615_scope_collection_auto_0032 (judge_only) score_task=0.8571 compose=0.0s judge=0.0s
+[compose] [272/400] real_69c6ef4e4cca74801cb63bc6_scope_collection_auto_0061 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[compose] [273/400] real_69c6ef4e4cca74801cb63bc6_scope_collection_auto_0062 (judge_only) score_task=0.9015 compose=0.0s judge=0.0s
+[compose] [274/400] real_69c6ef4e4cca74801cb63bc6_scope_collection_auto_0063 (judge_only) score_task=0.4286 compose=0.0s judge=0.0s
+[compose] [275/400] real_69c6ef4e4cca74801cb63bc6_scope_collection_auto_0064 (judge_only) score_task=0.5 compose=0.0s judge=0.0s
+[compose] [276/400] real_69c6f1d84cca74801cb63e02_scope_collection_auto_0067 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [277/400] real_69c6f1d84cca74801cb63e02_scope_collection_auto_0068 (judge_only) score_task=0.6 compose=0.0s judge=0.0s
+[compose] [278/400] real_69c6f4854cca74801cb63f43_scope_collection_auto_0045 (judge_only) score_task=0.5 compose=0.0s judge=0.0s
+[compose] [279/400] real_69c6f4854cca74801cb63f43_scope_collection_auto_0046 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [280/400] real_69c6f4854cca74801cb63f43_scope_collection_auto_0047 (judge_only) score_task=0.25 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] [281/400] real_69c6f4854cca74801cb63f43_scope_collection_auto_0048 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [282/400] real_69cb12d0919452cda2225a0b_scope_collection_auto_0073 (judge_only) score_task=0.9688 compose=0.0s judge=0.0s
+[compose] [283/400] real_69cb12d0919452cda2225a0b_scope_collection_auto_0076 (judge_only) score_task=0.3786 compose=0.0s judge=0.0s
+[compose] [284/400] latest_clean_scope_0017 (judge_only) score_task=0.163 compose=0.0s judge=0.0s
+[compose] [285/400] latest_clean_scope_0018 (judge_only) score_task=0.5 compose=0.0s judge=0.0s
+[compose] [286/400] latest_clean_scope_0019 (judge_only) score_task=0.8 compose=0.0s judge=0.0s
+[compose] [287/400] latest_clean_scope_0020 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[compose] [288/400] latest_clean_scope_0021 (judge_only) score_task=0.1667 compose=0.0s judge=0.0s
+[compose] [289/400] latest_clean_scope_0022 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [290/400] latest_clean_scope_0023 (judge_only) score_task=0.6404 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] [291/400] latest_clean_scope_0024 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [292/400] latest_clean_scope_0025 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[compose] [293/400] latest_clean_scope_0027 (judge_only) score_task=0.2122 compose=0.0s judge=0.0s
+[compose] [294/400] latest_clean_scope_0028 (judge_only) score_task=0.5 compose=0.0s judge=0.0s
+[compose] [295/400] latest_clean_scope_0029 (judge_only) score_task=0.5 compose=0.0s judge=0.0s
+[compose] [296/400] latest_clean_scope_0030 (judge_only) score_task=0.1667 compose=0.0s judge=0.0s
+[compose] [297/400] latest_clean_scope_0031 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[compose] [298/400] latest_clean_scope_0032 (judge_only) score_task=0.6211 compose=0.0s judge=0.0s
+[compose] [299/400] latest_clean_scope_0033 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[compose] [300/400] latest_clean_scope_0035 (judge_only) score_task=0.5 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] [301/400] latest_clean_scope_0036 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [302/400] latest_clean_scope_0037 (judge_only) score_task=0.1667 compose=0.0s judge=0.0s
+[compose] [303/400] latest_clean_scope_0040 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [304/400] latest_clean_scope_0041 (judge_only) score_task=0.1667 compose=0.0s judge=0.0s
+[compose] [305/400] latest_clean_scope_0042 (judge_only) score_task=0.5 compose=0.0s judge=0.0s
+[compose] [306/400] latest_clean_scope_0043 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[compose] [307/400] latest_clean_scope_0044 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [308/400] latest_clean_scope_0046 (judge_only) score_task=0.4709 compose=0.0s judge=0.0s
+[compose] [309/400] latest_clean_scope_0047 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] [310/400] latest_clean_scope_0048 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] [311/400] latest_clean_scope_0049 (judge_only) score_task=0.5 compose=0.0s judge=0.0s
+[compose] [312/400] latest_clean_scope_0050 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[compose] [313/400] latest_clean_scope_0051 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] [314/400] latest_clean_scope_0052 (judge_only) score_task=0.4693 compose=0.0s judge=0.0s
+[compose] [315/400] latest_clean_scope_0053 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [316/400] latest_clean_scope_0054 (judge_only) score_task=0.8264 compose=0.0s judge=0.0s
+[compose] [317/400] latest_clean_scope_0055 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [318/400] latest_clean_scope_0056 (judge_only) score_task=0.4778 compose=0.0s judge=0.0s
+[compose] [319/400] latest_clean_scope_0057 (judge_only) score_task=0.8333 compose=0.0s judge=0.0s
+[compose] [320/400] latest_clean_scope_0058 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] [321/400] latest_clean_scope_0059 (judge_only) score_task=0.6858 compose=0.0s judge=0.0s
+[compose] [322/400] latest_clean_scope_0060 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] [323/400] latest_clean_scope_0061 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [324/400] latest_clean_scope_0062 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[compose] [325/400] latest_clean_scope_0064 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [326/400] latest_clean_scope_0065 (judge_only) score_task=0.8033 compose=0.0s judge=0.0s
+[compose] [327/400] latest_clean_scope_0066 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [328/400] latest_clean_scope_0067 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [329/400] latest_clean_scope_0068 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [330/400] latest_clean_scope_0069 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] [331/400] latest_clean_scope_0070 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[compose] [332/400] latest_clean_scope_0071 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] [333/400] latest_clean_scope_0075 (judge_only) score_task=0.1667 compose=0.0s judge=0.0s
+[compose] [334/400] latest_clean_scope_0076 (judge_only) score_task=0.8333 compose=0.0s judge=0.0s
+[compose] [335/400] latest_clean_scope_0077 (judge_only) score_task=0.8333 compose=0.0s judge=0.0s
+[compose] [336/400] latest_clean_scope_0078 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [337/400] latest_clean_scope_0079 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] [338/400] latest_clean_scope_0080 (judge_only) score_task=0.8333 compose=0.0s judge=0.0s
+[compose] [339/400] latest_clean_scope_0081 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] [340/400] latest_clean_scope_0083 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] [341/400] latest_clean_scope_0084 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] [342/400] latest_clean_scope_0085 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [343/400] latest_clean_scope_0086 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] [344/400] latest_clean_scope_0087 (judge_only) score_task=0.5 compose=0.0s judge=0.0s
+[compose] [345/400] latest_clean_scope_0088 (judge_only) score_task=0.8333 compose=0.0s judge=0.0s
+[compose] [346/400] latest_clean_scope_0089 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [347/400] latest_clean_scope_0090 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] [348/400] latest_clean_scope_0091 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [349/400] latest_clean_scope_0092 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [350/400] latest_clean_scope_0093 (judge_only) score_task=0.2372 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] [351/400] latest_clean_scope_0095 (judge_only) score_task=0.5 compose=0.0s judge=0.0s
+[compose] [352/400] latest_clean_scope_0096 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [353/400] latest_clean_scope_0097 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [354/400] latest_clean_scope_0098 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [355/400] latest_clean_scope_0099 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [356/400] latest_clean_scope_0100 (judge_only) score_task=0.1928 compose=0.0s judge=0.0s
+[compose] [357/400] latest_clean_scope_0101 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [358/400] latest_clean_scope_0102 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [359/400] latest_clean_scope_0103 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [360/400] latest_clean_scope_0104 (judge_only) score_task=0.447 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] [361/400] latest_clean_scope_0105 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [362/400] latest_clean_scope_0107 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [363/400] latest_clean_scope_0108 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [364/400] latest_clean_scope_0109 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [365/400] latest_clean_scope_0110 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [366/400] latest_clean_scope_0111 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [367/400] latest_clean_scope_0112 (judge_only) score_task=0.5 compose=0.0s judge=0.0s
+[compose] [368/400] latest_clean_scope_0113 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [369/400] latest_clean_scope_0115 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [370/400] latest_clean_scope_0116 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] [371/400] latest_clean_scope_0117 (judge_only) score_task=0.6667 compose=0.0s judge=0.0s
+[compose] [372/400] latest_clean_scope_0119 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [373/400] latest_clean_scope_0122 (judge_only) score_task=0.4571 compose=0.0s judge=0.0s
+[compose] [374/400] latest_clean_scope_0124 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [375/400] latest_clean_scope_0129 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [376/400] latest_clean_scope_0130 (judge_only) score_task=0.1667 compose=0.0s judge=0.0s
+[compose] [377/400] latest_clean_scope_0131 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [378/400] latest_clean_scope_0132 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [379/400] latest_clean_scope_0133 (judge_only) score_task=0.1137 compose=0.0s judge=0.0s
+[compose] [380/400] latest_clean_scope_0135 (judge_only) score_task=0.1667 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] [381/400] latest_clean_scope_0136 (judge_only) score_task=0.1159 compose=0.0s judge=0.0s
+[compose] [382/400] latest_clean_scope_0137 (judge_only) score_task=0.317 compose=0.0s judge=0.0s
+[compose] [383/400] latest_clean_scope_0138 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [384/400] latest_clean_scope_0139 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [385/400] latest_clean_scope_0142 (judge_only) score_task=1.0 compose=0.0s judge=0.0s
+[compose] [386/400] latest_clean_scope_0144 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [387/400] latest_clean_scope_0145 (judge_only) score_task=0.5 compose=0.0s judge=0.0s
+[compose] [388/400] latest_clean_scope_0146 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [389/400] latest_clean_scope_0147 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [390/400] latest_clean_scope_0148 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] [391/400] latest_clean_scope_0149 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [392/400] latest_clean_scope_0150 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] [393/400] latest_clean_scope_0153 (judge_only) score_task=0.3333 compose=0.0s judge=0.0s
+[compose] [394/400] latest_clean_scope_0155 (judge_only) score_task=0.6257 compose=0.0s judge=0.0s
+[compose] [395/400] latest_clean_scope_0156 (judge_only) score_task=0.5 compose=0.0s judge=0.0s
+[compose] [396/400] latest_clean_scope_0157 (judge_only) score_task=0.6179 compose=0.0s judge=0.0s
+[compose] [397/400] latest_clean_scope_0158 (judge_only) score_task=0.8333 compose=0.0s judge=0.0s
+[compose] [398/400] latest_clean_scope_0159 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [399/400] latest_clean_scope_0160 (judge_only) score_task=0.0 compose=0.0s judge=0.0s
+[compose] [400/400] latest_clean_scope_0161 (judge_only) score_task=0.4833 compose=0.0s judge=0.0s
+[compose] flushed partial out -> /Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json
+[compose] done rows=400/400 failed=0 score_task_mean=0.2458225 out=/Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json checkpoint=/Users/wuchengke/Desktop/research-code/hierarchy-as-harness_f/cache/compose_from_replay_latest_clean400_map_nav_waterfill_oversize_judged_b500/checkpoint.jsonl

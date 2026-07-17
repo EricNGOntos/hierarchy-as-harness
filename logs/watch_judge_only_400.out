@@ -1,0 +1,8 @@
+WATCH_START 2026-07-17 13:04:03
+AGENT_JUDGE_WATCH_START {"target":400}
+STOPPED 0/400 at 2026-07-17 13:04:23 — auto-resuming
+AGENT_JUDGE_STOPPED {"n":0,"target":400,"action":"resume"}
+RESUMED pid=36533 n=0/400 2026-07-17 13:04:23
+AGENT_JUDGE_RESUMED {"n":0,"pid":36533}
+DONE 401/400 at 2026-07-17 13:12:49
+AGENT_JUDGE_DONE {"n":401,"target":400,"out":"results/latest_clean400_map_nav_waterfill_oversize_judged_b500.json"}

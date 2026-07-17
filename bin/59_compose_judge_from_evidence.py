@@ -252,6 +252,7 @@ def _signature(
     inspect_judge: bool,
     arm_key: str,
     compose_only: bool = False,
+    reuse_compose_from: str | None = None,
 ) -> str:
     payload = {
         "adapter": "compose_judge_from_frozen_evidence_v1",
@@ -262,6 +263,7 @@ def _signature(
         "budget_chars": int(budget_chars),
         "inspect_judge": bool(inspect_judge),
         "compose_only": bool(compose_only),
+        "reuse_compose_from": reuse_compose_from,
         "arm_key": arm_key,
         "compose_model": os.environ.get("COMPOSE_MODEL", "").strip(),
         "judge_model": os.environ.get("JUDGE_MODEL", "").strip(),
@@ -461,6 +463,33 @@ def _metrics_compose_only(case: dict[str, Any], episode: EpisodeResult) -> dict[
     }
 
 
+def _load_reuse_compose_map(path: Path) -> dict[str, str]:
+    """Load inspect_id -> composed_answer from a prior results JSON (compose-only ok)."""
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    rows = payload.get("rows") if isinstance(payload, dict) else None
+    if not isinstance(rows, list):
+        raise SystemExit(f"--reuse-compose-from must contain a rows list: {path}")
+    out: dict[str, str] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        iid = str(row.get("inspect_id") or "").strip()
+        if not iid:
+            continue
+        arm = row.get(_ARM_KEY) or row.get("hierarchical_gold") or {}
+        if not isinstance(arm, dict):
+            continue
+        ans = arm.get("composed_answer")
+        if ans is None:
+            continue
+        text = str(ans).strip()
+        if text:
+            out[iid] = text
+    if not out:
+        raise SystemExit(f"no reusable composed_answer rows in {path}")
+    return out
+
+
 def _episode_from_frozen(
     *,
     case: dict[str, Any],
@@ -562,6 +591,12 @@ def _build_argparser() -> argparse.ArgumentParser:
         "--compose-only",
         action="store_true",
         help="only run compose LLM; skip Inspect and semantic judge (score_task=NaN)",
+    )
+    p.add_argument(
+        "--reuse-compose-from",
+        type=Path,
+        default=None,
+        help="reuse composed_answer from a prior results JSON (judge-only; skip compose LLM)",
     )
     p.add_argument(
         "--stop-on-error",
@@ -682,6 +717,18 @@ def main() -> int:
         print(f"[compose] warn: {w}", flush=True)
 
     compose_only = bool(args.compose_only)
+    reuse_path = _resolve(args.reuse_compose_from) if args.reuse_compose_from else None
+    reuse_map: dict[str, str] = {}
+    if reuse_path is not None:
+        if compose_only:
+            raise SystemExit("--compose-only and --reuse-compose-from are mutually exclusive")
+        if not reuse_path.is_file():
+            raise SystemExit(f"missing --reuse-compose-from: {reuse_path}")
+        reuse_map = _load_reuse_compose_map(reuse_path)
+        print(
+            f"[compose] reuse-compose-from {reuse_path}: {len(reuse_map)} answers",
+            flush=True,
+        )
     use_inspect = (not bool(args.no_inspect_judge)) and (not compose_only)
     if args.inspect_tasks:
         inspect_paths = [_resolve(p) for p in args.inspect_tasks]
@@ -720,6 +767,9 @@ def main() -> int:
         inspect_judge=use_inspect,
         arm_key=_ARM_KEY,
         compose_only=compose_only,
+        reuse_compose_from=(
+            f"{reuse_path.resolve()}:{_file_sha256(reuse_path)}" if reuse_path else None
+        ),
     )
     resumed = _load_checkpoint(ckpt_path, signature)
     pending_ids = [c["inspect_id"] for c in cases if c["inspect_id"] not in resumed]
@@ -745,6 +795,7 @@ def main() -> int:
             "pending_sample": pending_ids[:10],
             "inspect_judge": use_inspect,
             "compose_only": compose_only,
+            "reuse_compose_from": str(reuse_path) if reuse_path else None,
             "dry_run": dry_run,
         },
     )
@@ -808,15 +859,24 @@ def main() -> int:
                 truncated_last=False,
             )
             compose_t0 = time.perf_counter()
-            composed = _make_composed_answer(
-                task,
-                fill,
-                budget_chars=int(args.budget_chars),
-                inspect_by_id=inspect_by_id,
-            )
+            reused = iid in reuse_map
+            if reused:
+                composed = reuse_map[iid]
+            else:
+                if reuse_map:
+                    raise RuntimeError(
+                        f"reuse-compose-from missing answer for {iid} "
+                        f"(have {len(reuse_map)} ids)"
+                    )
+                composed = _make_composed_answer(
+                    task,
+                    fill,
+                    budget_chars=int(args.budget_chars),
+                    inspect_by_id=inspect_by_id,
+                )
             if not str(composed or "").strip():
                 raise RuntimeError("compose returned empty answer")
-            compose_seconds = time.perf_counter() - compose_t0
+            compose_seconds = 0.0 if reused else (time.perf_counter() - compose_t0)
             episode = _episode_from_frozen(
                 case=case, composed=composed, compose_seconds=compose_seconds
             )
@@ -877,7 +937,12 @@ def main() -> int:
             )
             newly_done += 1
             st = (metrics or {}).get("score_task")
-            mode = "compose_only" if compose_only else "compose+judge"
+            if compose_only:
+                mode = "compose_only"
+            elif reused:
+                mode = "judge_only"
+            else:
+                mode = "compose+judge"
             print(
                 f"[compose] [{task_idx}/{len(cases)}] {iid} ({mode}) "
                 f"score_task={st} compose={compose_seconds:.1f}s judge={judge_seconds:.1f}s",
@@ -915,6 +980,7 @@ def main() -> int:
                         "budget_chars": int(args.budget_chars),
                         "inspect_judge": use_inspect,
                         "compose_only": compose_only,
+                        "reuse_compose_from": str(reuse_path) if reuse_path else None,
                         "partial": True,
                         "n_rows": len(rows),
                         "n_failed": len(failed),
@@ -940,6 +1006,7 @@ def main() -> int:
             "budget_chars": int(args.budget_chars),
             "inspect_judge": use_inspect,
             "compose_only": compose_only,
+            "reuse_compose_from": str(reuse_path) if reuse_path else None,
             "arm_key": _ARM_KEY,
             "evidence_fingerprint": evidence_fp,
             "checkpoint": str(ckpt_path),
