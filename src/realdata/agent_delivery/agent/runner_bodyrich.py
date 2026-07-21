@@ -50,7 +50,7 @@ import sys
 import time
 from pathlib import Path
 from statistics import mean
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 if __name__ == "__main__" and (__package__ is None or __package__ == ""):
     _root = Path(__file__).resolve().parents[2]
@@ -87,6 +87,61 @@ from ..code.llm_usage import reset_usage, snapshot_usage
 
 _POOL_MODE = os.environ.get("BODYRICH_POOL_MODE", "none").strip().lower()
 _NAV_RUNTIME: Dict[str, Any] = {"configured": False, "config": None, "policy": "rule"}
+
+SEARCH_SCOPE_TASK_DOC = "task_doc"
+SEARCH_SCOPE_TASK_CORPUS = "task_corpus"
+_VALID_SEARCH_SCOPES = {SEARCH_SCOPE_TASK_DOC, SEARCH_SCOPE_TASK_CORPUS}
+_VALID_ARMS = {"gold", "flat", "pred"}
+
+
+def _normalize_search_scope(raw: Optional[str]) -> str:
+    scope = str(raw or SEARCH_SCOPE_TASK_DOC).strip().lower() or SEARCH_SCOPE_TASK_DOC
+    if scope not in _VALID_SEARCH_SCOPES:
+        raise ValueError(
+            f"unsupported search_scope={raw!r}; expected one of {sorted(_VALID_SEARCH_SCOPES)}"
+        )
+    return scope
+
+
+def _parse_arms(raw: Optional[str], *, pred_enabled: bool) -> Set[str]:
+    if raw is None or not str(raw).strip():
+        arms = {"gold", "flat"}
+        if pred_enabled:
+            arms.add("pred")
+        return arms
+    parts = {p.strip().lower() for p in str(raw).split(",") if p.strip()}
+    bad = parts - _VALID_ARMS
+    if bad:
+        raise ValueError(f"unsupported arms={sorted(bad)}; expected subset of {sorted(_VALID_ARMS)}")
+    if not parts:
+        raise ValueError("arms must not be empty")
+    if "pred" in parts and not pred_enabled:
+        raise ValueError("arms includes pred but pred_jsonl is missing")
+    return parts
+
+
+def _doc_ids_from_tasks(tasks: Sequence[AgentTask]) -> Set[str]:
+    return {str(t.doc_id) for t in tasks if str(getattr(t, "doc_id", "") or "").strip()}
+
+
+def _episode_doc_id_for_arm(
+    task: AgentTask,
+    *,
+    search_scope: str,
+    arm: str,
+    hier_policy: str,
+) -> Optional[str]:
+    """task_doc: always lock to task.doc_id. task_corpus: Flat/compact/fixed search all loaded docs."""
+    scope = _normalize_search_scope(search_scope)
+    if scope == SEARCH_SCOPE_TASK_DOC:
+        return task.doc_id
+    if arm == "flat":
+        return None
+    policy = str(hier_policy or "").strip().lower()
+    if policy in {"nav", "toolspace"}:
+        return task.doc_id
+    # compact / fixed hierarchical under corpus scope → global over allowlisted docs
+    return None
 
 
 def _package_root() -> Path:
@@ -1553,6 +1608,8 @@ def _checkpoint_signature(
     hier_policy: str,
     inspect_judge: bool,
     inspect_tasks_paths: Optional[List[Path]],
+    search_scope: str = SEARCH_SCOPE_TASK_DOC,
+    arms: Optional[Sequence[str]] = None,
 ) -> str:
     payload = {
         "test_jsonl": str(test_jsonl.resolve()),
@@ -1567,6 +1624,8 @@ def _checkpoint_signature(
         "hier_policy": hier_policy,
         "inspect_judge": bool(inspect_judge),
         "inspect_tasks_paths": [str(p.resolve()) for p in (inspect_tasks_paths or [])],
+        "search_scope": _normalize_search_scope(search_scope),
+        "arms": sorted({str(a).strip().lower() for a in (arms or []) if str(a).strip()}),
         "compose_model": os.environ.get("COMPOSE_MODEL", "").strip(),
         "judge_model": os.environ.get("JUDGE_MODEL", "").strip(),
         "nav_model": os.environ.get("NAV_LLM_MODEL", "").strip(),
@@ -1718,8 +1777,8 @@ def _append_task_checkpoint(
 
 
 def _run_episodes_for_budget(
-    tools_g: HierarchicalTools,
-    tools_f: HierarchicalTools,
+    tools_g: Optional[HierarchicalTools],
+    tools_f: Optional[HierarchicalTools],
     tools_p: Optional[HierarchicalTools],
     tasks: List[AgentTask],
     budget_chars: int,
@@ -1731,6 +1790,8 @@ def _run_episodes_for_budget(
     use_inspect_judge: bool = False,
     checkpoint_jsonl: Optional[Path] = None,
     checkpoint_signature: str = "",
+    search_scope: str = SEARCH_SCOPE_TASK_DOC,
+    arms: Optional[Set[str]] = None,
 ) -> Tuple[
     Dict[str, List[float]],
     Dict[str, List[float]],
@@ -1738,6 +1799,20 @@ def _run_episodes_for_budget(
     List[Dict[str, Any]],
     Dict[str, Any],
 ]:
+    active_arms = arms or _parse_arms(None, pred_enabled=pred_enabled)
+    run_gold = "gold" in active_arms
+    run_flat = "flat" in active_arms
+    run_pred = "pred" in active_arms and pred_enabled
+    if run_gold and tools_g is None:
+        raise ValueError("arms includes gold but tools_g is None")
+    if run_flat and tools_f is None:
+        raise ValueError("arms includes flat but tools_f is None")
+    if run_pred and tools_p is None:
+        raise ValueError("arms includes pred but tools_p is None")
+    strat_tools = tools_g or tools_f or tools_p
+    if strat_tools is None:
+        raise ValueError("at least one of tools_g/tools_f/tools_p is required")
+
     agg_g = _empty_agg()
     agg_p = _empty_agg()
     agg_f = _empty_agg()
@@ -1762,11 +1837,11 @@ def _run_episodes_for_budget(
             if not isinstance(resumed_row, dict):
                 resumed_row = {}
             rows.append(resumed_row)
-            if isinstance(resumed_row.get("hierarchical_gold"), dict):
+            if run_gold and isinstance(resumed_row.get("hierarchical_gold"), dict):
                 _append_row_metrics_to_agg(agg_g, resumed_row["hierarchical_gold"])
-            if isinstance(resumed_row.get("flat"), dict):
+            if run_flat and isinstance(resumed_row.get("flat"), dict):
                 _append_row_metrics_to_agg(agg_f, resumed_row["flat"])
-            if pred_enabled and isinstance(resumed_row.get("hierarchical_pred"), dict):
+            if run_pred and isinstance(resumed_row.get("hierarchical_pred"), dict):
                 _append_row_metrics_to_agg(agg_p, resumed_row["hierarchical_pred"])
             cost_delta = resumed_record.get("cost_delta") if isinstance(resumed_record, dict) else {}
             if isinstance(cost_delta, dict):
@@ -1775,45 +1850,61 @@ def _run_episodes_for_budget(
                 print(f"[checkpoint] restored task {ti}/{len(tasks)}", file=sys.stderr, flush=True)
             continue
         cost_before_task = _cost_snapshot(cost)
-        strat = _stratification_fields(tools_g, task)
-        ep_g = _run_timed_arm(
-            cost,
-            "hierarchical_gold",
-            lambda: run_bodyrich_episode(
-                tools_g,
-                task.query,
-                doc_id=task.doc_id,
-                representation="hierarchical",
-                budget_chars=budget_chars,
-                route_m=route_m,
-                hier_policy=hier_policy,
-                task=task,
-                inspect_by_id=inspect_by_id,
-                compose_answer=not defer_compose_until_pool_control,
-            ),
-        )
-        ep_f = _run_timed_arm(
-            cost,
-            "flat",
-            lambda: run_flat_react_episode(
-                tools_f,
-                task.query,
-                doc_id=task.doc_id,
-                budget_chars=budget_chars,
-                task=task,
-                inspect_by_id=inspect_by_id,
-                compose_answer=not defer_compose_until_pool_control,
-            ),
-        )
+        strat = _stratification_fields(strat_tools, task)
+        ep_g: Optional[EpisodeResult] = None
+        if run_gold:
+            assert tools_g is not None
+            gold_doc_id = _episode_doc_id_for_arm(
+                task, search_scope=search_scope, arm="gold", hier_policy=hier_policy
+            )
+            ep_g = _run_timed_arm(
+                cost,
+                "hierarchical_gold",
+                lambda gold_doc_id=gold_doc_id: run_bodyrich_episode(
+                    tools_g,
+                    task.query,
+                    doc_id=gold_doc_id,
+                    representation="hierarchical",
+                    budget_chars=budget_chars,
+                    route_m=route_m,
+                    hier_policy=hier_policy,
+                    task=task,
+                    inspect_by_id=inspect_by_id,
+                    compose_answer=not defer_compose_until_pool_control,
+                ),
+            )
+        ep_f: Optional[EpisodeResult] = None
+        if run_flat:
+            assert tools_f is not None
+            flat_doc_id = _episode_doc_id_for_arm(
+                task, search_scope=search_scope, arm="flat", hier_policy=hier_policy
+            )
+            ep_f = _run_timed_arm(
+                cost,
+                "flat",
+                lambda flat_doc_id=flat_doc_id: run_flat_react_episode(
+                    tools_f,
+                    task.query,
+                    doc_id=flat_doc_id,
+                    budget_chars=budget_chars,
+                    task=task,
+                    inspect_by_id=inspect_by_id,
+                    compose_answer=not defer_compose_until_pool_control,
+                ),
+            )
         ep_p: Optional[EpisodeResult] = None
-        if tools_p is not None:
+        if run_pred:
+            assert tools_p is not None
+            pred_doc_id = _episode_doc_id_for_arm(
+                task, search_scope=search_scope, arm="pred", hier_policy=hier_policy
+            )
             ep_p = _run_timed_arm(
                 cost,
                 "hierarchical_pred",
-                lambda: run_bodyrich_episode(
+                lambda pred_doc_id=pred_doc_id: run_bodyrich_episode(
                     tools_p,
                     task.query,
-                    doc_id=task.doc_id,
+                    doc_id=pred_doc_id,
                     representation="hierarchical",
                     budget_chars=budget_chars,
                     route_m=route_m,
@@ -1824,16 +1915,22 @@ def _run_episodes_for_budget(
                 ),
             )
         if _POOL_MODE == "exact_matched":
-            h_pools = [len(ep_g.scored_chunks)]
+            h_pools = []
+            if ep_g is not None:
+                h_pools.append(len(ep_g.scored_chunks))
             if ep_p is not None:
                 h_pools.append(len(ep_p.scored_chunks))
             n_cap = min(h_pools) if h_pools else 0
-            f_cap = min(len(ep_f.scored_chunks), n_cap) if n_cap > 0 else len(ep_f.scored_chunks)
-            if n_cap > 0:
+            f_cap = (
+                min(len(ep_f.scored_chunks), n_cap)
+                if (ep_f is not None and n_cap > 0)
+                else (len(ep_f.scored_chunks) if ep_f is not None else 0)
+            )
+            if n_cap > 0 and ep_g is not None:
                 ep_g = _run_timed_arm(
                     cost,
                     "hierarchical_gold",
-                    lambda: _equalize_episode_pool(
+                    lambda ep_g=ep_g, n_cap=n_cap: _equalize_episode_pool(
                         ep_g,
                         n_cap,
                         budget_chars=budget_chars,
@@ -1841,10 +1938,11 @@ def _run_episodes_for_budget(
                         inspect_by_id=inspect_by_id,
                     ),
                 )
+            if n_cap > 0 and ep_f is not None:
                 ep_f = _run_timed_arm(
                     cost,
                     "flat",
-                    lambda: _equalize_episode_pool(
+                    lambda ep_f=ep_f, f_cap=f_cap: _equalize_episode_pool(
                         ep_f,
                         f_cap,
                         budget_chars=budget_chars,
@@ -1852,52 +1950,57 @@ def _run_episodes_for_budget(
                         inspect_by_id=inspect_by_id,
                     ),
                 )
-                if ep_p is not None:
-                    ep_p = _run_timed_arm(
-                        cost,
-                        "hierarchical_pred",
-                        lambda: _equalize_episode_pool(
-                            ep_p,
-                            n_cap,
-                            budget_chars=budget_chars,
-                            task=task,
-                            inspect_by_id=inspect_by_id,
-                        ),
-                    )
+            if n_cap > 0 and ep_p is not None:
+                ep_p = _run_timed_arm(
+                    cost,
+                    "hierarchical_pred",
+                    lambda ep_p=ep_p, n_cap=n_cap: _equalize_episode_pool(
+                        ep_p,
+                        n_cap,
+                        budget_chars=budget_chars,
+                        task=task,
+                        inspect_by_id=inspect_by_id,
+                    ),
+                )
         elif _POOL_MODE not in {"none", ""}:
             raise ValueError(
                 "unsupported BODYRICH_POOL_MODE="
                 f"{_POOL_MODE!r}; expected 'none' or 'exact_matched'"
             )
-        metrics_g = _run_timed_arm(
-            cost,
-            "hierarchical_gold",
-            lambda: _fill_agg(
-                agg_g,
-                ep_g,
-                task,
-                hier_policy=hier_policy,
-                inspect_by_id=inspect_by_id,
-                use_inspect_judge=use_inspect_judge,
-            ),
-        )
-        metrics_f = _run_timed_arm(
-            cost,
-            "flat",
-            lambda: _fill_agg(
-                agg_f,
-                ep_f,
-                task,
-                hier_policy="flat_react",
-                inspect_by_id=inspect_by_id,
-                use_inspect_judge=use_inspect_judge,
-            ),
-        )
-        metrics_p = (
-            _run_timed_arm(
+        metrics_g = None
+        if ep_g is not None:
+            metrics_g = _run_timed_arm(
+                cost,
+                "hierarchical_gold",
+                lambda ep_g=ep_g: _fill_agg(
+                    agg_g,
+                    ep_g,
+                    task,
+                    hier_policy=hier_policy,
+                    inspect_by_id=inspect_by_id,
+                    use_inspect_judge=use_inspect_judge,
+                ),
+            )
+        metrics_f = None
+        if ep_f is not None:
+            metrics_f = _run_timed_arm(
+                cost,
+                "flat",
+                lambda ep_f=ep_f: _fill_agg(
+                    agg_f,
+                    ep_f,
+                    task,
+                    hier_policy="flat_react",
+                    inspect_by_id=inspect_by_id,
+                    use_inspect_judge=use_inspect_judge,
+                ),
+            )
+        metrics_p = None
+        if ep_p is not None:
+            metrics_p = _run_timed_arm(
                 cost,
                 "hierarchical_pred",
-                lambda: _fill_agg(
+                lambda ep_p=ep_p: _fill_agg(
                     agg_p,
                     ep_p,
                     task,
@@ -1906,22 +2009,19 @@ def _run_episodes_for_budget(
                     use_inspect_judge=use_inspect_judge,
                 ),
             )
-            if ep_p is not None
-            else None
-        )
         row: Dict[str, Any] = {
             "task_idx": ti,
             "query": task.query,
             "doc_id": task.doc_id,
             "task_type": task.task_type,
-            "doc_line_count": strat["doc_line_count"],
-            "gold_level_primary": strat["gold_level_primary"],
-            "doc_lines_bucket": strat["doc_lines_bucket"],
-            "gold_level_bucket": strat["gold_level_bucket"],
             "gold_nodes": task.gold_nodes,
             "gold_answer": task.gold_answer,
             "inspect_id": getattr(task, "inspect_id", None),
-            "hierarchical_gold": {
+            "search_scope": _normalize_search_scope(search_scope),
+            **strat,
+        }
+        if ep_g is not None and metrics_g is not None:
+            row["hierarchical_gold"] = {
                 "n_scored_candidates": len(ep_g.scored_chunks),
                 "evidence_chars_actual": ep_g.evidence_chars_actual,
                 "evidence_text": ep_g.evidence_text,
@@ -1931,10 +2031,14 @@ def _run_episodes_for_budget(
                 "section_ids": ep_g.section_ids,
                 "retrieved_nodes": ep_g.retrieved_nodes,
                 "refusal_events": list(ep_g.refusal_events),
+                "search_doc_id": _episode_doc_id_for_arm(
+                    task, search_scope=search_scope, arm="gold", hier_policy=hier_policy
+                ),
                 "metrics": metrics_g,
                 "steps": [s.__dict__ for s in ep_g.steps],
-            },
-            "flat": {
+            }
+        if ep_f is not None and metrics_f is not None:
+            row["flat"] = {
                 "n_scored_candidates": len(ep_f.scored_chunks),
                 "evidence_chars_actual": ep_f.evidence_chars_actual,
                 "evidence_text": ep_f.evidence_text,
@@ -1942,11 +2046,13 @@ def _run_episodes_for_budget(
                 "trajectory_length": ep_f.trajectory_length,
                 "truncated_last": ep_f.truncated_last,
                 "retrieved_nodes": ep_f.retrieved_nodes,
+                "search_doc_id": _episode_doc_id_for_arm(
+                    task, search_scope=search_scope, arm="flat", hier_policy=hier_policy
+                ),
                 "metrics": metrics_f,
                 "steps": [s.__dict__ for s in ep_f.steps],
-            },
-        }
-        if ep_p is not None:
+            }
+        if ep_p is not None and metrics_p is not None:
             row["hierarchical_pred"] = {
                 "n_scored_candidates": len(ep_p.scored_chunks),
                 "evidence_chars_actual": ep_p.evidence_chars_actual,
@@ -1957,6 +2063,9 @@ def _run_episodes_for_budget(
                 "section_ids": ep_p.section_ids,
                 "retrieved_nodes": ep_p.retrieved_nodes,
                 "refusal_events": list(ep_p.refusal_events),
+                "search_doc_id": _episode_doc_id_for_arm(
+                    task, search_scope=search_scope, arm="pred", hier_policy=hier_policy
+                ),
                 "metrics": metrics_p,
                 "steps": [s.__dict__ for s in ep_p.steps],
             }
@@ -1966,6 +2075,7 @@ def _run_episodes_for_budget(
         if ti % 10 == 0 or ti == len(tasks):
             print(f"[checkpoint] saved task {ti}/{len(tasks)}", file=sys.stderr, flush=True)
     return agg_g, agg_p, agg_f, rows, cost
+
 
 
 def _prepare_episode_pools_for_fair_budget(
@@ -1978,6 +2088,7 @@ def _prepare_episode_pools_for_fair_budget(
     hier_policy: str,
     *,
     inspect_by_id: Optional[Dict[str, Dict[str, Any]]] = None,
+    search_scope: str = SEARCH_SCOPE_TASK_DOC,
 ) -> List[Tuple[AgentTask, Dict[str, Any], EpisodeResult, Optional[EpisodeResult], EpisodeResult, int]]:
     """Generate budget-independent candidate pools once for exact_matched multi-budget runs."""
     prepared: List[
@@ -1996,10 +2107,16 @@ def _prepare_episode_pools_for_fair_budget(
     start_idx = len(prepared)
     for ti, task in enumerate(tasks[start_idx:], start=start_idx + 1):
         strat = _stratification_fields(tools_g, task)
+        gold_doc_id = _episode_doc_id_for_arm(
+            task, search_scope=search_scope, arm="gold", hier_policy=hier_policy
+        )
+        flat_doc_id = _episode_doc_id_for_arm(
+            task, search_scope=search_scope, arm="flat", hier_policy=hier_policy
+        )
         ep_g = run_bodyrich_episode(
             tools_g,
             task.query,
-            doc_id=task.doc_id,
+            doc_id=gold_doc_id,
             representation="hierarchical",
             budget_chars=budget_chars,
             route_m=route_m,
@@ -2011,7 +2128,7 @@ def _prepare_episode_pools_for_fair_budget(
         ep_f = run_flat_react_episode(
             tools_f,
             task.query,
-            doc_id=task.doc_id,
+            doc_id=flat_doc_id,
             budget_chars=budget_chars,
             task=task,
             inspect_by_id=inspect_by_id,
@@ -2019,10 +2136,13 @@ def _prepare_episode_pools_for_fair_budget(
         )
         ep_p: Optional[EpisodeResult] = None
         if tools_p is not None:
+            pred_doc_id = _episode_doc_id_for_arm(
+                task, search_scope=search_scope, arm="pred", hier_policy=hier_policy
+            )
             ep_p = run_bodyrich_episode(
                 tools_p,
                 task.query,
-                doc_id=task.doc_id,
+                doc_id=pred_doc_id,
                 representation="hierarchical",
                 budget_chars=budget_chars,
                 route_m=route_m,
@@ -2273,12 +2393,24 @@ def run_bodyrich_experiment(
     inspect_judge: bool = False,
     inspect_tasks_paths: Optional[List[Path]] = None,
     checkpoint_dir: Path = Path("cache/gold_pred_flat"),
+    search_scope: str = SEARCH_SCOPE_TASK_DOC,
+    arms: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """统一入口：Gold vs Flat-ReAct（默认），或 Gold / Pred / Flat-ReAct 三联（提供 pred_jsonl 时）。"""
+    """统一入口：Gold vs Flat-ReAct（默认），或 Gold / Pred / Flat-ReAct 三联（提供 pred_jsonl 时）。
+
+    search_scope:
+      - task_doc: 每题检索锁定 task.doc_id（现状）
+      - task_corpus: 索引限定为 tasks 文件全部 doc_id；Flat/compact/fixed 在全局池检索
+    arms: 逗号分隔子集，如 ``flat`` / ``gold,flat``（默认按是否提供 pred 自动）
+    """
     _configure_bodyrich_task_judge()
-    tasks = _load_tasks(tasks_jsonl)
-    if max_tasks > 0:
-        tasks = tasks[:max_tasks]
+    search_scope = _normalize_search_scope(search_scope)
+    all_tasks = _load_tasks(tasks_jsonl)
+    corpus_doc_ids = _doc_ids_from_tasks(all_tasks)
+    tasks = all_tasks[:max_tasks] if max_tasks > 0 else all_tasks
+    pred_enabled = bool(pred_jsonl) and pred_jsonl.exists()  # type: ignore[union-attr]
+    active_arms = _parse_arms(arms, pred_enabled=pred_enabled)
+    doc_id_allowlist = corpus_doc_ids if search_scope == SEARCH_SCOPE_TASK_CORPUS else None
 
     # default_inspect_task_paths：datasets/realdata/… 在 bodyrich_delivery_kit 根下（与 delivery/ 并列）
     kit_root = Path(__file__).resolve().parents[4]
@@ -2299,38 +2431,60 @@ def run_bodyrich_experiment(
     )
 
     setup_cost: Dict[str, Dict[str, float]] = {}
-    t_data = time.perf_counter()
-    bundles_g = bundles_from_paths(test_jsonl, tree_source="gold", pred_path=None, max_docs=max_docs)
-    setup_cost["hierarchical_gold"] = {"data_load_seconds": time.perf_counter() - t_data}
-    _validate_task_gold_nodes_in_corpus(
-        tasks,
-        bundles_g,
-        context=f"run_bodyrich_experiment(test_jsonl={test_jsonl}, tasks={tasks_jsonl})",
-    )
-    t_data = time.perf_counter()
-    bundles_f = bundles_from_paths(test_jsonl, tree_source="flat", pred_path=None, max_docs=max_docs)
-    setup_cost["flat"] = {"data_load_seconds": time.perf_counter() - t_data}
-    t_index = time.perf_counter()
-    idx_g = CorpusIndex.from_bundles(
-        bundles_g, tree_mode="hierarchical", retrieval_backend=retrieval, embedding_model=embedding_model
-    )
-    setup_cost["hierarchical_gold"]["index_build_seconds"] = time.perf_counter() - t_index
-    t_index = time.perf_counter()
-    idx_f = CorpusIndex.from_bundles(
-        bundles_f, tree_mode="flat", retrieval_backend=retrieval, embedding_model=embedding_model
-    )
-    setup_cost["flat"]["index_build_seconds"] = time.perf_counter() - t_index
-    tools_g = HierarchicalTools(idx_g)
-    tools_f = HierarchicalTools(idx_f)
-
-    pred_enabled = bool(pred_jsonl) and pred_jsonl.exists()  # type: ignore[union-attr]
+    tools_g: Optional[HierarchicalTools] = None
+    tools_f: Optional[HierarchicalTools] = None
     tools_p: Optional[HierarchicalTools] = None
-    if pred_enabled:
+    bundles_for_validate = None
+
+    if "gold" in active_arms:
+        t_data = time.perf_counter()
+        bundles_g = bundles_from_paths(
+            test_jsonl,
+            tree_source="gold",
+            pred_path=None,
+            max_docs=max_docs,
+            doc_id_allowlist=doc_id_allowlist,
+        )
+        setup_cost["hierarchical_gold"] = {"data_load_seconds": time.perf_counter() - t_data}
+        bundles_for_validate = bundles_g
+        t_index = time.perf_counter()
+        idx_g = CorpusIndex.from_bundles(
+            bundles_g, tree_mode="hierarchical", retrieval_backend=retrieval, embedding_model=embedding_model
+        )
+        setup_cost["hierarchical_gold"]["index_build_seconds"] = time.perf_counter() - t_index
+        tools_g = HierarchicalTools(idx_g)
+
+    if "flat" in active_arms:
+        t_data = time.perf_counter()
+        bundles_f = bundles_from_paths(
+            test_jsonl,
+            tree_source="flat",
+            pred_path=None,
+            max_docs=max_docs,
+            doc_id_allowlist=doc_id_allowlist,
+        )
+        setup_cost["flat"] = {"data_load_seconds": time.perf_counter() - t_data}
+        if bundles_for_validate is None:
+            bundles_for_validate = bundles_f
+        t_index = time.perf_counter()
+        idx_f = CorpusIndex.from_bundles(
+            bundles_f, tree_mode="flat", retrieval_backend=retrieval, embedding_model=embedding_model
+        )
+        setup_cost["flat"]["index_build_seconds"] = time.perf_counter() - t_index
+        tools_f = HierarchicalTools(idx_f)
+
+    if "pred" in active_arms:
         t_data = time.perf_counter()
         bundles_p = bundles_from_paths(
-            test_jsonl, tree_source="pred", pred_path=pred_jsonl, max_docs=max_docs
+            test_jsonl,
+            tree_source="pred",
+            pred_path=pred_jsonl,
+            max_docs=max_docs,
+            doc_id_allowlist=doc_id_allowlist,
         )
         setup_cost["hierarchical_pred"] = {"data_load_seconds": time.perf_counter() - t_data}
+        if bundles_for_validate is None:
+            bundles_for_validate = bundles_p
         t_index = time.perf_counter()
         idx_p = CorpusIndex.from_bundles(
             bundles_p,
@@ -2340,6 +2494,14 @@ def run_bodyrich_experiment(
         )
         setup_cost["hierarchical_pred"]["index_build_seconds"] = time.perf_counter() - t_index
         tools_p = HierarchicalTools(idx_p)
+
+    if bundles_for_validate is None:
+        raise ValueError("no arms selected")
+    _validate_task_gold_nodes_in_corpus(
+        tasks,
+        bundles_for_validate,
+        context=f"run_bodyrich_experiment(test_jsonl={test_jsonl}, tasks={tasks_jsonl})",
+    )
 
     agg_g, agg_p, agg_f, rows, cost = _run_episodes_for_budget(
         tools_g,
@@ -2366,9 +2528,18 @@ def run_bodyrich_experiment(
             hier_policy=hier_policy,
             inspect_judge=inspect_judge,
             inspect_tasks_paths=inspect_tasks_paths,
+            search_scope=search_scope,
+            arms=sorted(active_arms),
         ),
+        search_scope=search_scope,
+        arms=active_arms,
     )
-    summary = _build_summary(agg_g, agg_p, agg_f, rows, pred_enabled)
+    summary = _build_summary(agg_g, agg_p, agg_f, rows, pred_enabled=("pred" in active_arms))
+    summary["config"]["search_scope"] = search_scope
+    summary["config"]["arms"] = sorted(active_arms)
+    summary["config"]["n_corpus_docs_indexed"] = (
+        len(doc_id_allowlist) if doc_id_allowlist is not None else None
+    )
     _apply_setup_cost(cost, setup_cost)
     _finalize_cost(cost)
     summary["cost"] = cost
@@ -2391,14 +2562,20 @@ def run_bodyrich_experiment_multi_budget(
     inspect_judge: bool = False,
     inspect_tasks_paths: Optional[List[Path]] = None,
     checkpoint_dir: Path = Path("cache/gold_pred_flat"),
+    search_scope: str = SEARCH_SCOPE_TASK_DOC,
+    arms: Optional[str] = None,
 ) -> List[Path]:
     """一次编码/索引，顺序跑多个 budget。out_template 必须含 '{budget}'。"""
     _configure_bodyrich_task_judge()
     if "{budget}" not in out_template:
         raise ValueError("out_template 必须包含 '{budget}' 占位符")
-    tasks = _load_tasks(tasks_jsonl)
-    if max_tasks > 0:
-        tasks = tasks[:max_tasks]
+    search_scope = _normalize_search_scope(search_scope)
+    all_tasks = _load_tasks(tasks_jsonl)
+    corpus_doc_ids = _doc_ids_from_tasks(all_tasks)
+    tasks = all_tasks[:max_tasks] if max_tasks > 0 else all_tasks
+    pred_enabled = bool(pred_jsonl) and pred_jsonl.exists()  # type: ignore[union-attr]
+    active_arms = _parse_arms(arms, pred_enabled=pred_enabled)
+    doc_id_allowlist = corpus_doc_ids if search_scope == SEARCH_SCOPE_TASK_CORPUS else None
 
     kit_root = Path(__file__).resolve().parents[4]
     use_inspect_judge = bool(inspect_judge)
@@ -2418,38 +2595,48 @@ def run_bodyrich_experiment_multi_budget(
     )
 
     setup_cost: Dict[str, Dict[str, float]] = {}
-    t_data = time.perf_counter()
-    bundles_g = bundles_from_paths(test_jsonl, tree_source="gold", pred_path=None, max_docs=max_docs)
-    setup_cost["hierarchical_gold"] = {"data_load_seconds": time.perf_counter() - t_data}
-    _validate_task_gold_nodes_in_corpus(
-        tasks,
-        bundles_g,
-        context=f"run_bodyrich_experiment_multi_budget(test_jsonl={test_jsonl}, tasks={tasks_jsonl})",
-    )
-    t_data = time.perf_counter()
-    bundles_f = bundles_from_paths(test_jsonl, tree_source="flat", pred_path=None, max_docs=max_docs)
-    setup_cost["flat"] = {"data_load_seconds": time.perf_counter() - t_data}
-    t_index = time.perf_counter()
-    idx_g = CorpusIndex.from_bundles(
-        bundles_g, tree_mode="hierarchical", retrieval_backend=retrieval, embedding_model=embedding_model
-    )
-    setup_cost["hierarchical_gold"]["index_build_seconds"] = time.perf_counter() - t_index
-    t_index = time.perf_counter()
-    idx_f = CorpusIndex.from_bundles(
-        bundles_f, tree_mode="flat", retrieval_backend=retrieval, embedding_model=embedding_model
-    )
-    setup_cost["flat"]["index_build_seconds"] = time.perf_counter() - t_index
-    tools_g = HierarchicalTools(idx_g)
-    tools_f = HierarchicalTools(idx_f)
-
-    pred_enabled = bool(pred_jsonl) and pred_jsonl.exists()  # type: ignore[union-attr]
+    tools_g: Optional[HierarchicalTools] = None
+    tools_f: Optional[HierarchicalTools] = None
     tools_p: Optional[HierarchicalTools] = None
-    if pred_enabled:
+    bundles_for_validate = None
+
+    if "gold" in active_arms:
+        t_data = time.perf_counter()
+        bundles_g = bundles_from_paths(
+            test_jsonl, tree_source="gold", pred_path=None, max_docs=max_docs, doc_id_allowlist=doc_id_allowlist
+        )
+        setup_cost["hierarchical_gold"] = {"data_load_seconds": time.perf_counter() - t_data}
+        bundles_for_validate = bundles_g
+        t_index = time.perf_counter()
+        idx_g = CorpusIndex.from_bundles(
+            bundles_g, tree_mode="hierarchical", retrieval_backend=retrieval, embedding_model=embedding_model
+        )
+        setup_cost["hierarchical_gold"]["index_build_seconds"] = time.perf_counter() - t_index
+        tools_g = HierarchicalTools(idx_g)
+
+    if "flat" in active_arms:
+        t_data = time.perf_counter()
+        bundles_f = bundles_from_paths(
+            test_jsonl, tree_source="flat", pred_path=None, max_docs=max_docs, doc_id_allowlist=doc_id_allowlist
+        )
+        setup_cost["flat"] = {"data_load_seconds": time.perf_counter() - t_data}
+        if bundles_for_validate is None:
+            bundles_for_validate = bundles_f
+        t_index = time.perf_counter()
+        idx_f = CorpusIndex.from_bundles(
+            bundles_f, tree_mode="flat", retrieval_backend=retrieval, embedding_model=embedding_model
+        )
+        setup_cost["flat"]["index_build_seconds"] = time.perf_counter() - t_index
+        tools_f = HierarchicalTools(idx_f)
+
+    if "pred" in active_arms:
         t_data = time.perf_counter()
         bundles_p = bundles_from_paths(
-            test_jsonl, tree_source="pred", pred_path=pred_jsonl, max_docs=max_docs
+            test_jsonl, tree_source="pred", pred_path=pred_jsonl, max_docs=max_docs, doc_id_allowlist=doc_id_allowlist
         )
         setup_cost["hierarchical_pred"] = {"data_load_seconds": time.perf_counter() - t_data}
+        if bundles_for_validate is None:
+            bundles_for_validate = bundles_p
         t_index = time.perf_counter()
         idx_p = CorpusIndex.from_bundles(
             bundles_p,
@@ -2460,7 +2647,22 @@ def run_bodyrich_experiment_multi_budget(
         setup_cost["hierarchical_pred"]["index_build_seconds"] = time.perf_counter() - t_index
         tools_p = HierarchicalTools(idx_p)
 
+    if bundles_for_validate is None:
+        raise ValueError("no arms selected")
+    _validate_task_gold_nodes_in_corpus(
+        tasks,
+        bundles_for_validate,
+        context=f"run_bodyrich_experiment_multi_budget(test_jsonl={test_jsonl}, tasks={tasks_jsonl})",
+    )
+
     if _POOL_MODE == "exact_matched":
+        if active_arms != {"gold", "flat"} and active_arms != {"gold", "flat", "pred"}:
+            raise ValueError(
+                "BODYRICH_POOL_MODE=exact_matched requires arms covering gold+flat "
+                f"(got {sorted(active_arms)})"
+            )
+        if tools_g is None or tools_f is None:
+            raise ValueError("exact_matched requires gold and flat tools")
         prepare_budget = max(budgets) if budgets else 500
         prepared = _prepare_episode_pools_for_fair_budget(
             tools_g,
@@ -2471,6 +2673,7 @@ def run_bodyrich_experiment_multi_budget(
             route_m,
             hier_policy,
             inspect_by_id=inspect_by_id,
+            search_scope=search_scope,
         )
         saved: List[Path] = []
         for budget_chars in budgets:
@@ -2483,12 +2686,14 @@ def run_bodyrich_experiment_multi_budget(
             agg_g, agg_p, agg_f, rows = _score_prepared_fair_budget(
                 prepared,
                 budget_chars=budget_chars,
-                pred_enabled=pred_enabled,
+                pred_enabled=("pred" in active_arms),
                 hier_policy=hier_policy,
                 inspect_by_id=inspect_by_id,
                 use_inspect_judge=use_inspect_judge,
             )
-            summary = _build_summary(agg_g, agg_p, agg_f, rows, pred_enabled)
+            summary = _build_summary(agg_g, agg_p, agg_f, rows, pred_enabled=("pred" in active_arms))
+            summary["config"]["search_scope"] = search_scope
+            summary["config"]["arms"] = sorted(active_arms)
             cost: Dict[str, Any] = {
                 "hierarchical_gold": _empty_cost_block(),
                 "hierarchical_pred": _empty_cost_block(),
@@ -2534,9 +2739,15 @@ def run_bodyrich_experiment_multi_budget(
                 hier_policy=hier_policy,
                 inspect_judge=inspect_judge,
                 inspect_tasks_paths=inspect_tasks_paths,
+                search_scope=search_scope,
+                arms=sorted(active_arms),
             ),
+            search_scope=search_scope,
+            arms=active_arms,
         )
-        summary = _build_summary(agg_g, agg_p, agg_f, rows, pred_enabled)
+        summary = _build_summary(agg_g, agg_p, agg_f, rows, pred_enabled=("pred" in active_arms))
+        summary["config"]["search_scope"] = search_scope
+        summary["config"]["arms"] = sorted(active_arms)
         _apply_setup_cost(cost, setup_cost)
         _finalize_cost(cost)
         summary["cost"] = cost
@@ -2572,6 +2783,17 @@ def _build_argparser() -> argparse.ArgumentParser:
     )
     p.add_argument("--max-docs", type=int, default=0)
     p.add_argument("--max-tasks", type=int, default=0)
+    p.add_argument(
+        "--search-scope",
+        choices=("task_doc", "task_corpus"),
+        default="task_doc",
+        help="task_doc=每题锁文档；task_corpus=tasks 文件全部 doc_id 作为统一检索空间（Flat/compact/fixed）",
+    )
+    p.add_argument(
+        "--arms",
+        default=None,
+        help="逗号分隔臂：gold,flat,pred；例如仅重测 Flat 用 flat",
+    )
     p.add_argument("--budget-chars", type=int, default=500, help="plan §P4/P5 headline=500")
     p.add_argument(
         "--budget-chars-list",
@@ -2680,6 +2902,8 @@ def main(argv: Optional[List[str]] = None) -> None:
             inspect_judge=bool(args.inspect_judge),
             inspect_tasks_paths=list(args.inspect_tasks) if args.inspect_tasks else None,
             checkpoint_dir=args.checkpoint_dir,
+            search_scope=args.search_scope,
+            arms=args.arms,
         )
         for p in saved:
             print(f"saved: {p}", file=sys.stderr)
@@ -2712,6 +2936,8 @@ def main(argv: Optional[List[str]] = None) -> None:
         inspect_judge=bool(args.inspect_judge),
         inspect_tasks_paths=list(args.inspect_tasks) if args.inspect_tasks else None,
         checkpoint_dir=args.checkpoint_dir,
+        search_scope=args.search_scope,
+        arms=args.arms,
     )
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "w", encoding="utf-8") as f:

@@ -131,14 +131,28 @@ def main() -> None:
     treerag = _load_arxiv_treerag_module()
     parser = argparse.ArgumentParser(description="Run TreeRAG baseline on RealData fair_clean tasks.")
     parser.add_argument("--test-jsonl", type=Path, default=Path("data/corpus/test_data_full_realdata_clean_latest.jsonl"))
-    parser.add_argument("--tasks", type=Path, default=Path("data/tasks/tasks_realdata_bodyrich_fair_clean.jsonl"))
+    parser.add_argument("--tasks", type=Path, default=Path("data/tasks/tasks_realdata_bodyrich_latest_clean_400.jsonl"))
     parser.add_argument("--budgets", default="500")
-    parser.add_argument("--out-template", default="results/fair_clean_treerag_fair_clean_goldnav_e2_v1_b{budget}.json")
-    parser.add_argument("--summary-md", type=Path, default=Path("cache/treerag_fair_clean_goldnav_e2_v1/run_summary.md"))
-    parser.add_argument("--cache-dir", type=Path, default=Path("cache/treerag_fair_clean_goldnav_e2_v1"))
-    parser.add_argument("--embedding-model", default=getattr(treerag, "PAPER_DENSE_EMBEDDING_MODEL", treerag.DEFAULT_DENSE_EMBEDDING_MODEL))
+    parser.add_argument("--out-template", default="results/latest_clean400_treerag_b{budget}.json")
+    parser.add_argument("--summary-md", type=Path, default=Path("cache/treerag_latest_clean400/run_summary.md"))
+    parser.add_argument("--cache-dir", type=Path, default=Path("cache/treerag_latest_clean400"))
+    parser.add_argument(
+        "--embedding-model",
+        default=(
+            os.environ.get("BODYRICH_EMBEDDING_MODEL", "").strip()
+            or os.environ.get("EMBEDDING_MODEL", "").strip()
+            or getattr(treerag, "DEFAULT_DENSE_EMBEDDING_MODEL", "text-embedding-v3")
+        ),
+        help="Dense embedding model. Default: BODYRICH_EMBEDDING_MODEL / EMBEDDING_MODEL / text-embedding-v3.",
+    )
     parser.add_argument("--max-docs", type=int, default=0)
     parser.add_argument("--max-tasks", type=int, default=0)
+    parser.add_argument(
+        "--search-scope",
+        choices=("task_doc", "task_corpus"),
+        default="task_doc",
+        help="task_doc=每题锁定文档；task_corpus=tasks 文件全部文档统一检索",
+    )
     parser.add_argument("--treerag-model", default=None)
     parser.add_argument("--intent-mode", choices=("llm", "always", "never"), default="llm")
     parser.add_argument("--tree-lines-per-call", type=int, default=60)
@@ -163,10 +177,20 @@ def main() -> None:
         metavar="PATH",
     )
     parser.add_argument("--rebuild-cache", action="store_true")
+    parser.add_argument(
+        "--index-only",
+        action="store_true",
+        help="Only build/load TreeRAG doc indices (tree-chunk + embeddings) then exit.",
+    )
     parser.add_argument("--skip-llm-preflight", action="store_true")
     parser.add_argument("--skip-llm-smoke-check", action="store_true")
     parser.add_argument("--check-only", action="store_true", help="Only validate task/corpus alignment and CLI wiring.")
     args = parser.parse_args()
+
+    # Ensure llm_api.env is visible even when wrapper is launched without prior source.
+    from agent_delivery.code.llm_config import load_llm_env
+
+    load_llm_env()
 
     alignment = _validate_alignment(args.test_jsonl, args.tasks)
     if alignment["missing_docs"] or alignment["missing_nodes"]:
@@ -176,8 +200,9 @@ def main() -> None:
         return
     if not os.environ.get("OPENAI_API_KEY", "").strip():
         raise RuntimeError("TreeRAG paper-style baseline requires OPENAI_API_KEY; rerun with --check-only for offline validation.")
-    treerag.run_eval(args)
-    _postprocess_outputs(args, alignment)
+    results = treerag.run_eval(args)
+    if results:
+        _postprocess_outputs(args, alignment)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ import json
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Collection, Dict, List, Optional, Tuple
 
 
 @dataclass
@@ -127,8 +127,18 @@ def bundles_from_paths(
     tree_source: str,
     pred_path: Optional[Path] = None,
     max_docs: int = 0,
+    doc_id_allowlist: Optional[Collection[str]] = None,
 ) -> List[DocBundle]:
     groups = load_test_groups(test_path)
+    if doc_id_allowlist is not None:
+        allow = {str(d) for d in doc_id_allowlist}
+        missing = sorted(allow - set(groups.keys()))
+        if missing:
+            raise ValueError(
+                f"doc_id_allowlist has {len(missing)} ids missing from corpus "
+                f"(first={missing[:5]})"
+            )
+        groups = {d: groups[d] for d in sorted(allow)}
     doc_ids = sorted(groups.keys())
     if max_docs > 0:
         doc_ids = doc_ids[:max_docs]
@@ -136,4 +146,7 @@ def bundles_from_paths(
     pred_groups = load_test_groups(pred_path) if pred_path and pred_path.exists() else None
     if tree_source == "pred" and pred_groups is None:
         raise ValueError("tree_source=pred 时需要提供有效的 pred_path JSONL（含 pred_level 或 predicted_level）")
+    if pred_groups is not None and doc_id_allowlist is not None:
+        allow = {str(d) for d in doc_id_allowlist}
+        pred_groups = {d: rows for d, rows in pred_groups.items() if d in allow}
     return groups_to_bundles(groups, tree_source=tree_source, pred_groups=pred_groups)

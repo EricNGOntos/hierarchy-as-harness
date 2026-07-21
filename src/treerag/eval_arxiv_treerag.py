@@ -902,6 +902,7 @@ def _task_checkpoint_signature(args: argparse.Namespace) -> str:
         "path_char_limit": int(args.path_char_limit),
         "max_tasks": int(args.max_tasks),
         "max_docs": int(args.max_docs),
+        "search_scope": _normalize_search_scope(getattr(args, "search_scope", None)),
         "adapter": "paper_llm_tree_chunking_btr_v2",
     }
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
@@ -1141,6 +1142,86 @@ def _gather_treerag_candidates(
     out = list(best.values())
     out.sort(key=lambda x: -x[1])
     return out
+
+
+def _gather_treerag_candidates_corpus(
+    doc_indices: Dict[str, TreeRagDocIndex],
+    query: str,
+    *,
+    dense_model: Any,
+    args: argparse.Namespace,
+    use_btr: bool,
+) -> Scored:
+    """Global initial retrieval over all docs; BTR still expands within the hit document."""
+    best: Dict[str, Tuple[Chunk, float]] = {}
+    ordered = sorted(doc_indices.items(), key=lambda kv: kv[0])
+    top_k = max(1, int(args.initial_top_k))
+
+    for qi, q in enumerate(_build_retrieval_queries(query)):
+        weight = _query_weight(qi)
+        sims_by_doc: Dict[str, Any] = {}
+        global_hits: List[Tuple[float, str, int]] = []
+        for doc_id, doc_index in ordered:
+            sims = _dense_scores(doc_index, q, dense_model)
+            sims_by_doc[doc_id] = sims
+            if getattr(sims, "size", 0) == 0:
+                continue
+            for local_idx, sim in enumerate(sims):
+                global_hits.append((float(sim), doc_id, int(local_idx)))
+        if not global_hits:
+            continue
+        global_hits.sort(key=lambda x: (-x[0], x[1], x[2]))
+        initial = global_hits[:top_k]
+        per_query_scores: Dict[Tuple[str, int], float] = {}
+
+        if use_btr:
+            for rank, (sim, doc_id, idx) in enumerate(initial):
+                doc_index = doc_indices[doc_id]
+                sims = sims_by_doc[doc_id]
+                node = doc_index.nodes[idx]
+                hit_score = float(sim) * weight
+                if node.child_indices:
+                    root_idx = idx
+                    base_decay = float(args.root_to_leaf_decay)
+                elif node.parent_idx is not None:
+                    root_idx = int(node.parent_idx)
+                    base_decay = float(args.leaf_to_parent_decay)
+                else:
+                    root_idx = idx
+                    base_decay = 1.0
+                leaves = _limited_leaves(doc_index.nodes[root_idx].leaf_indices, int(args.max_traversal_leaves))
+                for offset, leaf_idx in enumerate(leaves):
+                    leaf_dense = float(sims[leaf_idx]) * weight
+                    traversal = hit_score * base_decay
+                    score = max(leaf_dense, traversal - (offset * 1e-7) - (rank * 1e-8))
+                    key = (doc_id, int(leaf_idx))
+                    prev = per_query_scores.get(key)
+                    if prev is None or score > prev:
+                        per_query_scores[key] = score
+        else:
+            for rank, (sim, doc_id, idx) in enumerate(initial):
+                key = (doc_id, idx)
+                per_query_scores[key] = max(
+                    per_query_scores.get(key, float("-inf")),
+                    (float(sim) * weight) - (rank * 1e-8),
+                )
+
+        for (doc_id, idx), score in per_query_scores.items():
+            chunk = _chunk_for_node(doc_indices[doc_id], idx)
+            prev = best.get(chunk.node_id)
+            if prev is None or float(score) > float(prev[1]):
+                best[chunk.node_id] = (chunk, float(score))
+
+    out = list(best.values())
+    out.sort(key=lambda x: -x[1])
+    return out
+
+
+def _normalize_search_scope(raw: Optional[str]) -> str:
+    scope = str(raw or "task_doc").strip().lower() or "task_doc"
+    if scope not in {"task_doc", "task_corpus"}:
+        raise ValueError(f"unsupported search_scope={raw!r}; expected task_doc|task_corpus")
+    return scope
 
 
 def _chunks_to_retrieved_nodes(chunks: Sequence[Chunk]) -> List[str]:
@@ -1638,20 +1719,30 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
     embedding_load_seconds = time.time() - embedding_t0
 
     data_t0 = time.time()
-    tasks = _load_tasks(args.tasks)
-    if args.max_tasks > 0:
-        tasks = tasks[: args.max_tasks]
+    search_scope = _normalize_search_scope(getattr(args, "search_scope", None))
+    all_tasks = _load_tasks(args.tasks)
+    corpus_doc_ids = sorted({str(t.doc_id) for t in all_tasks if str(t.doc_id or "").strip()})
+    tasks = all_tasks[: args.max_tasks] if args.max_tasks > 0 else all_tasks
     inspect_paths = list(getattr(args, "inspect_tasks", None) or [])
     inspect_by_id = (
         _load_required_inspect_registry(inspect_paths, tasks)
         if bool(getattr(args, "inspect_judge", False))
         else None
     )
-    bundles = bundles_from_paths(args.test_jsonl, tree_source="flat", max_docs=args.max_docs)
+    doc_id_allowlist = set(corpus_doc_ids) if search_scope == "task_corpus" else None
+    bundles = bundles_from_paths(
+        args.test_jsonl,
+        tree_source="flat",
+        max_docs=args.max_docs,
+        doc_id_allowlist=doc_id_allowlist,
+    )
     bundles_by_doc = {b.doc_id: b for b in bundles}
     _validate_tasks(tasks, bundles_by_doc)
 
-    needed_doc_ids = sorted({str(t.doc_id) for t in tasks})
+    if search_scope == "task_corpus":
+        needed_doc_ids = list(corpus_doc_ids)
+    else:
+        needed_doc_ids = sorted({str(t.doc_id) for t in tasks})
     missing = [d for d in needed_doc_ids if d not in bundles_by_doc]
     if missing:
         raise RuntimeError(f"missing TreeRAG documents for tasks: {missing[:10]}")
@@ -1672,6 +1763,28 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
         if i % 10 == 0 or i == len(needed_doc_ids):
             print(f"[treerag] indexed {i}/{len(needed_doc_ids)} docs", file=sys.stderr, flush=True)
     index_seconds = time.time() - t0
+
+    if bool(getattr(args, "index_only", False)):
+        print(
+            json.dumps(
+                {
+                    "ok": True,
+                    "index_only": True,
+                    "search_scope": search_scope,
+                    "embedding_model": args.embedding_model,
+                    "n_docs_indexed": len(doc_indices),
+                    "doc_index_cache_hits": int(cache_hits),
+                    "index_seconds": index_seconds,
+                    "data_load_seconds": data_load_seconds,
+                    "embedding_load_seconds": embedding_load_seconds,
+                    "cache_dir": str(cache_dir.resolve()),
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            flush=True,
+        )
+        return []
 
     # Fair protocol: no per-method candidate-count cap. All methods share only the
     # b500 char budget + identical compose + identical judge. The legacy asymmetric
@@ -1747,13 +1860,22 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
             llm=llm,
             max_tokens=int(args.intent_max_tokens),
         )
-        scored_raw = _gather_treerag_candidates(
-            doc_index,
-            task.query,
-            dense_model=dense_model,
-            args=args,
-            use_btr=use_btr,
-        )
+        if search_scope == "task_corpus":
+            scored_raw = _gather_treerag_candidates_corpus(
+                doc_indices,
+                task.query,
+                dense_model=dense_model,
+                args=args,
+                use_btr=use_btr,
+            )
+        else:
+            scored_raw = _gather_treerag_candidates(
+                doc_index,
+                task.query,
+                dense_model=dense_model,
+                args=args,
+                use_btr=use_btr,
+            )
         cap = int(cap_by_task.get(ti, 0))
         scored = scored_raw[: min(len(scored_raw), cap)] if cap > 0 else scored_raw
         for chunk, _score in scored:
@@ -1982,6 +2104,7 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
                     "llm_cache_hits": int(token_usage.get("cache_hits", 0)),
                     "n_corpus_docs_loaded": len(bundles),
                     "n_docs_indexed_for_tasks": len(needed_doc_ids),
+                    "search_scope": search_scope,
                     "preflight_seconds": preflight_seconds,
                     "embedding_load_seconds": embedding_load_seconds,
                     "data_load_seconds": data_load_seconds,
@@ -2093,9 +2216,26 @@ def main() -> None:
     p.add_argument("--out-template", default=str(PACKAGE_ROOT / "results" / "arxiv_treerag_800equal_b{budget}.json"))
     p.add_argument("--summary-md", type=Path, default=PACKAGE_ROOT / "results" / "summary_treerag_800equal.md")
     p.add_argument("--cache-dir", type=Path, default=PACKAGE_ROOT / "cache" / "treerag")
-    p.add_argument("--embedding-model", default=PAPER_DENSE_EMBEDDING_MODEL)
+    p.add_argument(
+        "--embedding-model",
+        default=(
+            os.environ.get("BODYRICH_EMBEDDING_MODEL", "").strip()
+            or os.environ.get("EMBEDDING_MODEL", "").strip()
+            or DEFAULT_DENSE_EMBEDDING_MODEL
+        ),
+        help=(
+            f"Dense embedding model. Default: BODYRICH_EMBEDDING_MODEL / EMBEDDING_MODEL / "
+            f"{DEFAULT_DENSE_EMBEDDING_MODEL}. Paper reference model was {PAPER_DENSE_EMBEDDING_MODEL}."
+        ),
+    )
     p.add_argument("--max-docs", type=int, default=0)
     p.add_argument("--max-tasks", type=int, default=0)
+    p.add_argument(
+        "--search-scope",
+        choices=("task_doc", "task_corpus"),
+        default="task_doc",
+        help="task_doc=每题锁定 task.doc_id；task_corpus=tasks 文件全部文档作为统一检索空间",
+    )
     p.add_argument(
         "--treerag-model",
         default=None,
@@ -2143,6 +2283,11 @@ def main() -> None:
         help="Inspect-format JSONL registry. Can be passed multiple times.",
     )
     p.add_argument("--rebuild-cache", action="store_true")
+    p.add_argument(
+        "--index-only",
+        action="store_true",
+        help="Only build/load TreeRAG doc indices (tree-chunk + embeddings) then exit.",
+    )
     p.add_argument("--skip-llm-preflight", action="store_true")
     p.add_argument("--skip-llm-smoke-check", action="store_true")
     args = p.parse_args()
