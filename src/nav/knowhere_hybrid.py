@@ -103,10 +103,9 @@ def rank_rows_by_bm25(
 
     corpus: List[List[str]] = []
     ranked_rows: List[dict[str, Any]] = []
-    query_token_set = set(query_tokens)
     for row in rows:
         tokens = _get_search_tokens(row, search_field=search_field)
-        if not tokens or not query_token_set.intersection(tokens):
+        if not tokens:
             continue
         corpus.append(tokens)
         ranked_rows.append(row)
@@ -455,12 +454,17 @@ def score_rows_hybrid_all(
     content_texts: Optional[Dict[str, str]] = None,
     doc_id: Optional[str] = None,
     namespace: Optional[str] = None,
+    dense_scores_by_channel: Optional[
+        Dict[str, Optional[Dict[str, float]]]
+    ] = None,
 ) -> List[dict[str, Any]]:
     """Score every row with path/content/term; optional within-channel dense fuse.
 
     Unlike hybrid_search_rows, this returns a score for every input row (0 if no hit).
     Dense is applied only inside path and content channels when score_dense_channel
-    returns values; term stays lexical.
+    returns values; term stays lexical. ``dense_scores_by_channel`` lets callers
+    load cached vectors in partitions while keeping BM25, normalization, channel
+    ranking, and RRF global over this complete ``rows`` pool.
     """
     if not rows:
         return []
@@ -499,38 +503,60 @@ def score_rows_hybrid_all(
         str(r.get("chunk_id") or ""): float(r.get("score") or 0.0) for r in term_ranked
     }
 
-    path_dense_by_id: Optional[Dict[str, float]] = None
-    content_dense_by_id: Optional[Dict[str, float]] = None
-    path_text_list = [
-        str((path_texts or {}).get(uid) or row_by_id.get(uid, {}).get("path_text") or "")
-        for uid in unit_ids
-    ]
-    content_text_list = [
-        str((content_texts or {}).get(uid) or row_by_id.get(uid, {}).get("content") or "")
-        for uid in unit_ids
-    ]
-    path_dense_scores = score_dense_channel(
-        path_text_list,
-        query,
-        unit_ids=unit_ids,
-        doc_id=doc_id,
-        channel="path",
-        namespace=namespace,
-    )
-    content_dense_scores = score_dense_channel(
-        content_text_list,
-        query,
-        unit_ids=unit_ids,
-        doc_id=doc_id,
-        channel="content",
-        namespace=namespace,
-    )
-    if path_dense_scores is not None and len(path_dense_scores) == len(unit_ids):
-        path_dense_by_id = {uid: float(path_dense_scores[i]) for i, uid in enumerate(unit_ids)}
-    if content_dense_scores is not None and len(content_dense_scores) == len(unit_ids):
-        content_dense_by_id = {
-            uid: float(content_dense_scores[i]) for i, uid in enumerate(unit_ids)
-        }
+    if dense_scores_by_channel is None:
+        path_text_list = [
+            str(
+                (path_texts or {}).get(uid)
+                or row_by_id.get(uid, {}).get("path_text")
+                or ""
+            )
+            for uid in unit_ids
+        ]
+        content_text_list = [
+            str(
+                (content_texts or {}).get(uid)
+                or row_by_id.get(uid, {}).get("content")
+                or ""
+            )
+            for uid in unit_ids
+        ]
+        path_dense_scores = score_dense_channel(
+            path_text_list,
+            query,
+            unit_ids=unit_ids,
+            doc_id=doc_id,
+            channel="path",
+            namespace=namespace,
+        )
+        content_dense_scores = score_dense_channel(
+            content_text_list,
+            query,
+            unit_ids=unit_ids,
+            doc_id=doc_id,
+            channel="content",
+            namespace=namespace,
+        )
+        path_dense_by_id = (
+            {
+                uid: float(path_dense_scores[i])
+                for i, uid in enumerate(unit_ids)
+            }
+            if path_dense_scores is not None
+            and len(path_dense_scores) == len(unit_ids)
+            else None
+        )
+        content_dense_by_id = (
+            {
+                uid: float(content_dense_scores[i])
+                for i, uid in enumerate(unit_ids)
+            }
+            if content_dense_scores is not None
+            and len(content_dense_scores) == len(unit_ids)
+            else None
+        )
+    else:
+        path_dense_by_id = dense_scores_by_channel.get("path")
+        content_dense_by_id = dense_scores_by_channel.get("content")
 
     path_channel = fuse_channel_bm25_dense(path_bm25, path_dense_by_id, unit_ids)
     content_channel = fuse_channel_bm25_dense(content_bm25, content_dense_by_id, unit_ids)

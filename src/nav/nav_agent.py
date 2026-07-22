@@ -3,20 +3,31 @@ from __future__ import annotations
 import time
 import os
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from agent_delivery.agent.types import AgentStep, EpisodeResult
 from agent_delivery.code.compose_llm import compose_answer_llm
 from agent_delivery.code.hierarchical_tools import HierarchicalTools
 from agent_delivery.code.index_retrieval import Chunk
-from agent_delivery.code.tool_space import Refusal, ToolSpace
+from agent_delivery.code.tool_space import (
+    CORPUS_DOC_ID,
+    Refusal,
+    ToolSpace,
+    is_corpus_doc_id,
+    is_synthetic_dispatch_only,
+)
+from path_ledger import doc_id_for
 
 from nav_compose import (
     evidence_owner_section_id,
     pack_nav_evidence,
     unit_score_for_evidence_chunk,
 )
-from nav_map_scores import compute_map_and_unit_scores, select_map_highlights
+from nav_map_scores import (
+    compute_corpus_map_and_unit_scores,
+    compute_map_and_unit_scores,
+    select_map_highlights,
+)
 from nav_navigate import navigate
 from nav_types import (
     LegalAction,
@@ -59,6 +70,20 @@ def _add_scored(state: NavState, scored: List[Tuple[Chunk, float]]) -> int:
     return added
 
 
+def _resolve_action_doc_id(action_or_sid: Any, state: NavState) -> str:
+    """Prefer section_id prefix; fall back to episode doc_id (never corpus for hydrate)."""
+    if hasattr(action_or_sid, "section_id"):
+        sid = str(getattr(action_or_sid, "section_id", "") or "").strip()
+    else:
+        sid = str(action_or_sid or "").strip()
+    resolved = doc_id_for(sid)
+    if resolved and not is_corpus_doc_id(resolved):
+        return resolved
+    if state.doc_id and not is_corpus_doc_id(state.doc_id):
+        return state.doc_id
+    return str(resolved or state.doc_id or "")
+
+
 def _purge_descendant_evidence(
     ts: ToolSpace,
     state: NavState,
@@ -72,11 +97,12 @@ def _purge_descendant_evidence(
     sid = str(parent_sid or "").strip()
     if not sid:
         return 0
+    doc = _resolve_action_doc_id(sid, state)
     relations = getattr(ts, "section_relation_ids", None)
     if callable(relations):
-        _anc, descendants = relations(sid, state.doc_id)
+        _anc, descendants = relations(sid, doc)
     else:
-        descendants = _section_and_descendants(ts, sid, state.doc_id)
+        descendants = _section_and_descendants(ts, sid, doc)
     descendants = {str(x).strip() for x in (descendants or set()) if str(x).strip()}
     descendants.discard(sid)
     if not descendants:
@@ -107,10 +133,15 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
     sid = action.section_id
     if not sid:
         return []
+    if is_synthetic_dispatch_only(sid):
+        return []
+    doc = _resolve_action_doc_id(action, state)
+    if not doc or is_corpus_doc_id(doc):
+        return []
     materialize = getattr(ts, "_materialize_leaf_path_chunks", None)
     idx = getattr(ts, "_idx", None)
     if callable(materialize) and idx is not None:
-        pool = list(materialize(sid, state.doc_id))
+        pool = list(materialize(sid, doc))
         if pool:
             # Retrieval/evidence assembly is task-type agnostic: always hydrate the
             # full branch in document order. Keyword OUTLINE and scope-only collect
@@ -121,10 +152,10 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
                 state.query,
                 pool,
                 min(len(pool), int(config.collect_k)),
-                doc_id_filter=state.doc_id,
+                doc_id_filter=doc,
             )
             return [(c, float(s) + float(config.read_score_bonus)) for c, s in scored]
-    rc = ts.read_chunks(sid, state.query, doc_id=state.doc_id, k=int(config.collect_k))
+    rc = ts.read_chunks(sid, state.query, doc_id=doc, k=int(config.collect_k))
     if isinstance(rc, Refusal):
         state.refusal_events.append(
             {
@@ -149,13 +180,14 @@ def _mark_collected_branch(
     sid = str(action.section_id or "").strip()
     if not sid or not _env_enabled("NAV_FILTER_COLLECTED_SECTIONS"):
         return {}
+    doc = _resolve_action_doc_id(action, state)
     materialize = getattr(ts, "_materialize_leaf_path_chunks", None)
     relations = getattr(ts, "section_relation_ids", None)
-    pool = list(materialize(sid, state.doc_id)) if callable(materialize) else []
-    if callable(relations):
-        ancestors, descendants = relations(sid, state.doc_id)
+    pool = list(materialize(sid, doc)) if callable(materialize) and doc else []
+    if callable(relations) and doc:
+        ancestors, descendants = relations(sid, doc)
     else:
-        ancestors, descendants = set(), _section_and_descendants(ts, sid, state.doc_id)
+        ancestors, descendants = set(), _section_and_descendants(ts, sid, doc)
     descendants = {str(x).strip() for x in (descendants or set()) if str(x).strip()}
     descendants.add(sid)
 
@@ -245,7 +277,8 @@ def run_nav_episode(
     tools: HierarchicalTools,
     query: str,
     *,
-    doc_id: str,
+    doc_id: Optional[str] = None,
+    corpus_doc_ids: Optional[Sequence[str]] = None,
     budget_chars: int,
     task_type: str = "unknown",
     compose_format_constraints: str = "",
@@ -253,8 +286,18 @@ def run_nav_episode(
     policy: str = "rule",
     config: Optional[NavConfig] = None,
 ) -> EpisodeResult:
-    if not doc_id:
-        raise ValueError("Nav Agent requires a non-empty doc_id")
+    corpus_ids = [
+        str(d).strip()
+        for d in (corpus_doc_ids or [])
+        if str(d).strip() and not is_corpus_doc_id(str(d).strip())
+    ]
+    episode_doc = str(doc_id or "").strip()
+    if corpus_ids:
+        episode_doc = CORPUS_DOC_ID
+    elif not episode_doc:
+        raise ValueError(
+            "Nav Agent requires doc_id (single-doc) or non-empty corpus_doc_ids (corpus mode)"
+        )
     from agent_delivery.code.llm_config import load_llm_env, require_llm_env  # type: ignore
 
     load_llm_env()
@@ -282,13 +325,19 @@ def run_nav_episode(
         if int(getattr(cfg, "depth0_oversize_char_limit", 0) or 0) <= 0:
             cfg.depth0_oversize_char_limit = max(1, int(budget_chars))
     retrieval_t0 = time.perf_counter()
-    ts = ToolSpace(tools)
-    state = NavState(doc_id=doc_id, query=query, task_type=task_type)
+    ts = ToolSpace(tools, corpus_doc_ids=corpus_ids or None)
+    state = NavState(doc_id=episode_doc, query=query, task_type=task_type)
     steps: List[AgentStep] = []
-    section_ids = ts.sections_for_doc(doc_id)
-    state.map_scores, state.unit_scores = compute_map_and_unit_scores(
-        ts, doc_id=doc_id, query=query, root_ids=section_ids
-    )
+    if is_corpus_doc_id(episode_doc):
+        section_ids = ts.sections_for_doc(CORPUS_DOC_ID)
+        state.map_scores, state.unit_scores = compute_corpus_map_and_unit_scores(
+            ts, doc_ids=ts.corpus_doc_ids, query=query
+        )
+    else:
+        section_ids = ts.sections_for_doc(episode_doc)
+        state.map_scores, state.unit_scores = compute_map_and_unit_scores(
+            ts, doc_id=episode_doc, query=query, root_ids=section_ids
+        )
     state.highlight_ids = select_map_highlights(
         state.unit_scores, k=int(cfg.collect_top_k)
     )

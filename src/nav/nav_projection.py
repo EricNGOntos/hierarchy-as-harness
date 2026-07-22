@@ -152,13 +152,21 @@ def _ancestors_in_tree(roots: List[_MapNode], section_id: str) -> List[str]:
     return found
 
 
-def _subtree_contains_must_keep(node: _MapNode, must_keep: Set[str]) -> bool:
-    if node.section_id in must_keep:
-        return True
-    for child in node.children:
-        if not child.hidden and _subtree_contains_must_keep(child, must_keep):
-            return True
-    return False
+def _protected_spine_ids(nodes: List[_MapNode], must_keep: Set[str]) -> Set[str]:
+    """Return must-keep nodes and every ancestor needed to expose them."""
+    protected: Set[str] = set()
+
+    def visit(node: _MapNode) -> bool:
+        contains = node.section_id in must_keep
+        for child in node.children:
+            contains = visit(child) or contains
+        if contains:
+            protected.add(node.section_id)
+        return contains
+
+    for root in nodes:
+        visit(root)
+    return protected
 
 
 def _mark_hidden_subtree(node: _MapNode) -> None:
@@ -189,6 +197,26 @@ def _estimate_actionable_total(nodes: List[_MapNode], *, with_summary: bool = Fa
     return total
 
 
+def _visible_subtree_estimate(
+    node: _MapNode,
+    *,
+    with_summary: bool = False,
+) -> int:
+    """Estimated actionable characters removed by hiding this visible subtree."""
+    total = 0
+    stack = [node]
+    while stack:
+        current = stack.pop()
+        if current.hidden:
+            continue
+        total += _estimate_actionable_line(
+            current,
+            with_summary=with_summary,
+        )
+        stack.extend(current.children)
+    return total
+
+
 def _apply_budget_hide(
     nodes: List[_MapNode],
     *,
@@ -205,41 +233,49 @@ def _apply_budget_hide(
     Never hard-truncates: keeps hiding score-ordered candidates (depth-0 allowed)
     until the estimate fits or only must_keep spine remains.
     """
-    extra = set(extra_hidden_ids or ())
     flat_all = _flatten(nodes, include_hidden=True)
+    protected = _protected_spine_ids(nodes, must_keep)
+    extra = set(extra_hidden_ids or ())
 
     for node in flat_all:
-        if node.section_id in extra and node.section_id not in must_keep:
-            if not _subtree_contains_must_keep(node, must_keep):
-                _mark_hidden_subtree(node)
-
-    def try_hide_one() -> bool:
-        candidates = [
-            n
-            for n in _flatten(nodes, include_hidden=True)
-            if not n.hidden
-            and n.section_id not in must_keep
-            and not _subtree_contains_must_keep(n, must_keep)
-        ]
-        if not candidates:
-            return False
-        candidates.sort(
-            key=lambda n: (n.score, -n.n_descendants, -n.depth, n.section_id)
-        )
-        _mark_hidden_subtree(candidates[0])
-        return True
+        if node.section_id in extra and node.section_id not in protected:
+            _mark_hidden_subtree(node)
 
     for root in nodes:
         _count_descendants(root)
 
-    if _estimate_actionable_total(nodes, with_summary=with_summary) <= char_limit:
+    current_estimate = _estimate_actionable_total(
+        nodes,
+        with_summary=with_summary,
+    )
+    if current_estimate <= char_limit:
         return
 
-    while _estimate_actionable_total(nodes, with_summary=with_summary) > char_limit:
-        if not try_hide_one():
+    # Sort once. Chosen subtrees are disjoint after already-hidden descendants
+    # are skipped, so total subtree-estimation work remains linear.
+    candidates = [
+        node
+        for node in flat_all
+        if not node.hidden and node.section_id not in protected
+    ]
+    candidates.sort(
+        key=lambda node: (
+            node.score,
+            -node.n_descendants,
+            -node.depth,
+            node.section_id,
+        )
+    )
+    for node in candidates:
+        if current_estimate <= char_limit:
             break
-        for root in nodes:
-            _count_descendants(root)
+        if node.hidden:
+            continue
+        current_estimate -= _visible_subtree_estimate(
+            node,
+            with_summary=with_summary,
+        )
+        _mark_hidden_subtree(node)
 
 
 def _build_map_tree(

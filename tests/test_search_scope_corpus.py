@@ -64,11 +64,11 @@ class SearchScopeHelpersTests(unittest.TestCase):
                 task, search_scope="task_corpus", arm="flat", hier_policy="nav"
             )
         )
-        self.assertEqual(
+        # nav under task_corpus uses corpus root (doc_id=None + corpus_doc_ids).
+        self.assertIsNone(
             _episode_doc_id_for_arm(
                 task, search_scope="task_corpus", arm="gold", hier_policy="nav"
-            ),
-            "docA",
+            )
         )
         self.assertIsNone(
             _episode_doc_id_for_arm(

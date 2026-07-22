@@ -6,6 +6,7 @@ from knowhere_hybrid import (
     build_content_search_text,
     build_path_search_text,
     build_term_search_text,
+    score_dense_channel,
     score_rows_hybrid_all,
 )
 
@@ -131,6 +132,85 @@ def _collect_descendant_leaves(
     return out
 
 
+def _pool_unit_scores_to_tree(
+    children_map: Dict[str, List[str]],
+    leaves: Set[str],
+    unit_scores: Dict[str, float],
+) -> Dict[str, float]:
+    """MAX-pool globally comparable unit scores onto one document tree."""
+    map_scores = {
+        leaf_id: float(unit_scores.get(leaf_id, 0.0) or 0.0)
+        for leaf_id in leaves
+    }
+
+    def score_node(section_id: str) -> float:
+        if section_id in map_scores:
+            return map_scores[section_id]
+        kids = children_map.get(section_id) or []
+        if not kids:
+            score = float(unit_scores.get(section_id, 0.0) or 0.0)
+            map_scores[section_id] = score
+            return score
+        descendant_leaves = _collect_descendant_leaves(
+            section_id, children_map, leaves
+        )
+        parts = [
+            float(unit_scores.get(leaf_id, 0.0) or 0.0)
+            for leaf_id in descendant_leaves
+        ]
+        self_key = f"{section_id}__self"
+        if self_key in unit_scores:
+            parts.append(float(unit_scores[self_key]))
+        score = float(max(parts)) if parts else 0.0
+        map_scores[section_id] = score
+        return score
+
+    for section_id in children_map:
+        score_node(section_id)
+    return map_scores
+
+
+def _score_dense_units_by_doc(
+    units_by_doc: Sequence[Tuple[str, List[dict]]],
+    query: str,
+    *,
+    namespace: Optional[str],
+) -> Dict[str, Optional[Dict[str, float]]]:
+    """Read per-doc vector caches, returning raw cosine scores for global fusion.
+
+    Dense cosine is independently comparable across documents. Partitioning only
+    preserves the existing per-doc disk cache; no ranking or normalization occurs
+    here. If any partition fails, that whole channel falls back to global BM25.
+    """
+    dense_by_channel: Dict[str, Optional[Dict[str, float]]] = {}
+    for channel, text_field in (("path", "path_text"), ("content", "content")):
+        score_by_id: Dict[str, float] = {}
+        complete = True
+        for doc_id, units in units_by_doc:
+            if not units:
+                continue
+            unit_ids = [str(unit["chunk_id"]) for unit in units]
+            scores = score_dense_channel(
+                [str(unit.get(text_field) or "") for unit in units],
+                query,
+                unit_ids=unit_ids,
+                doc_id=doc_id,
+                channel=channel,
+                namespace=namespace,
+            )
+            if scores is None or len(scores) != len(unit_ids):
+                complete = False
+                break
+            score_by_id.update(
+                {
+                    unit_id: float(scores[index])
+                    for index, unit_id in enumerate(unit_ids)
+                }
+            )
+        dense_by_channel[channel] = score_by_id if complete else None
+    return dense_by_channel
+
+
 def build_score_units(ts: Any, doc_id: str, root_ids: Optional[Sequence[str]] = None) -> List[dict]:
     """Build leaf (+ interstitial self_only) units for hybrid scoring."""
     if root_ids is None:
@@ -238,32 +318,94 @@ def compute_map_and_unit_scores(
         namespace=ns,
     )
     unit_score = {str(r.get("chunk_id") or ""): float(r.get("score") or 0.0) for r in scored}
+    map_scores = _pool_unit_scores_to_tree(children_map, leaves, unit_score)
+    return map_scores, unit_score
+
+
+def compute_corpus_map_and_unit_scores(
+    ts: Any,
+    *,
+    doc_ids: Sequence[str],
+    query: str,
+    namespace: Optional[str] = None,
+) -> Tuple[Dict[str, float], Dict[str, float]]:
+    """Globally score every unit in the corpus-root navigation space.
+
+    All documents share one BM25 corpus, path/content normalization, channel
+    ranking, and RRF pass. Dense vectors are only loaded through per-doc cache
+    partitions; their raw cosine scores join the same global fusion. Synthetic
+    document and corpus roots are then MAX-pooled from those global unit scores.
+    """
+    from agent_delivery.code.tool_space import (  # late import
+        CORPUS_ROOT_SECTION_ID,
+        is_corpus_doc_id,
+    )
+
+    valid_doc_ids: List[str] = []
+    seen_doc_ids: Set[str] = set()
+    for raw in doc_ids:
+        doc_id = str(raw or "").strip()
+        if (
+            not doc_id
+            or is_corpus_doc_id(doc_id)
+            or doc_id in seen_doc_ids
+        ):
+            continue
+        seen_doc_ids.add(doc_id)
+        valid_doc_ids.append(doc_id)
+
+    ns = namespace
+    if not ns:
+        import os
+
+        ns = os.environ.get("NAV_MAP_UNIT_CACHE_NS", "").strip() or None
+
+    tree_by_doc: Dict[str, Tuple[Dict[str, List[str]], Set[str]]] = {}
+    units_by_doc: List[Tuple[str, List[dict]]] = []
+    all_units: List[dict] = []
+    for doc_id in valid_doc_ids:
+        root_ids = list(ts.sections_for_doc(doc_id))
+        children_map, leaves, _titles = _walk_tree(ts, doc_id, root_ids)
+        units = build_score_units(ts, doc_id, root_ids=root_ids)
+        tree_by_doc[doc_id] = (children_map, leaves)
+        units_by_doc.append((doc_id, units))
+        all_units.extend(units)
+
+    dense_scores = _score_dense_units_by_doc(
+        units_by_doc,
+        query,
+        namespace=ns,
+    )
+    scored = score_rows_hybrid_all(
+        all_units,
+        query,
+        dense_scores_by_channel=dense_scores,
+    )
+    unit_scores = {
+        str(row.get("chunk_id") or ""): float(row.get("score") or 0.0)
+        for row in scored
+    }
 
     map_scores: Dict[str, float] = {}
-    for leaf_id in leaves:
-        map_scores[leaf_id] = float(unit_score.get(leaf_id, 0.0) or 0.0)
-
-    # Bottom-up parent MAX-pool over descendant leaf units (+ interstitial self).
-    def score_node(sid: str) -> float:
-        if sid in map_scores:
-            return map_scores[sid]
-        kids = children_map.get(sid) or []
-        if not kids:
-            val = float(unit_score.get(sid, 0.0) or 0.0)
-            map_scores[sid] = val
-            return val
-        leaf_ids = _collect_descendant_leaves(sid, children_map, leaves)
-        parts = [float(unit_score.get(lid, 0.0) or 0.0) for lid in leaf_ids]
-        self_key = f"{sid}__self"
-        if self_key in unit_score:
-            parts.append(float(unit_score[self_key]))
-        val = float(max(parts)) if parts else 0.0
-        map_scores[sid] = val
-        return val
-
-    for sid in list(children_map.keys()):
-        score_node(sid)
-    return map_scores, unit_score
+    doc_root_scores: Dict[str, float] = {}
+    for doc_id in valid_doc_ids:
+        children_map, leaves = tree_by_doc[doc_id]
+        doc_map_scores = _pool_unit_scores_to_tree(
+            children_map, leaves, unit_scores
+        )
+        map_scores.update(doc_map_scores)
+        doc_max = max(
+            (float(value) for value in doc_map_scores.values()),
+            default=0.0,
+        )
+        root_id = f"{doc_id}:__doc_root"
+        map_scores[root_id] = doc_max
+        doc_root_scores[root_id] = doc_max
+    map_scores[CORPUS_ROOT_SECTION_ID] = max(
+        doc_root_scores.values(),
+        default=0.0,
+    )
+    return map_scores, unit_scores
 
 
 def unit_id_to_section_id(unit_id: str) -> str:

@@ -4,8 +4,13 @@ import concurrent.futures
 import threading
 from typing import Any, Dict, List, Optional, Tuple
 
-from agent_delivery.code.tool_space import ToolSpace
+from agent_delivery.code.tool_space import (
+    CORPUS_DOC_ID,
+    ToolSpace,
+    is_corpus_doc_id,
+)
 from agent_delivery.code.index_retrieval import Chunk
+from path_ledger import doc_id_for
 
 from nav_actions import build_legal_actions, format_actionable_map_observation
 from nav_policy import choose_llm_action, choose_rule_action
@@ -101,8 +106,11 @@ def _split_oversize_collect_actions(
         sid = str(act.section_id or "").strip()
         if not sid:
             continue
-        chars = _estimate_branch_chars(ts, sid, state.doc_id)
-        has_kids = _section_has_children(ts, sid, state.doc_id, projection)
+        act_doc = doc_id_for(sid) or (
+            state.doc_id if not is_corpus_doc_id(state.doc_id) else ""
+        )
+        chars = _estimate_branch_chars(ts, sid, act_doc) if act_doc else 0
+        has_kids = _section_has_children(ts, sid, act_doc or state.doc_id, projection)
         if limit > 0 and chars > limit and has_kids:
             rewrite.append(
                 LegalAction(
@@ -131,10 +139,10 @@ def _estimate_region_chars(projection_text: str) -> int:
     return len(projection_text or "")
 
 
-def _fork_nav_state(state: NavState) -> NavState:
+def _fork_nav_state(state: NavState, *, doc_id: Optional[str] = None) -> NavState:
     """Copy mutable evidence fields so concurrent subagents do not race."""
     return NavState(
-        doc_id=state.doc_id,
+        doc_id=str(doc_id) if doc_id is not None else state.doc_id,
         query=state.query,
         task_type=state.task_type,
         current_scope=state.current_scope,
@@ -271,20 +279,43 @@ def dispatch(
     budget: int,
     steps_out: Optional[List[Any]] = None,
 ) -> List[RegionReport]:
-    """Concurrently run navigate() on each region id (fork/merge state)."""
-    region_ids = [str(x).strip() for x in ids if str(x).strip()]
+    """Concurrently run navigate() on each region id (fork/merge state).
+
+    Corpus→document DISPATCH is depth-neutral: child episode starts at depth 0
+    with the real document doc_id so in-doc recursive/ablation gates match
+    single-doc mode (max_dispatch_depth unchanged).
+    """
+    scope_now = str(state.current_scope or "").strip()
+    region_ids = [
+        rid
+        for rid in (str(x).strip() for x in ids if str(x).strip())
+        if rid != scope_now  # never re-enter the current scope (self-dispatch)
+    ]
     if not region_ids:
         return []
 
     group_size = max(1, int(config.dispatch_group_size))
     max_workers = max(1, int(config.dispatch_max_workers))
     child_budget = max(500, int(budget * 0.85))
-    child_depth = depth + 1
     merge_lock = threading.Lock()
+    corpus_parent = is_corpus_doc_id(state.doc_id)
 
     def _run_one(rid: str) -> RegionReport:
+        child_doc = doc_id_for(rid)
+        # Depth-neutral route only when leaving the corpus sentinel into a real doc.
+        enter_doc = (
+            corpus_parent
+            and bool(child_doc)
+            and not is_corpus_doc_id(child_doc)
+            and child_doc != CORPUS_DOC_ID
+        )
         with merge_lock:
-            child_state = _fork_nav_state(state)
+            if enter_doc:
+                child_state = _fork_nav_state(state, doc_id=str(child_doc))
+                child_depth = 0
+            else:
+                child_state = _fork_nav_state(state)
+                child_depth = depth + 1
         try:
             report = navigate(
                 ts,
@@ -341,7 +372,7 @@ def dispatch(
                             scope=rid,
                             reason=f"dispatch_failed: {exc}",
                             skipped=True,
-                            depth=child_depth,
+                            depth=depth + 1,
                         )
                     )
     return reports
@@ -666,23 +697,29 @@ def sort_collected_by_doc_order(
     ts: ToolSpace,
     doc_id: str,
 ) -> List[Tuple[Chunk, float]]:
-    """Order evidence by document line position (hierarchy original order)."""
+    """Order evidence by (doc_id, line). Cross-doc when doc_id is the corpus sentinel."""
     idx = getattr(ts, "_idx", None)
     node_map = getattr(idx, "_node_to_doc_line", {}) if idx is not None else {}
+    corpus = is_corpus_doc_id(doc_id)
 
-    def key(item: Tuple[Chunk, float]) -> Tuple[int, int, str]:
+    def key(item: Tuple[Chunk, float]) -> Tuple[str, int, int, str]:
         chunk, _score = item
+        cdoc = str(getattr(chunk, "doc_id", "") or "")
         line_ids = list(chunk.line_ids or ())
         if line_ids:
-            return (min(line_ids), min(line_ids), chunk.node_id)
+            ln = min(line_ids)
+            return (cdoc if corpus else "", ln, ln, chunk.node_id)
         loc = node_map.get(chunk.node_id) or node_map.get(
             str(getattr(chunk, "section_id", "") or "")
         )
-        if loc and len(loc) >= 2 and loc[0] == doc_id:
-            try:
-                return (int(loc[1]), int(loc[1]), chunk.node_id)
-            except Exception:
-                pass
-        return (10**9, 10**9, chunk.node_id)
+        if loc and len(loc) >= 2:
+            loc_doc, loc_line = str(loc[0]), loc[1]
+            if corpus or loc_doc == doc_id:
+                try:
+                    li = int(loc_line)
+                    return (loc_doc if corpus else "", li, li, chunk.node_id)
+                except Exception:
+                    pass
+        return (cdoc if corpus else "\uffff", 10**9, 10**9, chunk.node_id)
 
     return sorted(scored, key=key)

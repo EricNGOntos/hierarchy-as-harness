@@ -123,6 +123,12 @@ def _build_argparser() -> argparse.ArgumentParser:
     parser.add_argument("--inspect-tasks", action="append", type=Path, default=None)
     parser.add_argument("--task-outputs-jsonl", type=Path, default=None)
     parser.add_argument("--checkpoint-jsonl", type=Path, default=None)
+    parser.add_argument(
+        "--search-scope",
+        choices=("task_doc", "task_corpus"),
+        default="task_doc",
+        help="task_doc=锁题面文档；task_corpus=tasks 全部 doc 作语料根导航",
+    )
     return parser
 
 
@@ -138,6 +144,17 @@ def main() -> int:
     tasks = _load_tasks(args.tasks)
     if args.max_tasks > 0:
         tasks = tasks[: args.max_tasks]
+    search_scope = str(getattr(args, "search_scope", "task_doc") or "task_doc").strip().lower()
+    corpus_doc_ids = sorted(
+        {str(t.doc_id).strip() for t in tasks if str(getattr(t, "doc_id", "") or "").strip()}
+    )
+    doc_id_allowlist = set(corpus_doc_ids) if search_scope == "task_corpus" else None
+    nav_corpus_ids = (
+        list(corpus_doc_ids)
+        if search_scope == "task_corpus"
+        and str(args.hier_policy).strip().lower() == "nav"
+        else None
+    )
 
     kit_root = Path(__file__).resolve().parents[1]
     if args.inspect_judge:
@@ -164,6 +181,7 @@ def main() -> int:
         tree_source=args.tree_source,
         pred_path=args.pred_jsonl if args.tree_source == "pred" else None,
         max_docs=args.max_docs,
+        doc_id_allowlist=doc_id_allowlist,
     )
     setup_cost[arm_key] = {"data_load_seconds": time.perf_counter() - t0}
     _validate_task_gold_nodes_in_corpus(
@@ -212,7 +230,7 @@ def main() -> int:
             lambda: run_bodyrich_episode(
                 tools,
                 task.query,
-                doc_id=task.doc_id,
+                doc_id=None if nav_corpus_ids else task.doc_id,
                 representation="hierarchical",
                 budget_chars=int(args.budget_chars),
                 route_m=int(args.route_m),
@@ -220,6 +238,7 @@ def main() -> int:
                 task=task,
                 inspect_by_id=inspect_by_id,
                 compose_answer=True,
+                corpus_doc_ids=nav_corpus_ids,
             ),
         )
         metrics = _run_timed_arm(

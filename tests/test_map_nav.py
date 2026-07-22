@@ -4,7 +4,7 @@ import os
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -178,6 +178,50 @@ class MapModeUnitTests(unittest.TestCase):
         # Depth-0 non-highlight siblings may be hidden under budget.
         self.assertTrue(len(ids) < 4)
 
+    def test_budget_hide_does_not_rescan_tree_per_hidden_node(self) -> None:
+        import nav_projection
+
+        flat = {
+            f"doc:L{i}": {
+                "title": f"Section {i}",
+                "level": 1,
+                "children": [],
+            }
+            for i in range(200)
+        }
+        ts = _FakeTS(flat)
+        ts.sections_for_doc = lambda doc_id: list(flat)  # type: ignore
+        cfg = NavConfig(
+            map_mode=True,
+            map_char_limit=180,
+            collect_top_k=1,
+        )
+        scores = {
+            section_id: float(index)
+            for index, section_id in enumerate(flat, 1)
+        }
+        highlight = "doc:L199"
+
+        with patch(
+            "nav_projection._estimate_actionable_total",
+            wraps=nav_projection._estimate_actionable_total,
+        ) as estimate:
+            projection = build_map(
+                ts,
+                doc_id="doc",
+                query="Section 199",
+                scope=None,
+                config=cfg,
+                map_scores=scores,
+                highlight_ids=[highlight],
+            )
+
+        self.assertLessEqual(estimate.call_count, 2)
+        self.assertIn(
+            highlight,
+            {view.section_id for view in projection.tree_sections},
+        )
+
     def test_highlight_path_and_leaf_actions(self) -> None:
         proj = build_map(
             self.ts,
@@ -322,16 +366,42 @@ class MapModeUnitTests(unittest.TestCase):
                 os.environ.pop("NAV_SECTION_SUMMARY_DIR", None)
                 clear_cache()
 
-    def test_empty_finish_guard(self) -> None:
+    def test_finish_always_available(self) -> None:
         proj = build_map(
             self.ts, doc_id="doc", query="x", scope=None, config=self.cfg
         )
         state = NavState(doc_id="doc", query="x")
+        # Early step, empty evidence: FINISH is still legal for LLM exit.
         actions = build_legal_actions(state, proj, step_idx=1, config=self.cfg)
-        self.assertNotIn(ActionKind.FINISH, {a.kind for a in actions})
-        # Near end of episode, FINISH is allowed even with empty evidence.
+        self.assertIn(ActionKind.FINISH, {a.kind for a in actions})
         actions2 = build_legal_actions(state, proj, step_idx=6, config=self.cfg)
         self.assertIn(ActionKind.FINISH, {a.kind for a in actions2})
+
+    def test_no_self_dispatch_on_current_scope(self) -> None:
+        proj = build_map(
+            self.ts, doc_id="doc", query="x", scope="doc:L1", config=self.cfg
+        )
+        state = NavState(doc_id="doc", query="x", current_scope="doc:L1")
+        cfg = NavConfig(
+            map_mode=True,
+            enable_recursive_dispatch=True,
+            max_dispatch_depth=3,
+        )
+        actions = build_legal_actions(
+            state, proj, step_idx=1, config=cfg, depth=1
+        )
+        dispatch_targets = {
+            a.section_id for a in actions if a.kind == ActionKind.DISPATCH
+        }
+        self.assertNotIn("doc:L1", dispatch_targets)
+        # Child internal nodes remain dispatchable.
+        self.assertIn("doc:L2", dispatch_targets)
+        self.assertIn(ActionKind.FINISH, {a.kind for a in actions})
+        # Scope root remains collectable (not synthetic).
+        self.assertIn(
+            "doc:L1",
+            {a.section_id for a in actions if a.kind == ActionKind.COLLECT},
+        )
 
     def test_no_covered_field_on_state(self) -> None:
         state = NavState(doc_id="doc", query="x")

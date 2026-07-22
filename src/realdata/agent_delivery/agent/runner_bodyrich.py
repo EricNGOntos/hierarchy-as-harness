@@ -131,17 +131,41 @@ def _episode_doc_id_for_arm(
     arm: str,
     hier_policy: str,
 ) -> Optional[str]:
-    """task_doc: always lock to task.doc_id. task_corpus: Flat/compact/fixed search all loaded docs."""
+    """task_doc: always lock to task.doc_id.
+
+    task_corpus:
+      - flat / compact / fixed → None (global over allowlisted docs)
+      - nav → None (corpus-root episode; pass corpus_doc_ids separately)
+      - toolspace → still task.doc_id (toolspace corpus mode not implemented)
+    """
     scope = _normalize_search_scope(search_scope)
     if scope == SEARCH_SCOPE_TASK_DOC:
         return task.doc_id
     if arm == "flat":
         return None
     policy = str(hier_policy or "").strip().lower()
-    if policy in {"nav", "toolspace"}:
+    if policy == "nav":
+        return None
+    if policy == "toolspace":
         return task.doc_id
     # compact / fixed hierarchical under corpus scope → global over allowlisted docs
     return None
+
+
+def _nav_corpus_doc_ids_for_scope(
+    *,
+    search_scope: str,
+    hier_policy: str,
+    corpus_doc_ids: Optional[Set[str]],
+) -> Optional[List[str]]:
+    """When nav runs under task_corpus, pass allowlisted docs for the corpus root."""
+    if _normalize_search_scope(search_scope) != SEARCH_SCOPE_TASK_CORPUS:
+        return None
+    if str(hier_policy or "").strip().lower() != "nav":
+        return None
+    if not corpus_doc_ids:
+        return None
+    return sorted(str(d) for d in corpus_doc_ids if str(d).strip())
 
 
 def _package_root() -> Path:
@@ -1067,17 +1091,23 @@ def run_bodyrich_episode(
     task: Optional[AgentTask] = None,
     inspect_by_id: Optional[Dict[str, Dict[str, Any]]] = None,
     compose_answer: bool = True,
+    corpus_doc_ids: Optional[Sequence[str]] = None,
 ) -> EpisodeResult:
     """
     plan §P1-P2 合规 episode：
       hierarchical: full top-level map → agent/selector chooses paths → budget_fill → compose
       flat:         flat_react 多轮 search/rewrite → budget_fill → compose
     trajectory_length = tool_calls 总数（含 compose）；flat 臂为多轮 search + compose。
-    hier_policy=nav 时使用 Nav Agent（expand/back/search/collect）；toolspace 时使用 plan §5.3 五工具 + react_agent。
+    hier_policy=nav 时使用 Nav Agent（COLLECT/DISPATCH/FINISH）；toolspace 时使用 plan §5.3 五工具 + react_agent。
     """
     if representation == "hierarchical" and hier_policy == "nav":
-        if not doc_id:
-            raise ValueError("hier_policy=nav 需要 task.doc_id")
+        corpus_ids = [
+            str(d).strip()
+            for d in (corpus_doc_ids or [])
+            if str(d).strip()
+        ]
+        if not doc_id and not corpus_ids:
+            raise ValueError("hier_policy=nav 需要 task.doc_id 或 corpus_doc_ids")
         if not _NAV_RUNTIME["configured"]:
             _configure_nav_runtime()
         _ensure_nav_code_on_path()
@@ -1086,7 +1116,7 @@ def run_bodyrich_episode(
         tt = _effective_task_type_for_compose(task, inspect_by_id) if task else "unknown"
         t_fmt = task or AgentTask(
             query=query,
-            doc_id=doc_id,
+            doc_id=doc_id or (corpus_ids[0] if corpus_ids else ""),
             gold_nodes=[],
             gold_answer="",
             task_type=tt,
@@ -1096,6 +1126,7 @@ def run_bodyrich_episode(
             tools,
             query,
             doc_id=doc_id,
+            corpus_doc_ids=corpus_ids or None,
             budget_chars=budget_chars,
             task_type=tt,
             compose_format_constraints=fc,
@@ -1792,6 +1823,7 @@ def _run_episodes_for_budget(
     checkpoint_signature: str = "",
     search_scope: str = SEARCH_SCOPE_TASK_DOC,
     arms: Optional[Set[str]] = None,
+    corpus_doc_ids: Optional[Set[str]] = None,
 ) -> Tuple[
     Dict[str, List[float]],
     Dict[str, List[float]],
@@ -1803,6 +1835,11 @@ def _run_episodes_for_budget(
     run_gold = "gold" in active_arms
     run_flat = "flat" in active_arms
     run_pred = "pred" in active_arms and pred_enabled
+    nav_corpus_ids = _nav_corpus_doc_ids_for_scope(
+        search_scope=search_scope,
+        hier_policy=hier_policy,
+        corpus_doc_ids=corpus_doc_ids,
+    )
     if run_gold and tools_g is None:
         raise ValueError("arms includes gold but tools_g is None")
     if run_flat and tools_f is None:
@@ -1871,6 +1908,7 @@ def _run_episodes_for_budget(
                     task=task,
                     inspect_by_id=inspect_by_id,
                     compose_answer=not defer_compose_until_pool_control,
+                    corpus_doc_ids=nav_corpus_ids,
                 ),
             )
         ep_f: Optional[EpisodeResult] = None
@@ -1912,6 +1950,7 @@ def _run_episodes_for_budget(
                     task=task,
                     inspect_by_id=inspect_by_id,
                     compose_answer=not defer_compose_until_pool_control,
+                    corpus_doc_ids=nav_corpus_ids,
                 ),
             )
         if _POOL_MODE == "exact_matched":
@@ -2124,6 +2163,11 @@ def _prepare_episode_pools_for_fair_budget(
             task=task,
             inspect_by_id=inspect_by_id,
             compose_answer=False,
+            corpus_doc_ids=_nav_corpus_doc_ids_for_scope(
+                search_scope=search_scope,
+                hier_policy=hier_policy,
+                corpus_doc_ids=_doc_ids_from_tasks(tasks),
+            ),
         )
         ep_f = run_flat_react_episode(
             tools_f,
@@ -2150,6 +2194,11 @@ def _prepare_episode_pools_for_fair_budget(
                 task=task,
                 inspect_by_id=inspect_by_id,
                 compose_answer=False,
+                corpus_doc_ids=_nav_corpus_doc_ids_for_scope(
+                    search_scope=search_scope,
+                    hier_policy=hier_policy,
+                    corpus_doc_ids=_doc_ids_from_tasks(tasks),
+                ),
             )
         h_pools = [len(ep_g.scored_chunks)]
         if ep_p is not None:
@@ -2400,7 +2449,8 @@ def run_bodyrich_experiment(
 
     search_scope:
       - task_doc: 每题检索锁定 task.doc_id（现状）
-      - task_corpus: 索引限定为 tasks 文件全部 doc_id；Flat/compact/fixed 在全局池检索
+      - task_corpus: 索引限定为 tasks 文件全部 doc_id；Flat/compact/fixed 在全局池检索；
+        nav 用语料根（corpus root）跨文档导航
     arms: 逗号分隔子集，如 ``flat`` / ``gold,flat``（默认按是否提供 pred 自动）
     """
     _configure_bodyrich_task_judge()
@@ -2533,6 +2583,7 @@ def run_bodyrich_experiment(
         ),
         search_scope=search_scope,
         arms=active_arms,
+        corpus_doc_ids=corpus_doc_ids,
     )
     summary = _build_summary(agg_g, agg_p, agg_f, rows, pred_enabled=("pred" in active_arms))
     summary["config"]["search_scope"] = search_scope
@@ -2744,6 +2795,7 @@ def run_bodyrich_experiment_multi_budget(
             ),
             search_scope=search_scope,
             arms=active_arms,
+            corpus_doc_ids=corpus_doc_ids,
         )
         summary = _build_summary(agg_g, agg_p, agg_f, rows, pred_enabled=("pred" in active_arms))
         summary["config"]["search_scope"] = search_scope
@@ -2787,7 +2839,7 @@ def _build_argparser() -> argparse.ArgumentParser:
         "--search-scope",
         choices=("task_doc", "task_corpus"),
         default="task_doc",
-        help="task_doc=每题锁文档；task_corpus=tasks 文件全部 doc_id 作为统一检索空间（Flat/compact/fixed）",
+        help="task_doc=每题锁文档；task_corpus=tasks 全部 doc_id 统一检索（Flat/compact/fixed/nav）",
     )
     p.add_argument(
         "--arms",

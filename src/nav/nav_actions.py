@@ -12,6 +12,13 @@ from nav_types import (
     SectionView,
 )
 
+try:
+    from agent_delivery.code.tool_space import is_synthetic_dispatch_only
+except Exception:  # pragma: no cover - nav path may put tool_space on sys.path later
+    def is_synthetic_dispatch_only(section_id: Optional[str]) -> bool:
+        sid = str(section_id or "").strip()
+        return sid.endswith(":__doc_root") or sid == "__corpus__:__root"
+
 
 def _env_enabled(name: str, default: str = "1") -> bool:
     return os.environ.get(name, default).strip().lower() not in {"0", "false", "no", "off"}
@@ -39,6 +46,8 @@ def build_legal_actions(
     """Every visible node is actionable: COLLECT + DISPATCH (when allowed) + FINISH.
 
     No action-space top-K: visibility is governed only by map display budget folding.
+    FINISH is always available; the LLM decides when to exit the current scope.
+    DISPATCH never targets the current scope root (no self-dispatch loop).
     """
     episode_steps = int(max_steps if max_steps is not None else config.max_steps)
     mode = _budget_mode(step_idx, config, max_steps=episode_steps)
@@ -53,6 +62,7 @@ def build_legal_actions(
     map_scores = dict(getattr(state, "map_scores", {}) or {})
     unit_scores = dict(getattr(state, "unit_scores", {}) or {})
     highlight_set = set(projection.highlight_ids or state.highlight_ids or [])
+    scope_id = str(state.current_scope or projection.scope or "").strip()
 
     # DISPATCH only at depth 0 unless recursive dispatch is enabled and under max depth.
     can_dispatch = depth == 0 or (
@@ -83,6 +93,9 @@ def build_legal_actions(
         collect_blocked = filter_collected and sid in (
             collected_sids | blocked
         )
+        # Corpus / document synthetic roots: DISPATCH-only (select doc / enter doc).
+        if is_synthetic_dispatch_only(sid):
+            collect_blocked = True
         if not collect_blocked:
             actions.append(
                 LegalAction(
@@ -105,6 +118,7 @@ def build_legal_actions(
             can_dispatch
             and view.has_children
             and sid not in collected_sids
+            and sid != scope_id
             and mode != "critical"
         ):
             actions.append(
@@ -123,19 +137,13 @@ def build_legal_actions(
             )
             dispatch_i += 1
 
-    # Empty FINISH guard: no evidence yet and still have room → withhold FINISH.
-    remaining = max(0, episode_steps - step_idx - 1)
-    allow_finish = True
-    if not state.collected and remaining > 2 and mode != "critical":
-        allow_finish = False
-    if allow_finish:
-        actions.append(
-            LegalAction(
-                action_id="F1",
-                kind=ActionKind.FINISH,
-                label="finish navigation and pack final evidence budget",
-            )
+    actions.append(
+        LegalAction(
+            action_id="F1",
+            kind=ActionKind.FINISH,
+            label="finish navigation and pack final evidence budget",
         )
+    )
     return actions
 
 

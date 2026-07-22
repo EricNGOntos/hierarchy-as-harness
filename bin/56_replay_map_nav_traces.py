@@ -355,7 +355,13 @@ def _build_steps_out(result: Any) -> list[dict[str, Any]]:
     return steps_out
 
 
-def _run_one_case(task: Any, tools: HierarchicalTools, cfg: NavConfig) -> dict[str, Any]:
+def _run_one_case(
+    task: Any,
+    tools: HierarchicalTools,
+    cfg: NavConfig,
+    *,
+    corpus_doc_ids: list[str] | None = None,
+) -> dict[str, Any]:
     iid = getattr(task, "inspect_id", None)
     old_row = _load_old_row(str(iid))
     old_arm = (old_row or {}).get("hierarchical_gold") or {}
@@ -368,7 +374,8 @@ def _run_one_case(task: Any, tools: HierarchicalTools, cfg: NavConfig) -> dict[s
     result = run_nav_episode(
         tools,
         task.query,
-        doc_id=str(task.doc_id),
+        doc_id=None if corpus_doc_ids else str(task.doc_id),
+        corpus_doc_ids=corpus_doc_ids,
         budget_chars=500,
         task_type=str(task.task_type or "unknown"),
         compose_format_constraints="",
@@ -484,6 +491,12 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         type=Path,
         default=None,
         help="nav config JSON (default: config/nav_default.json); use config/nav_waterfill.json for packing A/B",
+    )
+    parser.add_argument(
+        "--search-scope",
+        choices=("task_doc", "task_corpus"),
+        default="task_doc",
+        help="task_doc=lock task.doc_id; task_corpus=corpus-root over task docs",
     )
     return parser.parse_args(argv)
 
@@ -614,12 +627,44 @@ def main() -> int:
         print(f"[replay] resume: skip {n_skip}, run {len(pending)}", flush=True)
     print(f"[replay] tasks={total} docs={sorted({t.doc_id for t in selected if t.doc_id})}", flush=True)
 
+    search_scope = str(getattr(args, "search_scope", "task_doc") or "task_doc").strip().lower()
+    corpus_doc_ids = sorted(
+        {
+            str(t.doc_id).strip()
+            for t in selected
+            if str(getattr(t, "doc_id", "") or "").strip()
+        }
+    )
+    # For corpus mode also include all task-file docs if we loaded the full 400 list.
+    if search_scope == "task_corpus":
+        all_task_docs = sorted(
+            {
+                str(t.doc_id).strip()
+                for t in all_tasks
+                if str(getattr(t, "doc_id", "") or "").strip()
+            }
+        )
+        if all_task_docs:
+            corpus_doc_ids = all_task_docs
+    nav_corpus_ids = list(corpus_doc_ids) if search_scope == "task_corpus" else None
+    doc_allow = set(corpus_doc_ids) if search_scope == "task_corpus" else None
+
     embedding_model = resolve_embedding_model(
         os.environ.get("EMBEDDING_MODEL") or DEFAULT_DENSE_EMBEDDING_MODEL
     )
     t0 = time.perf_counter()
-    bundles = bundles_from_paths(corpus, tree_source="gold", pred_path=None, max_docs=0)
-    print(f"[replay] loaded bundles in {time.perf_counter()-t0:.1f}s", flush=True)
+    bundles = bundles_from_paths(
+        corpus,
+        tree_source="gold",
+        pred_path=None,
+        max_docs=0,
+        doc_id_allowlist=doc_allow,
+    )
+    print(
+        f"[replay] loaded bundles in {time.perf_counter()-t0:.1f}s "
+        f"scope={search_scope} n_docs={len(bundles)}",
+        flush=True,
+    )
 
     t0 = time.perf_counter()
     index = CorpusIndex.from_bundles(
@@ -638,6 +683,8 @@ def main() -> int:
             "NAV_MAP_MODE": os.environ.get("NAV_MAP_MODE"),
             "NAV_SECTION_SUMMARY_DIR": os.environ.get("NAV_SECTION_SUMMARY_DIR"),
             "EMBEDDING_MODEL": embedding_model,
+            "search_scope": search_scope,
+            "n_corpus_docs": len(corpus_doc_ids) if nav_corpus_ids else 1,
             "enable_recursive_dispatch": bool(cfg.enable_recursive_dispatch),
             "map_char_limit": int(cfg.map_char_limit),
             "max_steps": int(cfg.max_steps),
@@ -676,7 +723,9 @@ def main() -> int:
                     pass
 
             try:
-                raw_case = _run_one_case(task, tools, cfg)
+                raw_case = _run_one_case(
+                    task, tools, cfg, corpus_doc_ids=nav_corpus_ids
+                )
                 elapsed = float(raw_case.pop("_elapsed_raw", 0.0))
                 old_recall = float(raw_case.pop("_old_recall", 0.0))
                 new_recall = float(raw_case.pop("_new_recall", 0.0))

@@ -19,7 +19,7 @@ def choose_rule_action(
     config: NavConfig,
 ) -> LegalAction:
     """Deterministic fallback when LLM returns an illegal action."""
-    del projection, step_idx, config
+    del state, projection, step_idx, config
 
     def first(kind: ActionKind) -> Optional[LegalAction]:
         for a in actions:
@@ -27,10 +27,6 @@ def choose_rule_action(
                 return a
         return None
 
-    if not state.collected:
-        act = first(ActionKind.DISPATCH) or first(ActionKind.COLLECT)
-        if act:
-            return act
     act = first(ActionKind.COLLECT) or first(ActionKind.DISPATCH)
     if act:
         return act
@@ -246,8 +242,9 @@ def _system_prompt(
         + scope_rule
         + prefer_rule
         + preview_rule
-        + "  - Do NOT re-collect a section already listed under Evidence collected.\n"
-        "  - FINISH only when collected evidence is sufficient for the user's query. "
+        +         "  - Do NOT re-collect a section already listed under Evidence collected.\n"
+        "  - FINISH when this scope is done: evidence is sufficient, or this region is "
+        "irrelevant / exhausted (especially as a subagent). "
         "The system will not infer missing evidence for you.\n"
         "  - When steps remaining <= 2, prioritize COLLECT or FINISH.\n\n"
         "=== End Rules ===\n\n"

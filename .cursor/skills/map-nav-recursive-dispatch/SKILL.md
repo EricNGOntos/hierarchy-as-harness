@@ -83,7 +83,9 @@ navigate(scope, budget, depth) -> RegionReport
 ### 其它现行约定
 
 - **OUTLINE**：已从检索 COLLECT 路径退役（不再按 `task_type`/关键词只采前几行）；答题阶段仍用任务数据里的 `task_type` 选答法模板。legacy helper 保留作消融。TODO(knowhere-align): 若恢复 OUTLINE，改用 `query_intent`  
-- **空 FINISH**：`collected` 空且剩余步数 >2 时不发 FINISH  
+- **FINISH 常驻**：合法动作始终包含 `F1`；由 LLM 判断本 scope 是否收手（证据够 / 无关 / 耗尽）  
+- **禁止自指 DISPATCH**：当前 scope 根不出现 `D*`（`dispatch()` 也会丢弃 `rid == current_scope`）  
+
 - **证据收尾**：去重 → `pack_nav_evidence`（按最近父分组；组间 `group_priority`（外部 FINISH `group_rank`）优先；组内按 `own_unit+w_conf·conf` 贪心满文填充）。`compose_packing_mode=waterfill` 时：若贪心必须丢块，则预留覆盖预算做跨组摘要轮转，再按 rerank 富化回满文；父只做路径表头
 - **外部相对重排（depth0）**：有收集池时观测附 `Assembled Evidence` `[G*]` 预览；FINISH 须带 `group_rank`（序数相对排序）；写入 `NavState.group_priority`
 - **COLLECT confidence**：LLM 对每个 collect id 给 `[0,1]`；水合后代缺省 0；缺失 confidence=0（组间主判别已转交外部 `group_priority`）
@@ -127,6 +129,7 @@ navigate(scope, budget, depth) -> RegionReport
 - **旧 packing（已替换）**：曾用 `evaluate_at_budget` 全局 score 降序，长块挤掉短 gold；现行改为 `pack_nav_evidence`（confidence + 父 scope）
 - 根在子报告已充分后仍 COLLECT 干扰叶，进一步占预算  
 - 子 agent 先收引言行再收父节（可选 multi-collect 叶列表，属策略不是动作空间缺失）
+- **自指 DISPATCH（已修）**：曾允许对当前 scope 根发 `D*`，空转到 `max_dispatch_depth`；现行动作空间与 `dispatch()` 均禁止
 - **层级错标**：gold `levels_for_tree` 把兄弟节标成后代（如 2.4.5 挂进 2.4.4），整枝水合会带入噪声；属数据问题，非导航动作缺失
 
 ## 6. 改代码时的硬约束

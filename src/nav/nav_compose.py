@@ -16,7 +16,8 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from agent_delivery.code.index_retrieval import Chunk
 from agent_delivery.code.load_data import line_node_id
-from agent_delivery.code.tool_space import ToolSpace
+from agent_delivery.code.tool_space import ToolSpace, is_corpus_doc_id
+from path_ledger import doc_id_for
 
 from nav_types import NavConfig, NavState
 
@@ -34,6 +35,28 @@ class ComposeFillResult:
 
 def _clamp01(x: float) -> float:
     return max(0.0, min(1.0, float(x)))
+
+
+def _section_doc_id(ts: ToolSpace, section_id: str, fallback_doc_id: str = "") -> str:
+    """Resolve owning doc for a section (chunk owner / synthetic / episode fallback)."""
+    sid = str(section_id or "").strip()
+    if not sid:
+        return str(fallback_doc_id or "")
+    idx = getattr(ts, "_idx", None)
+    if idx is not None:
+        loc = getattr(idx, "_node_to_doc_line", {}).get(sid)
+        if loc:
+            return str(loc[0])
+        synth = getattr(ts, "_synthetic_doc_id", None)
+        if callable(synth):
+            did = synth(sid)
+            if did and not is_corpus_doc_id(did):
+                return str(did)
+    parsed = doc_id_for(sid)
+    if parsed and not is_corpus_doc_id(parsed):
+        return parsed
+    fb = str(fallback_doc_id or "")
+    return "" if is_corpus_doc_id(fb) else fb
 
 
 def evidence_owner_section_id(chunk: Chunk) -> str:
@@ -67,33 +90,45 @@ def _direct_parent_id(ts: ToolSpace, section_id: str, doc_id: str) -> Optional[s
     sid = str(section_id or "").strip()
     if not sid:
         return None
+    resolved = _section_doc_id(ts, sid, doc_id)
+    if not resolved:
+        return None
     idx = getattr(ts, "_idx", None)
     if idx is None:
         return None
     loc = getattr(idx, "_node_to_doc_line", {}).get(sid)
-    if not loc or loc[0] != doc_id:
+    if not loc or loc[0] != resolved:
         return None
     _, j = loc
-    parents = getattr(idx, "_doc_parents", {}).get(doc_id, [])
-    b = getattr(idx, "_bundles", {}).get(doc_id)
+    parents = getattr(idx, "_doc_parents", {}).get(resolved, [])
+    b = getattr(idx, "_bundles", {}).get(resolved)
     if not b or j >= len(parents):
         return None
     p = parents[j]
     if p is None or p < 0 or p >= len(b.lines):
         return None
-    return line_node_id(doc_id, b.lines[p].line_id)
+    return line_node_id(resolved, b.lines[p].line_id)
 
 
 def _section_title(ts: ToolSpace, section_id: str, doc_id: str, *, max_chars: int = 40) -> str:
     sid = str(section_id or "").strip()
     if not sid:
         return ""
+    resolved = _section_doc_id(ts, sid, doc_id)
     idx = getattr(ts, "_idx", None)
     if idx is None:
         return sid.split(":")[-1]
     loc = getattr(idx, "_node_to_doc_line", {}).get(sid)
-    b = getattr(idx, "_bundles", {}).get(doc_id) if loc and loc[0] == doc_id else None
+    b = getattr(idx, "_bundles", {}).get(resolved) if loc and resolved and loc[0] == resolved else None
     if not b:
+        # Document synthetic root → first-line title.
+        if sid.endswith(":__doc_root") and resolved:
+            bb = getattr(idx, "_bundles", {}).get(resolved)
+            if bb and bb.lines:
+                title = (bb.lines[0].content or "").strip()
+                if len(title) > max_chars:
+                    title = title[:max_chars].rstrip()
+                return title or sid.split(":")[-1]
         return sid.split(":")[-1]
     _, j = loc
     if j < 0 or j >= len(b.lines):
@@ -138,12 +173,15 @@ def _is_header_only_owner(owner: str, owners: set[str], ts: ToolSpace, doc_id: s
     """True if owner is a structural ancestor of another collected owner."""
     if not owner or owner not in owners:
         return False
+    owner_doc = _section_doc_id(ts, owner, doc_id)
     for other in owners:
         if other == owner:
             continue
+        if _section_doc_id(ts, other, doc_id) != owner_doc:
+            continue
         cur = other
         for _ in range(64):
-            p = _direct_parent_id(ts, cur, doc_id)
+            p = _direct_parent_id(ts, cur, owner_doc)
             if p is None:
                 break
             if p == owner:
@@ -231,11 +269,14 @@ def _build_groups(
     for chunk, owner, score in items:
         if owner in header_owners:
             continue
-        parent_id = _direct_parent_id(ts, owner, state.doc_id)
+        owner_doc = _section_doc_id(ts, owner, state.doc_id) or str(
+            getattr(chunk, "doc_id", "") or ""
+        )
+        parent_id = _direct_parent_id(ts, owner, owner_doc)
         if parent_id is None:
             parent_id = owner
         if parent_id not in groups:
-            title = _section_title(ts, parent_id, state.doc_id, max_chars=40)
+            title = _section_title(ts, parent_id, owner_doc, max_chars=40)
             groups[parent_id] = _ParentGroup(
                 parent_id=parent_id,
                 parent_title=title,

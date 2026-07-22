@@ -33,11 +33,17 @@ def line_number(section_id: Optional[str]) -> Optional[int]:
 
 
 def doc_id_for(section_id: Optional[str]) -> Optional[str]:
+    """Parse doc prefix from ``doc:L12``, ``doc:__doc_root``, or ``__corpus__:__root``."""
     s = normalize_section_id(section_id)
     if not s:
         return None
     m = _LINE_RE.match(s)
-    return m.group("doc") if m else None
+    if m:
+        return m.group("doc")
+    # Synthetic / corpus nodes: "{doc}:__doc_root" | "{doc}:__prefix" | "__corpus__:__root"
+    if ":" in s:
+        return s.split(":", 1)[0] or None
+    return None
 
 
 def is_same_or_descendant(child: Optional[str], ancestor: Optional[str], all_descendants: Iterable[str]) -> bool:

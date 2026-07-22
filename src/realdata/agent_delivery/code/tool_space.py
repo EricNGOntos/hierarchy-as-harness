@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass, field
-from typing import List, Literal, Optional, Union
+from typing import List, Literal, Optional, Sequence, Union
 
 from .hierarchical_tools import HierarchicalTools, ToolHit
 from .index_retrieval import Chunk, CorpusIndex
@@ -17,6 +17,28 @@ from .load_data import line_node_id
 
 
 RefusalStatus = Literal["no_match", "too_many"]
+
+# Cross-document search-space sentinel (map-nav corpus mode).
+CORPUS_DOC_ID = "__corpus__"
+CORPUS_ROOT_SECTION_ID = f"{CORPUS_DOC_ID}:__root"
+
+
+def is_corpus_doc_id(doc_id: Optional[str]) -> bool:
+    return str(doc_id or "").strip() == CORPUS_DOC_ID
+
+
+def is_corpus_root_section(section_id: Optional[str]) -> bool:
+    return str(section_id or "").strip() == CORPUS_ROOT_SECTION_ID
+
+
+def is_doc_root_section(section_id: Optional[str]) -> bool:
+    return str(section_id or "").strip().endswith(":__doc_root")
+
+
+def is_synthetic_dispatch_only(section_id: Optional[str]) -> bool:
+    """Corpus root and per-doc roots: DISPATCH-only (no COLLECT)."""
+    sid = str(section_id or "").strip()
+    return is_corpus_root_section(sid) or is_doc_root_section(sid)
 
 
 @dataclass
@@ -39,10 +61,32 @@ def _env_enabled(name: str, default: str = "1") -> bool:
 class ToolSpace:
     """五工具：get_map / get_structure / read_chunks(+refusal) / discover_files / search。"""
 
-    def __init__(self, tools: HierarchicalTools) -> None:
+    def __init__(
+        self,
+        tools: HierarchicalTools,
+        *,
+        corpus_doc_ids: Optional[Sequence[str]] = None,
+    ) -> None:
         self._t = tools
         self._idx: CorpusIndex = tools.index
         self._leaf_path_cache: dict[tuple[str, str], List[Chunk]] = {}
+        allow = [
+            str(d).strip()
+            for d in (corpus_doc_ids or [])
+            if str(d).strip() and str(d).strip() != CORPUS_DOC_ID
+        ]
+        # Preserve caller order; drop unknown ids that are not in the index.
+        self._corpus_doc_ids: List[str] = [
+            d for d in allow if d in getattr(self._idx, "_bundles", {})
+        ]
+
+    @property
+    def corpus_doc_ids(self) -> List[str]:
+        return list(self._corpus_doc_ids)
+
+    @property
+    def corpus_mode(self) -> bool:
+        return bool(self._corpus_doc_ids)
 
     def _synthetic_root_enabled(self) -> bool:
         return _env_enabled("NAV_SYNTHETIC_ROOT_SECTIONS", "1")
@@ -61,12 +105,42 @@ class ToolSpace:
     def _prefix_id(self, doc_id: str) -> str:
         return f"{doc_id}:__prefix"
 
+    def _corpus_root_id(self) -> str:
+        return CORPUS_ROOT_SECTION_ID
+
     def _synthetic_doc_id(self, section_id: str) -> Optional[str]:
-        if section_id.endswith(":__doc_root"):
-            return section_id[: -len(":__doc_root")]
-        if section_id.endswith(":__prefix"):
-            return section_id[: -len(":__prefix")]
+        sid = str(section_id or "").strip()
+        if is_corpus_root_section(sid):
+            return CORPUS_DOC_ID
+        if sid.endswith(":__doc_root"):
+            return sid[: -len(":__doc_root")]
+        if sid.endswith(":__prefix"):
+            return sid[: -len(":__prefix")]
         return None
+
+    def _doc_title_preview(self, doc_id: str, *, max_chars: int = 160) -> str:
+        b = self._idx._bundles.get(doc_id)
+        if not b or not b.lines:
+            return doc_id
+        title = (b.lines[0].content or "").strip().replace("\n", " ")
+        if not title:
+            return doc_id
+        return title[:max_chars]
+
+    def _doc_navigable_top_sections(self, doc_id: str) -> List[str]:
+        """Top-level sections under a document root (never returns ``__doc_root`` itself)."""
+        root = self._doc_root_id(doc_id)
+        ids = [s for s in self._sections_for_doc(doc_id) if s != root]
+        if ids:
+            return ids
+        # No anchors: fall back to structural children of the whole-doc synthetic root.
+        return [
+            str(r.get("section_id") or "").strip()
+            for r in self._synthetic_child_rows_from_bounds(
+                root, doc_id, limit=100000
+            )
+            if str(r.get("section_id") or "").strip()
+        ]
 
     def _top_level_anchor_indices(self, doc_id: str) -> List[int]:
         b = self._idx._bundles.get(doc_id)
@@ -97,6 +171,8 @@ class ToolSpace:
     def _synthetic_section_bounds(
         self, section_id: str, doc_id: str
     ) -> Optional[tuple[int, int]]:
+        if is_corpus_root_section(section_id) or is_corpus_doc_id(doc_id):
+            return None
         if not self._synthetic_root_enabled():
             return None
         b = self._idx._bundles.get(doc_id)
@@ -117,7 +193,7 @@ class ToolSpace:
                 return (0, first_anchor)
         return None
 
-    def _synthetic_child_rows(
+    def _synthetic_child_rows_from_bounds(
         self, section_id: str, doc_id: str, limit: int = 24
     ) -> List[dict]:
         bounds = self._synthetic_section_bounds(section_id, doc_id)
@@ -153,6 +229,54 @@ class ToolSpace:
                 break
         return children
 
+    def _synthetic_child_rows(
+        self, section_id: str, doc_id: str, limit: int = 24
+    ) -> List[dict]:
+        # Corpus search-space root → one node per allowlisted document.
+        if is_corpus_root_section(section_id) or (
+            is_corpus_doc_id(doc_id) and section_id == self._corpus_root_id()
+        ):
+            children: List[dict] = []
+            for did in self._corpus_doc_ids:
+                children.append(
+                    {
+                        "section_id": self._doc_root_id(did),
+                        "level": 0,
+                        "preview": self._doc_title_preview(did),
+                    }
+                )
+                if len(children) >= limit:
+                    break
+            return children
+        # Document root in corpus mode (and generally): expose navigable top sections.
+        if is_doc_root_section(section_id):
+            real_doc = self._synthetic_doc_id(section_id) or doc_id
+            if is_corpus_doc_id(real_doc):
+                return []
+            out: List[dict] = []
+            for sid in self._doc_navigable_top_sections(real_doc):
+                preview = ""
+                if sid.endswith(":__prefix"):
+                    preview = "(document prefix)"
+                else:
+                    loc = self._idx._node_to_doc_line.get(sid)
+                    b = self._idx._bundles.get(real_doc)
+                    if loc and b and loc[0] == real_doc and 0 <= loc[1] < len(b.lines):
+                        preview = (b.lines[loc[1]].content or "")[:160]
+                out.append(
+                    {
+                        "section_id": sid,
+                        "level": 1,
+                        "preview": preview,
+                    }
+                )
+                if len(out) >= limit:
+                    break
+            if out:
+                return out
+            return self._synthetic_child_rows_from_bounds(section_id, real_doc, limit=limit)
+        return self._synthetic_child_rows_from_bounds(section_id, doc_id, limit=limit)
+
     # --- 1) get_map ---
     def get_map(self, doc_id: str) -> str:
         """返回文档内完整 top-level section 骨架，供 agent 自主选路。"""
@@ -168,6 +292,10 @@ class ToolSpace:
         return "sections:\n" + "\n".join(lines_out)
 
     def _sections_for_doc(self, doc_id: str) -> List[str]:
+        if is_corpus_doc_id(doc_id):
+            if not self._corpus_doc_ids:
+                return []
+            return [self._corpus_root_id()]
         b = self._idx._bundles.get(doc_id)
         if b and b.lines:
             anchors = self._top_level_anchor_indices(doc_id)
@@ -535,8 +663,38 @@ class ToolSpace:
 
     # --- 2) get_structure ---
     def get_structure(self, section_id: str) -> dict:
+        # Corpus search-space root (no line pool; children are document roots).
+        if is_corpus_root_section(section_id):
+            children = self._children_for_section_path(
+                section_id, CORPUS_DOC_ID, limit=max(1, len(self._corpus_doc_ids) or 1)
+            )
+            return {
+                "section_id": section_id,
+                "level": 0,
+                "n_chunks": 0,
+                "n_leaf_path_chunks": 0,
+                "n_lines": 0,
+                "preview": "corpus search space",
+                "children": children,
+                "exists": bool(self._corpus_doc_ids),
+            }
         loc = self._idx._node_to_doc_line.get(section_id)
         doc_id = loc[0] if loc else (self._synthetic_doc_id(section_id) or "")
+        if is_doc_root_section(section_id) and doc_id and not is_corpus_doc_id(doc_id):
+            children = self._children_for_section_path(section_id, doc_id)
+            preview = self._doc_title_preview(doc_id)
+            b = self._idx._bundles.get(doc_id)
+            n_lines = len(b.lines) if b else 0
+            return {
+                "section_id": section_id,
+                "level": 0,
+                "n_chunks": n_lines,
+                "n_leaf_path_chunks": 0,
+                "n_lines": n_lines,
+                "preview": preview,
+                "children": children,
+                "exists": bool(b),
+            }
         pool = self._pool_for_section_path(section_id, doc_id) if doc_id else []
         leaf_chunks = self._materialize_leaf_path_chunks(section_id, doc_id) if doc_id else []
         if not pool:

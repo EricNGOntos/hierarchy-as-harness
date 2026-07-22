@@ -95,6 +95,7 @@ COMMON_ARGS=(
   --hier-policy "${HIER_POLICY:-nav}"
   --nav-config "${NAV_CONFIG:-config/nav_default.json}"
   --nav-policy "${NAV_POLICY:-llm}"
+  --search-scope "${SEARCH_SCOPE:-task_doc}"
   --inspect-judge
   --inspect-tasks "${INSPECT_TASKS}"
 )

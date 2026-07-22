@@ -15,6 +15,7 @@ for source_dir in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
 from agent_delivery.code.index_retrieval import Chunk  # noqa: E402
 from knowhere_hybrid import (  # noqa: E402
     fuse_channel_bm25_dense,
+    rank_rows_by_bm25,
     score_dense_channel,
     score_rows_hybrid_all,
 )
@@ -87,6 +88,35 @@ class DenseChannelTests(unittest.TestCase):
             )
         by_id = {r["chunk_id"]: float(r["score"]) for r in scored}
         self.assertGreater(by_id["u1"], by_id["u2"])
+
+    def test_bm25_idf_uses_complete_input_pool(self) -> None:
+        rows = [
+            {"chunk_id": "hit", "path_search_text": "alpha target"},
+            {"chunk_id": "miss", "path_search_text": "background only"},
+        ]
+
+        class FakeBM25:
+            seen_corpus = None
+
+            def __init__(self, corpus):
+                FakeBM25.seen_corpus = corpus
+
+            def get_scores(self, query_tokens):
+                del query_tokens
+                return [2.0, 0.0]
+
+        with mock.patch("rank_bm25.BM25Okapi", FakeBM25):
+            ranked = rank_rows_by_bm25(
+                rows,
+                ["alpha"],
+                search_field="path_search_text",
+            )
+
+        self.assertEqual(
+            FakeBM25.seen_corpus,
+            [["alpha", "target"], ["background", "only"]],
+        )
+        self.assertEqual([row["chunk_id"] for row in ranked], ["hit", "miss"])
 
 
 class CollectHydrationTests(unittest.TestCase):
