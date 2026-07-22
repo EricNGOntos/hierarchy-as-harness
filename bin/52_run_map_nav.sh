@@ -16,8 +16,8 @@ TASKS="${TASKS:-data/tasks/tasks_realdata_bodyrich_latest_clean_400.jsonl}"
 INSPECT_TASKS="${INSPECT_TASKS:-data/tasks/tasks_realdata_bodyrich_latest_clean_400.inspect.jsonl}"
 CORPUS="${CORPUS:-data/corpus/test_data_full_realdata_clean_latest.jsonl}"
 PRED_JSONL="${PRED_JSONL:-data/realdata_clean_m1024_best_pred_levels_prevline_fallback.jsonl}"
-FLAT_SOURCE="${FLAT_SOURCE:-results/latest_clean400_goldnav_e2_v1_gold_flat_b500.json}"
-TREERAG_SOURCE="${TREERAG_SOURCE:-results/latest_clean400_goldnav_e2_v1_treerag_b500.json}"
+FLAT_SOURCE="${FLAT_SOURCE:-results/latest_clean400_task_doc_v3_flat_b500.json}"
+TREERAG_SOURCE="${TREERAG_SOURCE:-results/latest_clean400_task_doc_v3_treerag_b500.json}"
 
 # Remote embeddings (no local GPU). text-embedding-v3 is available on the configured
 # OpenAI-compatible gateway and returns 1024-d vectors. Legacy local bge-m3 caches

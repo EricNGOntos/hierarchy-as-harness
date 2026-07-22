@@ -8,6 +8,7 @@ from agent_delivery.code.tool_space import (
     CORPUS_DOC_ID,
     ToolSpace,
     is_corpus_doc_id,
+    is_doc_root_section,
 )
 from agent_delivery.code.index_retrieval import Chunk
 from path_ledger import doc_id_for
@@ -281,9 +282,9 @@ def dispatch(
 ) -> List[RegionReport]:
     """Concurrently run navigate() on each region id (fork/merge state).
 
-    Corpus→document DISPATCH is depth-neutral: child episode starts at depth 0
-    with the real document doc_id so in-doc recursive/ablation gates match
-    single-doc mode (max_dispatch_depth unchanged).
+    Corpus→synthetic-document-root DISPATCH is depth-neutral: the document
+    episode starts at depth 0. A direct corpus→real-section DISPATCH already
+    descends one in-document level, so it starts at depth 1.
     """
     scope_now = str(state.current_scope or "").strip()
     region_ids = [
@@ -302,7 +303,10 @@ def dispatch(
 
     def _run_one(rid: str) -> RegionReport:
         child_doc = doc_id_for(rid)
-        # Depth-neutral route only when leaving the corpus sentinel into a real doc.
+        # Leaving the corpus sentinel switches to the real document state.
+        # Only the virtual document root is depth-neutral. Entering a real
+        # section directly is equivalent to entering the document and then
+        # dispatching that section in single-document mode.
         enter_doc = (
             corpus_parent
             and bool(child_doc)
@@ -312,7 +316,7 @@ def dispatch(
         with merge_lock:
             if enter_doc:
                 child_state = _fork_nav_state(state, doc_id=str(child_doc))
-                child_depth = 0
+                child_depth = 0 if is_doc_root_section(rid) else 1
             else:
                 child_state = _fork_nav_state(state)
                 child_depth = depth + 1

@@ -167,7 +167,7 @@ map_nav_trace/replay_YYYYMMDD_HHMMSS/
 |----|-----------|
 | 任务集 | `data/tasks/tasks_realdata_bodyrich_latest_clean_400.jsonl`（400 题） |
 | 语料 | `data/corpus/test_data_full_realdata_clean_latest.jsonl` |
-| Nav 配置 | `config/nav_default.json` |
+| Nav 配置 | `config/nav_default.json`（默认 waterfill+oversize；消融 greedy 用 `config/nav_greedy.json`） |
 | LLM 环境 | `load_llm_env()`；模型 `NAV_LLM_MODEL` / `NAV_SUBAGENT_MODEL` |
 | Embedding | 默认 `text-embedding-v3` remote；缓存 `cache/embeddings/` |
 | LLM 缓存 | `cache/llm_api_cache.jsonl`（复跑同轨迹会 hit，快很多） |
@@ -194,12 +194,13 @@ map_nav_trace/replay_YYYYMMDD_HHMMSS/
 6. 抽 evidence_text → `59_compose_judge_from_evidence.py`（先 `--dry-run` / `--max-tasks 2`）
 ```
 
-## 清单文件索引
+## 权威结果目录（保留）
 
-| 文件 | 内容 |
-|------|------|
-| `map_nav_trace/map_nav_still_gold_recall_zero.json` | baseline 99 zero 的元数据 + 92 剩余 `inspect_ids` |
-| `map_nav_trace/map_nav_still_gold_recall_zero.txt` | 仅 id 列表（若存在） |
+| 目录/文件 | 内容 |
+|-----------|------|
+| `map_nav_trace/replay_400_waterfill_oversize_merged/` | task_doc Map-Nav waterfill+oversize 全量 evidence |
+| `map_nav_trace/replay_400_task_corpus_waterfill_oversize_*` | task_corpus Map-Nav waterfill+oversize 全量 evidence |
+| `results/latest_clean400_map_nav_waterfill_oversize_*_b500.json` | task_doc Map-Nav 冻结 evidence 的 compose/judge |
 
 ## 进一步细节
 

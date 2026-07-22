@@ -490,7 +490,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--nav-config",
         type=Path,
         default=None,
-        help="nav config JSON (default: config/nav_default.json); use config/nav_waterfill.json for packing A/B",
+        help="nav config JSON (default: config/nav_default.json = waterfill+oversize; "
+        "use config/nav_greedy.json for greedy packing ablation)",
     )
     parser.add_argument(
         "--search-scope",

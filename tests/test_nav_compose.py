@@ -50,7 +50,10 @@ class NavComposePackTests(unittest.TestCase):
         }
         self.ts = MagicMock()
         self.ts._idx = idx
-        self.cfg = NavConfig(compose_confidence_weight=0.5)
+        self.cfg = NavConfig(
+            compose_confidence_weight=0.5,
+            compose_packing_mode="greedy",
+        )
 
     def _chunk(self, lid: int, text: str) -> Chunk:
         return Chunk(

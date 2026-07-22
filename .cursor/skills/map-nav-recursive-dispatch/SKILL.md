@@ -86,7 +86,7 @@ navigate(scope, budget, depth) -> RegionReport
 - **FINISH 常驻**：合法动作始终包含 `F1`；由 LLM 判断本 scope 是否收手（证据够 / 无关 / 耗尽）  
 - **禁止自指 DISPATCH**：当前 scope 根不出现 `D*`（`dispatch()` 也会丢弃 `rid == current_scope`）  
 
-- **证据收尾**：去重 → `pack_nav_evidence`（按最近父分组；组间 `group_priority`（外部 FINISH `group_rank`）优先；组内按 `own_unit+w_conf·conf` 贪心满文填充）。`compose_packing_mode=waterfill` 时：若贪心必须丢块，则预留覆盖预算做跨组摘要轮转，再按 rerank 富化回满文；父只做路径表头
+- **证据收尾**：去重 → `pack_nav_evidence`（按最近父分组；组间 `group_priority`（外部 FINISH `group_rank`）优先）。**默认 `compose_packing_mode=waterfill`**（覆盖预算跨组摘要轮转再富化）；仍可用 `greedy`（`config/nav_greedy.json`）做消融。父只做路径表头
 - **外部相对重排（depth0）**：有收集池时观测附 `Assembled Evidence` `[G*]` 预览；FINISH 须带 `group_rank`（序数相对排序）；写入 `NavState.group_priority`
 - **COLLECT confidence**：LLM 对每个 collect id 给 `[0,1]`；水合后代缺省 0；缺失 confidence=0（组间主判别已转交外部 `group_priority`）
 - **选中集**：`action_id ∪ ids` 合并为同一选中集；选完后按层级决定水合（父=整枝，叶=仅自身）

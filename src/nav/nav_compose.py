@@ -5,9 +5,9 @@ Child score = own_unit + w_conf * collect_confidence (default w_conf=0.5).
 Group order: group_priority (external rank), then max child score, then doc order.
 
 Packing modes (NavConfig.compose_packing_mode):
-- greedy: fill full text by group/score until budget (legacy default).
-- waterfill: when greedy must drop children, reserve a coverage slice for
+- waterfill (default): when greedy must drop children, reserve a coverage slice for
   cross-group snippets, then enrich snippets back to full text by rerank.
+- greedy: fill full text by group/score until budget (kept for ablation / override).
 """
 from __future__ import annotations
 
@@ -747,7 +747,7 @@ def pack_nav_evidence(
     groups = _build_groups(collected, ts, state, config)
     groups.sort(key=lambda g: (-g.priority, -g.group_key, g.doc_order_key))
 
-    mode = str(getattr(config, "compose_packing_mode", "greedy") or "greedy").strip().lower()
+    mode = str(getattr(config, "compose_packing_mode", "waterfill") or "waterfill").strip().lower()
     snippet_chars = int(getattr(config, "compose_snippet_chars", 80) or 80)
 
     if mode == "waterfill":

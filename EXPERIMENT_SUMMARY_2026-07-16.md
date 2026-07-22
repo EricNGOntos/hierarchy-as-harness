@@ -254,7 +254,7 @@
 |------|------|
 | 400 Evidence + TRACE | `map_nav_trace/replay_400_merged_latest/` |
 | 400 Compose + Inspect QA | `results/latest_clean400_map_nav_merged_latest_b500.json` |
-| 论文对照 baseline | `results/latest_clean400_goldnav_e2_v1_{gold_flat,treerag}_b500.json` |
+| 论文对照 baseline | `results/latest_clean400_task_doc_v3_{flat,treerag}_b500.json` / `task_corpus_v3_*` |
 | 旧 scope_compact | `results/latest_clean400_scope_compact_cap180_v1_{gold,pred,summary}*` |
 
 ### 已清理（中间实验）

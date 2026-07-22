@@ -349,6 +349,41 @@ class DepthNeutralDispatchTests(unittest.TestCase):
         self.assertEqual(seen["scope"], "docA:__doc_root")
         self.assertEqual(seen["max_steps"], cfg.max_steps)
 
+    def test_corpus_to_real_section_starts_at_in_doc_depth_one(self) -> None:
+        ts = ToolSpace(HierarchicalTools(_tiny_index()), corpus_doc_ids=["docA", "docB"])
+        state = NavState(doc_id=CORPUS_DOC_ID, query="q", task_type="niche_fact")
+        cfg = NavConfig(
+            map_mode=True,
+            enable_recursive_dispatch=True,
+            max_dispatch_depth=3,
+            max_steps=8,
+            navigate_max_steps=4,
+        )
+        seen: dict = {}
+
+        def fake_navigate(ts_arg, *, state, scope, query, config, depth, budget, steps_out=None):
+            seen["depth"] = depth
+            seen["doc_id"] = state.doc_id
+            seen["scope"] = scope
+            seen["max_steps"] = cfg.navigate_max_steps if depth > 0 else cfg.max_steps
+            return RegionReport(scope=scope, depth=depth)
+
+        with mock.patch("nav_navigate.navigate", side_effect=fake_navigate):
+            reports = dispatch(
+                ts,
+                state,
+                ["docA:L1"],
+                query="q",
+                config=cfg,
+                depth=0,
+                budget=5000,
+            )
+        self.assertEqual(len(reports), 1)
+        self.assertEqual(seen["depth"], 1)
+        self.assertEqual(seen["doc_id"], "docA")
+        self.assertEqual(seen["scope"], "docA:L1")
+        self.assertEqual(seen["max_steps"], cfg.navigate_max_steps)
+
     def test_in_doc_dispatch_increments_depth(self) -> None:
         ts = ToolSpace(HierarchicalTools(_tiny_index()), corpus_doc_ids=["docA", "docB"])
         state = NavState(doc_id="docA", query="q", task_type="niche_fact")
