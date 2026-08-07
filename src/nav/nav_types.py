@@ -78,6 +78,32 @@ class NavConfig:
     enable_depth0_oversize_to_dispatch: bool = False
     # 0 = use episode evidence budget_chars (set in run_nav_episode).
     depth0_oversize_char_limit: int = 0
+    # M2 query planning (structure-conditioned). Off by default → zero regression.
+    enable_query_planning: bool = False
+    # Display budget for the one-shot planning map; executor still uses map_char_limit.
+    # 0 = reuse map_char_limit.
+    planning_map_char_limit: int = 10000
+    # Soft prompt guidance only when > 0; never silently truncates a valid plan.
+    planner_max_subgoals: int = 0
+    planner_model_env: str = "NAV_PLANNER_MODEL"
+    # Separate from navigate llm_max_tokens: plan JSON is larger.
+    planner_llm_max_tokens: int = 1024
+    # M3: after planning, re-score the map per bindable subgoal retrieval_query.
+    enable_per_subgoal_illumination: bool = False
+    # M3: fold merge uses budget_share weights + satisfied decay (else equal max).
+    enable_goal_conditioned_folding: bool = False
+    # M4: replace single navigate with dependency-wave plan execution.
+    enable_plan_orchestration: bool = False
+    # M4: merge same-wave subgoals whose beacons share a subtree.
+    enable_locality_merge: bool = False
+    # M5: contract verify + slot extract + activation + limited replan.
+    enable_contract_verify: bool = False
+    # M5: navigate+verify cycles per subgoal (RETRY/WIDEN/REBIND). Min 1.
+    subgoal_max_attempts: int = 2
+    # M5: 0 = never replan; otherwise hard cap on structural replans.
+    max_replans: int = 0
+    # M4: 0 = no extra wave cap (stop when no ready subgoals).
+    max_waves: int = 0
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "NavConfig":
@@ -125,6 +151,8 @@ class SectionView:
     is_highlight: bool = False
     parent_id: Optional[str] = None
     summary: str = ""
+    # M3: which subgoal illuminations marked this node a Hit (for [Hit:s1,s3]).
+    hit_sources: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -176,6 +204,20 @@ class RegionReport:
 
 
 @dataclass
+class SubgoalResult:
+    """Typed outcome of one subgoal execution (M5)."""
+
+    subgoal_id: str
+    satisfied: bool
+    confidence: float = 0.0
+    collected_section_ids: List[str] = field(default_factory=list)
+    extracted: Dict[str, str] = field(default_factory=dict)
+    gap: str = ""
+    chars_used: int = 0
+    verdict: str = ""  # SATISFIED|RETRY_SAME_REGION|WIDEN|REBIND|REPLAN
+
+
+@dataclass
 class NavState:
     doc_id: str
     query: str
@@ -204,3 +246,25 @@ class NavState:
     # External agent relative priority over nearest-parent groups: parent_id -> score
     # (higher packs first). Empty = no external rerank yet.
     group_priority: Dict[str, float] = field(default_factory=dict)
+    # M2: structured retrieval plan + slot bindings for delayed query fill.
+    retrieval_plan: Optional[Any] = None
+    slot_bindings: Dict[str, str] = field(default_factory=dict)
+    # M3: per-subgoal illumination caches + fold provenance.
+    subgoal_map_scores: Dict[str, Dict[str, float]] = field(default_factory=dict)
+    subgoal_unit_scores: Dict[str, Dict[str, float]] = field(default_factory=dict)
+    hit_sources: Dict[str, List[str]] = field(default_factory=dict)
+    active_subgoal_ids: List[str] = field(default_factory=list)
+    satisfied_subgoal_ids: set[str] = field(default_factory=set)
+    # Finished trying (success or attempts exhausted). Deps wait on satisfied only.
+    attempted_subgoal_ids: set[str] = field(default_factory=set)
+    activated_subgoal_ids: set[str] = field(default_factory=set)
+    # M4/M5: soft focus for policy (never clips action space).
+    focus_subgoal_id: str = ""
+    focus_subgoal_need: str = ""
+    focus_subgoal_contract: str = ""
+    focus_retrieval_query: str = ""
+    focus_contract_kind: str = ""
+    # Soft scope preference for the active subgoal (doc_ids only; not action clip).
+    focus_scope_doc_ids: List[str] = field(default_factory=list)
+    subgoal_results: Dict[str, Any] = field(default_factory=dict)
+    replan_count: int = 0

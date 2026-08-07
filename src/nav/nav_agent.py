@@ -129,6 +129,30 @@ def _line_order(pool: List[Chunk]) -> List[Chunk]:
     return sorted(pool, key=lambda c: (min(c.line_ids or (10**9,)), c.node_id))
 
 
+def _collect_by_unit_score(
+    pool: List[Chunk],
+    state: NavState,
+    config: NavConfig,
+) -> List[Tuple[Chunk, float]]:
+    """Directed hydrate: order/truncate by unit score (single_fact / span)."""
+    if not pool:
+        return []
+    bonus = float(config.read_score_bonus)
+    scored = [
+        (chunk, float(unit_score_for_evidence_chunk(chunk, state.unit_scores)) + bonus)
+        for chunk in pool
+    ]
+    scored.sort(
+        key=lambda item: (
+            -float(item[1]),
+            min(getattr(item[0], "line_ids", None) or (10**9,)),
+            str(getattr(item[0], "node_id", "") or ""),
+        )
+    )
+    k = max(1, int(config.collect_k or 1))
+    return scored[:k]
+
+
 def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config: NavConfig) -> List[Tuple[Chunk, float]]:
     sid = action.section_id
     if not sid:
@@ -143,10 +167,11 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
     if callable(materialize) and idx is not None:
         pool = list(materialize(sid, doc))
         if pool:
-            # Retrieval/evidence assembly is task-type agnostic: always hydrate the
-            # full branch in document order. Keyword OUTLINE and scope-only collect
-            # paths are retired (task_type remains for compose answer format only).
+            # Contract-driven hydrate when a soft-focus subgoal is active (M5/A3).
+            kind = str(getattr(state, "focus_contract_kind", "") or "").strip().lower()
             if map_mode_enabled(config) or bool(getattr(state, "unit_scores", None)):
+                if kind in {"single_fact", "span", "comparison", "existence"}:
+                    return _collect_by_unit_score(pool, state, config)
                 return _collect_in_doc_order(pool, config)
             scored = idx.search(
                 state.query,
@@ -342,17 +367,73 @@ def run_nav_episode(
         state.unit_scores, k=int(cfg.collect_top_k)
     )
 
-    # Top-level recursive-dispatch navigate (depth 0).
-    navigate(
-        ts,
-        state=state,
-        scope=None,
-        query=query,
-        config=cfg,
-        depth=0,
-        budget=int(cfg.map_char_limit),
-        steps_out=steps,
-    )
+    if bool(getattr(cfg, "enable_query_planning", False)):
+        from nav_plan import plan_query
+
+        plan_t0 = time.perf_counter()
+        retrieval_plan = plan_query(ts, state, cfg)
+        state.retrieval_plan = retrieval_plan
+        steps.append(
+            AgentStep(
+                step_idx=len(steps) + 1,
+                action="query_plan",
+                detail={
+                    "fallback": bool(retrieval_plan.fallback),
+                    "n_subgoals": len(retrieval_plan.subgoals),
+                    "reason": retrieval_plan.reason,
+                    "plan": retrieval_plan.to_dict(),
+                    "planning_map_char_limit": int(
+                        getattr(cfg, "planning_map_char_limit", 0) or cfg.map_char_limit
+                    ),
+                    "seconds": time.perf_counter() - plan_t0,
+                },
+            )
+        )
+
+    if bool(getattr(cfg, "enable_per_subgoal_illumination", False)):
+        from nav_illuminate import illuminate_from_plan
+
+        illum_t0 = time.perf_counter()
+        illum_detail = illuminate_from_plan(ts, state, cfg)
+        if illum_detail is not None:
+            illum_detail = dict(illum_detail)
+            illum_detail["seconds"] = time.perf_counter() - illum_t0
+            steps.append(
+                AgentStep(
+                    step_idx=len(steps) + 1,
+                    action="illuminate",
+                    detail=illum_detail,
+                )
+            )
+
+    # Top-level: plan orchestration (M4/M5) or classic single navigate.
+    if bool(getattr(cfg, "enable_plan_orchestration", False)) and state.retrieval_plan is not None:
+        from nav_orchestrate import execute_plan
+
+        orch_t0 = time.perf_counter()
+        orch_detail = execute_plan(
+            ts, state, cfg, steps_out=steps, episode_query=query
+        )
+        orch_detail = dict(orch_detail or {})
+        orch_detail["seconds"] = time.perf_counter() - orch_t0
+        steps.append(
+            AgentStep(
+                step_idx=len(steps) + 1,
+                action="plan_orchestrate",
+                detail=orch_detail,
+            )
+        )
+    else:
+        navigate(
+            ts,
+            state=state,
+            scope=None,
+            query=query,
+            config=cfg,
+            depth=0,
+            budget=int(cfg.map_char_limit),
+            steps_out=steps,
+        )
 
     fill = pack_nav_evidence(
         _dedupe_scored(list(state.collected)),

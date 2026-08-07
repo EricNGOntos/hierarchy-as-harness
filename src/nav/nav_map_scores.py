@@ -436,3 +436,116 @@ def select_map_highlights(unit_scores: Dict[str, float], k: int = 6) -> List[str
         if len(out) >= limit:
             break
     return out
+
+
+def compute_multi_query_map_scores(
+    ts: Any,
+    *,
+    queries: Dict[str, str],
+    doc_id: str,
+    root_ids: Optional[Sequence[str]] = None,
+    corpus_doc_ids: Optional[Sequence[str]] = None,
+    namespace: Optional[str] = None,
+) -> Tuple[Dict[str, Dict[str, float]], Dict[str, Dict[str, float]]]:
+    """Score the map once per query id.
+
+    Returns ``(subgoal_map_scores, subgoal_unit_scores)`` keyed by the same
+    query ids. Empty / blank queries are skipped. Reuses the existing single-
+    query scorer — no new retrieval channels.
+    """
+    sub_map: Dict[str, Dict[str, float]] = {}
+    sub_unit: Dict[str, Dict[str, float]] = {}
+    corpus = list(corpus_doc_ids or [])
+    for qid, raw_q in (queries or {}).items():
+        key = str(qid or "").strip()
+        query = str(raw_q or "").strip()
+        if not key or not query:
+            continue
+        if corpus:
+            ms, us = compute_corpus_map_and_unit_scores(
+                ts, doc_ids=corpus, query=query, namespace=namespace
+            )
+        else:
+            ms, us = compute_map_and_unit_scores(
+                ts,
+                doc_id=doc_id,
+                query=query,
+                root_ids=root_ids,
+                namespace=namespace,
+            )
+        sub_map[key] = ms
+        sub_unit[key] = us
+    return sub_map, sub_unit
+
+
+def merge_score_maps(
+    per_source: Dict[str, Dict[str, float]],
+    *,
+    weights: Optional[Dict[str, float]] = None,
+    active_ids: Optional[Sequence[str]] = None,
+) -> Dict[str, float]:
+    """Goal-conditioned merge: ``max_s(w_s · score_s(node))``.
+
+    Sources with non-positive weight are ignored. When ``weights`` is omitted,
+    every active source contributes with equal weight 1.0.
+    """
+    if active_ids is None:
+        keys = [str(k) for k in (per_source or {}).keys()]
+    else:
+        keys = [str(k) for k in active_ids if str(k) in (per_source or {})]
+    if not keys:
+        return {}
+    wmap = {str(k): float(v) for k, v in (weights or {}).items()}
+    out: Dict[str, float] = {}
+    for key in keys:
+        w = float(wmap.get(key, 1.0))
+        if w <= 0.0:
+            continue
+        for sid, score in (per_source.get(key) or {}).items():
+            val = w * float(score or 0.0)
+            prev = out.get(sid)
+            if prev is None or val > prev:
+                out[sid] = val
+    return out
+
+
+def select_map_highlights_multi(
+    per_source_unit_scores: Dict[str, Dict[str, float]],
+    *,
+    k: int,
+    active_ids: Optional[Sequence[str]] = None,
+    weights: Optional[Dict[str, float]] = None,
+) -> Tuple[List[str], Dict[str, List[str]]]:
+    """Per-source TOP-K union + provenance for ``[Hit:s*]`` tags.
+
+    Each active source contributes up to ``k`` sections (same rescue-K as the
+    single-query path). Union order follows the merged weighted unit score.
+    """
+    if active_ids is None:
+        keys = [str(k) for k in (per_source_unit_scores or {}).keys()]
+    else:
+        keys = [
+            str(k) for k in active_ids if str(k) in (per_source_unit_scores or {})
+        ]
+    hit_sources: Dict[str, List[str]] = {}
+    for key in keys:
+        local = select_map_highlights(per_source_unit_scores.get(key) or {}, k=k)
+        for sid in local:
+            hit_sources.setdefault(sid, [])
+            if key not in hit_sources[sid]:
+                hit_sources[sid].append(key)
+
+    merged_units = merge_score_maps(
+        per_source_unit_scores,
+        weights=weights,
+        active_ids=keys,
+    )
+    # Rank the union by merged score; keep every sourced hit (must_keep soft).
+    ranked = sorted(
+        hit_sources.keys(),
+        key=lambda sid: (
+            -float(merged_units.get(sid, 0.0) or 0.0),
+            sid,
+        ),
+    )
+    return ranked, hit_sources

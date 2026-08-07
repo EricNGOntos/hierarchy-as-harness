@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Sequence, Set
 
 from nav_types import NavConfig, Projection, SectionView, map_mode_enabled
 
@@ -360,6 +360,20 @@ def _clip_summary(text: str, *, head: int = 120) -> str:
     return s[: max(0, head - 1)].rstrip() + "…"
 
 
+def format_hit_tag(
+    *,
+    is_highlight: bool,
+    hit_sources: Optional[Sequence[str]] = None,
+) -> str:
+    """Render Hit badge; multi-source form is ``[Hit:s1,s3]``."""
+    srcs = [str(s).strip() for s in (hit_sources or []) if str(s).strip()]
+    if srcs:
+        return f" [Hit:{','.join(srcs)}]"
+    if is_highlight:
+        return " [Hit]"
+    return ""
+
+
 def _render_map(
     nodes: List[_MapNode],
     *,
@@ -367,11 +381,13 @@ def _render_map(
     scope: Optional[str],
     char_limit: int,
     highlight_ids: Optional[Set[str]] = None,
+    hit_sources: Optional[Dict[str, List[str]]] = None,
     inline_summary: bool = False,
 ) -> tuple[str, List[SectionView], Dict[str, str], bool]:
     """Render the budget-hidden title map (no mid-tree hard truncation)."""
     _ = char_limit
     hits = set(highlight_ids or ())
+    sources = hit_sources or {}
     lines: List[str] = []
     visible: List[SectionView] = []
     id_to_section: Dict[str, str] = {}
@@ -396,7 +412,8 @@ def _render_map(
         indent = "  " * node.depth
         is_hit = node.section_id in hits or node.is_highlight
         leaf_tag = " [Leaf]" if not node.has_children else ""
-        hit_tag = " [Hit]" if is_hit else ""
+        node_sources = list(sources.get(node.section_id) or [])
+        hit_tag = format_hit_tag(is_highlight=is_hit, hit_sources=node_sources)
         line = (
             f"{indent}[{map_id}] {node.title} ({node.n_chunks} chunks)"
             f"{leaf_tag}{hit_tag}"
@@ -423,6 +440,7 @@ def _render_map(
                 is_highlight=is_hit,
                 parent_id=node.parent_id,
                 summary=summary,
+                hit_sources=node_sources,
             )
         )
         for child in node.children:
@@ -452,6 +470,7 @@ def build_map(
     dismissed_section_ids: Optional[Set[str]] = None,
     highlight_ids: Optional[List[str]] = None,
     extra_hidden_ids: Optional[Set[str]] = None,
+    hit_sources: Optional[Dict[str, List[str]]] = None,
 ) -> Projection:
     """Full-depth title map with score-ordered budget hiding (+ optional inline summary)."""
     scores = dict(map_scores or {})
@@ -505,6 +524,7 @@ def build_map(
         scope=scope,
         char_limit=char_limit,
         highlight_ids=hit_set,
+        hit_sources=hit_sources,
         inline_summary=inline_summary,
     )
     visible_sorted = sorted(
@@ -536,6 +556,7 @@ def build_projection(
     dismissed_section_ids: Optional[Set[str]] = None,
     highlight_ids: Optional[List[str]] = None,
     extra_hidden_ids: Optional[Set[str]] = None,
+    hit_sources: Optional[Dict[str, List[str]]] = None,
 ) -> Projection:
     if map_mode_enabled(config):
         return build_map(
@@ -549,6 +570,7 @@ def build_projection(
             dismissed_section_ids=dismissed_section_ids,
             highlight_ids=highlight_ids,
             extra_hidden_ids=extra_hidden_ids,
+            hit_sources=hit_sources,
         )
 
     # Minimal non-map fallback (legacy shallow projection) — kept for ablation only.

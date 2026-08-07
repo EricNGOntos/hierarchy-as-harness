@@ -1,0 +1,907 @@
+"""Structure-conditioned query planning (M2).
+
+Looks at a planning map observation and emits an auditable RetrievalPlan DAG.
+Does not change COLLECT/DISPATCH/FINISH execution by itself.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+from dataclasses import asdict, dataclass, field, replace
+from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple
+
+from nav_actions import build_legal_actions, format_actionable_map_observation
+from nav_projection import build_map
+from nav_types import NavConfig, NavState, Projection
+
+ContractKind = Literal[
+    "single_fact",
+    "enumeration",
+    "span",
+    "comparison",
+    "existence",
+]
+RelationKind = Literal["parent-child", "sibling"]
+MapCoverage = Literal["sufficient", "partial", "insufficient"]
+ActivationMode = Literal["always", "on"]
+
+_SLOT_REF_RE = re.compile(r"\{\{\s*([A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)?)\s*\}\}")
+_CONTRACT_KINDS = {
+    "single_fact",
+    "enumeration",
+    "span",
+    "comparison",
+    "existence",
+}
+_RELATION_KINDS = {"parent-child", "sibling"}
+_MAP_COVERAGE = {"sufficient", "partial", "insufficient"}
+_PLANNER_PURPOSE = "nav_query_plan_v2"
+
+
+@dataclass
+class Contract:
+    kind: ContractKind = "single_fact"
+    cardinality: Optional[int] = None
+    must_mention: List[str] = field(default_factory=list)
+
+
+@dataclass
+class ScopeFilter:
+    """Optional hard constraints on where a subgoal may look."""
+
+    doc_ids: List[str] = field(default_factory=list)
+    modality: List[str] = field(default_factory=list)
+    section_kind: List[str] = field(default_factory=list)
+
+
+@dataclass
+class Activation:
+    """When this subgoal may run. Conditional goals must set mode=on."""
+
+    mode: ActivationMode = "always"
+    on: str = ""  # parent subgoal id when mode=on
+    when: str = ""  # natural-language predicate over parent's extracted slots
+
+
+@dataclass
+class Subgoal:
+    id: str
+    need: str
+    retrieval_query: str
+    depends_on: List[str] = field(default_factory=list)
+    prefer_after: List[str] = field(default_factory=list)
+    contract: Contract = field(default_factory=Contract)
+    scope_filter: ScopeFilter = field(default_factory=ScopeFilter)
+    budget_share: float = 0.0
+    produces: List[str] = field(default_factory=list)
+    activation: Activation = field(default_factory=Activation)
+    # Optional map anchors: N* display ids and/or section_ids visible on the plan map.
+    route_hints: List[str] = field(default_factory=list)
+
+
+@dataclass
+class SubgoalEdge:
+    source: str
+    target: str
+    kind: RelationKind
+
+
+@dataclass
+class RetrievalPlan:
+    subgoals: List[Subgoal] = field(default_factory=list)
+    relations: List[SubgoalEdge] = field(default_factory=list)
+    reason: str = ""
+    map_coverage: MapCoverage = "sufficient"
+    fallback: bool = False
+    raw: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+    def subgoal_by_id(self) -> Dict[str, Subgoal]:
+        return {s.id: s for s in self.subgoals}
+
+
+def bind_slots(text: str, bindings: Dict[str, str]) -> str:
+    """Fill ``{{slot}}`` / ``{{s1.slot}}`` placeholders from extracted bindings."""
+
+    def repl(m: re.Match[str]) -> str:
+        key = m.group(1)
+        if key in bindings:
+            return str(bindings[key])
+        if "." in key:
+            short = key.split(".", 1)[1]
+            if short in bindings:
+                return str(bindings[short])
+        return m.group(0)
+
+    return _SLOT_REF_RE.sub(repl, text or "")
+
+
+def unbound_slots(text: str) -> List[str]:
+    return [m.group(1) for m in _SLOT_REF_RE.finditer(text or "")]
+
+
+def extract_plan_json(text: str) -> Optional[dict]:
+    """Parse a (possibly nested) JSON object from model output.
+
+    Unlike the navigate-action helper, this uses brace balancing so nested
+    plan objects are not truncated to the first inner ``{...}``.
+    """
+    s = (text or "").strip()
+    if not s:
+        return None
+    if s.startswith("```"):
+        s = re.sub(r"^```(?:json)?\s*", "", s)
+        s = re.sub(r"\s*```$", "", s)
+        s = s.strip()
+    if s.startswith("{") and s.endswith("}"):
+        try:
+            obj = json.loads(s)
+            return obj if isinstance(obj, dict) else None
+        except Exception:
+            pass
+    start = s.find("{")
+    if start < 0:
+        return None
+    depth = 0
+    in_str = False
+    esc = False
+    for i in range(start, len(s)):
+        ch = s[i]
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+        elif ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                try:
+                    obj = json.loads(s[start : i + 1])
+                    return obj if isinstance(obj, dict) else None
+                except Exception:
+                    return None
+    return None
+
+
+def _as_str_list(raw: Any) -> List[str]:
+    if raw is None:
+        return []
+    if isinstance(raw, str):
+        s = raw.strip()
+        return [s] if s else []
+    if isinstance(raw, list):
+        out: List[str] = []
+        for x in raw:
+            t = str(x).strip()
+            if t:
+                out.append(t)
+        return out
+    return []
+
+
+def _parse_contract(raw: Any) -> Contract:
+    if not isinstance(raw, dict):
+        return Contract()
+    kind = str(raw.get("kind") or "single_fact").strip().lower().replace("-", "_")
+    if kind not in _CONTRACT_KINDS:
+        kind = "single_fact"
+    card = raw.get("cardinality", None)
+    cardinality: Optional[int] = None
+    if card is not None and str(card).strip() != "":
+        try:
+            cardinality = max(1, int(card))
+        except Exception:
+            cardinality = None
+    return Contract(
+        kind=kind,  # type: ignore[arg-type]
+        cardinality=cardinality,
+        must_mention=_as_str_list(raw.get("must_mention")),
+    )
+
+
+def _parse_scope_filter(raw: Any) -> ScopeFilter:
+    if not isinstance(raw, dict):
+        return ScopeFilter()
+    return ScopeFilter(
+        doc_ids=_as_str_list(raw.get("doc_ids")),
+        modality=_as_str_list(raw.get("modality")),
+        section_kind=_as_str_list(raw.get("section_kind")),
+    )
+
+
+def _parse_activation(raw: Any) -> Activation:
+    if raw is None:
+        return Activation()
+    if isinstance(raw, str):
+        mode = raw.strip().lower()
+        if mode in {"always", "on"}:
+            return Activation(mode=mode)  # type: ignore[arg-type]
+        return Activation()
+    if not isinstance(raw, dict):
+        return Activation()
+    mode = str(raw.get("mode") or "").strip().lower()
+    on = str(raw.get("on") or raw.get("parent") or raw.get("after") or "").strip()
+    when = str(raw.get("when") or raw.get("if") or raw.get("condition") or "").strip()
+    if mode not in {"always", "on"}:
+        mode = "on" if on else "always"
+    if mode == "on" and not on:
+        mode = "always"
+    return Activation(mode=mode, on=on, when=when)  # type: ignore[arg-type]
+
+
+def _script_hist(text: str) -> Dict[str, float]:
+    """Fraction of non-space chars in cjk / latin / other (no language hardcoding)."""
+    counts = {"cjk": 0, "latin": 0, "other": 0}
+    for ch in text or "":
+        if ch.isspace():
+            continue
+        code = ord(ch)
+        if 0x4E00 <= code <= 0x9FFF or 0x3400 <= code <= 0x4DBF:
+            counts["cjk"] += 1
+        elif ("A" <= ch <= "Z") or ("a" <= ch <= "z"):
+            counts["latin"] += 1
+        else:
+            counts["other"] += 1
+    total = sum(counts.values())
+    if total <= 0:
+        return {"cjk": 0.0, "latin": 0.0, "other": 0.0}
+    return {k: float(v) / float(total) for k, v in counts.items()}
+
+
+def _dominant_letter_script(hist: Dict[str, float]) -> Optional[str]:
+    cjk = float(hist.get("cjk") or 0.0)
+    latin = float(hist.get("latin") or 0.0)
+    if cjk <= 0.0 and latin <= 0.0:
+        return None
+    return "cjk" if cjk >= latin else "latin"
+
+
+def retrieval_query_language_mismatch(retrieval_query: str, reference: str) -> bool:
+    """True when rq uses another letter script while lacking the map/query script.
+
+    Criterion is absolute absence of the reference's dominant letter script while
+    another letter script is present — not a numeric threshold, not a fixed language.
+    """
+    rq = (retrieval_query or "").strip()
+    ref = (reference or "").strip()
+    if not rq or not ref:
+        return False
+    ref_dom = _dominant_letter_script(_script_hist(ref))
+    if ref_dom is None:
+        return False
+    q_hist = _script_hist(rq)
+    if ref_dom == "cjk" and q_hist.get("cjk", 0.0) == 0.0 and q_hist.get("latin", 0.0) > 0.0:
+        return True
+    if ref_dom == "latin" and q_hist.get("latin", 0.0) == 0.0 and q_hist.get("cjk", 0.0) > 0.0:
+        return True
+    return False
+
+
+def language_reference_text(
+    *,
+    query: str,
+    projection: Optional[Projection] = None,
+) -> str:
+    """Script reference for retrieval_query checks.
+
+    Uses the user query plus visible map *titles* only. The actionable map
+    observation is intentionally excluded — its English chrome (collect=/dispatch=
+    /[Hit]/ would falsely dominate script detection.
+    """
+    parts: List[str] = []
+    q = (query or "").strip()
+    if q:
+        parts.append(q)
+    if projection is not None:
+        for v in projection.tree_sections or projection.visible_sections or []:
+            title = str(getattr(v, "title", "") or "").strip()
+            if not title:
+                title = str(getattr(v, "preview", "") or "").strip()
+            if title:
+                parts.append(title)
+    return "\n".join(parts)
+
+
+def plan_has_language_mismatch(plan: RetrievalPlan, reference: str) -> bool:
+    return any(
+        retrieval_query_language_mismatch(s.retrieval_query, reference)
+        for s in plan.subgoals
+    )
+
+
+def is_always_active(subgoal: Subgoal) -> bool:
+    return (subgoal.activation.mode or "always") != "on"
+
+
+def _normalize_budget_shares(subgoals: List[Subgoal]) -> None:
+    """Normalize budget only among always-active subgoals.
+
+    Conditional subgoals keep their declared relative claim and do not dilute
+    the always-active pool (they draw from a reserve when activated later).
+    """
+    always = [s for s in subgoals if is_always_active(s)]
+    if not always:
+        always = list(subgoals)
+    shares = [max(0.0, float(s.budget_share or 0.0)) for s in always]
+    total = sum(shares)
+    if total > 0.0:
+        for s, w in zip(always, shares):
+            s.budget_share = float(w) / total
+        return
+    n = len(always)
+    if n <= 0:
+        return
+    even = 1.0 / float(n)
+    for s in always:
+        s.budget_share = even
+
+
+def _has_cycle(subgoals: List[Subgoal]) -> bool:
+    deps: Dict[str, List[str]] = {s.id: list(s.depends_on) for s in subgoals}
+    visiting: Set[str] = set()
+    done: Set[str] = set()
+
+    def dfs(node: str) -> bool:
+        if node in done:
+            return False
+        if node in visiting:
+            return True
+        visiting.add(node)
+        for nxt in deps.get(node, []):
+            if nxt in deps and dfs(nxt):
+                return True
+        visiting.remove(node)
+        done.add(node)
+        return False
+
+    return any(dfs(sid) for sid in deps)
+
+
+def _break_dependency_cycles(subgoals: List[Subgoal]) -> None:
+    """Move cycle-forming back-edges to prefer_after; keep acyclic depends_on."""
+    deps: Dict[str, List[str]] = {s.id: list(s.depends_on) for s in subgoals}
+    visiting: Set[str] = set()
+    done: Set[str] = set()
+    back_edges: List[Tuple[str, str]] = []
+
+    def dfs(node: str) -> None:
+        visiting.add(node)
+        for nxt in list(deps.get(node, [])):
+            if nxt not in deps:
+                continue
+            if nxt in visiting:
+                back_edges.append((node, nxt))
+            elif nxt not in done:
+                dfs(nxt)
+        visiting.discard(node)
+        done.add(node)
+
+    for sid in list(deps.keys()):
+        if sid not in done:
+            dfs(sid)
+
+    if not back_edges:
+        return
+    by = {s.id: s for s in subgoals}
+    for src, tgt in back_edges:
+        s = by.get(src)
+        if s is None or tgt not in s.depends_on:
+            continue
+        s.depends_on = [d for d in s.depends_on if d != tgt]
+        if tgt not in s.prefer_after:
+            s.prefer_after.append(tgt)
+
+
+def _resolve_route_hints(
+    hints: Sequence[str],
+    *,
+    projection: Optional[Projection],
+) -> List[str]:
+    """Keep only hints that resolve to visible map nodes; drop hallucinations."""
+    if not hints:
+        return []
+    if projection is None:
+        return [str(h).strip() for h in hints if str(h).strip()]
+    id_to_section = dict(projection.id_to_section or {})
+    visible_sids = {
+        str(v.section_id)
+        for v in (projection.tree_sections or projection.visible_sections or [])
+        if v.section_id
+    }
+    map_ids = {str(mid).upper(): sid for mid, sid in id_to_section.items()}
+    out: List[str] = []
+    seen: Set[str] = set()
+    for raw in hints:
+        token = str(raw or "").strip()
+        if not token:
+            continue
+        sid = ""
+        upper = token.upper()
+        if upper in map_ids:
+            sid = map_ids[upper]
+        elif token in visible_sids:
+            sid = token
+        if sid and sid not in seen:
+            out.append(sid)
+            seen.add(sid)
+    return out
+
+
+def _slot_owner_and_name(ref: str) -> Tuple[Optional[str], str]:
+    token = (ref or "").strip()
+    if not token:
+        return None, ""
+    if "." in token:
+        owner, name = token.split(".", 1)
+        return owner.strip() or None, name.strip()
+    return None, token
+
+
+def _apply_slot_dependency_inference(subgoals: List[Subgoal]) -> None:
+    """Hard deps + produces filled from ``{{s1.slot}}`` references (mechanical)."""
+    by_id = {s.id: s for s in subgoals}
+    for s in subgoals:
+        for ref in unbound_slots(s.retrieval_query) + unbound_slots(s.need):
+            owner, name = _slot_owner_and_name(ref)
+            if owner and owner in by_id and owner != s.id:
+                if owner not in s.depends_on:
+                    s.depends_on.append(owner)
+                if name and not by_id[owner].produces:
+                    by_id[owner].produces = [name]
+
+
+def _apply_activation_dependencies(subgoals: List[Subgoal]) -> None:
+    known = {s.id for s in subgoals}
+    for s in subgoals:
+        if s.activation.mode != "on":
+            continue
+        parent = (s.activation.on or "").strip()
+        if parent not in known or parent == s.id:
+            s.activation = Activation()
+            continue
+        if parent not in s.depends_on:
+            s.depends_on.append(parent)
+
+
+def _parse_map_coverage(raw: Any) -> MapCoverage:
+    val = str(raw or "").strip().lower()
+    if val in _MAP_COVERAGE:
+        return val  # type: ignore[return-value]
+    return "sufficient"
+
+
+def parse_retrieval_plan(
+    obj: dict,
+    *,
+    query: str,
+    projection: Optional[Projection] = None,
+) -> RetrievalPlan:
+    """Parse LLM JSON into a RetrievalPlan; invalid refs are dropped."""
+    rows = obj.get("subgoals") or obj.get("goals") or obj.get("steps") or []
+    if not isinstance(rows, list):
+        rows = []
+
+    activations: Dict[str, Activation] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        sid = str(row.get("id") or row.get("subgoal_id") or "").strip()
+        if sid:
+            activations[sid] = _parse_activation(row.get("activation"))
+
+    subgoals: List[Subgoal] = []
+    seen_ids: Set[str] = set()
+    for i, row in enumerate(rows):
+        if not isinstance(row, dict):
+            continue
+        sid = str(row.get("id") or row.get("subgoal_id") or f"s{i + 1}").strip()
+        if not sid or sid in seen_ids:
+            continue
+        seen_ids.add(sid)
+        need = str(row.get("need") or row.get("goal") or "").strip()
+        rq = str(
+            row.get("retrieval_query") or row.get("query") or need or query
+        ).strip()
+        if not need:
+            need = rq or query
+        if not rq:
+            rq = need or query
+        produces = _as_str_list(row.get("produces"))
+        if len(produces) > 1:
+            produces = produces[:1]
+        subgoals.append(
+            Subgoal(
+                id=sid,
+                need=need,
+                retrieval_query=rq,
+                depends_on=_as_str_list(row.get("depends_on")),
+                prefer_after=_as_str_list(row.get("prefer_after")),
+                contract=_parse_contract(row.get("contract")),
+                scope_filter=_parse_scope_filter(row.get("scope_filter")),
+                budget_share=float(row.get("budget_share") or 0.0),
+                produces=produces,
+                activation=activations.get(sid, Activation()),
+                route_hints=_as_str_list(
+                    row.get("route_hints") or row.get("map_hints") or row.get("hints")
+                ),
+            )
+        )
+
+    known = {s.id for s in subgoals}
+    for s in subgoals:
+        s.depends_on = [d for d in s.depends_on if d in known and d != s.id]
+        s.prefer_after = [d for d in s.prefer_after if d in known and d != s.id]
+        s.route_hints = _resolve_route_hints(s.route_hints, projection=projection)
+
+    _apply_activation_dependencies(subgoals)
+    _apply_slot_dependency_inference(subgoals)
+    for s in subgoals:
+        if len(s.produces) > 1:
+            s.produces = s.produces[:1]
+
+    relations: List[SubgoalEdge] = []
+    rel_raw = obj.get("relations") or obj.get("edges") or []
+    if isinstance(rel_raw, list):
+        for edge in rel_raw:
+            if not isinstance(edge, dict):
+                continue
+            src = str(edge.get("source") or edge.get("from") or edge.get("a") or "").strip()
+            tgt = str(edge.get("target") or edge.get("to") or edge.get("b") or "").strip()
+            kind = str(edge.get("kind") or edge.get("relation") or "").strip().lower()
+            if kind == "parent_child":
+                kind = "parent-child"
+            if kind == "unrelated":
+                continue
+            if src not in known or tgt not in known or src == tgt:
+                continue
+            if kind not in _RELATION_KINDS:
+                continue
+            relations.append(SubgoalEdge(source=src, target=tgt, kind=kind))  # type: ignore[arg-type]
+            if kind == "parent-child":
+                for s in subgoals:
+                    if s.id == tgt and src not in s.depends_on:
+                        s.depends_on.append(src)
+
+    if _has_cycle(subgoals):
+        _break_dependency_cycles(subgoals)
+
+    _normalize_budget_shares(subgoals)
+    reason = str(obj.get("reason") or obj.get("plan_reason") or "").strip()
+    coverage = _parse_map_coverage(obj.get("map_coverage") or obj.get("coverage"))
+    return RetrievalPlan(
+        subgoals=subgoals,
+        relations=relations,
+        reason=reason,
+        map_coverage=coverage,
+    )
+
+
+def fallback_plan(query: str, *, reason: str = "fallback") -> RetrievalPlan:
+    """Single atomic subgoal when planning fails or is unnecessary."""
+    q = (query or "").strip() or "query"
+    return RetrievalPlan(
+        subgoals=[
+            Subgoal(
+                id="s1",
+                need=q,
+                retrieval_query=q,
+                contract=Contract(kind="single_fact"),
+                budget_share=1.0,
+                activation=Activation(),
+            )
+        ],
+        reason=reason,
+        map_coverage="sufficient",
+        fallback=True,
+    )
+
+
+def validate_retrieval_plan(plan: RetrievalPlan) -> Tuple[bool, str]:
+    if not plan.subgoals:
+        return False, "empty_subgoals"
+    ids = [s.id for s in plan.subgoals]
+    if len(ids) != len(set(ids)):
+        return False, "duplicate_ids"
+    known = set(ids)
+    for s in plan.subgoals:
+        if not (s.need or s.retrieval_query):
+            return False, f"empty_need:{s.id}"
+        for d in s.depends_on:
+            if d not in known:
+                return False, f"bad_depends_on:{s.id}->{d}"
+        for d in s.prefer_after:
+            if d not in known:
+                return False, f"bad_prefer_after:{s.id}->{d}"
+        if s.contract.kind not in _CONTRACT_KINDS:
+            return False, f"bad_contract:{s.id}"
+        if len(s.produces) > 1:
+            return False, f"multi_produces:{s.id}"
+        if s.activation.mode == "on":
+            parent = (s.activation.on or "").strip()
+            if parent not in known or parent == s.id:
+                return False, f"bad_activation:{s.id}"
+            if parent not in s.depends_on:
+                return False, f"activation_missing_depends:{s.id}"
+        for ref in unbound_slots(s.retrieval_query) + unbound_slots(s.need):
+            owner, _name = _slot_owner_and_name(ref)
+            if owner and owner in known and owner not in s.depends_on and owner != s.id:
+                return False, f"slot_missing_depends:{s.id}->{owner}"
+    if plan.map_coverage not in _MAP_COVERAGE:
+        return False, "bad_map_coverage"
+    if _has_cycle(plan.subgoals):
+        return False, "cyclic_depends_on"
+    return True, "ok"
+
+
+def planning_char_limit(config: NavConfig) -> int:
+    planned = int(getattr(config, "planning_map_char_limit", 0) or 0)
+    base = int(config.map_char_limit or 0)
+    if planned > 0:
+        return planned
+    return max(1, base)
+
+
+def build_planning_observation(
+    ts: Any,
+    state: NavState,
+    config: NavConfig,
+) -> Tuple[Projection, str]:
+    """Build the one-shot planning map (wider budget; same fold/title-only rules)."""
+    limit = planning_char_limit(config)
+    plan_cfg = replace(config, map_char_limit=limit)
+    projection = build_map(
+        ts,
+        doc_id=state.doc_id,
+        query=state.query,
+        scope=None,
+        config=plan_cfg,
+        map_scores=state.map_scores,
+        collected_section_ids=state.collected_section_ids,
+        dismissed_section_ids=state.dismissed_section_ids,
+        highlight_ids=state.highlight_ids,
+        hit_sources=state.hit_sources or None,
+    )
+    actions = build_legal_actions(
+        state,
+        projection,
+        step_idx=0,
+        config=plan_cfg,
+        depth=0,
+    )
+    obs = format_actionable_map_observation(
+        projection,
+        actions,
+        inline_summary=False,
+    )
+    return projection, obs
+
+
+def _planner_system_prompt(*, max_subgoals: int) -> str:
+    cap = ""
+    if max_subgoals > 0:
+        cap = f" Prefer at most {max_subgoals} subgoals."
+    return (
+        "You are a retrieval planner for a hierarchical document map.\n"
+        "You see a folded title map of the corpus/document. Nodes may carry "
+        "collect=C* and dispatch=D* action ids; [Hit] marks hybrid retrieval beacons.\n"
+        "Your job is to decompose the user query into an auditable retrieval plan "
+        "aligned with the map's seams — not with linguistic guesswork alone.\n\n"
+        "Rules:\n"
+        "1. Split until each subgoal is one atomic (subject, relation, object) need; "
+        "do not split further if another split adds no retrieval value."
+        f"{cap}\n"
+        "2. Simple queries may yield a single subgoal.\n"
+        "3. Each subgoal produces at most ONE slot name in produces "
+        "(enumeration = one list-valued slot).\n"
+        "4. retrieval_query is fed to lexical/hybrid retrieval over the map. "
+        "It MUST use the same language and terminology as the visible map titles "
+        "and the user query. Do not translate section terms into another script.\n"
+        "5. If a later retrieval_query needs a value from an earlier subgoal, "
+        "write it as {{s1.slot}} (not prose). That implies depends_on.\n"
+        "6. depends_on = hard data dependency. prefer_after = soft ordering only.\n"
+        "7. Conditional work uses activation, not a separate alternatives list:\n"
+        '   - default / main path: {"mode":"always"}\n'
+        '   - true fork only: {"mode":"on","on":"s1","when":"natural-language predicate"}\n'
+        "   Conditional subgoals run only if the parent succeeded and when holds. "
+        "Never put the primary answer path behind activation.\n"
+        "8. relations only for parent-child or sibling (omit unrelated pairs).\n"
+        "9. route_hints may list visible map ids (N*) only; never invent section paths.\n"
+        "10. budget_share is a relative weight for always-active subgoals "
+        "(need not sum to 1). Conditional subgoals may declare a claim too.\n"
+        "11. map_coverage: sufficient | partial | insufficient — whether the planning "
+        "map shows enough structure to ground this plan.\n"
+        "12. reason must be English, under 40 words. Document titles stay original "
+        "language.\n\n"
+        "Return ONLY one JSON object:\n"
+        "{\n"
+        '  "reason": "...",\n'
+        '  "map_coverage": "sufficient|partial|insufficient",\n'
+        '  "subgoals": [\n'
+        "    {\n"
+        '      "id": "s1",\n'
+        '      "need": "...",\n'
+        '      "retrieval_query": "...",\n'
+        '      "depends_on": [],\n'
+        '      "prefer_after": [],\n'
+        '      "produces": ["entity"],\n'
+        '      "budget_share": 0.5,\n'
+        '      "activation": {"mode": "always"},\n'
+        '      "contract": {"kind": "single_fact|enumeration|span|comparison|existence", '
+        '"cardinality": null, "must_mention": []},\n'
+        '      "scope_filter": {"doc_ids": [], "modality": [], "section_kind": []},\n'
+        '      "route_hints": ["N3"]\n'
+        "    },\n"
+        "    {\n"
+        '      "id": "s2",\n'
+        '      "need": "...",\n'
+        '      "retrieval_query": "... {{s1.entity}} ...",\n'
+        '      "depends_on": ["s1"],\n'
+        '      "produces": ["detail"],\n'
+        '      "activation": {"mode": "on", "on": "s1", "when": "entity is type A"},\n'
+        '      "contract": {"kind": "single_fact"}\n'
+        "    }\n"
+        "  ],\n"
+        '  "relations": [{"source": "s1", "target": "s2", "kind": "parent-child|sibling"}]\n'
+        "}"
+    )
+
+
+def _language_repair_user(
+    observation: str,
+    state: NavState,
+    bad_plan: RetrievalPlan,
+    *,
+    reference: str,
+) -> str:
+    bad_lines = []
+    for s in bad_plan.subgoals:
+        if retrieval_query_language_mismatch(s.retrieval_query, reference):
+            bad_lines.append(f"- {s.id}: {s.retrieval_query}")
+    bad_block = "\n".join(bad_lines) if bad_lines else "(see prior plan)"
+    return (
+        f"User query: {state.query}\n"
+        f"Task type: {state.task_type}\n\n"
+        f"=== Planning Map ===\n{observation}\n=== End Planning Map ===\n\n"
+        "Your previous plan had retrieval_query values that do not match the "
+        "language/script of the map titles and user query. Those queries will "
+        "fail lexical retrieval. Rewrite the FULL plan JSON. Keep structure, but "
+        "rewrite every mismatched retrieval_query using the map's own terms.\n"
+        f"Mismatched retrieval_query lines:\n{bad_block}\n"
+    )
+
+
+def plan_query(
+    ts: Any,
+    state: NavState,
+    config: NavConfig,
+    *,
+    observation: Optional[str] = None,
+    projection: Optional[Projection] = None,
+) -> RetrievalPlan:
+    """LLM plan over the planning map. Falls back to a single subgoal on failure."""
+    from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
+    from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
+    from agent_delivery.code.llm_usage import record_usage  # type: ignore
+
+    require_llm_env(context="Nav Query Planner")
+    if projection is None or observation is None:
+        projection, observation = build_planning_observation(ts, state, config)
+
+    from agent_delivery.code.llm_config import (  # type: ignore
+        chat_thinking_extra,
+        resolve_chat_credentials,
+        resolve_thinking_mode,
+    )
+
+    model = (
+        os.environ.get(config.planner_model_env, "").strip()
+        or os.environ.get(config.llm_model_env, "").strip()
+        or os.environ.get("COMPOSE_MODEL", "").strip()
+        or "gpt-4o-mini"
+    )
+    key, base_url = resolve_chat_credentials(
+        model=model,
+        api_key_env="NAV_PLANNER_API_KEY",
+        base_url_env="NAV_PLANNER_BASE_URL",
+    )
+    if not key:
+        key = os.environ.get("OPENAI_API_KEY", "").strip()
+    thinking_mode = resolve_thinking_mode(
+        os.environ.get("NAV_PLANNER_THINKING", "").strip() or None
+    )
+    think_extra = chat_thinking_extra(mode=thinking_mode, model=model)
+    # Thinking can exceed the default 60s client timeout.
+    timeout_s = float(os.environ.get("NAV_PLANNER_TIMEOUT_SECONDS", "").strip() or "0")
+    if timeout_s <= 0:
+        timeout_s = 300.0 if thinking_mode == "enabled" else 90.0
+    client = make_openai_client(api_key=key, base_url=base_url, timeout=timeout_s)
+    max_subgoals = int(getattr(config, "planner_max_subgoals", 0) or 0)
+    system = _planner_system_prompt(max_subgoals=max_subgoals)
+    reference = language_reference_text(query=state.query, projection=projection)
+    user = (
+        f"User query: {state.query}\n"
+        f"Task type: {state.task_type}\n\n"
+        f"=== Planning Map ===\n{observation}\n=== End Planning Map ===\n\n"
+        "Return the retrieval plan JSON."
+    )
+    max_tokens = max(
+        int(config.llm_max_tokens or 0),
+        int(getattr(config, "planner_llm_max_tokens", 0) or 0),
+        256,
+    )
+    # Reasoning tokens consume the same max_tokens budget as the final JSON.
+    # Without headroom, think mode returns HTTP 200 with empty content.
+    think_max = int(os.environ.get("NAV_PLANNER_THINK_MAX_TOKENS", "").strip() or "0")
+    if thinking_mode == "enabled":
+        if think_max <= 0:
+            think_max = 16384
+        max_tokens = max(max_tokens, think_max)
+    last_raw = ""
+    last_err = ""
+    language_repair_used = False
+    for _attempt in range(3):
+        try:
+            cached = cached_chat_completion(
+                client,
+                purpose=_PLANNER_PURPOSE,
+                model=model,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+                temperature=float(config.llm_temperature),
+                max_tokens=max_tokens,
+                response_format={"type": "json_object"},
+                extra=think_extra or None,
+            )
+            record_usage("nav_plan", cached.get("usage"))
+            content = str(cached.get("content") or "").strip()
+            reasoning = str(cached.get("reasoning_content") or "").strip()
+            last_raw = content
+            if not last_raw and reasoning:
+                # Only fall back to reasoning if it actually embeds JSON.
+                if extract_plan_json(reasoning):
+                    last_raw = reasoning
+                else:
+                    last_err = "empty_content_after_think"
+                    continue
+            if not last_raw:
+                last_err = "empty_content"
+                continue
+            obj = extract_plan_json(last_raw) or {}
+            plan = parse_retrieval_plan(
+                obj, query=state.query, projection=projection
+            )
+            plan.raw = last_raw[:2000]
+            ok, why = validate_retrieval_plan(plan)
+            if not ok:
+                last_err = why
+                continue
+            if plan_has_language_mismatch(plan, reference) and not language_repair_used:
+                language_repair_used = True
+                last_err = "language_mismatch"
+                user = _language_repair_user(
+                    observation, state, plan, reference=reference
+                )
+                continue
+            if plan_has_language_mismatch(plan, reference):
+                last_err = "language_mismatch"
+                continue
+            return plan
+        except Exception as exc:  # pragma: no cover - network/LLM path
+            last_err = str(exc)
+            continue
+    plan = fallback_plan(state.query, reason=f"fallback:{last_err or 'unparsed'}")
+    plan.raw = last_raw[:2000]
+    return plan

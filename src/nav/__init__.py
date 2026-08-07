@@ -1,13 +1,41 @@
 """Recursive-dispatch map navigation for RealData experiments."""
 
-from nav_types import ActionKind, NavConfig, NavState, RegionReport, map_mode_enabled
+from nav_types import (
+    ActionKind,
+    NavConfig,
+    NavState,
+    RegionReport,
+    SubgoalResult,
+    map_mode_enabled,
+)
 from nav_agent import run_nav_episode
+from nav_plan import (
+    Activation,
+    Contract,
+    RetrievalPlan,
+    ScopeFilter,
+    Subgoal,
+    bind_slots,
+    plan_query,
+)
+from nav_orchestrate import execute_plan
+from nav_illuminate import illuminate_from_plan
 
 __all__ = [
     "ActionKind",
     "NavConfig",
     "NavState",
     "RegionReport",
+    "SubgoalResult",
     "map_mode_enabled",
     "run_nav_episode",
+    "Activation",
+    "Contract",
+    "RetrievalPlan",
+    "ScopeFilter",
+    "Subgoal",
+    "bind_slots",
+    "plan_query",
+    "execute_plan",
+    "illuminate_from_plan",
 ]

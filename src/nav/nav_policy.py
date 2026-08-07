@@ -310,8 +310,11 @@ def choose_llm_action(
             f"=== End Assembled Evidence ===\n"
         )
 
+    focus_need = str(getattr(state, "focus_subgoal_need", "") or "").strip()
+    focus_rq = str(getattr(state, "focus_retrieval_query", "") or "").strip()
+    effective_query = focus_rq or state.query
     user = (
-        f"User query: {state.query}\n"
+        f"User query: {effective_query}\n"
         f"Task type: {state.task_type}\n\n"
         f"{agent_state}\n\n"
         f"=== Actionable Observation ===\n"
@@ -321,6 +324,35 @@ def choose_llm_action(
         f"{preview_block}\n"
         'Return: {"action_id":"...","reason":"..."}'
     )
+    if focus_need:
+        focus_id = str(getattr(state, "focus_subgoal_id", "") or "").strip()
+        focus_contract = str(getattr(state, "focus_subgoal_contract", "") or "").strip()
+        episode_line = ""
+        if focus_rq and focus_rq.strip() != str(state.query or "").strip():
+            episode_line = f"episode_query: {state.query}\n"
+        focus_block = (
+            f"\n=== Current Subgoal (soft focus; action space unchanged) ===\n"
+            f"id: {focus_id or '-'}\n"
+            f"{episode_line}"
+            f"need: {focus_need}\n"
+            f"retrieval_query: {focus_rq or focus_need}\n"
+            f"contract: {focus_contract or '-'}\n"
+            f"Prefer evidence that serves this need, but you may still collect any "
+            f"visible useful node.\n"
+            f"=== End Current Subgoal ===\n"
+        )
+        user = (
+            f"User query: {effective_query}\n"
+            f"Task type: {state.task_type}\n\n"
+            f"{agent_state}\n"
+            f"{focus_block}\n"
+            f"=== Actionable Observation ===\n"
+            f"{projection.text}\n"
+            f"=== End Actionable Observation ===\n"
+            f"{reports_block}"
+            f"{preview_block}\n"
+            'Return: {"action_id":"...","reason":"..."}'
+        )
 
     purpose = "nav_navigate_v1" if depth == 0 else "nav_subagent_v1"
     last_error: Optional[Exception] = None

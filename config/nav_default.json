@@ -35,5 +35,18 @@
   "compose_coverage_budget_frac": 0.4,
   "compose_snippet_chars": 80,
   "enable_depth0_oversize_to_dispatch": true,
-  "depth0_oversize_char_limit": 500
+  "depth0_oversize_char_limit": 500,
+  "enable_query_planning": false,
+  "planning_map_char_limit": 10000,
+  "planner_max_subgoals": 0,
+  "planner_model_env": "NAV_PLANNER_MODEL",
+  "planner_llm_max_tokens": 1024,
+  "enable_per_subgoal_illumination": false,
+  "enable_goal_conditioned_folding": false,
+  "enable_plan_orchestration": false,
+  "enable_locality_merge": false,
+  "enable_contract_verify": false,
+  "subgoal_max_attempts": 2,
+  "max_replans": 0,
+  "max_waves": 0
 }

@@ -143,7 +143,12 @@ def cached_chat_completion(
                 "billed_usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
                 "elapsed_seconds": time.perf_counter() - call_t0,
             })
-            return {"content": str(row.get("content") or ""), "usage": usage, "cache_hit": True}
+            return {
+                "content": str(row.get("content") or ""),
+                "reasoning_content": str(row.get("reasoning_content") or ""),
+                "usage": usage,
+                "cache_hit": True,
+            }
 
     kwargs: Dict[str, Any] = {
         "model": model,
@@ -155,7 +160,10 @@ def cached_chat_completion(
     if response_format is not None:
         kwargs["response_format"] = response_format
     if extra:
-        kwargs.update(extra)
+        # Keys starting with "_" are cache-only metadata (e.g. _thinking_mode).
+        kwargs.update(
+            {k: v for k, v in extra.items() if not str(k).startswith("_")}
+        )
     max_retries = max(1, int(os.environ.get("BODYRICH_LLM_API_MAX_RETRIES", "6").strip() or "6"))
     base_sleep = max(0.0, float(os.environ.get("BODYRICH_LLM_API_RETRY_BASE_SECONDS", "0.8").strip() or "0.8"))
     last_error: Exception | None = None
@@ -180,7 +188,33 @@ def cached_chat_completion(
     else:  # pragma: no cover - loop always breaks or raises.
         raise RuntimeError(f"LLM API failed without response: {last_error}")
     content = (rsp.choices[0].message.content or "").strip()
+    reasoning = ""
+    msg = rsp.choices[0].message
+    for attr in ("reasoning_content", "reasoning"):
+        val = getattr(msg, attr, None)
+        if val:
+            reasoning = str(val).strip()
+            break
+    if not reasoning and isinstance(getattr(msg, "model_extra", None), dict):
+        reasoning = str(
+            msg.model_extra.get("reasoning_content")
+            or msg.model_extra.get("reasoning")
+            or ""
+        ).strip()
     usage = _usage_dict(getattr(rsp, "usage", None))
+    # Some gateways report reasoning tokens separately.
+    raw_usage = getattr(rsp, "usage", None)
+    if raw_usage is not None:
+        for attr in ("reasoning_tokens", "completion_tokens_details"):
+            val = getattr(raw_usage, attr, None)
+            if attr == "reasoning_tokens" and val is not None:
+                usage["reasoning_tokens"] = int(val or 0)
+            if attr == "completion_tokens_details" and val is not None:
+                rt = getattr(val, "reasoning_tokens", None)
+                if rt is None and isinstance(val, dict):
+                    rt = val.get("reasoning_tokens")
+                if rt is not None:
+                    usage["reasoning_tokens"] = int(rt or 0)
     usage["retry_wait_seconds"] = retry_wait_seconds
     if _cache_enabled():
         path = _cache_path()
@@ -191,6 +225,7 @@ def cached_chat_completion(
             "purpose": purpose,
             "model": model,
             "content": content,
+            "reasoning_content": reasoning,
             "usage": usage,
         }
         with _LOCK:
@@ -210,5 +245,11 @@ def cached_chat_completion(
         "billed_usage": _usage_dict(usage),
         "retry_wait_seconds": retry_wait_seconds,
         "elapsed_seconds": time.perf_counter() - call_t0,
+        "has_reasoning": bool(reasoning),
     })
-    return {"content": content, "usage": usage, "cache_hit": False}
+    return {
+        "content": content,
+        "reasoning_content": reasoning,
+        "usage": usage,
+        "cache_hit": False,
+    }

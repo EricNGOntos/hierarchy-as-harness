@@ -149,8 +149,8 @@ def _fork_nav_state(state: NavState, *, doc_id: Optional[str] = None) -> NavStat
         current_scope=state.current_scope,
         collected_ids=set(state.collected_ids),
         collected=list(state.collected),
-        map_scores=state.map_scores,
-        unit_scores=state.unit_scores,
+        map_scores=dict(state.map_scores or {}),
+        unit_scores=dict(state.unit_scores or {}),
         highlight_ids=list(state.highlight_ids),
         collected_section_ids=set(state.collected_section_ids),
         blocked_collect_section_ids=set(state.blocked_collect_section_ids),
@@ -162,6 +162,27 @@ def _fork_nav_state(state: NavState, *, doc_id: Optional[str] = None) -> NavStat
         collect_confidence=dict(state.collect_confidence),
         explicit_collect_ids=set(state.explicit_collect_ids),
         group_priority=dict(state.group_priority),
+        retrieval_plan=state.retrieval_plan,
+        slot_bindings=dict(state.slot_bindings),
+        subgoal_map_scores={
+            k: dict(v) for k, v in (state.subgoal_map_scores or {}).items()
+        },
+        subgoal_unit_scores={
+            k: dict(v) for k, v in (state.subgoal_unit_scores or {}).items()
+        },
+        hit_sources={k: list(v) for k, v in (state.hit_sources or {}).items()},
+        active_subgoal_ids=list(state.active_subgoal_ids),
+        satisfied_subgoal_ids=set(state.satisfied_subgoal_ids),
+        attempted_subgoal_ids=set(state.attempted_subgoal_ids),
+        activated_subgoal_ids=set(state.activated_subgoal_ids),
+        focus_subgoal_id=state.focus_subgoal_id,
+        focus_subgoal_need=state.focus_subgoal_need,
+        focus_subgoal_contract=state.focus_subgoal_contract,
+        focus_retrieval_query=state.focus_retrieval_query,
+        focus_contract_kind=state.focus_contract_kind,
+        focus_scope_doc_ids=list(state.focus_scope_doc_ids or []),
+        subgoal_results=dict(state.subgoal_results),
+        replan_count=int(state.replan_count or 0),
     )
 
 
@@ -182,6 +203,11 @@ def _merge_nav_state(parent: NavState, child: NavState) -> None:
     parent.collect_confidence.update(child.collect_confidence)
     parent.explicit_collect_ids.update(child.explicit_collect_ids)
     parent.group_priority.update(child.group_priority)
+    parent.slot_bindings.update(child.slot_bindings)
+    parent.satisfied_subgoal_ids.update(child.satisfied_subgoal_ids)
+    parent.attempted_subgoal_ids.update(child.attempted_subgoal_ids)
+    parent.activated_subgoal_ids.update(child.activated_subgoal_ids)
+    parent.subgoal_results.update(child.subgoal_results)
     if child.reports_context:
         if parent.reports_context:
             parent.reports_context = parent.reports_context + "\n" + child.reports_context
@@ -419,6 +445,7 @@ def navigate(
                 collected_section_ids=state.collected_section_ids,
                 dismissed_section_ids=state.dismissed_section_ids,
                 highlight_ids=state.highlight_ids,
+                hit_sources=state.hit_sources or None,
             )
             # Experimental non-recursive mode: if a deep region overflows the
             # map budget after folding, skip rather than invent hard truncation.
