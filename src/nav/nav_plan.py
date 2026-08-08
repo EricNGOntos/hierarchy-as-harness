@@ -671,6 +671,11 @@ def build_planning_observation(
         dismissed_section_ids=state.dismissed_section_ids,
         highlight_ids=state.highlight_ids,
         hit_sources=state.hit_sources or None,
+        harvested_section_ids=(
+            state.harvested_owner_subgoal
+            if bool(getattr(config, "show_harvested_in_map", False))
+            else None
+        ),
     )
     actions = build_legal_actions(
         state,

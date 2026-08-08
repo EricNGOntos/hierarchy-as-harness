@@ -183,6 +183,9 @@ def _fork_nav_state(state: NavState, *, doc_id: Optional[str] = None) -> NavStat
         focus_scope_doc_ids=list(state.focus_scope_doc_ids or []),
         subgoal_results=dict(state.subgoal_results),
         replan_count=int(state.replan_count or 0),
+        harvested_owner_subgoal=dict(state.harvested_owner_subgoal),
+        subgoal_reharvest_anchor=dict(state.subgoal_reharvest_anchor),
+        subgoal_attempt_counts=dict(state.subgoal_attempt_counts),
     )
 
 
@@ -208,6 +211,12 @@ def _merge_nav_state(parent: NavState, child: NavState) -> None:
     parent.attempted_subgoal_ids.update(child.attempted_subgoal_ids)
     parent.activated_subgoal_ids.update(child.activated_subgoal_ids)
     parent.subgoal_results.update(child.subgoal_results)
+    parent.harvested_owner_subgoal.update(child.harvested_owner_subgoal)
+    parent.subgoal_reharvest_anchor.update(child.subgoal_reharvest_anchor)
+    for sid, n in child.subgoal_attempt_counts.items():
+        parent.subgoal_attempt_counts[sid] = max(
+            int(parent.subgoal_attempt_counts.get(sid, 0)), int(n)
+        )
     if child.reports_context:
         if parent.reports_context:
             parent.reports_context = parent.reports_context + "\n" + child.reports_context
@@ -446,6 +455,11 @@ def navigate(
                 dismissed_section_ids=state.dismissed_section_ids,
                 highlight_ids=state.highlight_ids,
                 hit_sources=state.hit_sources or None,
+                harvested_section_ids=(
+                    state.harvested_owner_subgoal
+                    if bool(getattr(config, "show_harvested_in_map", False))
+                    else None
+                ),
             )
             # Experimental non-recursive mode: if a deep region overflows the
             # map budget after folding, skip rather than invent hard truncation.
@@ -480,10 +494,21 @@ def navigate(
 
             group_map: Dict[str, str] = {}
             assembled_preview = ""
+            # settle-group-rank (fix-group-rank): under a RetrievalPlan every
+            # subgoal's navigate() runs at depth 0, so this per-step preview
+            # would re-request (and overwrite) group_priority once per
+            # subgoal — the last subgoal to run always wins globally. When
+            # enable_settle_group_rank is on, ranking happens exactly once at
+            # settle time (nav_compose._build_groups' own score-order fallback)
+            # instead, so this per-step request is skipped for plan episodes.
+            settle_group_rank_active = bool(
+                getattr(config, "enable_settle_group_rank", False)
+            ) and state.retrieval_plan is not None
             if (
                 depth == 0
                 and bool(getattr(config, "enable_external_rerank", True))
                 and state.collected
+                and not settle_group_rank_active
             ):
                 from nav_compose import build_compose_preview, dedupe_scored
 

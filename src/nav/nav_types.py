@@ -106,6 +106,28 @@ class NavConfig:
     enable_subgoal_budget_ledger: bool = False
     # Fraction of episode budget reserved as floors by budget_share (rest starts in Tier-2 pool).
     subgoal_budget_floor_frac: float = 1.0
+    # --- PLAN×NAV fusion (2026-08): anchor entry + one-shot harvest + plan_control ---
+    # Enter a subgoal's harvest at its resolved route_hints anchor instead of the
+    # document/corpus root. Per-subgoal fallback to root when no anchor resolves.
+    enable_anchor_entry: bool = False
+    # Replace the multi-step ReAct navigate() with a single collect/dispatch
+    # decision per node; recursion only follows explicit DISPATCH selections.
+    enable_one_shot_harvest: bool = False
+    # Structural recursion depth cap for harvest() (mirrors max_dispatch_depth's
+    # existing default; harvest recursion is bounded independently of navigate()).
+    max_harvest_depth: int = 3
+    # Replace per-subgoal verdict auto-escalation (RETRY/WIDEN/REBIND -> REPLAN)
+    # with one LLM call per wave that reviews every subgoal's own new evidence.
+    enable_plan_control: bool = False
+    # Per-subgoal evidence digest cap shown to plan_control (not the full pool;
+    # kept small since plan_control runs once per wave over every subgoal).
+    plan_control_digest_chars: int = 600
+    # Render collected branches as "[harvested:sN]" instead of removing them from
+    # the map/action space, so later subgoals and plan_control still see coverage.
+    show_harvested_in_map: bool = False
+    # Compute group_priority once at settle time instead of once per per-subgoal
+    # navigate() call (which otherwise lets the last subgoal's rank win globally).
+    enable_settle_group_rank: bool = False
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "NavConfig":
@@ -155,6 +177,10 @@ class SectionView:
     summary: str = ""
     # M3: which subgoal illuminations marked this node a Hit (for [Hit:s1,s3]).
     hit_sources: List[str] = field(default_factory=list)
+    # PLAN×NAV fusion: subgoal id that collected this node's branch, when the
+    # node stays visible (collapsed, no descendant expansion) instead of being
+    # deleted from the map — for [harvested:sN].
+    harvested_by: str = ""
 
 
 @dataclass
@@ -270,3 +296,10 @@ class NavState:
     focus_scope_doc_ids: List[str] = field(default_factory=list)
     subgoal_results: Dict[str, Any] = field(default_factory=dict)
     replan_count: int = 0
+    # PLAN×NAV fusion: explicit collect-root section_id -> owning subgoal_id
+    # (drives "[harvested:sN]" map tags when show_harvested_in_map is on).
+    harvested_owner_subgoal: Dict[str, str] = field(default_factory=dict)
+    # Per-subgoal override anchor set by plan_control's "reharvest" decision.
+    subgoal_reharvest_anchor: Dict[str, str] = field(default_factory=dict)
+    # Per-subgoal wave-attempt counter (circuit breaker under plan_control).
+    subgoal_attempt_counts: Dict[str, int] = field(default_factory=dict)

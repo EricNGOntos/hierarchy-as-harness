@@ -35,7 +35,7 @@ from nav_types import NavConfig, NavState, SubgoalResult
 from nav_verify import (
     activation_when_holds,
     apply_bindings_from_result,
-    build_evidence_text_from_state,
+    build_evidence_text_from_chunks,
     extract_slots,
     verify_contract,
 )
@@ -172,10 +172,17 @@ def _verify_subgoal(
     subgoal: Subgoal,
     *,
     retrieval_query: str,
+    new_chunks: Sequence[Tuple[Any, float]],
     collected_before: Set[str],
     force_llm_extract: bool = False,
 ) -> SubgoalResult:
-    evidence = build_evidence_text_from_state(state)
+    """Verify against THIS call's own new evidence only (never the global pool).
+
+    ``new_chunks`` must be the chunks collected since ``collected_before`` was
+    snapshotted — mixing in older/other-subgoal evidence here is exactly the
+    attribution leak audited in docs/audit_plan_nav_overlap.md §1.4-1.
+    """
+    evidence = build_evidence_text_from_chunks(new_chunks)
     use_llm = bool(getattr(config, "enable_contract_verify", False)) or force_llm_extract
     extracted, conf = extract_slots(
         subgoal,
@@ -238,7 +245,12 @@ def _execute_subgoal_with_verdicts(
     max_attempts = max(1, int(getattr(config, "subgoal_max_attempts", 2) or 2))
     rq = bind_slots(subgoal.retrieval_query, state.slot_bindings)
     last: Optional[SubgoalResult] = None
+    last_new_chunks: List[Tuple[Any, float]] = []
     want_replan = False
+    # Cross-subgoal report leakage (audit §1.6): each subgoal starts with a
+    # clean scratchpad; its own dispatch reports still accumulate across its
+    # own retries below.
+    state.reports_context = ""
 
     for attempt in range(max_attempts):
         before = set(state.collected_section_ids)
@@ -247,12 +259,14 @@ def _execute_subgoal_with_verdicts(
             _widen_scope_filter(subgoal)
 
         if last is not None and last.verdict == "REBIND":
-            # First: re-extract (LLM if verify enabled). If still bad, degrade query.
+            # First: re-extract (LLM if verify enabled) from the SAME evidence
+            # collected by the previous attempt. If still bad, degrade query.
             re_extract = _verify_subgoal(
                 state,
                 config,
                 subgoal,
                 retrieval_query=rq,
+                new_chunks=last_new_chunks,
                 collected_before=before,
                 force_llm_extract=True,
             )
@@ -261,15 +275,18 @@ def _execute_subgoal_with_verdicts(
             rq = _unbound_retrieval_query(subgoal)
 
         _set_focus(state, subgoal, rq)
+        before_len = len(state.collected)
         child_steps: List[Any] = []
         _run_navigate_for_query(ts, state, config, query=rq, steps_out=child_steps)
         if steps_out is not None:
             steps_out.extend(child_steps)
+        last_new_chunks = list(state.collected[before_len:])
         last = _verify_subgoal(
             state,
             config,
             subgoal,
             retrieval_query=rq,
+            new_chunks=last_new_chunks,
             collected_before=before,
         )
         if last.satisfied or last.verdict == "SATISFIED":
@@ -293,6 +310,129 @@ def _execute_subgoal_with_verdicts(
         last.verdict = "REPLAN"
         want_replan = True
     return last, want_replan
+
+
+def _execute_subgoal_harvest_once(
+    ts: Any,
+    state: NavState,
+    config: NavConfig,
+    subgoal: Subgoal,
+    *,
+    steps_out: Optional[List[Any]],
+) -> Dict[str, Any]:
+    """One harvest() call for this subgoal this wave — no internal retry loop.
+
+    Retry / widen / drop / replan authority belongs to ``plan_control`` across
+    waves (see ``nav_control.plan_control``), not to this single call.
+    """
+    from nav_harvest import harvest, resolve_harvest_anchor
+
+    rq = bind_slots(subgoal.retrieval_query, state.slot_bindings)
+    _set_focus(state, subgoal, rq)
+    anchor = resolve_harvest_anchor(subgoal, state, config)
+    before_sections = set(state.collected_section_ids)
+    before_len = len(state.collected)
+    harvest_result = harvest(
+        ts,
+        state,
+        config,
+        subgoal=subgoal,
+        entry_scope=anchor,
+        query=rq,
+        steps_out=steps_out,
+    )
+    new_chunks = list(state.collected[before_len:])
+    signal = _verify_subgoal(
+        state,
+        config,
+        subgoal,
+        retrieval_query=rq,
+        new_chunks=new_chunks,
+        collected_before=before_sections,
+    )
+    _clear_focus(state)
+    return {
+        "subgoal_id": subgoal.id,
+        "result": signal,
+        "new_chunks": new_chunks,
+        "harvest": {
+            "anchor": anchor,
+            "n_policy_calls": harvest_result.n_policy_calls,
+            "visited_section_ids": list(harvest_result.visited_section_ids),
+            "max_depth_hit": harvest_result.max_depth_hit,
+        },
+    }
+
+
+def _apply_plan_control(
+    ts: Any,
+    state: NavState,
+    config: NavConfig,
+    *,
+    plan: RetrievalPlan,
+    outputs: Sequence[Dict[str, Any]],
+    by_id: Dict[str, Subgoal],
+    steps_out: Optional[List[Any]],
+) -> Dict[str, Any]:
+    """Apply one wave's plan_control decision; returns a TRACE-friendly detail."""
+    from nav_control import plan_control
+
+    decision = plan_control(ts, state, config, plan=plan, wave_outputs=outputs)
+    max_attempts = max(1, int(getattr(config, "subgoal_max_attempts", 2) or 2))
+
+    for item in outputs:
+        sid = item["subgoal_id"]
+        result: SubgoalResult = item["result"]
+        sub_decision = decision.per_subgoal.get(sid)
+        kind = sub_decision.decision if sub_decision else ("accept" if result.satisfied else "widen")
+        # Circuit breaker: bound reharvest/widen loops regardless of plan_control.
+        if kind in {"reharvest", "widen"} and int(
+            state.subgoal_attempt_counts.get(sid, 0)
+        ) >= max_attempts:
+            kind = "drop"
+
+        if kind == "accept":
+            result.satisfied = True
+            result.verdict = "SATISFIED"
+            state.subgoal_results[sid] = asdict(result)
+            state.satisfied_subgoal_ids.add(sid)
+            state.attempted_subgoal_ids.add(sid)
+            _activate_conditionals(plan, state, config, parent_id=sid, parent_result=result)
+        elif kind == "reharvest":
+            anchor = str(sub_decision.anchor or "").strip() if sub_decision else ""
+            if anchor:
+                state.subgoal_reharvest_anchor[sid] = anchor
+        elif kind == "widen":
+            sg = by_id.get(sid)
+            if sg is not None:
+                _widen_scope_filter(sg)
+            state.subgoal_reharvest_anchor.pop(sid, None)
+        elif kind == "drop":
+            state.attempted_subgoal_ids.add(sid)
+
+    if steps_out is not None:
+        from agent_delivery.agent.types import AgentStep  # type: ignore
+
+        steps_out.append(
+            AgentStep(
+                step_idx=len(steps_out) + 1,
+                action="plan_control",
+                detail={
+                    "global": decision.global_action,
+                    "reason": decision.reason,
+                    "subgoals": {
+                        sid: {"decision": d.decision, "anchor": d.anchor, "note": d.note}
+                        for sid, d in decision.per_subgoal.items()
+                    },
+                },
+            )
+        )
+    return {
+        "global": decision.global_action,
+        "replan": decision.global_action == "replan",
+        "done": decision.global_action == "done",
+        "reason": decision.reason,
+    }
 
 
 def _execute_subgoal_on_state(
@@ -331,10 +471,15 @@ def execute_plan(
         return {"fallback_navigate": True}
 
     max_waves = int(getattr(config, "max_waves", 0) or 0)
+    use_harvest = bool(getattr(config, "enable_one_shot_harvest", False))
+    use_control = bool(getattr(config, "enable_plan_control", False))
     wave_idx = 0
     summary: Dict[str, Any] = {"waves": [], "results": {}}
+    episode_done = False
 
     while True:
+        if episode_done:
+            break
         if max_waves > 0 and wave_idx >= max_waves:
             break
         ready = ready_subgoal_ids(
@@ -359,13 +504,18 @@ def execute_plan(
         by_id = {s.id: s for s in plan.subgoals}
         outputs: List[Dict[str, Any]] = []
 
+        def _run_one(sid: str, working_state: NavState, out_steps: Optional[List[Any]]) -> Dict[str, Any]:
+            if use_harvest:
+                return _execute_subgoal_harvest_once(
+                    ts, working_state, config, by_id[sid], steps_out=out_steps
+                )
+            return _execute_subgoal_on_state(
+                ts, working_state, config, plan, sid, steps_out=out_steps
+            )
+
         if len(ready) <= 1:
             for sid in ready:
-                outputs.append(
-                    _execute_subgoal_on_state(
-                        ts, state, config, plan, sid, steps_out=steps_out
-                    )
-                )
+                outputs.append(_run_one(sid, state, steps_out))
         else:
             max_workers = max(1, min(len(ready), int(config.dispatch_max_workers or 1)))
             forks = [(sid, _fork_nav_state(state)) for sid in ready]
@@ -373,9 +523,7 @@ def execute_plan(
             def _run_fork(item: Tuple[str, NavState]):
                 subgoal_id, child = item
                 fork_steps: List[Any] = []
-                res = _execute_subgoal_on_state(
-                    ts, child, config, plan, subgoal_id, steps_out=fork_steps
-                )
+                res = _run_one(subgoal_id, child, fork_steps)
                 return child, res, fork_steps
 
             with ThreadPoolExecutor(max_workers=max_workers) as pool:
@@ -392,7 +540,7 @@ def execute_plan(
                         steps_out.extend(fork_steps)
                     outputs.append(result_item)
 
-        replan_requested = False
+        # Bookkeeping shared by both decision paths.
         for item in outputs:
             sid = item["subgoal_id"]
             result: SubgoalResult = item["result"]
@@ -401,22 +549,36 @@ def execute_plan(
                 {"subgoal_id": sid, "verdict": result.verdict, "gap": result.gap}
             )
             summary["results"][sid] = asdict(result)
-
             if result.extracted:
                 state.slot_bindings = apply_bindings_from_result(
                     state.slot_bindings, by_id[sid], result.extracted
                 )
+            state.subgoal_attempt_counts[sid] = int(
+                state.subgoal_attempt_counts.get(sid, 0)
+            ) + 1
 
-            if item.get("want_replan") or result.verdict == "REPLAN":
-                replan_requested = True
-
-            # Close the node after attempts (success or exhausted).
-            state.attempted_subgoal_ids.add(sid)
-            if result.satisfied or result.verdict == "SATISFIED":
-                state.satisfied_subgoal_ids.add(sid)
-                _activate_conditionals(
-                    plan, state, config, parent_id=sid, parent_result=result
-                )
+        replan_requested = False
+        if use_control:
+            control_detail = _apply_plan_control(
+                ts, state, config, plan=plan, outputs=outputs, by_id=by_id, steps_out=steps_out
+            )
+            wave_detail["plan_control"] = control_detail
+            replan_requested = bool(control_detail.get("replan"))
+            if control_detail.get("done"):
+                episode_done = True
+        else:
+            for item in outputs:
+                sid = item["subgoal_id"]
+                result = item["result"]
+                if item.get("want_replan") or result.verdict == "REPLAN":
+                    replan_requested = True
+                # Close the node after attempts (success or exhausted).
+                state.attempted_subgoal_ids.add(sid)
+                if result.satisfied or result.verdict == "SATISFIED":
+                    state.satisfied_subgoal_ids.add(sid)
+                    _activate_conditionals(
+                        plan, state, config, parent_id=sid, parent_result=result
+                    )
 
         if bool(getattr(config, "enable_per_subgoal_illumination", False)):
             illuminate_from_plan(ts, state, config)
@@ -440,11 +602,20 @@ def execute_plan(
                 new_plan = plan_query(ts, state, config)
                 state.retrieval_plan = new_plan
                 plan = new_plan
+                # A regenerated plan gets fresh subgoal ids (s1, s2, ... again),
+                # so per-id bookkeeping (satisfied/attempted/activated, qualified
+                # "sX.slot" bindings) cannot be safely carried over — those ids
+                # now mean something else. What IS safe and worth keeping (audit
+                # §2.4: "don't discard what's already accepted") is unqualified
+                # slot bindings (plain fact values) and every chunk already in
+                # state.collected — neither is reset here or anywhere else.
                 state.satisfied_subgoal_ids = set()
                 state.attempted_subgoal_ids = set()
                 state.activated_subgoal_ids = set()
-                state.slot_bindings = {}
                 state.subgoal_results = {}
+                state.slot_bindings = {
+                    k: v for k, v in state.slot_bindings.items() if "." not in k
+                }
                 if bool(getattr(config, "enable_per_subgoal_illumination", False)):
                     illuminate_from_plan(ts, state, config)
                 if steps_out is not None:

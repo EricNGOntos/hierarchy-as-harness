@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from typing import List, Optional
 
-from nav_projection import format_hit_tag
+from nav_projection import format_harvested_tag, format_hit_tag
 from nav_types import (
     ActionKind,
     LegalAction,
@@ -191,11 +191,12 @@ def format_actionable_map_observation(
             is_highlight=bool(view.is_highlight),
             hit_sources=getattr(view, "hit_sources", None) or [],
         )
+        harvested_tag = format_harvested_tag(getattr(view, "harvested_by", "") or "")
         map_id = view.map_id or "?"
         meta = f"({view.n_chunks} chunks)"
         lines.append(
-            f"{indent}[{map_id}] {view.title or view.section_id} {meta}{leaf_tag}{hit_tag} "
-            f"actions: {node_actions(view.section_id)}"
+            f"{indent}[{map_id}] {view.title or view.section_id} {meta}"
+            f"{leaf_tag}{hit_tag}{harvested_tag} actions: {node_actions(view.section_id)}"
         )
         if inline_summary and view.summary:
             lines.append(f"{indent}    summary: {view.summary}")

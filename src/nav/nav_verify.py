@@ -355,11 +355,11 @@ def apply_bindings_from_result(
     return out
 
 
-def build_evidence_text_from_state(state: Any, *, limit: int = 8000) -> str:
-    """Concatenate collected chunk texts currently on the state."""
+def build_evidence_text_from_chunks(chunks: Any, *, limit: int = 8000) -> str:
+    """Concatenate (chunk, score) texts up to a char budget."""
     parts: List[str] = []
     total = 0
-    for chunk, _score in list(getattr(state, "collected", None) or []):
+    for chunk, _score in list(chunks or []):
         text = str(getattr(chunk, "text", "") or getattr(chunk, "content", "") or "")
         if not text.strip():
             continue

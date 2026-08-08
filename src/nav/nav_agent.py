@@ -164,8 +164,7 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
     if not doc or is_corpus_doc_id(doc):
         return []
     materialize = getattr(ts, "_materialize_leaf_path_chunks", None)
-    idx = getattr(ts, "_idx", None)
-    if callable(materialize) and idx is not None:
+    if callable(materialize):
         pool = list(materialize(sid, doc))
         if pool:
             # Contract-driven hydrate when a soft-focus subgoal is active (M5/A3).
@@ -173,6 +172,9 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
             if map_mode_enabled(config) or bool(getattr(state, "unit_scores", None)):
                 if kind in {"single_fact", "span", "comparison", "existence"}:
                     return _collect_by_unit_score(pool, state, config)
+                return _collect_in_doc_order(pool, config)
+            idx = getattr(ts, "_idx", None)
+            if idx is None:
                 return _collect_in_doc_order(pool, config)
             scored = idx.search(
                 state.query,

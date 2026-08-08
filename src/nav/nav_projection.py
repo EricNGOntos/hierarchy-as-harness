@@ -107,6 +107,7 @@ class _MapNode:
     is_highlight: bool = False
     map_id: str = ""
     parent_id: Optional[str] = None
+    harvested_by: str = ""
 
 
 def _count_descendants(node: _MapNode) -> int:
@@ -288,12 +289,19 @@ def _build_map_tree(
     max_nodes: int = 20000,
     collected_section_ids: Optional[Set[str]] = None,
     dismissed_section_ids: Optional[Set[str]] = None,
+    harvested_section_ids: Optional[Dict[str, str]] = None,
 ) -> List[_MapNode]:
     roots: List[_MapNode] = []
     seen: Set[str] = set()
     node_count = 0
+    harvested = dict(harvested_section_ids or {})
     # collected = branch done (sid ∪ descendants already marked by caller).
-    gone = set(collected_section_ids or ()) | set(dismissed_section_ids or ())
+    # Harvested roots stay visible as a collapsed single line (fix-map-
+    # visibility); their descendants are still fully removed like any other
+    # collected branch — the point is coverage context, not re-expansion.
+    gone = (
+        set(collected_section_ids or ()) - set(harvested.keys())
+    ) | set(dismissed_section_ids or ())
 
     def make_node(section_id: str, depth: int, parent_id: Optional[str]) -> Optional[_MapNode]:
         nonlocal node_count
@@ -338,12 +346,16 @@ def _build_map_tree(
             return
         if row_title_hint and (not node.title or node.title == section_id):
             node.title = _title_from_row(row_title_hint, section_id)
-        for row in _children(ts, section_id, limit=children_limit):
-            child_id = str(row.get("section_id") or "").strip()
-            if child_id:
-                append_visible_descendants(
-                    node.children, child_id, depth + 1, section_id, row
-                )
+        if section_id in harvested:
+            # Collapsed leaf: this line alone represents the covered branch.
+            node.harvested_by = str(harvested[section_id])
+        else:
+            for row in _children(ts, section_id, limit=children_limit):
+                child_id = str(row.get("section_id") or "").strip()
+                if child_id:
+                    append_visible_descendants(
+                        node.children, child_id, depth + 1, section_id, row
+                    )
         node.has_children = bool(node.children)
         _count_descendants(node)
         parent_children.append(node)
@@ -372,6 +384,12 @@ def format_hit_tag(
     if is_highlight:
         return " [Hit]"
     return ""
+
+
+def format_harvested_tag(owner_subgoal_id: str) -> str:
+    """Render the collapsed-coverage badge for a node kept visible post-collect."""
+    sid = str(owner_subgoal_id or "").strip()
+    return f" [harvested:{sid}]" if sid else ""
 
 
 def _render_map(
@@ -414,9 +432,10 @@ def _render_map(
         leaf_tag = " [Leaf]" if not node.has_children else ""
         node_sources = list(sources.get(node.section_id) or [])
         hit_tag = format_hit_tag(is_highlight=is_hit, hit_sources=node_sources)
+        harvested_tag = format_harvested_tag(node.harvested_by)
         line = (
             f"{indent}[{map_id}] {node.title} ({node.n_chunks} chunks)"
-            f"{leaf_tag}{hit_tag}"
+            f"{leaf_tag}{hit_tag}{harvested_tag}"
         )
         lines.append(line)
         summary = ""
@@ -441,6 +460,7 @@ def _render_map(
                 parent_id=node.parent_id,
                 summary=summary,
                 hit_sources=node_sources,
+                harvested_by=node.harvested_by,
             )
         )
         for child in node.children:
@@ -471,6 +491,7 @@ def build_map(
     highlight_ids: Optional[List[str]] = None,
     extra_hidden_ids: Optional[Set[str]] = None,
     hit_sources: Optional[Dict[str, List[str]]] = None,
+    harvested_section_ids: Optional[Dict[str, str]] = None,
 ) -> Projection:
     """Full-depth title map with score-ordered budget hiding (+ optional inline summary)."""
     scores = dict(map_scores or {})
@@ -486,6 +507,7 @@ def build_map(
         children_limit=max(1, int(config.map_children_limit)),
         collected_section_ids=collected_section_ids,
         dismissed_section_ids=dismissed_section_ids,
+        harvested_section_ids=harvested_section_ids,
     )
     hits = [str(x).strip() for x in (highlight_ids or []) if str(x).strip()]
     if not hits:
@@ -557,6 +579,7 @@ def build_projection(
     highlight_ids: Optional[List[str]] = None,
     extra_hidden_ids: Optional[Set[str]] = None,
     hit_sources: Optional[Dict[str, List[str]]] = None,
+    harvested_section_ids: Optional[Dict[str, str]] = None,
 ) -> Projection:
     if map_mode_enabled(config):
         return build_map(
@@ -571,6 +594,7 @@ def build_projection(
             highlight_ids=highlight_ids,
             extra_hidden_ids=extra_hidden_ids,
             hit_sources=hit_sources,
+            harvested_section_ids=harvested_section_ids,
         )
 
     # Minimal non-map fallback (legacy shallow projection) — kept for ablation only.

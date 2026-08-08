@@ -49,5 +49,12 @@
   "max_replans": 0,
   "max_waves": 0,
   "enable_subgoal_budget_ledger": false,
-  "subgoal_budget_floor_frac": 1.0
+  "subgoal_budget_floor_frac": 1.0,
+  "enable_anchor_entry": false,
+  "enable_one_shot_harvest": false,
+  "max_harvest_depth": 3,
+  "enable_plan_control": false,
+  "plan_control_digest_chars": 600,
+  "show_harvested_in_map": false,
+  "enable_settle_group_rank": false
 }
