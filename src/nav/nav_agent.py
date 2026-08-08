@@ -21,6 +21,7 @@ from path_ledger import doc_id_for
 from nav_compose import (
     evidence_owner_section_id,
     pack_nav_evidence,
+    settle_subgoal_evidence,
     unit_score_for_evidence_chunk,
 )
 from nav_map_scores import (
@@ -321,7 +322,8 @@ def run_nav_episode(
         episode_doc = CORPUS_DOC_ID
     elif not episode_doc:
         raise ValueError(
-            "Nav Agent requires doc_id (single-doc) or non-empty corpus_doc_ids (corpus mode)"
+            "Nav Agent requires doc_id or non-empty corpus_doc_ids "
+            "(eval entry points always pass corpus_doc_ids for task_corpus)"
         )
     from agent_delivery.code.llm_config import load_llm_env, require_llm_env  # type: ignore
 
@@ -435,13 +437,37 @@ def run_nav_episode(
             steps_out=steps,
         )
 
-    fill = pack_nav_evidence(
-        _dedupe_scored(list(state.collected)),
-        ts,
-        state,
-        cfg,
-        budget_chars=budget_chars,
-    )
+    fill = None
+    ledger_detail = None
+    if (
+        bool(getattr(cfg, "enable_subgoal_budget_ledger", False))
+        and state.retrieval_plan is not None
+        and bool(getattr(cfg, "enable_plan_orchestration", False))
+    ):
+        fill, ledger = settle_subgoal_evidence(
+            _dedupe_scored(list(state.collected)),
+            ts,
+            state,
+            cfg,
+            budget_chars=budget_chars,
+        )
+        if ledger is not None:
+            ledger_detail = ledger.to_dict()
+            steps.append(
+                AgentStep(
+                    step_idx=len(steps) + 1,
+                    action="budget_ledger",
+                    detail=ledger_detail,
+                )
+            )
+    if fill is None:
+        fill = pack_nav_evidence(
+            _dedupe_scored(list(state.collected)),
+            ts,
+            state,
+            cfg,
+            budget_chars=budget_chars,
+        )
     scored_chunks = list(fill.scored_chunks)
     retrieval_seconds = time.perf_counter() - retrieval_t0
     composed = ""

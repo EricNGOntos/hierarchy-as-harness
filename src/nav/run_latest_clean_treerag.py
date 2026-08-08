@@ -149,9 +149,9 @@ def main() -> None:
     parser.add_argument("--max-tasks", type=int, default=0)
     parser.add_argument(
         "--search-scope",
-        choices=("task_doc", "task_corpus"),
-        default="task_doc",
-        help="task_doc=每题锁定文档；task_corpus=tasks 文件全部文档统一检索",
+        choices=("task_corpus",),
+        default="task_corpus",
+        help="task_corpus only: tasks 文件全部文档统一检索（task_doc 已移除）",
     )
     parser.add_argument("--treerag-model", default=None)
     parser.add_argument("--intent-mode", choices=("llm", "always", "never"), default="llm")

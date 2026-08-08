@@ -18,7 +18,7 @@ export PYTHONDONTWRITEBYTECODE=1
 cd "$(dirname "$0")/.."
 
 STAGE="${STAGE:-all}"
-SEARCH_SCOPE="${SEARCH_SCOPE:-task_corpus}"
+SEARCH_SCOPE="task_corpus"
 RUN_TAG="${RUN_TAG:-latest_clean400_${SEARCH_SCOPE}_v3}"
 RUN_ROOT="cache/${RUN_TAG}"
 LOG_ROOT="${RUN_ROOT}/logs"

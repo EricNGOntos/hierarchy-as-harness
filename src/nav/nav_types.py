@@ -94,8 +94,6 @@ class NavConfig:
     enable_goal_conditioned_folding: bool = False
     # M4: replace single navigate with dependency-wave plan execution.
     enable_plan_orchestration: bool = False
-    # M4: merge same-wave subgoals whose beacons share a subtree.
-    enable_locality_merge: bool = False
     # M5: contract verify + slot extract + activation + limited replan.
     enable_contract_verify: bool = False
     # M5: navigate+verify cycles per subgoal (RETRY/WIDEN/REBIND). Min 1.
@@ -104,6 +102,10 @@ class NavConfig:
     max_replans: int = 0
     # M4: 0 = no extra wave cap (stop when no ready subgoals).
     max_waves: int = 0
+    # M6: settle evidence with per-subgoal floors + leftover recirculation.
+    enable_subgoal_budget_ledger: bool = False
+    # Fraction of episode budget reserved as floors by budget_share (rest starts in Tier-2 pool).
+    subgoal_budget_floor_frac: float = 1.0
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "NavConfig":

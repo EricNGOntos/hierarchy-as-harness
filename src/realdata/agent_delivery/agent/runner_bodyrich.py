@@ -88,14 +88,19 @@ from ..code.llm_usage import reset_usage, snapshot_usage
 _POOL_MODE = os.environ.get("BODYRICH_POOL_MODE", "none").strip().lower()
 _NAV_RUNTIME: Dict[str, Any] = {"configured": False, "config": None, "policy": "rule"}
 
-SEARCH_SCOPE_TASK_DOC = "task_doc"
 SEARCH_SCOPE_TASK_CORPUS = "task_corpus"
-_VALID_SEARCH_SCOPES = {SEARCH_SCOPE_TASK_DOC, SEARCH_SCOPE_TASK_CORPUS}
+# Historical alias removed: task_doc (per-task lock). All eval entry points are corpus-only.
+_VALID_SEARCH_SCOPES = {SEARCH_SCOPE_TASK_CORPUS}
 _VALID_ARMS = {"gold", "flat", "pred"}
 
 
 def _normalize_search_scope(raw: Optional[str]) -> str:
-    scope = str(raw or SEARCH_SCOPE_TASK_DOC).strip().lower() or SEARCH_SCOPE_TASK_DOC
+    scope = str(raw or SEARCH_SCOPE_TASK_CORPUS).strip().lower() or SEARCH_SCOPE_TASK_CORPUS
+    if scope == "task_doc":
+        raise ValueError(
+            "search_scope=task_doc has been removed; use task_corpus "
+            "(full task-file doc pool under __corpus__)"
+        )
     if scope not in _VALID_SEARCH_SCOPES:
         raise ValueError(
             f"unsupported search_scope={raw!r}; expected one of {sorted(_VALID_SEARCH_SCOPES)}"
@@ -131,16 +136,13 @@ def _episode_doc_id_for_arm(
     arm: str,
     hier_policy: str,
 ) -> Optional[str]:
-    """task_doc: always lock to task.doc_id.
+    """Corpus-only episode doc id.
 
-    task_corpus:
-      - flat / compact / fixed → None (global over allowlisted docs)
-      - nav → None (corpus-root episode; pass corpus_doc_ids separately)
-      - toolspace → still task.doc_id (toolspace corpus mode not implemented)
+    - flat / compact / fixed / nav → None (global over allowlisted docs; nav uses
+      corpus_doc_ids + ``__corpus__`` root)
+    - toolspace → still task.doc_id (toolspace corpus mode not implemented)
     """
-    scope = _normalize_search_scope(search_scope)
-    if scope == SEARCH_SCOPE_TASK_DOC:
-        return task.doc_id
+    _normalize_search_scope(search_scope)
     if arm == "flat":
         return None
     policy = str(hier_policy or "").strip().lower()
@@ -148,7 +150,6 @@ def _episode_doc_id_for_arm(
         return None
     if policy == "toolspace":
         return task.doc_id
-    # compact / fixed hierarchical under corpus scope → global over allowlisted docs
     return None
 
 
@@ -158,9 +159,8 @@ def _nav_corpus_doc_ids_for_scope(
     hier_policy: str,
     corpus_doc_ids: Optional[Set[str]],
 ) -> Optional[List[str]]:
-    """When nav runs under task_corpus, pass allowlisted docs for the corpus root."""
-    if _normalize_search_scope(search_scope) != SEARCH_SCOPE_TASK_CORPUS:
-        return None
+    """Pass allowlisted docs for the corpus root when hier_policy is nav."""
+    _normalize_search_scope(search_scope)
     if str(hier_policy or "").strip().lower() != "nav":
         return None
     if not corpus_doc_ids:
@@ -1639,7 +1639,7 @@ def _checkpoint_signature(
     hier_policy: str,
     inspect_judge: bool,
     inspect_tasks_paths: Optional[List[Path]],
-    search_scope: str = SEARCH_SCOPE_TASK_DOC,
+    search_scope: str = SEARCH_SCOPE_TASK_CORPUS,
     arms: Optional[Sequence[str]] = None,
 ) -> str:
     payload = {
@@ -1821,7 +1821,7 @@ def _run_episodes_for_budget(
     use_inspect_judge: bool = False,
     checkpoint_jsonl: Optional[Path] = None,
     checkpoint_signature: str = "",
-    search_scope: str = SEARCH_SCOPE_TASK_DOC,
+    search_scope: str = SEARCH_SCOPE_TASK_CORPUS,
     arms: Optional[Set[str]] = None,
     corpus_doc_ids: Optional[Set[str]] = None,
 ) -> Tuple[
@@ -2127,7 +2127,7 @@ def _prepare_episode_pools_for_fair_budget(
     hier_policy: str,
     *,
     inspect_by_id: Optional[Dict[str, Dict[str, Any]]] = None,
-    search_scope: str = SEARCH_SCOPE_TASK_DOC,
+    search_scope: str = SEARCH_SCOPE_TASK_CORPUS,
 ) -> List[Tuple[AgentTask, Dict[str, Any], EpisodeResult, Optional[EpisodeResult], EpisodeResult, int]]:
     """Generate budget-independent candidate pools once for exact_matched multi-budget runs."""
     prepared: List[
@@ -2442,15 +2442,14 @@ def run_bodyrich_experiment(
     inspect_judge: bool = False,
     inspect_tasks_paths: Optional[List[Path]] = None,
     checkpoint_dir: Path = Path("cache/gold_pred_flat"),
-    search_scope: str = SEARCH_SCOPE_TASK_DOC,
+    search_scope: str = SEARCH_SCOPE_TASK_CORPUS,
     arms: Optional[str] = None,
 ) -> Dict[str, Any]:
     """统一入口：Gold vs Flat-ReAct（默认），或 Gold / Pred / Flat-ReAct 三联（提供 pred_jsonl 时）。
 
     search_scope:
-      - task_doc: 每题检索锁定 task.doc_id（现状）
-      - task_corpus: 索引限定为 tasks 文件全部 doc_id；Flat/compact/fixed 在全局池检索；
-        nav 用语料根（corpus root）跨文档导航
+      - task_corpus only: 索引限定为 tasks 文件全部 doc_id；Flat/compact/fixed 在全局池检索；
+        nav 用语料根（``__corpus__``）跨文档导航。``task_doc`` 已移除。
     arms: 逗号分隔子集，如 ``flat`` / ``gold,flat``（默认按是否提供 pred 自动）
     """
     _configure_bodyrich_task_judge()
@@ -2460,7 +2459,7 @@ def run_bodyrich_experiment(
     tasks = all_tasks[:max_tasks] if max_tasks > 0 else all_tasks
     pred_enabled = bool(pred_jsonl) and pred_jsonl.exists()  # type: ignore[union-attr]
     active_arms = _parse_arms(arms, pred_enabled=pred_enabled)
-    doc_id_allowlist = corpus_doc_ids if search_scope == SEARCH_SCOPE_TASK_CORPUS else None
+    doc_id_allowlist = set(corpus_doc_ids)
 
     # default_inspect_task_paths：datasets/realdata/… 在 bodyrich_delivery_kit 根下（与 delivery/ 并列）
     kit_root = Path(__file__).resolve().parents[4]
@@ -2613,7 +2612,7 @@ def run_bodyrich_experiment_multi_budget(
     inspect_judge: bool = False,
     inspect_tasks_paths: Optional[List[Path]] = None,
     checkpoint_dir: Path = Path("cache/gold_pred_flat"),
-    search_scope: str = SEARCH_SCOPE_TASK_DOC,
+    search_scope: str = SEARCH_SCOPE_TASK_CORPUS,
     arms: Optional[str] = None,
 ) -> List[Path]:
     """一次编码/索引，顺序跑多个 budget。out_template 必须含 '{budget}'。"""
@@ -2626,7 +2625,7 @@ def run_bodyrich_experiment_multi_budget(
     tasks = all_tasks[:max_tasks] if max_tasks > 0 else all_tasks
     pred_enabled = bool(pred_jsonl) and pred_jsonl.exists()  # type: ignore[union-attr]
     active_arms = _parse_arms(arms, pred_enabled=pred_enabled)
-    doc_id_allowlist = corpus_doc_ids if search_scope == SEARCH_SCOPE_TASK_CORPUS else None
+    doc_id_allowlist = set(corpus_doc_ids)
 
     kit_root = Path(__file__).resolve().parents[4]
     use_inspect_judge = bool(inspect_judge)
@@ -2837,9 +2836,9 @@ def _build_argparser() -> argparse.ArgumentParser:
     p.add_argument("--max-tasks", type=int, default=0)
     p.add_argument(
         "--search-scope",
-        choices=("task_doc", "task_corpus"),
-        default="task_doc",
-        help="task_doc=每题锁文档；task_corpus=tasks 全部 doc_id 统一检索（Flat/compact/fixed/nav）",
+        choices=("task_corpus",),
+        default="task_corpus",
+        help="task_corpus only: tasks 文件全部 doc_id 作为统一检索空间（Flat/compact/fixed/nav）",
     )
     p.add_argument(
         "--arms",

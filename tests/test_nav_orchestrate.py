@@ -13,13 +13,9 @@ for source_dir in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
     if str(source_dir) not in sys.path:
         sys.path.insert(0, str(source_dir))
 
-from nav_orchestrate import (  # noqa: E402
-    beacons_for_subgoal,
-    cluster_by_locality,
-    ready_subgoal_ids,
-)
+from nav_orchestrate import ready_subgoal_ids  # noqa: E402
 from nav_plan import Activation, Contract, RetrievalPlan, Subgoal  # noqa: E402
-from nav_types import NavConfig, NavState, SubgoalResult  # noqa: E402
+from nav_types import NavConfig, NavState  # noqa: E402
 from nav_verify import (  # noqa: E402
     activation_when_holds,
     apply_bindings_from_result,
@@ -225,54 +221,57 @@ class TestNavOrchestrate(unittest.TestCase):
         )
         self.assertEqual(ready2, ["s2", "s3"])
 
-    def test_cluster_by_locality_union(self) -> None:
-        ts = MagicMock()
+    def test_same_wave_subgoals_run_own_queries(self) -> None:
+        """Independent subgoals never share one navigate call or one verdict."""
+        from nav_orchestrate import execute_plan
 
-        def rel(sid, doc_id):
-            tree = {
-                "doc:L2": ({"doc:L1"}, set()),
-                "doc:L3": ({"doc:L1"}, set()),
-                "doc:L9": ({"doc:L8"}, set()),
-            }
-            return tree.get(sid, (set(), set()))
+        plan = RetrievalPlan(
+            subgoals=[
+                Subgoal(
+                    id="s1",
+                    need="a",
+                    retrieval_query="法人章 适用范围",
+                    produces=["seal_type"],
+                    contract=Contract(kind="single_fact", must_mention=["法人章"]),
+                ),
+                Subgoal(
+                    id="s2",
+                    need="b",
+                    retrieval_query="档案保管 年限",
+                    produces=["years"],
+                    contract=Contract(kind="single_fact", must_mention=["保管"]),
+                ),
+            ]
+        )
+        state = NavState(doc_id="doc", query="q", retrieval_plan=plan)
+        cfg = NavConfig(enable_plan_orchestration=True, map_char_limit=5000)
 
-        ts.section_relation_ids = rel
-        state = NavState(
-            doc_id="doc",
-            query="q",
-            hit_sources={
-                "doc:L2": ["s1"],
-                "doc:L3": ["s2"],
-                "doc:L9": ["s3"],
-            },
-        )
-        clusters = cluster_by_locality(
-            ts, state, ["s1", "s2", "s3"], k=2, enabled=True
-        )
-        # s1+s2 share ancestor L1; s3 separate
-        flat = {frozenset(c) for c in clusters}
-        self.assertIn(frozenset({"s1", "s2"}), flat)
-        self.assertIn(frozenset({"s3"}), flat)
-        solo = cluster_by_locality(
-            ts, state, ["s1", "s2", "s3"], k=2, enabled=False
-        )
-        self.assertEqual(solo, [["s1"], ["s2"], ["s3"]])
+        class _Chunk:
+            def __init__(self, text: str) -> None:
+                self.text = text
+                self.node_id = "n1"
 
-    def test_beacons_from_hit_sources(self) -> None:
-        state = NavState(
-            doc_id="doc",
-            query="q",
-            hit_sources={"doc:L1": ["s1"], "doc:L2": ["s1", "s2"]},
-        )
-        self.assertEqual(
-            set(beacons_for_subgoal(state, "s1", k=10)),
-            {"doc:L1", "doc:L2"},
-        )
+        calls: list[str] = []
+
+        def fake_nav(ts, *, state, scope, query, config, depth=0, budget=None, steps_out=None):
+            calls.append(query)
+            # Only s1's region exists; s2 must not inherit its evidence.
+            if "法人章" in query:
+                state.collected.append((_Chunk("对外重大合同应使用法人章。"), 1.0))
+                state.collected_section_ids.add("doc:L1")
+
+        with patch("nav_orchestrate.navigate", side_effect=fake_nav):
+            execute_plan(MagicMock(), state, cfg, steps_out=[], episode_query="q")
+
+        # Each subgoal issued its own query; none is a concatenation of both.
+        self.assertTrue(any("法人章" in c and "档案保管" not in c for c in calls))
+        self.assertTrue(any("档案保管" in c and "法人章" not in c for c in calls))
+        self.assertIn("s1", state.satisfied_subgoal_ids)
+        self.assertNotIn("s2", state.satisfied_subgoal_ids)
 
     def test_config_flags_default_off(self) -> None:
         cfg = NavConfig.from_dict({})
         self.assertFalse(cfg.enable_plan_orchestration)
-        self.assertFalse(cfg.enable_locality_merge)
         self.assertFalse(cfg.enable_contract_verify)
         self.assertEqual(cfg.max_replans, 0)
         self.assertEqual(cfg.max_waves, 0)

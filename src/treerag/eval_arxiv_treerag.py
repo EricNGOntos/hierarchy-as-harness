@@ -1218,9 +1218,14 @@ def _gather_treerag_candidates_corpus(
 
 
 def _normalize_search_scope(raw: Optional[str]) -> str:
-    scope = str(raw or "task_doc").strip().lower() or "task_doc"
-    if scope not in {"task_doc", "task_corpus"}:
-        raise ValueError(f"unsupported search_scope={raw!r}; expected task_doc|task_corpus")
+    scope = str(raw or "task_corpus").strip().lower() or "task_corpus"
+    if scope == "task_doc":
+        raise ValueError(
+            "search_scope=task_doc has been removed; use task_corpus "
+            "(full task-file doc pool)"
+        )
+    if scope != "task_corpus":
+        raise ValueError(f"unsupported search_scope={raw!r}; expected task_corpus")
     return scope
 
 
@@ -1729,7 +1734,7 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
         if bool(getattr(args, "inspect_judge", False))
         else None
     )
-    doc_id_allowlist = set(corpus_doc_ids) if search_scope == "task_corpus" else None
+    doc_id_allowlist = set(corpus_doc_ids)
     bundles = bundles_from_paths(
         args.test_jsonl,
         tree_source="flat",
@@ -1739,10 +1744,7 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
     bundles_by_doc = {b.doc_id: b for b in bundles}
     _validate_tasks(tasks, bundles_by_doc)
 
-    if search_scope == "task_corpus":
-        needed_doc_ids = list(corpus_doc_ids)
-    else:
-        needed_doc_ids = sorted({str(t.doc_id) for t in tasks})
+    needed_doc_ids = list(corpus_doc_ids)
     missing = [d for d in needed_doc_ids if d not in bundles_by_doc]
     if missing:
         raise RuntimeError(f"missing TreeRAG documents for tasks: {missing[:10]}")
@@ -1853,29 +1855,19 @@ def run_eval(args: argparse.Namespace) -> List[Dict[str, Any]]:
             if ti % 10 == 0 or ti == len(tasks):
                 print(f"[treerag] scored {ti}/{len(tasks)} tasks", file=sys.stderr, flush=True)
             continue
-        doc_index = doc_indices[str(task.doc_id)]
         use_btr = _should_use_btr(
             task.query,
             mode=args.intent_mode,
             llm=llm,
             max_tokens=int(args.intent_max_tokens),
         )
-        if search_scope == "task_corpus":
-            scored_raw = _gather_treerag_candidates_corpus(
-                doc_indices,
-                task.query,
-                dense_model=dense_model,
-                args=args,
-                use_btr=use_btr,
-            )
-        else:
-            scored_raw = _gather_treerag_candidates(
-                doc_index,
-                task.query,
-                dense_model=dense_model,
-                args=args,
-                use_btr=use_btr,
-            )
+        scored_raw = _gather_treerag_candidates_corpus(
+            doc_indices,
+            task.query,
+            dense_model=dense_model,
+            args=args,
+            use_btr=use_btr,
+        )
         cap = int(cap_by_task.get(ti, 0))
         scored = scored_raw[: min(len(scored_raw), cap)] if cap > 0 else scored_raw
         for chunk, _score in scored:
@@ -2232,9 +2224,9 @@ def main() -> None:
     p.add_argument("--max-tasks", type=int, default=0)
     p.add_argument(
         "--search-scope",
-        choices=("task_doc", "task_corpus"),
-        default="task_doc",
-        help="task_doc=每题锁定 task.doc_id；task_corpus=tasks 文件全部文档作为统一检索空间",
+        choices=("task_corpus",),
+        default="task_corpus",
+        help="task_corpus only: tasks 文件全部文档作为统一检索空间（task_doc 已移除）",
     )
     p.add_argument(
         "--treerag-model",

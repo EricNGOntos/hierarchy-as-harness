@@ -125,9 +125,9 @@ def _build_argparser() -> argparse.ArgumentParser:
     parser.add_argument("--checkpoint-jsonl", type=Path, default=None)
     parser.add_argument(
         "--search-scope",
-        choices=("task_doc", "task_corpus"),
-        default="task_doc",
-        help="task_doc=锁题面文档；task_corpus=tasks 全部 doc 作语料根导航",
+        choices=("task_corpus",),
+        default="task_corpus",
+        help="task_corpus only: tasks 全部 doc 作语料根导航（task_doc 已移除）",
     )
     return parser
 
@@ -144,15 +144,14 @@ def main() -> int:
     tasks = _load_tasks(args.tasks)
     if args.max_tasks > 0:
         tasks = tasks[: args.max_tasks]
-    search_scope = str(getattr(args, "search_scope", "task_doc") or "task_doc").strip().lower()
+    search_scope = "task_corpus"
     corpus_doc_ids = sorted(
         {str(t.doc_id).strip() for t in tasks if str(getattr(t, "doc_id", "") or "").strip()}
     )
-    doc_id_allowlist = set(corpus_doc_ids) if search_scope == "task_corpus" else None
+    doc_id_allowlist = set(corpus_doc_ids)
     nav_corpus_ids = (
         list(corpus_doc_ids)
-        if search_scope == "task_corpus"
-        and str(args.hier_policy).strip().lower() == "nav"
+        if str(args.hier_policy).strip().lower() == "nav"
         else None
     )
 

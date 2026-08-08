@@ -244,9 +244,9 @@ def _structure_diagnostics(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--gold-flat", type=Path, default=Path("results/latest_clean400_task_doc_v3_flat_b500.json"))
+    parser.add_argument("--gold-flat", type=Path, default=Path("results/latest_clean400_task_corpus_v3_flat_b500.json"))
     parser.add_argument("--pred", type=Path, default=Path("results/latest_clean400_goldpred_robust_v1_pred_b500.json"))
-    parser.add_argument("--treerag", type=Path, default=Path("results/latest_clean400_task_doc_v3_treerag_b500.json"))
+    parser.add_argument("--treerag", type=Path, default=Path("results/latest_clean400_task_corpus_v3_treerag_b500.json"))
     parser.add_argument("--corpus", type=Path, default=Path("data/corpus/test_data_full_realdata_clean_latest.jsonl"))
     parser.add_argument("--pred-jsonl", type=Path, default=Path("data/realdata_clean_m1024_best_pred_levels_prevline_fallback.jsonl"))
     parser.add_argument("--out-json", type=Path, default=Path("results/gold_pred_robust_v1_diagnostics.json"))

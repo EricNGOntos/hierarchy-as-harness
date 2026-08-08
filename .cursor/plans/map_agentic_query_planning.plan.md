@@ -15,7 +15,7 @@ todos:
     content: "M3/P2（已完成）: Pass1 按 bindable subgoal 多光源点亮；max(w·score) 折叠合并；[Hit:s*]；satisfied 衰减钩子；默认开关关。Pass0 覆盖偏置后置。"
     status: completed
   - id: p3-orchestrator
-    content: "M4/P3（骨架完成）: execute_plan 依赖分波 + locality 聚类；软 focus；fork/merge。缺口：prefer_after 未调度；并行 TRACE 丢步。"
+    content: "M4/P3（已完成）: execute_plan 分波 + 每子目标独立遍历；prefer_after soft 排序；并行 TRACE；软 focus。locality 合并已删除。"
     status: completed
   - id: p4-verifier
     content: "M5/P4（闭环已修）: attempted vs satisfied；RETRY/WIDEN/REBIND 有限重试；契约 COLLECT；REPLAN 在耗尽后可选升级。"
@@ -27,8 +27,8 @@ todos:
     content: "M4 收口: prefer_after soft 排序；并行 fork TRACE；illuminate 不把未激活 conditional 进 fold。"
     status: completed
   - id: p5-budget
-    content: "M6/P5: 子目标预算账本（floor + 回流）+ 契约决定枝内水合（若 M5 未先做则并入此处）。"
-    status: pending
+    content: "M6/P5（已完成）: BudgetLedger floor+回流；settle_subgoal_evidence 外层配额、内层复用 waterfill；默认 enable_subgoal_budget_ledger=false。"
+    status: completed
   - id: p6-facet
     content: "M7/P6: ScopeFilter 掩码与 modality 标签（依赖语料 modality）。"
     status: pending
@@ -92,8 +92,7 @@ flowchart TB
     EXEC --> BIND[Slot Binding]
     BIND --> ILLN[Per-Subgoal Illumination]
     ILLN --> MAP
-    ILLN --> CLUS[Locality Clustering]
-    CLUS --> NAV["navigate: COLLECT / DISPATCH / FINISH<br/>(existing recursion, scoped to subgoal)"]
+    ILLN --> NAV["navigate: COLLECT / DISPATCH / FINISH<br/>(existing recursion, one call per subgoal)"]
     NAV --> MAP
     NAV --> REP["Typed SubgoalResult<br/>satisfied / extracted / gap"]
     REP --> VER[Contract Verifier]
@@ -187,27 +186,22 @@ class RetrievalPlan:
 - **地图按未满足的需求重新折叠。** 折叠排序权重改为 `max_s(w_s · score_s(node))`，其中 `w_s` 随子目标满足度衰减。**s1 满足后，它的区域自动折叠让位，显示预算流向还没满足的 s2/s3**——地图会随任务推进主动重排版面。这是"渐进式披露"从静态阈值升级为目标驱动的关键一步。
 - **观测行标注光源**：`[N19] … [Hit:s1,s3]`。agent 一眼看出哪个区域服务哪个需求。
 
-### M4 · 地图局部性聚类：并行/串行由地形决定（对应 A1） — **骨架已完成**
+### M4 · 分波执行：每个子目标独立一次遍历（对应 A1） — **已完成**
 
-一波内的就绪子目标，不是简单全并行，而是先看它们的 beacon 落在哪：
+一波内的就绪子目标各自独立执行，一个子目标一次 `navigate`：
 
-- beacon 聚在同一子树 → **合并成一次遍历**，带复合契约（省调用、避免两个 subagent 重复走同一片区域）
-- beacon 分散在不相交子树 → **并行 DISPATCH**（复用现有 `ThreadPoolExecutor` + fork/merge）
-- 有硬依赖 → 分波串行
+- 同波多个就绪子目标 → **并行 DISPATCH**（复用现有 `ThreadPoolExecutor` + fork/merge）
+- 有硬依赖 → 分波串行；`prefer_after` → 同波 soft 排序
 
-即：**执行顺序 = 依赖 DAG ∩ 地图局部性**。这是纯依赖分析给不了的调度信号，也是"最优利用 MAP"的直接体现。
+即：**执行顺序 = 依赖 DAG ∩ soft prefer_after**。
 
-**落地**：`nav_orchestrate.execute_plan` / `cluster_by_locality`；soft focus（只改 prompt，**不裁** C*/D*/F*）；flags `enable_plan_orchestration` / `enable_locality_merge` / `max_waves` 默认关。
+**落地**：`execute_plan` / `order_ready_by_prefer_after`；soft focus（不裁 C*/D*/F*）；并行 fork 深拷贝 score + TRACE 回并；flags 默认关。
 
-**已知缺口（下一步收口）**：
+**已知曾有缺口（已收口）**：prefer_after 未调度、并行 TRACE 丢失、illuminate 把未激活 conditional 放进 fold —— 均已修。
 
-- `prefer_after` 可解析入库，但**不参与 wave 排序**（环依赖时还会把硬 `depends_on` 降级塞进它 → 依赖蒸发）。
-- 并行 fork：`steps_out=None` → 子 navigate TRACE 丢步；`map_scores` 等按引用共享，有竞态风险。
-- soft focus 的 `User query:` 仍是 episode 原问；子目标 `retrieval_query` 主要靠 focus.need + 地图打分，未完整进入 policy 主 query 通道。
+**已移除：locality 合并（原 `cluster_by_locality` / `enable_locality_merge`）。** 该机制把同波内 beacon 共享祖先的子目标并成一次 `navigate`，query 换行拼接。实测三个问题：(1) 判据用 `state.doc_id` 查祖先，语料模式下 `doc_id="__corpus__"` 取不到 bundle，祖先集退化为自身，合并几乎从未触发；(2) 单文档模式下"任意共享祖先"会被畸形包装标题击穿——例如安全生产条例的 `L1` 是内容为零宽空格的 lv1 标题，子树覆盖 233 行中的 1–154 行（第一章至第三章），该范围内任意两点都判为同一局部；(3) 合并后 `_verify_subgoal` 对簇内每个子目标共用同一份新增证据快照，A 捞到的内容会让 B 误判 SATISFIED。收益仅是省几次 LLM 调用，风险是污染验证结论，故按第一性原理整体删除，不做修补。
 
-**升级路径（借 PlanRAG）**：上面是启发式聚类；PlanRAG 用**代价模型 + 动态规划**来组织执行树。我们的代价维度是现成的且比它们更具体——`n_chunks`（要读多少字符）、子树深度（要几次 LLM 调用）、beacon 集中度（命中概率）、`budget_share`（配额）。先按启发式落地，若 M4 被证明有效再换 DP，属于第二轮优化，不阻塞 P3。
-
-### M5 · 契约验证：让 FINISH 可判定（对应 A3、A4） — **部分完成（闭环未接线）**
+### M5 · 契约验证：让 FINISH 可判定（对应 A3、A4） — **已完成（闭环已接线）**
 
 **目标行为（方案正文，仍有效）**：
 
@@ -226,28 +220,35 @@ class RetrievalPlan:
 
 `RegionReport` 扩展（修 A6）→ `SubgoalResult`（已有 dataclass + `verdict` 字段）。
 
-**当前实现实况（2026-08 自查；下一步要修）**：
+**当前实现实况（2026-08；闭环已接线）**：
 
 | 能力 | 状态 |
 |------|------|
 | `extract_slots` / `verify_contract` / `activation_when_holds` / `slot_bindings` | 代码有 |
 | `RETRY` / `WIDEN` / `REBIND` 被 verify 产出 | **有**（规则：空证据→RETRY；缺槽→REBIND；枚举短→RETRY；must_mention 缺→WIDEN） |
-| 上述 verdict 驱动再导航 / 放宽 / 重抽 | **无** — orchestration 一律「一试即关」 |
-| `REPLAN` / `ABANDON` | 类型有；`verify_contract` **从不产出**；execute 里 `if verdict=="REPLAN"` 死路径 |
-| 契约驱动 COLLECT（A3） | **未做** — 仍文档序整枝 |
+| 上述 verdict 驱动再导航 / 放宽 / 重抽 | **有** — `subgoal_max_attempts` 内重试；耗尽可升 REPLAN |
+| `REPLAN` | 耗尽重试且 `max_replans>0` 时升级；重规划清 bindings / attempted / 半成品 |
+| 契约驱动 COLLECT（A3） | **有** — single_fact/span 按 unit score；enumeration 文档序 |
 | `scope_filter` | schema+prompt 有，执行期不用 → WIDEN 即使接线也暂无滤镜可放宽 |
-| `satisfied_subgoal_ids` | **语义被改坏**：任意 attempt 都 `add(sid)`，fold 衰减把「试过」当「满足」 |
-| verify 关闭时 | 「有新 evidence ≈ satisfied」，槽可空 |
+| `satisfied` vs `attempted` | **已拆**：仅真 SATISFIED 进 satisfied；attempted 防死循环 |
+| verify 规则 | 始终跑 rule verify；LLM 抽槽仍受 `enable_contract_verify` 控制 |
 
-> **Soft-plan 澄清（勿与 anti-stall 混淆）**：方案里的 soft-plan = 子目标只影响光照/配额/focus 文案，**绝不裁剪 C\*/D\*/F\***。现行 `one attempt closes the node` 是实现自创的防死锁，**不是** soft-plan；修复时应拆 `attempted_subgoal_ids` vs `satisfied_subgoal_ids`，用有限 retry 预算代替「假 satisfied」。
+> **Soft-plan 澄清**：子目标只影响光照/配额/focus，**绝不裁剪 C\*/D\*/F\***。防死循环用 `attempted` + `subgoal_max_attempts`；**只有真 SATISFIED 才算及格**（已落地）。人话：不及格就重考，及格了才把答案传给下一题。
 
-### M6 · 预算账本：把预算变成一等规划资源（对应 A5）
+### M6 · 预算账本：把预算变成一等规划资源（对应 A5） — **已完成**
 
 三层分配，**内层直接复用现有 waterfill**，改动面很小：
 
-- Tier 1：每个子目标拿到 `min(floor_s, actual_need_s)`，`floor_s = B · budget_share_s`
+- Tier 1：每个子目标拿到 `min(floor_s, actual_need_s)`，`floor_s = B · floor_frac · budget_share_s`
 - Tier 2：未用完的份额回流到契约未满足（尤其是枚举未尽）的子目标
-- Tier 3：子目标内部按现有 `pack_nav_evidence` waterfill 打包
+- Tier 3：子目标内部按现有 `pack_nav_evidence` waterfill/greedy 打包
+
+**落地**：
+
+- `BudgetLedger` / `build_budget_ledger` / `settle_subgoal_evidence`（`nav_compose.py`）
+- `run_nav_episode` 在 plan orchestration 后按账本 settle；TRACE `action=budget_ledger`
+- flags：`enable_subgoal_budget_ledger`（默认 false）、`subgoal_budget_floor_frac`（默认 1.0）
+- 契约枝内水合已在 M5（`focus_contract_kind` → directed hydrate），此处不重复
 
 这从结构上保证第二跳不会被第一跳饿死。
 
@@ -262,6 +263,37 @@ class RetrievalPlan:
 给执行器一个**在循环内重新点亮地图**的动作 `P*`：不移动 viewpoint、不收证据，只用新 query 重算当前 scope 的光照。这是 ReAct 在 MAP 上最自然的形态——agent 走到一半发现该换个词去找。
 
 注意这**会改动动作空间**（skill 里有"不恢复 JUMP/PEEK/EXPAND 当主循环"的硬约束）。PROBE 与那些被删的动作性质不同——它不是移动动作，是重打分动作，不制造空转路径。但仍建议**独立开关、独立消融**，默认关。
+
+### 实测发现 · Plan+NAV 成本瓶颈在 NAV，不在 Planner（2026-08，task_corpus）
+
+对 5 道复杂探针在 **42 文档语料根**下跑 planned（全套规划开关）vs baseline（纯 NAV），budget=20000。
+
+**调用结构（最极端题：3 人死亡Ⅰ级，planned 共 51 次 API）**：
+
+| 用途 | 次数 | 说明 |
+|------|------|------|
+| `nav`（选 C\*/D\*/F\*） | **40** | 主导成本 |
+| `nav_verify`（抽槽） | 8 | `enable_contract_verify` |
+| `nav_plan`（含 1 次 replan） | **2** | planner 本身很便宜 |
+| `compose` | 1 | 最终答题 |
+
+同题 baseline 纯 NAV 仅 **12** 次。其它题 planned 约 14–26 次，baseline 约 6–11 次。
+
+**机制乘数（不是 bug，是结构）**：
+
+1. NAV 是 ReAct 环：**每选一个动作 = 1 次 LLM**，不是「进文档调一次」。
+2. Plan 把题拆成多个子目标后，**每个子目标各自再跑一整条 `navigate`** → 步数 ×N。
+3. `DISPATCH` 再生子链，子 scope 里又是一套选动作直到 FINISH。
+4. `RETRY` / `REPLAN` 会再叠一波 navigate。
+5. 语料根地图大，单次 navigate 观察可达数万 prompt tokens；次数一乘，总 token 主要是 **重复塞地图的 prompt**，不是 completion。
+
+**因此**：
+
+- 贵的不是「多了一次规划」，而是 **「规划把一条 NAV 链变成多条 NAV 链」**。
+- 召回/可答性上 planned 与纯 NAV 在这批单文档聚集题上接近（budget 够大时），但算力明显更高 → 消融必须配 **C0 算力对齐**，否则「效果变好」可能只是多花了调用。
+- 控成本优先砍：子目标数上限、`enable_contract_verify`、`max_replans`、DISPATCH 扇出；其次才是压缩规划地图 / 每步是否必须带全图。
+
+产物：`map_nav_trace/plan_nav_e2e_complex5_corpus_b20k/`。
 
 ---
 
@@ -328,8 +360,9 @@ class RetrievalPlan:
 
 - `src/nav/nav_plan.py` — `Subgoal` / `Contract` / `ScopeFilter` / `RetrievalPlan` 数据类；planner 提示词与 JSON 解析；replanner；槽位绑定 `bind_slots()`
 - `src/nav/nav_planning_projection.py` — `build_planning_projection()`：复用 `build_map`，但启用广度偏置（每枝深度贡献上限）、更宽的 `planning_map_char_limit`、beacon 兄弟纳入 must_keep
-- `src/nav/nav_orchestrate.py` — 分波执行器 `execute_plan()`；`cluster_by_locality()`；`BudgetLedger`
+- `src/nav/nav_orchestrate.py` — 分波执行器 `execute_plan()`
 - `src/nav/nav_verify.py` — 契约验证器，输出类型化 verdict
+- `src/nav/nav_compose.py` — `BudgetLedger` + `settle_subgoal_evidence`（外层配额；内层复用 waterfill）
 
 ### 修改文件
 
@@ -344,7 +377,7 @@ class RetrievalPlan:
 
 ### 配置开关（全部默认 false，保证老路径零回归 + 消融干净）
 
-`enable_query_planning` · `planner_max_subgoals` · `planning_map_char_limit`（首版默认约 10000）· `enable_per_subgoal_illumination` · `enable_goal_conditioned_folding` · `enable_locality_merge` · `enable_contract_verify` · `max_replans` · `max_waves` · `subgoal_budget_floor_frac` · `enable_probe_action`
+`enable_query_planning` · `planner_max_subgoals` · `planning_map_char_limit`（首版默认约 10000）· `enable_per_subgoal_illumination` · `enable_goal_conditioned_folding` · `enable_contract_verify` · `max_replans` · `max_waves` · `enable_subgoal_budget_ledger` · `subgoal_budget_floor_frac` · `enable_probe_action`
 
 后置开关（不进首版）：`planning_breadth_depth_cap` · `enable_beacon_sibling_context`
 
@@ -362,15 +395,21 @@ class RetrievalPlan:
 
 | 期 | 机制 | 状态 |
 |----|------|------|
-| **P1** | M1 规划地图放宽 + M2 RetrievalPlan（开环，可审计；不接执行） | **已完成** |
-| **P2** | **M3** 按子目标点亮 + 目标条件化折叠（Pass1；Pass0 覆盖偏置后置） | **已完成**（Pass0 覆盖偏置仍后置） |
-| **P3** | **M4** 分波 + locality 聚类 | **骨架完成**（见 M4 已知缺口） |
-| **P4** | **M5** verifier + 槽位/activation/replan | **闭环已修**（见 §5.1 完成项） |
-| P5 | M6 子目标预算账本 | 未做 |
+| **P1** | M1 宽规划地图 + M2 RetrievalPlan（开环） | **已完成** |
+| **P2** | **M3** 按子目标点亮 + 目标条件化折叠 | **已完成**（Pass0 覆盖偏置仍后置） |
+| **P3** | **M4** 分波 + 并行 + prefer_after（locality 合并已删除） | **已完成** |
+| **P4** | **M5** 契约验证闭环（不及格重考） | **已完成 ← 我们在这里** |
+| **P5** | M6 子目标预算账本 | **已完成** |
 | P6 | M7 facet（依赖语料 modality） | 未做 |
-| 后置 | M1 辅助（每枝深度上限、高亮兄弟保留） | 未做 |
+| 后置 | M1 辅助 / M8 PROBE / 消融 | 未做 |
 
-P1 已可用 plan rubric / 复杂题 smoke 单独评拆题质量（语言、activation、依赖），不必等执行链路。
+**当前站位**：规划层主链路 **PLAN → ILLUMINATE → TRAVERSE → VERIFY/REBIND → SETTLE(ledger)** 已可开关跑通；默认 flags 仍全关。下一期可选 M7（需语料 modality）或消融 A0–A5 + C0。
+
+**评测范围（强制）**：以后所有 plan+NAV / Flat / TreeRAG 评测只跑 **`task_corpus`（`__corpus__` 语料根）**。`search_scope=task_doc` 入口与单文档 episode 产物已从仓库清除。语料内 DISPATCH 进入某文档后的文档内导航仍保留（那是 corpus 的子过程，不是废弃模式）。早期 `plan_nav_e2e_complex5` 探针是单文档模式，结论不可外推到语料评测。
+
+**心智模型（P4）**：不及格就重考；只有真 `SATISFIED` 才写入槽、激活条件支、改 fold；`attempted` 只防死循环，不等于及格。
+
+**心智模型（P5）**：证据预算按子目标份额保底，用不完回流给未满足契约（尤其枚举未尽）；子目标内部仍走现有 waterfill。
 
 ### 5.1 实现自查缺口与下一步修复清单（2026-08）
 
@@ -402,16 +441,16 @@ P1 已可用 plan rubric / 复杂题 smoke 单独评拆题质量（语言、acti
 10. 清理或明确保留：`_migrate_legacy_alternatives`；死枚举 `ABANDON`；planner 工程常数（timeout/token 截断）集中到配置而非散落。
 11. verify 关时的成功判定勿过宽（有 evidence ≠ 槽满足）。
 
-**明确未做、勿标完成**：M6 ledger；M1-aux；Pass0 覆盖偏置；M7/M8。
+**明确未做、勿标完成**：M1-aux；Pass0 覆盖偏置；M7/M8。
 
-**未发现的问题（保持）**：无文档/gold ID 过拟合；未裁剪 C*/D*/F*；未回潮 JUMP/PEEK/EXPAND；未提前实现 M6/M7/M8。
+**未发现的问题（保持）**：无文档/gold ID 过拟合；未裁剪 C*/D*/F*；未回潮 JUMP/PEEK/EXPAND；未提前实现 M7/M8。
 
 ---
 
 ## 6. 风险审计
 
-- **计划锁死（最大风险）。** 错误的解构比不解构更糟——它会把执行器锁在错误区域。**缓解：计划是"软"的**——子目标只影响光照权重与预算配额，**绝不裁剪动作空间**（与现有"不对动作空间 top-K"的硬约束一致）。执行器始终能看到完整地图并收计划外的证据。**勿把「一试即关」误当成 soft-plan。**
-- **假闭环（已实现债）。** verify 产出 RETRY/WIDEN/REBIND 但执行器不听 → 指标上看起来「有 verifier」，行为等价于开环。修复前消融 A3 无意义。
+- **计划锁死（最大风险）。** 错误的解构比不解构更糟。**缓解：soft-plan**——只影响光照/配额/focus，**绝不裁剪动作空间**。防死循环用 `attempted`，不要用「假及格」。
+- **假闭环（已修复）。** 曾出现 verify 产出 RETRY/WIDEN/REBIND 但执行器「一试即关」；现已拆 attempted/satisfied 并接线重试。消融 A3 可在开关打开后评估。
 - **算力混淆。** 3 倍调用量下效果提升可能只是算力换来的 → 必须跑 C0 对照。
 - **简单 query 过度解构。** 单点事实型不需要计划 → 加轻量 router，允许 plan 长度为 1。
 - **planner 幻觉区域。** 输出的 route hint 必须对照真实 `section_id` 校验，非法的直接丢弃。

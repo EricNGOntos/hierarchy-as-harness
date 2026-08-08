@@ -1,13 +1,11 @@
-"""Unit tests for task_corpus (42-doc) search scope on Flat / TreeRAG paths."""
+"""Unit tests for task_corpus (42-doc) search scope on Flat / TreeRAG / Nav paths."""
 from __future__ import annotations
 
 import argparse
 import importlib.util
 import sys
-import tempfile
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
 
 import numpy as np
 
@@ -19,7 +17,6 @@ if str(REALDATA_SRC) not in sys.path:
 
 from agent_delivery.agent.runner_bodyrich import (  # noqa: E402
     SEARCH_SCOPE_TASK_CORPUS,
-    SEARCH_SCOPE_TASK_DOC,
     _doc_ids_from_tasks,
     _episode_doc_id_for_arm,
     _normalize_search_scope,
@@ -44,20 +41,19 @@ def _load_treerag_module():
 
 
 class SearchScopeHelpersTests(unittest.TestCase):
-    def test_normalize_and_episode_doc_id(self) -> None:
+    def test_normalize_rejects_task_doc(self) -> None:
+        self.assertEqual(_normalize_search_scope(None), SEARCH_SCOPE_TASK_CORPUS)
         self.assertEqual(_normalize_search_scope("task_corpus"), SEARCH_SCOPE_TASK_CORPUS)
+        with self.assertRaises(ValueError):
+            _normalize_search_scope("task_doc")
+
+    def test_episode_doc_id_corpus_only(self) -> None:
         task = AgentTask(
             query="q",
             doc_id="docA",
             gold_nodes=["docA:L1"],
             gold_answer="a",
             task_type="niche_fact",
-        )
-        self.assertEqual(
-            _episode_doc_id_for_arm(
-                task, search_scope="task_doc", arm="flat", hier_policy="nav"
-            ),
-            "docA",
         )
         self.assertIsNone(
             _episode_doc_id_for_arm(
@@ -74,6 +70,12 @@ class SearchScopeHelpersTests(unittest.TestCase):
             _episode_doc_id_for_arm(
                 task, search_scope="task_corpus", arm="gold", hier_policy="compact"
             )
+        )
+        self.assertEqual(
+            _episode_doc_id_for_arm(
+                task, search_scope="task_corpus", arm="gold", hier_policy="toolspace"
+            ),
+            "docA",
         )
 
     def test_parse_arms(self) -> None:

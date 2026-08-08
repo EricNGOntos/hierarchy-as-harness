@@ -44,9 +44,10 @@
   "enable_per_subgoal_illumination": false,
   "enable_goal_conditioned_folding": false,
   "enable_plan_orchestration": false,
-  "enable_locality_merge": false,
   "enable_contract_verify": false,
   "subgoal_max_attempts": 2,
   "max_replans": 0,
-  "max_waves": 0
+  "max_waves": 0,
+  "enable_subgoal_budget_ledger": false,
+  "subgoal_budget_floor_frac": 1.0
 }

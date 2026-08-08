@@ -1,8 +1,12 @@
-"""M4/M5: wave orchestration over a RetrievalPlan.
+"""M4/M5/M6: wave orchestration over a RetrievalPlan.
 
-Execution order = dependency DAG ∩ optional map-locality merge ∩ soft prefer_after.
+Execution order = dependency DAG ∩ soft prefer_after. Each subgoal runs its own
+navigate→verify so evidence attribution stays per-subgoal.
 Soft plan: never clips C*/D*/F* action space — only changes query focus,
 bindings, fold weights, and TRACE.
+
+M6 ``BudgetLedger`` / ``settle_subgoal_evidence`` live in ``nav_compose``
+(wired from ``run_nav_episode`` after orchestration).
 """
 
 from __future__ import annotations
@@ -106,119 +110,6 @@ def order_ready_by_prefer_after(
         if sid not in seen:
             ordered.append(sid)
     return ordered
-
-
-def beacons_for_subgoal(
-    state: NavState,
-    subgoal_id: str,
-    *,
-    k: int,
-) -> List[str]:
-    """Beacon sections for locality: Hit provenance, else top map scores."""
-    sid = str(subgoal_id)
-    prefer_docs = {
-        str(d).strip()
-        for d in (getattr(state, "focus_scope_doc_ids", None) or [])
-        if str(d).strip()
-    }
-    from_hits: List[str] = []
-    for section, sources in (state.hit_sources or {}).items():
-        if sid in (sources or []):
-            from_hits.append(str(section))
-    if prefer_docs:
-        scoped = [s for s in from_hits if any(d in s for d in prefer_docs)]
-        if scoped:
-            from_hits = scoped
-    if from_hits:
-        return from_hits[: max(1, int(k))]
-    scores = dict((state.subgoal_map_scores or {}).get(sid) or {})
-    if not scores and state.map_scores:
-        scores = dict(state.map_scores)
-    ranked = sorted(scores.items(), key=lambda kv: (-float(kv[1] or 0.0), str(kv[0])))
-    ids = [s for s, _ in ranked]
-    if prefer_docs:
-        scoped = [s for s in ids if any(d in s for d in prefer_docs)]
-        if scoped:
-            ids = scoped
-    return ids[: max(1, int(k))]
-
-
-def _ancestor_set(ts: Any, section_id: str, doc_id: str) -> Set[str]:
-    rel = getattr(ts, "section_relation_ids", None)
-    if not callable(rel):
-        return {str(section_id)}
-    try:
-        ancestors, _desc = rel(section_id, doc_id)
-        out = {str(section_id)}
-        out.update(str(a) for a in (ancestors or []) if a)
-        return out
-    except Exception:
-        return {str(section_id)}
-
-
-def _beacons_related(
-    ts: Any,
-    doc_id: str,
-    a: Sequence[str],
-    b: Sequence[str],
-) -> bool:
-    """True if any beacon pair shares ancestry (same local subtree)."""
-    if not a or not b:
-        return False
-    sets_a = [_ancestor_set(ts, sid, doc_id) for sid in a]
-    sets_b = [_ancestor_set(ts, sid, doc_id) for sid in b]
-    for sa in sets_a:
-        for sb in sets_b:
-            if sa & sb:
-                return True
-    return False
-
-
-def cluster_by_locality(
-    ts: Any,
-    state: NavState,
-    subgoal_ids: Sequence[str],
-    *,
-    k: int,
-    enabled: bool,
-) -> List[List[str]]:
-    """Union-find merge of same-wave subgoals whose beacons share a subtree."""
-    ids = [str(x) for x in subgoal_ids]
-    if not ids:
-        return []
-    if not enabled or len(ids) == 1:
-        return [[i] for i in ids]
-
-    parent = {i: i for i in ids}
-
-    def find(x: str) -> str:
-        while parent[x] != x:
-            parent[x] = parent[parent[x]]
-            x = parent[x]
-        return x
-
-    def union(a: str, b: str) -> None:
-        ra, rb = find(a), find(b)
-        if ra != rb:
-            parent[rb] = ra
-
-    beacons = {i: beacons_for_subgoal(state, i, k=k) for i in ids}
-    for i, si in enumerate(ids):
-        for sj in ids[i + 1 :]:
-            if _beacons_related(ts, state.doc_id, beacons[si], beacons[sj]):
-                union(si, sj)
-
-    groups: Dict[str, List[str]] = {}
-    for i in ids:
-        groups.setdefault(find(i), []).append(i)
-    order = []
-    seen = set()
-    for i in ids:
-        root = find(i)
-        if root not in seen:
-            seen.add(root)
-            order.append(root)
-    return [groups[r] for r in order]
 
 
 def _set_focus(state: NavState, subgoal: Subgoal, retrieval_query: str) -> None:
@@ -404,53 +295,21 @@ def _execute_subgoal_with_verdicts(
     return last, want_replan
 
 
-def _execute_cluster_on_state(
+def _execute_subgoal_on_state(
     ts: Any,
     state: NavState,
     config: NavConfig,
     plan: RetrievalPlan,
-    cluster: List[str],
+    subgoal_id: str,
     *,
     steps_out: Optional[List[Any]],
-) -> List[Dict[str, Any]]:
+) -> Dict[str, Any]:
     by = {s.id: s for s in plan.subgoals}
-    results: List[Dict[str, Any]] = []
-    merge = len(cluster) > 1 and bool(getattr(config, "enable_locality_merge", False))
-    if merge:
-        parts = [bind_slots(by[sid].retrieval_query, state.slot_bindings) for sid in cluster]
-        join_q = chr(10).join(parts)
-        before = set(state.collected_section_ids)
-        _set_focus(state, by[cluster[0]], join_q)
-        child_steps: List[Any] = []
-        _run_navigate_for_query(ts, state, config, query=join_q, steps_out=child_steps)
-        if steps_out is not None:
-            steps_out.extend(child_steps)
-        for sid in cluster:
-            sg = by[sid]
-            rq = bind_slots(sg.retrieval_query, state.slot_bindings)
-            result = _verify_subgoal(
-                state, config, sg, retrieval_query=rq, collected_before=before
-            )
-            results.append(
-                {
-                    "subgoal_id": sid,
-                    "result": result,
-                    "want_replan": result.verdict == "REPLAN",
-                }
-            )
-        _clear_focus(state)
-        return results
-
-    for sid in cluster:
-        sg = by[sid]
-        result, want_replan = _execute_subgoal_with_verdicts(
-            ts, state, config, sg, steps_out=steps_out
-        )
-        results.append(
-            {"subgoal_id": sid, "result": result, "want_replan": want_replan}
-        )
-        _clear_focus(state)
-    return results
+    result, want_replan = _execute_subgoal_with_verdicts(
+        ts, state, config, by[subgoal_id], steps_out=steps_out
+    )
+    _clear_focus(state)
+    return {"subgoal_id": subgoal_id, "result": result, "want_replan": want_replan}
 
 
 def execute_plan(
@@ -488,49 +347,41 @@ def execute_plan(
         if not ready:
             break
         wave_idx += 1
-        clusters = cluster_by_locality(
-            ts,
-            state,
-            ready,
-            k=int(config.collect_top_k),
-            enabled=bool(getattr(config, "enable_locality_merge", False)),
-        )
         wave_detail: Dict[str, Any] = {
             "wave": wave_idx,
             "ready": list(ready),
-            "clusters": [list(c) for c in clusters],
-            "cluster_results": [],
+            "subgoal_results": [],
         }
 
         if bool(getattr(config, "enable_per_subgoal_illumination", False)):
             refresh_fold_from_subgoal_scores(state, config)
 
         by_id = {s.id: s for s in plan.subgoals}
-        cluster_outputs: List[List[Dict[str, Any]]] = []
+        outputs: List[Dict[str, Any]] = []
 
-        if len(clusters) <= 1:
-            for c in clusters:
-                cluster_outputs.append(
-                    _execute_cluster_on_state(
-                        ts, state, config, plan, c, steps_out=steps_out
+        if len(ready) <= 1:
+            for sid in ready:
+                outputs.append(
+                    _execute_subgoal_on_state(
+                        ts, state, config, plan, sid, steps_out=steps_out
                     )
                 )
         else:
-            max_workers = max(1, min(len(clusters), int(config.dispatch_max_workers or 1)))
-            forks = [(c, _fork_nav_state(state)) for c in clusters]
+            max_workers = max(1, min(len(ready), int(config.dispatch_max_workers or 1)))
+            forks = [(sid, _fork_nav_state(state)) for sid in ready]
 
-            def _run_fork(item: Tuple[List[str], NavState]):
-                cluster, child = item
+            def _run_fork(item: Tuple[str, NavState]):
+                subgoal_id, child = item
                 fork_steps: List[Any] = []
-                res = _execute_cluster_on_state(
-                    ts, child, config, plan, cluster, steps_out=fork_steps
+                res = _execute_subgoal_on_state(
+                    ts, child, config, plan, subgoal_id, steps_out=fork_steps
                 )
-                return cluster, child, res, fork_steps
+                return child, res, fork_steps
 
             with ThreadPoolExecutor(max_workers=max_workers) as pool:
                 futs = [pool.submit(_run_fork, item) for item in forks]
                 for fut in as_completed(futs):
-                    _c, child, results, fork_steps = fut.result()
+                    child, result_item, fork_steps = fut.result()
                     _merge_nav_state(state, child)
                     state.slot_bindings.update(child.slot_bindings)
                     state.satisfied_subgoal_ids.update(child.satisfied_subgoal_ids)
@@ -539,34 +390,33 @@ def execute_plan(
                     state.subgoal_results.update(child.subgoal_results)
                     if steps_out is not None and fork_steps:
                         steps_out.extend(fork_steps)
-                    cluster_outputs.append(results)
+                    outputs.append(result_item)
 
         replan_requested = False
-        for group in cluster_outputs:
-            for item in group:
-                sid = item["subgoal_id"]
-                result: SubgoalResult = item["result"]
-                state.subgoal_results[sid] = asdict(result)
-                wave_detail["cluster_results"].append(
-                    {"subgoal_id": sid, "verdict": result.verdict, "gap": result.gap}
+        for item in outputs:
+            sid = item["subgoal_id"]
+            result: SubgoalResult = item["result"]
+            state.subgoal_results[sid] = asdict(result)
+            wave_detail["subgoal_results"].append(
+                {"subgoal_id": sid, "verdict": result.verdict, "gap": result.gap}
+            )
+            summary["results"][sid] = asdict(result)
+
+            if result.extracted:
+                state.slot_bindings = apply_bindings_from_result(
+                    state.slot_bindings, by_id[sid], result.extracted
                 )
-                summary["results"][sid] = asdict(result)
 
-                if result.extracted:
-                    state.slot_bindings = apply_bindings_from_result(
-                        state.slot_bindings, by_id[sid], result.extracted
-                    )
+            if item.get("want_replan") or result.verdict == "REPLAN":
+                replan_requested = True
 
-                if item.get("want_replan") or result.verdict == "REPLAN":
-                    replan_requested = True
-
-                # Close the node after attempts (success or exhausted).
-                state.attempted_subgoal_ids.add(sid)
-                if result.satisfied or result.verdict == "SATISFIED":
-                    state.satisfied_subgoal_ids.add(sid)
-                    _activate_conditionals(
-                        plan, state, config, parent_id=sid, parent_result=result
-                    )
+            # Close the node after attempts (success or exhausted).
+            state.attempted_subgoal_ids.add(sid)
+            if result.satisfied or result.verdict == "SATISFIED":
+                state.satisfied_subgoal_ids.add(sid)
+                _activate_conditionals(
+                    plan, state, config, parent_id=sid, parent_result=result
+                )
 
         if bool(getattr(config, "enable_per_subgoal_illumination", False)):
             illuminate_from_plan(ts, state, config)

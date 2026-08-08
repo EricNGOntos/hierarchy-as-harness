@@ -198,9 +198,11 @@ map_nav_trace/replay_YYYYMMDD_HHMMSS/
 
 | 目录/文件 | 内容 |
 |-----------|------|
-| `map_nav_trace/replay_400_waterfill_oversize_merged/` | task_doc Map-Nav waterfill+oversize 全量 evidence |
-| `map_nav_trace/replay_400_task_corpus_waterfill_oversize_*` | task_corpus Map-Nav waterfill+oversize 全量 evidence |
-| `results/latest_clean400_map_nav_waterfill_oversize_*_b500.json` | task_doc Map-Nav 冻结 evidence 的 compose/judge |
+| `map_nav_trace/replay_400_task_corpus_waterfill_oversize_*` | **task_corpus** Map-Nav waterfill+oversize 全量 evidence（唯一权威） |
+| `results/latest_clean400_map_nav_task_corpus_waterfill_oversize_judged_b500.json` | task_corpus 冻结 evidence 的 compose/judge |
+| `results/latest_clean400_task_corpus_v3_{flat,treerag}_b500.json` | Flat / TreeRAG 语料对照 |
+
+**已移除**：`search_scope=task_doc` 入口与全部单文档 episode 产物（含 `replay_400_waterfill_oversize_merged/`、`plan_nav_e2e_*` 探针）。以后批量只跑 `task_corpus`。`bin/56` / `bin/52` / runner 默认均为 `task_corpus`；传入 `task_doc` 会直接报错。
 
 ## 进一步细节
 

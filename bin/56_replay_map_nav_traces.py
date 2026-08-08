@@ -495,9 +495,9 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--search-scope",
-        choices=("task_doc", "task_corpus"),
-        default="task_doc",
-        help="task_doc=lock task.doc_id; task_corpus=corpus-root over task docs",
+        choices=("task_corpus",),
+        default="task_corpus",
+        help="task_corpus only: corpus-root over task docs (task_doc removed)",
     )
     return parser.parse_args(argv)
 
@@ -628,27 +628,25 @@ def main() -> int:
         print(f"[replay] resume: skip {n_skip}, run {len(pending)}", flush=True)
     print(f"[replay] tasks={total} docs={sorted({t.doc_id for t in selected if t.doc_id})}", flush=True)
 
-    search_scope = str(getattr(args, "search_scope", "task_doc") or "task_doc").strip().lower()
+    search_scope = "task_corpus"
     corpus_doc_ids = sorted(
         {
             str(t.doc_id).strip()
-            for t in selected
+            for t in all_tasks
             if str(getattr(t, "doc_id", "") or "").strip()
         }
     )
-    # For corpus mode also include all task-file docs if we loaded the full 400 list.
-    if search_scope == "task_corpus":
-        all_task_docs = sorted(
+    # Fallback: if task file empty of docs, use selected tasks only.
+    if not corpus_doc_ids:
+        corpus_doc_ids = sorted(
             {
                 str(t.doc_id).strip()
-                for t in all_tasks
+                for t in selected
                 if str(getattr(t, "doc_id", "") or "").strip()
             }
         )
-        if all_task_docs:
-            corpus_doc_ids = all_task_docs
-    nav_corpus_ids = list(corpus_doc_ids) if search_scope == "task_corpus" else None
-    doc_allow = set(corpus_doc_ids) if search_scope == "task_corpus" else None
+    nav_corpus_ids = list(corpus_doc_ids)
+    doc_allow = set(corpus_doc_ids)
 
     embedding_model = resolve_embedding_model(
         os.environ.get("EMBEDDING_MODEL") or DEFAULT_DENSE_EMBEDDING_MODEL
