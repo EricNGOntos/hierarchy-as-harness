@@ -33,7 +33,12 @@ attempt 里各自问一遍 LLM，而不是把"够不够"交给一个更懂全局
 N* id / section_id），但融合之前的 `navigate()` 从不读它——每个 subgoal
 不论 planner 给出多精确的锚点，执行时都从文档/语料根重新走一遍完整的
 COLLECT/DISPATCH 决策链。这是最直接的"PLAN 算过的东西 NAV 不认"的重叠浪费。
-融合后由 `nav_harvest.resolve_harvest_anchor` 消费它（见 §2.1）。
+融合后由 `nav_harvest.resolve_harvest_anchor` 消费它（见 §2.1），解析结果
+粘在 `state.subgoal_anchor[sid]` 上，只有 `plan_control` 的 `widen` 决策
+（`nav_orchestrate._apply_plan_control`）才会移动它——一次性解析，而不是
+每次都重新扫一遍 `route_hints`（2026-08-09 修订：早期版本每次都无状态重扫
+`route_hints`，"没被收集过"≠"没被看过没选中"，同一个错误锚点会被反复选中，
+是 F2 空转的根因之一，见下）。
 
 ### 1.4 证据归属泄漏
 
@@ -91,7 +96,7 @@ channel 去猜，容易导致 REPLAN 生成的新 subgoal 重新扫一遍已经�
 结束"往返；不再有 depth-0 特权重排；不再有自由文本 report——见 §2.1），
 用零成本的规则判据（`verify_contract`，不消耗 LLM）取代 4 里对 LLM 的
 依赖作为唯一输入，再引入 `plan_control()` 作为**唯一**读全局证据、下
-结构化决策（accept/reharvest/widen/drop + 全局 continue/replan/done）的
+结构化决策（accept/widen/drop + 全局 continue/replan/done）的
 裁判（见 §2.2）。旧的"attempts 耗尽→自动升级为 REPLAN"路径
 （`_execute_subgoal_with_verdicts` 内的逻辑）在 `enable_plan_control=True`
 时不再被调用——REPLAN 只能由 `plan_control` 发出。
@@ -111,22 +116,47 @@ DISPATCH 合法性判断——即 DISPATCH 选项本身仍受 `enable_recursive_
 上限，二者都满足才会真正递归）。
 
 `resolve_harvest_anchor`（`enable_anchor_entry`）把 §1.3 提到的
-`route_hints` 接上：每个 subgoal 的 harvest 优先从 `plan_control` 的
-"reharvest" 锚点、否则从 planner 给的 `route_hints` 直接进入，而不是每次
-都从文档/语料根重新展开完整的地图决策链；`scope_filter.doc_ids` 声明过
-的 subgoal 永远不会被锚点带出自己声明的文档边界。
+`route_hints` 接上：每个 subgoal 第一次调用时从 `route_hints` 里挑一个
+可用的入口（跳过已收集 / 已被这个 subgoal dismiss 过 / 越出
+`scope_filter.doc_ids` 的候选），否则退回文档根，而不是每次都从文档/
+语料根重新展开完整的地图决策链；结果粘在 `state.subgoal_anchor[sid]`
+上，后续调用直接读缓存。`scope_filter.doc_ids` 声明过的 subgoal 永远不会
+被锚点带出自己声明的文档边界。
+
+每次 `harvest()` 调用里，"看到过（有 collect/dispatch 选项）但既没
+collect 也没 dispatch"的直接子节点 + 自身，会被记进
+`state.subgoal_dismissed_section_ids[sid]`（整棵 dispatch 子树颗粒无收时
+也会把 dispatch 目标本身记进去）；同一 subgoal 后续任何一次 harvest 调用
+都会把这些 id 从地图里剔除（`nav_projection.build_map` 的
+`dismissed_section_ids` 入参，按 subgoal 各自维护，不进全局
+`state.dismissed_section_ids`，不影响其它 subgoal）。这是 widen 上移到父
+节点后能看到"真正还没看过"的兄弟节点、而不是原样再看一遍已经拒绝过的
+节点的关键。
 
 ### 2.2 `plan_control()`：唯一检查权威（`nav_control.py`）
 
 每个 wave 结束后调用一次（而不是每个 subgoal 各自调用）：输入是这个 wave
 里每个 subgoal**自己新收集的证据**（`new_chunks`，绝不是全局池——直接
 复用 §1.4-1 的 `collected_before` 差分修复）+ 零成本的规则判据
-（`verify_contract` 的输出，不额外花 LLM 调用）。输出是每个 subgoal 的
-`accept/reharvest/widen/drop` 决策 + 一个全局的 `continue/replan/done`
-决策。`REPLAN` 只能从这里发出——旧的"重试耗尽自动升级"路径在这条链路上
-不再触发。`_apply_plan_control` 里还有一个不依赖 LLM 的电路breaker：
-`reharvest`/`widen` 累计次数达到 `subgoal_max_attempts` 时强制降级为
-`drop`，避免 `plan_control` 判断出错导致的死循环。
+（`verify_contract` 的输出，不额外花 LLM 调用）+ `harvest_reason`（harvester
+自己对这一轮看到什么、为什么选/不选的解释——2026-08-09 之前只写进
+`AgentStep.detail` 供 TRACE 用，从未传回 `plan_control` 的输入，控制器只能
+靠零成本规则信号猜；现在并入每个 subgoal 的证据块）。输出是每个 subgoal
+的 `accept/widen/drop` 决策 + 一个全局的 `continue/replan/done` 决策。
+
+`reharvest` 已经删除（2026-08-09）：原方案 `reharvest`（模型给 anchor）和
+`widen`（清空 `scope_filter`，对 `resolve_harvest_anchor` 的入口解析完全
+没有作用）两条决策一起管"换个入口再采一次"，却没有一条把 anchor 到底该
+定成什么、定完怎么持续生效的全部逻辑管全——这正是 F2 空转
+（`widen, anchor=""`）的根因。现在只有一种"再采一次"决策：`widen` 由
+`_apply_plan_control` 确定性执行，把 `state.subgoal_anchor[sid]` 移到当前
+anchor 的父节点（`nav_harvest.resolve_parent_section_id`，同时兼容
+knowhere/legacy 两种 ToolSpace 后端）；不接受模型给 anchor。当前 anchor
+已经是 `None`（文档根，已是最粗粒度）时无处可 widen，直接确定性降级为
+`drop`。`_apply_plan_control` 里还有一个不依赖 LLM 的电路breaker：`widen`
+累计次数达到 `subgoal_max_attempts` 时同样强制降级为 `drop`，避免
+`plan_control` 判断出错导致的死循环——现在只有一种循环（widen）需要
+断路，不再是两种互相踩脚的路径。
 
 ### 2.3 `[harvested:sN]` 渐进可见性（`nav_projection.py` / `nav_actions.py`）
 
@@ -189,7 +219,7 @@ BM25/dense 索引、不需要 `_idx`），`src/nav` 下其余文件不需要改�
 
 | 开关 | 默认 | 作用 |
 | --- | --- | --- |
-| `enable_anchor_entry` | `false` | harvest 从 `route_hints`/reharvest 锚点进入，而非总从根开始 |
+| `enable_anchor_entry` | `false` | harvest 从 `route_hints` 解析出的粘滞 anchor 进入，而非总从根开始 |
 | `enable_one_shot_harvest` | `false` | 用 `harvest()` 替换 `navigate()` 作为每个 subgoal 的执行原语 |
 | `max_harvest_depth` | `3` | harvest 递归深度上限（独立于 `max_dispatch_depth`） |
 | `enable_plan_control` | `false` | 用 `plan_control()` 替换逐 subgoal 的 verdict 自动升级/REPLAN 路径 |

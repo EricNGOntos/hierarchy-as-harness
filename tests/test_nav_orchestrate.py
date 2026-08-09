@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 
@@ -13,6 +14,8 @@ for source_dir in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
     if str(source_dir) not in sys.path:
         sys.path.insert(0, str(source_dir))
 
+from nav_control import PlanControlDecision, SubgoalDecision  # noqa: E402
+from nav_hierarchy import InMemoryHierarchyProvider, InMemoryNode, ProviderToolSpace  # noqa: E402
 from nav_orchestrate import ready_subgoal_ids  # noqa: E402
 from nav_plan import Activation, Contract, RetrievalPlan, Subgoal  # noqa: E402
 from nav_types import NavConfig, NavState  # noqa: E402
@@ -202,24 +205,29 @@ class TestNavOrchestrate(unittest.TestCase):
                 ),
             ]
         )
-        ready0 = ready_subgoal_ids(
-            plan, satisfied=set(), activated=set(), bindings={}
-        )
+        ready0 = ready_subgoal_ids(plan, satisfied=set(), activated=set())
         self.assertEqual(ready0, ["s1"])
-        ready1 = ready_subgoal_ids(
-            plan,
-            satisfied={"s1"},
-            activated=set(),
-            bindings={"s1.seal_type": "法人章", "seal_type": "法人章"},
-        )
+        ready1 = ready_subgoal_ids(plan, satisfied={"s1"}, activated=set())
         self.assertEqual(ready1, ["s2"])
-        ready2 = ready_subgoal_ids(
-            plan,
-            satisfied={"s1"},
-            activated={"s3"},
-            bindings={"s1.seal_type": "法人章", "seal_type": "法人章"},
-        )
+        ready2 = ready_subgoal_ids(plan, satisfied={"s1"}, activated={"s3"})
         self.assertEqual(ready2, ["s2", "s3"])
+
+    def test_dropped_precursor_settles_deps_like_satisfied(self) -> None:
+        """F1: a dropped precursor must not starve a downstream subgoal forever."""
+        plan = RetrievalPlan(
+            subgoals=[
+                Subgoal(id="s1", need="a", retrieval_query="a"),
+                Subgoal(id="s2", need="b", retrieval_query="b", depends_on=["s1"]),
+            ]
+        )
+        still_blocked = ready_subgoal_ids(
+            plan, satisfied=set(), activated=set(), dropped=set(), attempted={"s1"}
+        )
+        self.assertEqual(still_blocked, [])
+        unblocked = ready_subgoal_ids(
+            plan, satisfied=set(), activated=set(), dropped={"s1"}, attempted={"s1"}
+        )
+        self.assertEqual(unblocked, ["s2"])
 
     def test_same_wave_subgoals_run_own_queries(self) -> None:
         """Independent subgoals never share one navigate call or one verdict."""
@@ -328,6 +336,64 @@ class TestNavOrchestrate(unittest.TestCase):
         self.assertIn("s2", state.satisfied_subgoal_ids)
         self.assertEqual(state.slot_bindings.get("seal_type"), "法人章")
         self.assertGreaterEqual(detail.get("n_waves", 0), 2)
+
+    def test_widen_moves_anchor_to_parent_then_drops_at_root(self) -> None:
+        """F2 fix: widen is deterministic move-to-parent; exhausting the
+        document with nowhere coarser to go degrades to drop, never an
+        anchor="" empty-loop repeat of the exact same harvest."""
+        from nav_orchestrate import _apply_plan_control
+
+        nodes = {
+            "doc1:__doc_root": InMemoryNode(
+                section_id="doc1:__doc_root", title="Root", children=["doc1:A"]
+            ),
+            "doc1:A": InMemoryNode(section_id="doc1:A", title="A", children=["doc1:A1"]),
+            "doc1:A1": InMemoryNode(section_id="doc1:A1", title="A1", content="x"),
+        }
+        provider = InMemoryHierarchyProvider(roots_by_doc={"doc1": ["doc1:__doc_root"]}, nodes=nodes)
+        ts = ProviderToolSpace(provider)
+
+        subgoal = Subgoal(id="s1", need="x", retrieval_query="x")
+        plan = RetrievalPlan(subgoals=[subgoal])
+        state = NavState(doc_id="doc1", query="x", retrieval_plan=plan)
+        state.subgoal_anchor["s1"] = "doc1:A1"
+        cfg = NavConfig(subgoal_max_attempts=5)
+        outputs = [
+            {
+                "subgoal_id": "s1",
+                "result": SimpleNamespace(satisfied=False, verdict="", gap=""),
+                "new_chunks": [],
+            }
+        ]
+        widen_decision = PlanControlDecision(
+            per_subgoal={"s1": SubgoalDecision(subgoal_id="s1", decision="widen")},
+            global_action="continue",
+        )
+
+        with patch("nav_control.plan_control", return_value=widen_decision):
+            _apply_plan_control(
+                ts, state, cfg, plan=plan, outputs=outputs, by_id={"s1": subgoal}, steps_out=None
+            )
+        self.assertEqual(state.subgoal_anchor["s1"], "doc1:A")
+
+        with patch("nav_control.plan_control", return_value=widen_decision):
+            _apply_plan_control(
+                ts, state, cfg, plan=plan, outputs=outputs, by_id={"s1": subgoal}, steps_out=None
+            )
+        self.assertEqual(state.subgoal_anchor["s1"], "doc1:__doc_root")
+
+        with patch("nav_control.plan_control", return_value=widen_decision):
+            _apply_plan_control(
+                ts, state, cfg, plan=plan, outputs=outputs, by_id={"s1": subgoal}, steps_out=None
+            )
+        self.assertIsNone(state.subgoal_anchor["s1"])
+
+        with patch("nav_control.plan_control", return_value=widen_decision):
+            _apply_plan_control(
+                ts, state, cfg, plan=plan, outputs=outputs, by_id={"s1": subgoal}, steps_out=None
+            )
+        self.assertIn("s1", state.dropped_subgoal_ids)
+        self.assertIn("s1", state.attempted_subgoal_ids)
 
 
 if __name__ == "__main__":

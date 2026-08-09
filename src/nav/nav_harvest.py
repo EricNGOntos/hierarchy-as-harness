@@ -42,6 +42,9 @@ class HarvestResult:
     visited_section_ids: List[str] = field(default_factory=list)
     n_policy_calls: int = 0
     max_depth_hit: bool = False
+    # "<scope>: <reason>" per policy call this harvest tree made, joined by
+    # " | " — plan_control reads this alongside new_evidence to judge widen
+    # vs drop (previously only reached AgentStep.detail, never the controller).
     reason: str = ""
 
 
@@ -54,9 +57,9 @@ def _actions_by_ids(actions: Sequence[LegalAction], ids: Sequence[str]) -> List[
 def _harvest_system_prompt(*, dispatch_available: bool) -> str:
     dispatch_rule = (
         "  - dispatch=D*: hand a node's subtree to a deeper harvester before "
-        "deciding; use this only when the node's title/summary alone does not "
-        "tell you whether the needed evidence is inside — the deeper harvester "
-        "will make its own single decision over that subtree.\n"
+        "deciding; use this when the node's title/summary alone does not "
+        "already tell you whether the needed evidence is inside — the deeper "
+        "harvester will make its own single decision over that subtree.\n"
         if dispatch_available
         else ""
     )
@@ -73,8 +76,13 @@ def _harvest_system_prompt(*, dispatch_available: bool) -> str:
         f"{dispatch_rule}"
         "  - Use only action IDs shown on a node line. Never invent IDs or "
         "write raw section paths as targets.\n"
-        "  - Prefer being decisive: if the visible titles/summaries already "
-        "answer the subgoal, collect directly instead of dispatching.\n"
+        "  - Select every node that plausibly bears on the subgoal (collect "
+        "if the answer looks to be inside it already, dispatch if you are "
+        "unsure and need to look deeper). Leave a node unselected only when "
+        "it clearly does not relate to the subgoal.\n"
+        "  - A node you leave unselected this call will not be shown again "
+        "for this subgoal, so when in doubt prefer dispatch over silently "
+        "skipping a node.\n"
         "  - Provide confidence in [0,1] for every collect id (object map "
         "keyed by action id, or a single scalar when there is exactly one).\n\n"
         "=== End Rules ===\n\n"
@@ -201,31 +209,58 @@ def resolve_harvest_anchor(
     state: NavState,
     config: NavConfig,
 ) -> Optional[str]:
-    """Per-subgoal harvest entry scope: reharvest override > route_hints > root.
+    """Per-subgoal harvest entry scope, sticky across waves.
 
-    Skips hints already fully collected, and hints outside a declared
-    ``scope_filter.doc_ids`` (anchors never cross a subgoal's own document
-    boundary once one is declared).
+    Resolved once from ``route_hints`` (first hint that is not already fully
+    collected, not already dismissed by this subgoal, and not outside a
+    declared ``scope_filter.doc_ids``), else the document root (``None``).
+    The result is cached on ``state.subgoal_anchor`` so later calls this
+    episode return the same value without re-scanning ``route_hints`` — the
+    only thing that ever moves it afterwards is plan_control's ``widen``
+    decision (``nav_orchestrate._apply_plan_control``, one level up to the
+    parent scope each time via ``resolve_parent_section_id``).
     """
     if not bool(getattr(config, "enable_anchor_entry", False)):
         return None
-    override = str((state.subgoal_reharvest_anchor or {}).get(subgoal.id) or "").strip()
-    if override:
-        return override
+    if subgoal.id in state.subgoal_anchor:
+        return state.subgoal_anchor[subgoal.id]
 
     from path_ledger import doc_id_for
 
+    dismissed = state.subgoal_dismissed_section_ids.get(subgoal.id, set())
     allowed_docs = {d for d in (subgoal.scope_filter.doc_ids or []) if str(d).strip()}
+    anchor: Optional[str] = None
     for hint in subgoal.route_hints or []:
         sid = str(hint or "").strip()
-        if not sid or sid in state.collected_section_ids:
+        if not sid or sid in state.collected_section_ids or sid in dismissed:
             continue
         if allowed_docs:
             doc = doc_id_for(sid)
             if doc and doc not in allowed_docs:
                 continue
-        return sid
-    return None
+        anchor = sid
+        break
+    state.subgoal_anchor[subgoal.id] = anchor
+    return anchor
+
+
+def resolve_parent_section_id(ts: Any, section_id: str, doc_id: str) -> Optional[str]:
+    """Direct parent of ``section_id`` in the full hierarchy — drives ``widen``.
+
+    Prefers a provider-exposed ``parent_id`` capability (``KnowhereProvider``
+    / any ``HierarchyProvider`` via ``ProviderToolSpace``); falls back to the
+    legacy line-indexed ``ToolSpace``'s parent-pointer table. Returns
+    ``None`` when ``section_id`` has no further parent (already at the
+    document's top level) — the caller then treats the *next* widen entry
+    point as the unrestricted document root.
+    """
+    fn = getattr(ts, "parent_id", None)
+    if callable(fn):
+        parent = fn(section_id)
+        return str(parent).strip() or None if parent else None
+    from nav_compose import direct_parent_id
+
+    return direct_parent_id(ts, section_id, doc_id)
 
 
 def harvest(
@@ -251,7 +286,6 @@ def harvest(
         node_scope=entry_scope,
         query=query,
         depth=initial_depth,
-        budget=int(config.map_char_limit),
         steps_out=steps_out,
         result=result,
     )
@@ -267,7 +301,6 @@ def _harvest_node(
     node_scope: Optional[str],
     query: str,
     depth: int,
-    budget: int,
     steps_out: Optional[List[Any]],
     result: HarvestResult,
 ) -> None:
@@ -275,6 +308,7 @@ def _harvest_node(
 
     max_depth = max(0, int(getattr(config, "max_harvest_depth", 0) or 0))
     show_harvested = bool(getattr(config, "show_harvested_in_map", False))
+    subgoal_dismissed = state.subgoal_dismissed_section_ids.get(subgoal.id, set())
     projection = build_projection(
         ts,
         doc_id=state.doc_id,
@@ -283,7 +317,7 @@ def _harvest_node(
         config=config,
         map_scores=state.map_scores,
         collected_section_ids=state.collected_section_ids,
-        dismissed_section_ids=state.dismissed_section_ids,
+        dismissed_section_ids=state.dismissed_section_ids | subgoal_dismissed,
         highlight_ids=state.highlight_ids,
         hit_sources=state.hit_sources or None,
         harvested_section_ids=state.harvested_owner_subgoal if show_harvested else None,
@@ -305,6 +339,25 @@ def _harvest_node(
         depth=depth,
     )
     result.n_policy_calls += 1
+    if reason:
+        tag = node_scope or "root"
+        result.reason = f"{result.reason} | {tag}: {reason}" if result.reason else f"{tag}: {reason}"
+
+    # Only the current node and its direct children are an actual decision at
+    # this call — deeper rows are shown for context inside the same
+    # full-depth map but belong to whichever recursive call lands on their
+    # own direct parent. Dismissing them here would pre-empt that call (e.g.
+    # a leaf two levels down would never get its own chance once its
+    # grandparent is DISPATCHed instead of collected).
+    depth_from_scope = {v.section_id: v.depth_from_scope for v in projection.tree_sections}
+    decided_now = [a for a in actionable if depth_from_scope.get(a.section_id or "", 99) <= 1]
+    selected_ids = {a.section_id for a in (*collect_actions, *dispatch_actions) if a.section_id}
+    unselected_ids = {
+        a.section_id for a in decided_now if a.section_id and a.section_id not in selected_ids
+    }
+    if unselected_ids:
+        state.subgoal_dismissed_section_ids.setdefault(subgoal.id, set()).update(unselected_ids)
+
     if steps_out is not None:
         from agent_delivery.agent.types import AgentStep  # type: ignore
 
@@ -350,7 +403,7 @@ def _harvest_node(
         if not sid or sid == str(node_scope or ""):
             continue
         result.visited_section_ids.append(sid)
-        child_budget = max(500, int(budget * 0.85))
+        before_collected = len(result.new_section_ids)
         _harvest_node(
             ts,
             state,
@@ -359,7 +412,11 @@ def _harvest_node(
             node_scope=sid,
             query=query,
             depth=depth + 1,
-            budget=child_budget,
             steps_out=steps_out,
             result=result,
         )
+        # Whole dispatched subtree came up empty: a dead end, not just "not
+        # yet explored" — dismiss it too so a later widen doesn't re-dispatch
+        # into the same branch.
+        if len(result.new_section_ids) == before_collected:
+            state.subgoal_dismissed_section_ids.setdefault(subgoal.id, set()).add(sid)

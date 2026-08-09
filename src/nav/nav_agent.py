@@ -302,7 +302,7 @@ def _section_and_descendants(ts: ToolSpace, section_id: str, doc_id: str) -> set
 
 
 def run_nav_episode(
-    tools: HierarchicalTools,
+    tools: Optional[HierarchicalTools],
     query: str,
     *,
     doc_id: Optional[str] = None,
@@ -313,6 +313,7 @@ def run_nav_episode(
     compose_answer: bool = True,
     policy: str = "rule",
     config: Optional[NavConfig] = None,
+    toolspace: Optional[Any] = None,
 ) -> EpisodeResult:
     corpus_ids = [
         str(d).strip()
@@ -354,7 +355,12 @@ def run_nav_episode(
         if int(getattr(cfg, "depth0_oversize_char_limit", 0) or 0) <= 0:
             cfg.depth0_oversize_char_limit = max(1, int(budget_chars))
     retrieval_t0 = time.perf_counter()
-    ts = ToolSpace(tools, corpus_doc_ids=corpus_ids or None)
+    if toolspace is not None:
+        ts = toolspace
+    elif tools is not None:
+        ts = ToolSpace(tools, corpus_doc_ids=corpus_ids or None)
+    else:
+        raise ValueError("Nav Agent requires either tools or an injected toolspace")
     state = NavState(doc_id=episode_doc, query=query, task_type=task_type)
     steps: List[AgentStep] = []
     if is_corpus_doc_id(episode_doc):

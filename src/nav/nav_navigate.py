@@ -184,8 +184,12 @@ def _fork_nav_state(state: NavState, *, doc_id: Optional[str] = None) -> NavStat
         subgoal_results=dict(state.subgoal_results),
         replan_count=int(state.replan_count or 0),
         harvested_owner_subgoal=dict(state.harvested_owner_subgoal),
-        subgoal_reharvest_anchor=dict(state.subgoal_reharvest_anchor),
+        subgoal_anchor=dict(state.subgoal_anchor),
+        subgoal_dismissed_section_ids={
+            k: set(v) for k, v in (state.subgoal_dismissed_section_ids or {}).items()
+        },
         subgoal_attempt_counts=dict(state.subgoal_attempt_counts),
+        dropped_subgoal_ids=set(state.dropped_subgoal_ids),
     )
 
 
@@ -212,7 +216,10 @@ def _merge_nav_state(parent: NavState, child: NavState) -> None:
     parent.activated_subgoal_ids.update(child.activated_subgoal_ids)
     parent.subgoal_results.update(child.subgoal_results)
     parent.harvested_owner_subgoal.update(child.harvested_owner_subgoal)
-    parent.subgoal_reharvest_anchor.update(child.subgoal_reharvest_anchor)
+    parent.subgoal_anchor.update(child.subgoal_anchor)
+    for sid, ids in (child.subgoal_dismissed_section_ids or {}).items():
+        parent.subgoal_dismissed_section_ids.setdefault(sid, set()).update(ids)
+    parent.dropped_subgoal_ids.update(child.dropped_subgoal_ids)
     for sid, n in child.subgoal_attempt_counts.items():
         parent.subgoal_attempt_counts[sid] = max(
             int(parent.subgoal_attempt_counts.get(sid, 0)), int(n)

@@ -17,11 +17,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
-from nav_illuminate import (
-    bindable_retrieval_queries,
-    illuminate_from_plan,
-    refresh_fold_from_subgoal_scores,
-)
+from nav_illuminate import illuminate_from_plan, refresh_fold_from_subgoal_scores
 from nav_navigate import _fork_nav_state, _merge_nav_state, navigate
 from nav_plan import (
     RetrievalPlan,
@@ -30,6 +26,7 @@ from nav_plan import (
     bind_slots,
     is_always_active,
     plan_query,
+    unbound_slots,
 )
 from nav_types import NavConfig, NavState, SubgoalResult
 from nav_verify import (
@@ -48,23 +45,30 @@ def ready_subgoal_ids(
     *,
     satisfied: Set[str],
     activated: Set[str],
-    bindings: Dict[str, str],
     attempted: Optional[Set[str]] = None,
+    dropped: Optional[Set[str]] = None,
 ) -> List[str]:
-    """Subgoals eligible to run now (deps met, bindable, not yet finished)."""
-    bindable = bindable_retrieval_queries(plan, bindings)
+    """Subgoals eligible to run now (deps settled, activated, not yet finished).
+
+    F1 fix: a dependency only needs to be *settled* (``satisfied`` or
+    ``dropped``, never both — see ``NavState.dropped_subgoal_ids``), not
+    specifically ``satisfied``. A dropped precursor must not starve every
+    downstream subgoal forever. Readiness no longer requires the retrieval
+    query to be fully slot-bound either: once deps are settled the caller
+    degrades an unbound query (``_unbound_retrieval_query``) instead of
+    waiting on a slot that a dropped precursor will never produce.
+    """
+    settled = set(satisfied) | set(dropped or ())
     known = {s.id for s in plan.subgoals}
     done = set(attempted or ()) | set(satisfied)
     out: List[str] = []
     for sg in plan.subgoals:
         if sg.id in done:
             continue
-        if sg.id not in bindable:
-            continue
         if not is_always_active(sg) and sg.id not in activated:
             continue
         deps = [d for d in (sg.depends_on or []) if d in known]
-        if any(d not in satisfied for d in deps):
+        if any(d not in settled for d in deps):
             continue
         out.append(sg.id)
     return order_ready_by_prefer_after(plan, out)
@@ -328,6 +332,11 @@ def _execute_subgoal_harvest_once(
     from nav_harvest import harvest, resolve_harvest_anchor
 
     rq = bind_slots(subgoal.retrieval_query, state.slot_bindings)
+    if unbound_slots(rq):
+        # F1: deps may be "settled" (satisfied or dropped) without ever
+        # producing this subgoal's referenced slot — degrade to a query with
+        # the unresolved {{...}} braces stripped rather than stalling.
+        rq = _unbound_retrieval_query(subgoal)
     _set_focus(state, subgoal, rq)
     anchor = resolve_harvest_anchor(subgoal, state, config)
     before_sections = set(state.collected_section_ids)
@@ -360,6 +369,7 @@ def _execute_subgoal_harvest_once(
             "n_policy_calls": harvest_result.n_policy_calls,
             "visited_section_ids": list(harvest_result.visited_section_ids),
             "max_depth_hit": harvest_result.max_depth_hit,
+            "reason": harvest_result.reason,
         },
     }
 
@@ -374,8 +384,18 @@ def _apply_plan_control(
     by_id: Dict[str, Subgoal],
     steps_out: Optional[List[Any]],
 ) -> Dict[str, Any]:
-    """Apply one wave's plan_control decision; returns a TRACE-friendly detail."""
+    """Apply one wave's plan_control decision; returns a TRACE-friendly detail.
+
+    F2 fix: ``widen`` is the only "try again differently" decision (no more
+    ``reharvest``) and is applied deterministically here, never by the LLM
+    naming an anchor — it steps ``state.subgoal_anchor[sid]`` up to the
+    parent of whatever it currently is (``nav_harvest.resolve_parent_section_id``).
+    Once the anchor is already the document root (``None`` — maximum
+    breadth), there is nowhere coarser to go, so widen degrades to a
+    deterministic ``drop`` instead of silently repeating the same harvest.
+    """
     from nav_control import plan_control
+    from nav_harvest import resolve_parent_section_id
 
     decision = plan_control(ts, state, config, plan=plan, wave_outputs=outputs)
     max_attempts = max(1, int(getattr(config, "subgoal_max_attempts", 2) or 2))
@@ -385,11 +405,18 @@ def _apply_plan_control(
         result: SubgoalResult = item["result"]
         sub_decision = decision.per_subgoal.get(sid)
         kind = sub_decision.decision if sub_decision else ("accept" if result.satisfied else "widen")
-        # Circuit breaker: bound reharvest/widen loops regardless of plan_control.
-        if kind in {"reharvest", "widen"} and int(
-            state.subgoal_attempt_counts.get(sid, 0)
-        ) >= max_attempts:
+        # Circuit breaker: bound widen loops regardless of plan_control.
+        if kind == "widen" and int(state.subgoal_attempt_counts.get(sid, 0)) >= max_attempts:
             kind = "drop"
+
+        if kind == "widen":
+            current = state.subgoal_anchor.get(sid)
+            if current is None:
+                # Already at the unrestricted document root: no coarser scope
+                # exists to widen into.
+                kind = "drop"
+            else:
+                state.subgoal_anchor[sid] = resolve_parent_section_id(ts, current, state.doc_id)
 
         if kind == "accept":
             result.satisfied = True
@@ -398,17 +425,11 @@ def _apply_plan_control(
             state.satisfied_subgoal_ids.add(sid)
             state.attempted_subgoal_ids.add(sid)
             _activate_conditionals(plan, state, config, parent_id=sid, parent_result=result)
-        elif kind == "reharvest":
-            anchor = str(sub_decision.anchor or "").strip() if sub_decision else ""
-            if anchor:
-                state.subgoal_reharvest_anchor[sid] = anchor
-        elif kind == "widen":
-            sg = by_id.get(sid)
-            if sg is not None:
-                _widen_scope_filter(sg)
-            state.subgoal_reharvest_anchor.pop(sid, None)
         elif kind == "drop":
+            state.dropped_subgoal_ids.add(sid)
             state.attempted_subgoal_ids.add(sid)
+        # kind == "widen": anchor already advanced above; next wave's harvest
+        # reads it back from state.subgoal_anchor via resolve_harvest_anchor.
 
     if steps_out is not None:
         from agent_delivery.agent.types import AgentStep  # type: ignore
@@ -421,7 +442,7 @@ def _apply_plan_control(
                     "global": decision.global_action,
                     "reason": decision.reason,
                     "subgoals": {
-                        sid: {"decision": d.decision, "anchor": d.anchor, "note": d.note}
+                        sid: {"decision": d.decision, "note": d.note}
                         for sid, d in decision.per_subgoal.items()
                     },
                 },
@@ -486,8 +507,8 @@ def execute_plan(
             plan,
             satisfied=set(state.satisfied_subgoal_ids),
             activated=set(state.activated_subgoal_ids),
-            bindings=dict(state.slot_bindings),
             attempted=set(state.attempted_subgoal_ids),
+            dropped=set(state.dropped_subgoal_ids),
         )
         if not ready:
             break

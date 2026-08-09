@@ -21,11 +21,11 @@ from nav_plan import RetrievalPlan, Subgoal
 from nav_policy import _extract_json_obj
 from nav_types import NavConfig, NavState
 
-SubgoalDecisionKind = Literal["accept", "reharvest", "widen", "drop"]
+SubgoalDecisionKind = Literal["accept", "widen", "drop"]
 GlobalDecisionKind = Literal["continue", "replan", "done"]
 
 _CONTROL_PURPOSE = "nav_plan_control_v1"
-_SUBGOAL_DECISIONS = {"accept", "reharvest", "widen", "drop"}
+_SUBGOAL_DECISIONS = {"accept", "widen", "drop"}
 _GLOBAL_DECISIONS = {"continue", "replan", "done"}
 
 
@@ -33,7 +33,6 @@ _GLOBAL_DECISIONS = {"continue", "replan", "done"}
 class SubgoalDecision:
     subgoal_id: str
     decision: SubgoalDecisionKind = "accept"
-    anchor: str = ""
     note: str = ""
 
 
@@ -85,6 +84,9 @@ def _wave_subgoal_block(
             f"visited={len(harvest_meta.get('visited_section_ids') or [])} "
             f"policy_calls={harvest_meta.get('n_policy_calls', 0)}"
         )
+        harvest_reason = str(harvest_meta.get("reason") or "").strip()
+        if harvest_reason:
+            lines.append(f"  harvest_reason: {harvest_reason}")
     lines.append(f"  new_evidence: {digest.strip() or '(empty)'}")
     return "\n".join(lines)
 
@@ -107,31 +109,33 @@ def _control_system_prompt() -> str:
         "hierarchical document retrieval episode. You replace all separate "
         "per-region stop/retry judgments with one decision.\n\n"
         "For each subgoal in this wave you are shown: its need/contract, a "
-        "zero-cost rule signal (from a deterministic contract checker) and "
-        "the evidence collected THIS wave only (never older evidence from "
-        "other subgoals).\n\n"
+        "zero-cost rule signal (from a deterministic contract checker), the "
+        "harvester's own explanation of what it saw and why it did or did "
+        "not select each node (harvest_reason), and the evidence collected "
+        "THIS wave only (never older evidence from other subgoals).\n\n"
         "=== Per-subgoal decisions ===\n"
         "  - accept: contract is satisfied by this wave's evidence; done.\n"
-        "  - reharvest: not yet satisfied but there is a concrete better entry "
-        "point; set anchor to a map id (N*) visible in this wave's evidence "
-        "or context that should be entered next, if you can name one.\n"
-        "  - widen: not satisfied, and no better anchor is known; broaden the "
-        "subgoal's scope instead of narrowing it.\n"
+        "  - widen: not yet satisfied, and this region plausibly does not "
+        "hold the answer; step out to the parent scope and look again with a "
+        "coarser view (handled automatically — you do not name an anchor, "
+        "and nodes already reviewed and rejected for this subgoal will not "
+        "be shown again).\n"
         "  - drop: not satisfied and further attempts are unlikely to help "
-        "(e.g. evidence is structurally absent); stop trying this subgoal.\n\n"
+        "(e.g. evidence is structurally absent, or harvest_reason shows the "
+        "search has already reached the document root with nothing found); "
+        "stop trying this subgoal.\n\n"
         "=== Global decision ===\n"
         "  - continue: proceed to the next wave with current subgoal set.\n"
         "  - replan: the retrieval plan's decomposition itself is wrong "
         "(e.g. missing subgoals, wrong dependencies) and needs regenerating. "
         "Only choose this for a structural plan problem, not for an "
-        "individual subgoal's evidence gap (use reharvest/widen/drop for "
-        "those).\n"
+        "individual subgoal's evidence gap (use widen/drop for those).\n"
         "  - done: the plan's information need is met (or cannot be met "
         "further); stop the episode.\n\n"
         "Return ONLY one JSON object:\n"
         "{\n"
-        '  "subgoals": {"s1": {"decision": "accept|reharvest|widen|drop", '
-        '"anchor": "N4", "note": "..."}},\n'
+        '  "subgoals": {"s1": {"decision": "accept|widen|drop", '
+        '"note": "..."}},\n'
         '  "global": "continue|replan|done",\n'
         '  "reason": "..."\n'
         "}\n"
@@ -156,7 +160,6 @@ def _parse_control_decision(obj: Dict[str, Any], subgoal_ids: Sequence[str]) -> 
             per_subgoal[sid] = SubgoalDecision(
                 subgoal_id=sid,
                 decision=decision,  # type: ignore[arg-type]
-                anchor=str(row.get("anchor") or "").strip(),
                 note=str(row.get("note") or "")[:200],
             )
     global_action = str(obj.get("global") or "").strip().lower()
@@ -197,7 +200,7 @@ def plan_control(
     plan: RetrievalPlan,
     wave_outputs: Sequence[Dict[str, Any]],
 ) -> PlanControlDecision:
-    """One LLM call per wave: per-subgoal accept/reharvest/widen/drop + global signal."""
+    """One LLM call per wave: per-subgoal accept/widen/drop + global signal."""
     by_id = {s.id: s for s in plan.subgoals}
     subgoal_ids = [str(item.get("subgoal_id")) for item in wave_outputs]
     signals = {str(item.get("subgoal_id")): item.get("result") for item in wave_outputs}

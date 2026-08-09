@@ -12,7 +12,7 @@ for source_dir in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
     if str(source_dir) not in sys.path:
         sys.path.insert(0, str(source_dir))
 
-from nav_harvest import harvest, resolve_harvest_anchor  # noqa: E402
+from nav_harvest import harvest, resolve_harvest_anchor, resolve_parent_section_id  # noqa: E402
 from nav_hierarchy import InMemoryHierarchyProvider, InMemoryNode, ProviderToolSpace  # noqa: E402
 from nav_plan import Contract, ScopeFilter, Subgoal  # noqa: E402
 from nav_types import ActionKind, NavConfig, NavState  # noqa: E402
@@ -113,6 +113,61 @@ class HarvestRecursionTests(unittest.TestCase):
         self.assertEqual(result.visited_section_ids, [])
         self.assertFalse(result.max_depth_hit)
 
+    def test_unselected_visible_nodes_are_dismissed_for_this_subgoal(self) -> None:
+        """A1/A2/A (self) are all directly decided here; collecting only A1
+        must dismiss the other two (F2/F3 fix)."""
+        state = NavState(doc_id="doc1", query="A")
+        config = _config(max_harvest_depth=3)
+        subgoal = _subgoal()
+
+        def fake_policy(ts, state, config, *, subgoal, query, projection, actions, depth):
+            collect = [a for a in actions if a.kind == ActionKind.COLLECT and a.section_id == "doc1:A1"]
+            return collect, [], {collect[0].action_id: 0.9}, "A1 matches", {}
+
+        with patch("nav_harvest.harvest_policy_call", side_effect=fake_policy):
+            harvest(self.ts, state, config, subgoal=subgoal, entry_scope="doc1:A", query="A")
+
+        self.assertEqual(state.subgoal_dismissed_section_ids.get("s1"), {"doc1:A", "doc1:A2"})
+
+    def test_dispatch_branch_with_zero_yield_is_dismissed(self) -> None:
+        """Dispatching into A and collecting nothing inside dismisses A itself."""
+        state = NavState(doc_id="doc1", query="A")
+        config = _config(max_harvest_depth=3)
+        subgoal = _subgoal()
+
+        def fake_policy(ts, state, config, *, subgoal, query, projection, actions, depth):
+            if projection.scope == "doc1:__doc_root":
+                dispatch = [a for a in actions if a.kind == ActionKind.DISPATCH and a.section_id == "doc1:A"]
+                return [], dispatch, {}, "look inside A", {}
+            return [], [], {}, "nothing here either", {}
+
+        with patch("nav_harvest.harvest_policy_call", side_effect=fake_policy):
+            harvest(
+                self.ts, state, config, subgoal=subgoal, entry_scope="doc1:__doc_root", query="A"
+            )
+
+        self.assertIn("doc1:A", state.subgoal_dismissed_section_ids.get("s1", set()))
+
+    def test_harvest_reason_accumulates_across_recursion(self) -> None:
+        state = NavState(doc_id="doc1", query="A")
+        config = _config(max_harvest_depth=3)
+        subgoal = _subgoal()
+
+        def fake_policy(ts, state, config, *, subgoal, query, projection, actions, depth):
+            if projection.scope == "doc1:__doc_root":
+                dispatch = [a for a in actions if a.kind == ActionKind.DISPATCH and a.section_id == "doc1:A"]
+                return [], dispatch, {}, "enter A", {}
+            collect = [a for a in actions if a.kind == ActionKind.COLLECT and a.section_id == "doc1:A1"]
+            return collect, [], {collect[0].action_id: 0.7}, "found A1", {}
+
+        with patch("nav_harvest.harvest_policy_call", side_effect=fake_policy):
+            result = harvest(
+                self.ts, state, config, subgoal=subgoal, entry_scope="doc1:__doc_root", query="A"
+            )
+
+        self.assertIn("enter A", result.reason)
+        self.assertIn("found A1", result.reason)
+
 
 class ResolveHarvestAnchorTests(unittest.TestCase):
     def test_disabled_flag_returns_none(self) -> None:
@@ -121,12 +176,35 @@ class ResolveHarvestAnchorTests(unittest.TestCase):
         subgoal = _subgoal(route_hints=["doc1:A1"])
         self.assertIsNone(resolve_harvest_anchor(subgoal, state, config))
 
-    def test_reharvest_override_wins_over_route_hints(self) -> None:
+    def test_anchor_is_sticky_across_calls(self) -> None:
+        """First resolution is cached; later state changes don't reshuffle it."""
         state = NavState(doc_id="doc1", query="A")
-        state.subgoal_reharvest_anchor["s1"] = "doc1:A2"
         config = _config(enable_anchor_entry=True)
-        subgoal = _subgoal(route_hints=["doc1:A1"])
+        subgoal = _subgoal(route_hints=["doc1:A1", "doc1:A2"])
+        first = resolve_harvest_anchor(subgoal, state, config)
+        self.assertEqual(first, "doc1:A1")
+        # Even though A1 is now collected, the cached anchor does not change
+        # here — only plan_control's widen (nav_orchestrate) ever moves it.
+        state.collected_section_ids.add("doc1:A1")
+        self.assertEqual(resolve_harvest_anchor(subgoal, state, config), "doc1:A1")
+
+    def test_skips_hints_already_dismissed_by_this_subgoal(self) -> None:
+        state = NavState(doc_id="doc1", query="A")
+        state.subgoal_dismissed_section_ids["s1"] = {"doc1:A1"}
+        config = _config(enable_anchor_entry=True)
+        subgoal = _subgoal(route_hints=["doc1:A1", "doc1:A2"])
         self.assertEqual(resolve_harvest_anchor(subgoal, state, config), "doc1:A2")
+
+
+class ResolveParentSectionIdTests(unittest.TestCase):
+    def test_returns_direct_parent_via_provider_toolspace(self) -> None:
+        ts = _build_ts()
+        self.assertEqual(resolve_parent_section_id(ts, "doc1:A1", "doc1"), "doc1:A")
+        self.assertEqual(resolve_parent_section_id(ts, "doc1:A", "doc1"), "doc1:__doc_root")
+
+    def test_no_parent_at_top_level_returns_none(self) -> None:
+        ts = _build_ts()
+        self.assertIsNone(resolve_parent_section_id(ts, "doc1:__doc_root", "doc1"))
 
     def test_skips_already_collected_hints(self) -> None:
         state = NavState(doc_id="doc1", query="A")

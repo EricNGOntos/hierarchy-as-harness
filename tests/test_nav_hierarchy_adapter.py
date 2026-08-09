@@ -82,10 +82,21 @@ class HierarchyAdapterPortSeamTests(unittest.TestCase):
             "_children_for_section_path",
             "section_relation_ids",
             "_materialize_leaf_path_chunks",
+            "materialize_self_only_chunks",
+            "path_titles",
+            "read_chunks",
         ):
             self.assertTrue(callable(getattr(self.ts, name)))
         self.assertIsNone(getattr(self.ts, "_idx", None))
-        self.assertFalse(hasattr(self.ts, "read_chunks"))
+
+    def test_optional_capabilities_degrade_when_provider_lacks_them(self) -> None:
+        # InMemoryHierarchyProvider implements only the required 5, so the
+        # chunk-granularity and path-channel forwards must stay inert.
+        self.assertEqual(self.ts.materialize_self_only_chunks("doc1:L5", "doc1"), [])
+        self.assertEqual(self.ts.path_titles("doc1:L5", "doc1"), "")
+        self.assertEqual(self.ts.read_chunks("doc1:L5", "q", doc_id="doc1", k=3), [])
+        blob = self.ts._materialize_leaf_path_chunks("doc1:L5", "doc1")
+        self.assertEqual([c.node_id for c in blob], ["doc1:L5__path"])
 
     def test_harvest_collects_via_hierarchy_provider_only(self) -> None:
         def fake_policy_call(ts, state, config, *, subgoal, query, projection, actions, depth):

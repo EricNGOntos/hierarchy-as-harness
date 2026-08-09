@@ -299,7 +299,20 @@ class NavState:
     # PLAN×NAV fusion: explicit collect-root section_id -> owning subgoal_id
     # (drives "[harvested:sN]" map tags when show_harvested_in_map is on).
     harvested_owner_subgoal: Dict[str, str] = field(default_factory=dict)
-    # Per-subgoal override anchor set by plan_control's "reharvest" decision.
-    subgoal_reharvest_anchor: Dict[str, str] = field(default_factory=dict)
+    # Per-subgoal sticky harvest entry point: None == document root (maximum
+    # breadth already). Set once by resolve_harvest_anchor's first
+    # resolution, moved only by plan_control's "widen" decision (one level up
+    # to the parent scope each time) — see nav_orchestrate._apply_plan_control.
+    subgoal_anchor: Dict[str, Optional[str]] = field(default_factory=dict)
+    # Per-subgoal "seen but not selected" section ids (visible collect/dispatch
+    # candidates a harvest call chose neither of, plus dispatched branches that
+    # yielded nothing) — hidden from that subgoal's later map views so widen
+    # surfaces siblings instead of re-offering the same dead ends. Scoped per
+    # subgoal, not merged into the global dismissed_section_ids below.
+    subgoal_dismissed_section_ids: Dict[str, set[str]] = field(default_factory=dict)
     # Per-subgoal wave-attempt counter (circuit breaker under plan_control).
     subgoal_attempt_counts: Dict[str, int] = field(default_factory=dict)
+    # Terminal "drop" outcomes: disjoint from satisfied_subgoal_ids. Union of
+    # the two is "settled" — the only thing ready_subgoal_ids' dependency gate
+    # requires from a precursor (F1: a dropped precursor must not starve deps).
+    dropped_subgoal_ids: set[str] = field(default_factory=set)

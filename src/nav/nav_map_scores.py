@@ -40,7 +40,10 @@ def _line_content(ts: Any, section_id: str, doc_id: str) -> str:
 def _ancestor_path_titles(ts: Any, section_id: str, doc_id: str) -> str:
     idx = getattr(ts, "_idx", None)
     if idx is None:
-        return ""
+        # Provider-backed spaces expose the title chain directly; without this
+        # the path channel would score every unit as empty.
+        path_fn = getattr(ts, "path_titles", None)
+        return str(path_fn(section_id, doc_id) or "") if callable(path_fn) else ""
     try:
         ancestors = list(idx.ancestor_line_node_ids(section_id))
     except Exception:

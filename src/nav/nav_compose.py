@@ -90,7 +90,7 @@ def unit_score_for_evidence_chunk(chunk: Chunk, unit_scores: Dict[str, float]) -
     return float(scores.get(nid, 0.0) or 0.0)
 
 
-def _direct_parent_id(ts: ToolSpace, section_id: str, doc_id: str) -> Optional[str]:
+def direct_parent_id(ts: ToolSpace, section_id: str, doc_id: str) -> Optional[str]:
     sid = str(section_id or "").strip()
     if not sid:
         return None
@@ -185,7 +185,7 @@ def _is_header_only_owner(owner: str, owners: set[str], ts: ToolSpace, doc_id: s
             continue
         cur = other
         for _ in range(64):
-            p = _direct_parent_id(ts, cur, owner_doc)
+            p = direct_parent_id(ts, cur, owner_doc)
             if p is None:
                 break
             if p == owner:
@@ -276,7 +276,7 @@ def _build_groups(
         owner_doc = _section_doc_id(ts, owner, state.doc_id) or str(
             getattr(chunk, "doc_id", "") or ""
         )
-        parent_id = _direct_parent_id(ts, owner, owner_doc)
+        parent_id = direct_parent_id(ts, owner, owner_doc)
         if parent_id is None:
             parent_id = owner
         if parent_id not in groups:
