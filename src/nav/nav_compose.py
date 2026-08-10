@@ -10,7 +10,7 @@ first non-explicit COLLECT owners, then lowest unit-score — until under budget
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 from agent_delivery.code.index_retrieval import Chunk
 from agent_delivery.code.load_data import line_node_id
@@ -489,6 +489,50 @@ def _selection_chars(
     return len(sep.join(parts))
 
 
+def _refill_to_budget(
+    groups: Sequence[_ParentGroup],
+    kept_ids: Set[str],
+    state: NavState,
+    *,
+    budget_chars: int,
+) -> None:
+    """Re-add dropped children, best first, while the rendered selection still fits.
+
+    Dropping runs back-to-front and stops the moment the selection fits, so whole
+    tail groups can be gone while a large slice of the budget sits unused. Without
+    this pass a single oversized chunk near the cut point strands everything behind
+    it (observed: 4 chunks kept, 5.7k of 12k budget idle, 414 dropped chunks that
+    each still fit).
+    """
+    dropped = [
+        c
+        for g in groups
+        for c in g.children
+        if c.chunk.node_id and c.chunk.node_id not in kept_ids
+    ]
+    if not dropped:
+        return
+    dropped.sort(
+        key=lambda c: (
+            not _is_explicit_collect(c, state),
+            -_unit_score(c, state),
+            c.line_key,
+        )
+    )
+    used = _selection_chars(groups, kept_ids)
+    for child in dropped:
+        if used >= budget_chars:
+            break
+        if len(child.chunk.text or "") > budget_chars - used:
+            continue
+        kept_ids.add(child.chunk.node_id)
+        size = _selection_chars(groups, kept_ids)
+        if size > budget_chars:
+            kept_ids.discard(child.chunk.node_id)
+            continue
+        used = size
+
+
 def _pack_trim(
     groups: List[_ParentGroup],
     state: NavState,
@@ -496,10 +540,11 @@ def _pack_trim(
     budget_chars: int,
     min_partial_chars: int = 20,
 ) -> ComposeFillResult:
-    """Keep group order; drop back-to-front until under budget.
+    """Keep group order; drop back-to-front until under budget, then refill slack.
 
     Phase 1: drop non-explicit COLLECT owners (later groups first, later doc first).
     Phase 2: drop remaining by lowest unit score (later groups first).
+    Phase 3: re-add dropped children best-first while they still fit.
     """
     scored_flat = _scored_flat(groups)
     if budget_chars <= 0 or not groups:
@@ -550,9 +595,392 @@ def _pack_trim(
             if fits() or len(kept_ids) <= 1:
                 break
 
+    _refill_to_budget(groups, kept_ids, state, budget_chars=budget_chars)
+
     return _render_kept(
         groups, kept_ids, budget_chars=budget_chars, min_partial_chars=min_partial_chars
     )
+
+
+@dataclass
+class _SelectedChild:
+    item: _ChildItem
+    mode: str  # "full" | "snippet"
+
+
+def _n_owners_from_chunks(chunks: Sequence[Chunk]) -> int:
+    return len({evidence_owner_section_id(c) for c in chunks if c})
+
+
+def _child_snippet(body: str, snippet_chars: int) -> str:
+    first = ""
+    for ln in (body or "").splitlines():
+        if ln.strip():
+            first = ln.strip()
+            break
+    if not first:
+        return ""
+    cap = max(1, int(snippet_chars))
+    if len(first) > cap:
+        return first[:cap].rstrip() + "…"
+    return first
+
+
+def _display_body(child: _ChildItem, mode: str, snippet_chars: int) -> str:
+    body = _chunk_body(child.chunk)
+    if not body:
+        return ""
+    if mode == "snippet":
+        return _child_snippet(body, snippet_chars)
+    return body
+
+
+def _wf_render_group(
+    group: _ParentGroup,
+    selected: Sequence[Union[_SelectedChild, _ChildItem]],
+    *,
+    evidence_index: int,
+    indent: bool,
+    snippet_chars: int = 80,
+) -> str:
+    parts: List[str] = [f"[E{evidence_index}]"]
+    if group.parent_title:
+        parts.append(f"[§ {group.parent_title}]")
+    for entry in selected:
+        if isinstance(entry, _SelectedChild):
+            child, mode = entry.item, entry.mode
+        else:
+            child, mode = entry, "full"
+        body = _display_body(child, mode, snippet_chars)
+        if not body:
+            continue
+        if indent:
+            indented = "\n".join(
+                ("  " + ln if ln.strip() else ln) for ln in body.splitlines()
+            )
+            parts.append(indented)
+        else:
+            parts.append(body)
+    return "\n".join(parts).strip()
+
+
+def _pack_greedy(
+    groups: List[_ParentGroup],
+    *,
+    budget_chars: int,
+    min_partial_chars: int = 20,
+    snippet_chars: int = 80,
+) -> ComposeFillResult:
+    """Legacy fill used as waterfill fallback when coverage collapses."""
+    scored_flat = _scored_flat(groups)
+    if budget_chars <= 0:
+        return ComposeFillResult([], "", 0, 0, False, scored_flat, dropped_any=False)
+
+    parts: List[str] = []
+    kept: List[Chunk] = []
+    used = 0
+    truncated_last = False
+    sep = "\n\n"
+    n_pool = _n_pool_children(groups)
+
+    for g in groups:
+        if not g.children:
+            continue
+        by_score = sorted(g.children, key=lambda x: (-x.score, x.line_key))
+        selected: List[_ChildItem] = []
+        for child in by_score:
+            trial = selected + [child]
+            trial_doc = sorted(trial, key=lambda x: x.line_key)
+            indent = len(trial_doc) >= 2
+            block = _wf_render_group(
+                g,
+                trial_doc,
+                evidence_index=len(parts) + 1,
+                indent=indent,
+                snippet_chars=snippet_chars,
+            )
+            add = len(block) + (len(sep) if parts else 0)
+            if used + add <= budget_chars:
+                selected = trial
+
+        if not selected:
+            if not parts and by_score:
+                child = by_score[0]
+                one = [child]
+                block = _wf_render_group(
+                    g, one, evidence_index=1, indent=False, snippet_chars=snippet_chars
+                )
+                if len(block) > budget_chars and budget_chars >= min_partial_chars:
+                    parts.append(block[:budget_chars])
+                    kept.append(child.chunk)
+                    used = budget_chars
+                    truncated_last = True
+                    return ComposeFillResult(
+                        kept,
+                        parts[0],
+                        used,
+                        len(kept),
+                        truncated_last,
+                        scored_flat,
+                        dropped_any=n_pool > 1,
+                    )
+            continue
+
+        selected_doc = sorted(selected, key=lambda x: x.line_key)
+        indent = len(selected_doc) >= 2
+        block = _wf_render_group(
+            g,
+            selected_doc,
+            evidence_index=len(parts) + 1,
+            indent=indent,
+            snippet_chars=snippet_chars,
+        )
+        add = len(block) + (len(sep) if parts else 0)
+        if used + add <= budget_chars:
+            parts.append(block)
+            kept.extend(c.chunk for c in selected_doc)
+            used += add
+            continue
+        remain = budget_chars - used - (len(sep) if parts else 0)
+        if remain >= min_partial_chars:
+            parts.append(block[:remain])
+            kept.extend(c.chunk for c in selected_doc)
+            used = budget_chars
+            truncated_last = True
+        break
+
+    text = sep.join(parts)
+    return ComposeFillResult(
+        kept_chunks=kept,
+        evidence_text=text,
+        evidence_chars_actual=len(text),
+        n_chunks_kept=len(kept),
+        truncated_last=truncated_last,
+        scored_chunks=scored_flat,
+        dropped_any=len(kept) < n_pool,
+    )
+
+
+def _wf_render_selection(
+    groups: Sequence[_ParentGroup],
+    selected_by_nid: Dict[str, _SelectedChild],
+    *,
+    budget_chars: int,
+    snippet_chars: int,
+    min_partial_chars: int = 20,
+) -> ComposeFillResult:
+    scored_flat = _scored_flat(groups)
+    parts: List[str] = []
+    kept: List[Chunk] = []
+    used = 0
+    truncated_last = False
+    sep = "\n\n"
+    n_pool = _n_pool_children(groups)
+
+    for g in groups:
+        entries = [
+            selected_by_nid[c.chunk.node_id]
+            for c in sorted(g.children, key=lambda x: x.line_key)
+            if c.chunk.node_id in selected_by_nid
+        ]
+        if not entries:
+            continue
+        indent = len(entries) >= 2
+        block = _wf_render_group(
+            g,
+            entries,
+            evidence_index=len(parts) + 1,
+            indent=indent,
+            snippet_chars=snippet_chars,
+        )
+        add = len(block) + (len(sep) if parts else 0)
+        if used + add <= budget_chars:
+            parts.append(block)
+            kept.extend(e.item.chunk for e in entries)
+            used += add
+            continue
+        remain = budget_chars - used - (len(sep) if parts else 0)
+        if remain >= min_partial_chars and not parts:
+            parts.append(block[:budget_chars])
+            kept.extend(e.item.chunk for e in entries)
+            used = budget_chars
+            truncated_last = True
+            break
+        if remain >= min_partial_chars:
+            parts.append(block[:remain])
+            kept.extend(e.item.chunk for e in entries)
+            used = budget_chars
+            truncated_last = True
+        break
+
+    text = sep.join(parts)
+    return ComposeFillResult(
+        kept_chunks=kept,
+        evidence_text=text,
+        evidence_chars_actual=len(text),
+        n_chunks_kept=len(kept),
+        truncated_last=truncated_last,
+        scored_chunks=scored_flat,
+        dropped_any=len(kept) < n_pool,
+    )
+
+
+def _trial_fits(
+    groups: Sequence[_ParentGroup],
+    selected_by_nid: Dict[str, _SelectedChild],
+    *,
+    budget_chars: int,
+    snippet_chars: int,
+) -> bool:
+    fill = _wf_render_selection(
+        groups,
+        selected_by_nid,
+        budget_chars=budget_chars,
+        snippet_chars=snippet_chars,
+    )
+    return len(fill.kept_chunks) == len(selected_by_nid)
+
+
+def _pack_waterfill(
+    groups: List[_ParentGroup],
+    *,
+    budget_chars: int,
+    cov_frac: float,
+    snippet_chars: int,
+    min_partial_chars: int = 20,
+) -> ComposeFillResult:
+    """Tiered pack: full-text head, round-robin snippets, then enrich."""
+    scored_flat = _scored_flat(groups)
+    if budget_chars <= 0 or not groups:
+        return ComposeFillResult([], "", 0, 0, False, scored_flat, dropped_any=False)
+
+    cov_frac = max(0.0, min(0.9, float(cov_frac)))
+    full_budget = max(min_partial_chars, int(budget_chars * (1.0 - cov_frac)))
+    full_budget = min(budget_chars, full_budget)
+    snippet_chars = max(8, int(snippet_chars))
+
+    greedy = _pack_greedy(
+        groups,
+        budget_chars=budget_chars,
+        min_partial_chars=min_partial_chars,
+        snippet_chars=snippet_chars,
+    )
+    if not greedy.dropped_any:
+        return greedy
+
+    selected: Dict[str, _SelectedChild] = {}
+    sep = "\n\n"
+    used_probe = 0
+    tier1_parts: List[str] = []
+
+    # Tier1: full-text head under full_budget.
+    for g in groups:
+        if not g.children:
+            continue
+        by_score = sorted(g.children, key=lambda x: (-x.score, x.line_key))
+        chosen: List[_ChildItem] = []
+        for child in by_score:
+            if child.chunk.node_id in selected:
+                continue
+            trial_items = chosen + [child]
+            probe = dict(selected)
+            for c in trial_items:
+                probe[c.chunk.node_id] = _SelectedChild(c, "full")
+            entries = [
+                probe[c.chunk.node_id]
+                for c in sorted(g.children, key=lambda x: x.line_key)
+                if c.chunk.node_id in probe
+            ]
+            indent = len(entries) >= 2
+            block = _wf_render_group(
+                g,
+                entries,
+                evidence_index=len(tier1_parts) + 1,
+                indent=indent,
+                snippet_chars=snippet_chars,
+            )
+            add = len(block) + (len(sep) if tier1_parts else 0)
+            if used_probe + add <= full_budget:
+                chosen = trial_items
+                selected[child.chunk.node_id] = _SelectedChild(child, "full")
+
+        if chosen:
+            entries = [
+                selected[c.chunk.node_id]
+                for c in sorted(chosen, key=lambda x: x.line_key)
+            ]
+            indent = len(entries) >= 2
+            block = _wf_render_group(
+                g,
+                entries,
+                evidence_index=len(tier1_parts) + 1,
+                indent=indent,
+                snippet_chars=snippet_chars,
+            )
+            add = len(block) + (len(sep) if tier1_parts else 0)
+            if used_probe + add <= full_budget:
+                tier1_parts.append(block)
+                used_probe += add
+            else:
+                for c in chosen:
+                    selected.pop(c.chunk.node_id, None)
+                # Historical waterfill: stop Tier1 when one group no longer fits.
+                break
+
+    # Tier2: round-robin snippets across groups (doc order within group).
+    per_group_queue: List[List[_ChildItem]] = []
+    for g in groups:
+        remaining = [
+            c
+            for c in sorted(g.children, key=lambda x: x.line_key)
+            if c.chunk.node_id not in selected
+        ]
+        per_group_queue.append(remaining)
+
+    max_rounds = max((len(q) for q in per_group_queue), default=0)
+    for r in range(max_rounds):
+        for gi, g in enumerate(groups):
+            queue = per_group_queue[gi]
+            if r >= len(queue):
+                continue
+            child = queue[r]
+            if child.chunk.node_id in selected:
+                continue
+            trial = dict(selected)
+            trial[child.chunk.node_id] = _SelectedChild(child, "snippet")
+            if _trial_fits(
+                groups, trial, budget_chars=budget_chars, snippet_chars=snippet_chars
+            ):
+                selected = trial
+
+    # Tier3: enrich snippets -> full by group/score order.
+    enrich_order: List[_ChildItem] = []
+    for g in groups:
+        for child in sorted(g.children, key=lambda x: (-x.score, x.line_key)):
+            sel = selected.get(child.chunk.node_id)
+            if sel is not None and sel.mode == "snippet":
+                enrich_order.append(child)
+    for child in enrich_order:
+        trial = dict(selected)
+        trial[child.chunk.node_id] = _SelectedChild(child, "full")
+        if _trial_fits(
+            groups, trial, budget_chars=budget_chars, snippet_chars=snippet_chars
+        ):
+            selected = trial
+
+    waterfill = _wf_render_selection(
+        groups,
+        selected,
+        budget_chars=budget_chars,
+        snippet_chars=snippet_chars,
+        min_partial_chars=min_partial_chars,
+    )
+
+    if _n_owners_from_chunks(waterfill.kept_chunks) < _n_owners_from_chunks(
+        greedy.kept_chunks
+    ):
+        return greedy
+    return waterfill
 
 
 def pack_nav_evidence(
@@ -570,6 +998,19 @@ def pack_nav_evidence(
 
     groups = _build_groups(collected, ts, state, config)
     groups.sort(key=lambda g: (-g.priority, -g.group_key, g.doc_order_key))
+
+    mode = str(getattr(config, "compose_packing_mode", "trim") or "trim").strip().lower()
+    if mode == "waterfill":
+        cov_frac = float(getattr(config, "compose_coverage_budget_frac", 0.4) or 0.4)
+        snippet_chars = int(getattr(config, "compose_snippet_chars", 80) or 80)
+        return _pack_waterfill(
+            groups,
+            budget_chars=budget_chars,
+            cov_frac=cov_frac,
+            snippet_chars=snippet_chars,
+            min_partial_chars=min_partial_chars,
+        )
+
     return _pack_trim(
         groups,
         state,

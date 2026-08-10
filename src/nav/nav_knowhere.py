@@ -28,6 +28,8 @@ from nav_address import NavLevel
 from nav_hierarchy import NodeMeta
 
 _ASSET_TYPES = ("table", "image")
+# Knowhere sentinel path for the virtual document container (not a collectable leaf).
+ROOT_SECTION_PATH = "Root"
 _DEFAULT_DSN = "postgresql://root:root123@127.0.0.1:5433/Knowhere"
 
 
@@ -80,13 +82,48 @@ def asset_display_text(unit: UnitRow) -> str:
 def normalize_section_path(path: str) -> str:
     """Canonical path for gold/lookup: ``a / b`` (accepts ``a/b`` or ``a / b``)."""
     raw = str(path or "").strip().strip("/")
-    if not raw or raw == "Root":
+    if not raw or raw == ROOT_SECTION_PATH:
         return ""
     if " / " in raw:
         parts = [p.strip() for p in raw.split(" / ") if p.strip()]
     else:
         parts = [p.strip() for p in raw.split("/") if p.strip()]
     return " / ".join(parts)
+
+
+def is_root_section_path(path: str) -> bool:
+    """True when the raw ``section_path`` is Knowhere's Root container."""
+    return str(path or "").strip() == ROOT_SECTION_PATH
+
+
+def is_root_section(provider_or_ts: Any, section_id: str) -> bool:
+    """True when ``section_id`` is a Root container (raw path, not normalized)."""
+    sid = str(section_id or "").strip()
+    if not sid:
+        return False
+    path_fn = getattr(provider_or_ts, "section_path", None)
+    if callable(path_fn):
+        return is_root_section_path(path_fn(sid))
+    provider = getattr(provider_or_ts, "_provider", None)
+    path_fn = getattr(provider, "section_path", None) if provider is not None else None
+    if callable(path_fn):
+        return is_root_section_path(path_fn(sid))
+    return False
+
+
+def _connect_to_targets(metadata: Dict[str, Any]) -> List[str]:
+    """``chunk_metadata.connect_to[].target`` ids (document order, first wins upstream)."""
+    raw = metadata.get("connect_to") if isinstance(metadata, dict) else None
+    if not isinstance(raw, list):
+        return []
+    out: List[str] = []
+    for conn in raw:
+        if not isinstance(conn, dict):
+            continue
+        target = str(conn.get("target") or "").strip()
+        if target:
+            out.append(target)
+    return out
 
 
 def knowhere_database_url() -> str:
@@ -127,6 +164,67 @@ class KnowhereProvider:
             self._units_by_section.setdefault(sid, []).append(unit)
             if unit.chunk_id:
                 self._chunk_ids.add(unit.chunk_id)
+        self._remount_root_assets()
+
+    def _remount_root_assets(self) -> None:
+        """Reattach Root-FK image|table units to host sections via ``connect_to``.
+
+        Aligns with Knowhere ``resolve_root_asset_owners``: assets whose FK still
+        points at Root are owned by the text chunk that lists them in
+        ``metadata.connect_to``. Unresolved Root assets leave the evidence surface.
+        """
+        root_sids = [
+            sid
+            for sid, row in self._sections.items()
+            if is_root_section_path(row.section_path)
+        ]
+        if not root_sids:
+            return
+
+        root_assets: Dict[str, UnitRow] = {}
+        for sid in root_sids:
+            for unit in self._units_by_section.get(sid, ()):
+                if unit.chunk_type in _ASSET_TYPES and unit.chunk_id:
+                    root_assets[unit.chunk_id] = unit
+        if not root_assets:
+            return
+
+        owner_by_asset: Dict[str, str] = {}
+        for sid, units in self._units_by_section.items():
+            row = self._sections.get(sid)
+            if row is None or is_root_section_path(row.section_path):
+                continue
+            for unit in units:
+                if unit.chunk_type != "text":
+                    continue
+                for target in _connect_to_targets(unit.metadata or {}):
+                    if target in root_assets and target not in owner_by_asset:
+                        owner_by_asset[target] = sid
+
+        touched_owners: Set[str] = set()
+        for chunk_id, owner_sid in owner_by_asset.items():
+            unit = root_assets[chunk_id]
+            remounted = UnitRow(
+                chunk_id=unit.chunk_id,
+                section_id=owner_sid,
+                chunk_type=unit.chunk_type,
+                content=unit.content,
+                sort_order=unit.sort_order,
+                source_chunk_path=unit.source_chunk_path,
+                file_path=unit.file_path,
+                metadata=dict(unit.metadata or {}),
+            )
+            self._units_by_section.setdefault(owner_sid, []).append(remounted)
+            touched_owners.add(owner_sid)
+
+        for sid in root_sids:
+            self._units_by_section[sid] = [
+                u
+                for u in self._units_by_section.get(sid, ())
+                if u.chunk_type not in _ASSET_TYPES
+            ]
+        for sid in touched_owners:
+            self._units_by_section[sid].sort(key=lambda u: (u.sort_order, u.chunk_id))
 
     def address_level(self, node_id: str) -> Optional[NavLevel]:
         sid = str(node_id or "").strip()

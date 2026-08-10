@@ -36,8 +36,8 @@ _CONTRACT_KINDS = {
 }
 _RELATION_KINDS = {"parent-child", "sibling"}
 _MAP_COVERAGE = {"sufficient", "partial", "insufficient"}
-_PLANNER_PURPOSE = "nav_query_plan_v3"
-_QUERY_REFINE_PURPOSE = "nav_query_refine_v2"
+_PLANNER_PURPOSE = "nav_query_plan_v4"
+_QUERY_REFINE_PURPOSE = "nav_query_refine_v3"
 
 
 @dataclass
@@ -597,12 +597,12 @@ def _planner_system_prompt(*, max_subgoals: int) -> str:
         "to list checklist items.\n"
         "3. Each subgoal produces at most ONE slot name in produces "
         "(enumeration = one list-valued slot).\n"
-        "4. retrieval_query is a natural-language QUESTION for THIS subgoal only "
-        "(one or two short sentences). Prefer adapting the user query: keep or "
-        "split its wording, add/drop constraints as needed. Do NOT compress it "
-        "into a bag of keywords or title tokens. It is scored by lexical/hybrid "
-        "retrieval and shown on the map, so keep entity names and scope "
-        "constraints from the question. Same language/script as the map titles "
+        "4. retrieval_query is a SHORT KEYWORD QUERY for THIS subgoal only "
+        "(space-separated entity/role/topic tokens, e.g. \"王仁坤 总工程师 设计成果\"). "
+        "Split or adapt the user question into compact lexical terms — do NOT "
+        "emit a full natural-language question or long prose. It is scored by "
+        "lexical/hybrid retrieval and lights the map, so keep entity names and "
+        "role terms; drop filler words. Same language/script as the map titles "
         "and user query — do not translate section terms into another script.\n"
         "5. If a later retrieval_query needs a value from an earlier subgoal, "
         "write it as {{s1.slot}} (not prose). That implies depends_on.\n"
@@ -665,8 +665,9 @@ def _language_repair_user(
         "Your previous plan had retrieval_query values that do not match the "
         "language/script of the map titles and user query. Those queries will "
         "fail lexical retrieval. Rewrite the FULL plan JSON. Keep structure, but "
-        "rewrite every mismatched retrieval_query as a natural-language question "
-        "in the map's own language and terms (not a keyword bag).\n"
+        "rewrite every mismatched retrieval_query as a short keyword query "
+        "in the map's own language and terms (space-separated tokens, not a "
+        "full-sentence question).\n"
         f"Mismatched retrieval_query lines:\n{bad_block}\n"
     )
 
@@ -793,10 +794,10 @@ def _refine_system_prompt() -> str:
         "Rules:\n"
         "1. Scope is this subgoal only. Rewrite for its need; do not pull in "
         "other subgoals' goals or other parts of a multi-part question.\n"
-        "2. Write a natural-language QUESTION (one or two short sentences), not "
-        "a bag of keywords. Start from the previous retrieval_query and revise "
-        "it by adding, dropping, or rephrasing constraints so it aims at the "
-        "reported gap. A paraphrase that ranks the same nodes is useless.\n"
+        "2. Write a SHORT KEYWORD QUERY (space-separated tokens), not a full "
+        "sentence. Start from the previous retrieval_query and revise by "
+        "adding, dropping, or swapping terms so it aims at the reported gap. "
+        "A paraphrase that ranks the same nodes is useless.\n"
         "3. If prior selected nodes are listed, do not aim the question back at "
         "those same nodes; steer toward other map regions that may hold the "
         "missing evidence, using the map's own wording where helpful.\n"
@@ -886,7 +887,7 @@ def refine_subgoal_query(
             temperature=float(config.llm_temperature),
             max_tokens=max(128, int(config.llm_max_tokens or 0)),
             response_format={"type": "json_object"},
-            thinking_role="planner",
+            thinking_role="action",
             context="Nav Query Refine",
             api_key_env="NAV_PLANNER_API_KEY",
             base_url_env="NAV_PLANNER_BASE_URL",

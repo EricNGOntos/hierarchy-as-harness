@@ -316,7 +316,7 @@ def plan_control(
             model_env=config.planner_model_env,
             fallback_envs=(config.llm_model_env, "COMPOSE_MODEL"),
         )
-        # Same thinking + max_tokens policy as plan_query (NAV_PLANNER_*).
+        # Control is short JSON (accept/widen/drop); thinking only on plan_query/replan.
         max_tokens = planner_output_max_tokens(
             int(getattr(config, "planner_llm_max_tokens", 0) or 0)
             or int(config.llm_max_tokens or 256)
@@ -338,7 +338,7 @@ def plan_control(
             temperature=float(config.llm_temperature),
             max_tokens=max_tokens,
             response_format={"type": "json_object"},
-            thinking_role="planner",
+            thinking_role="action",
             context="Nav Plan Control",
             api_key_env="NAV_PLANNER_API_KEY",
             base_url_env="NAV_PLANNER_BASE_URL",

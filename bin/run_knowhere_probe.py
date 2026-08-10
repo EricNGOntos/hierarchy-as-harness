@@ -149,6 +149,9 @@ def cfg_shared() -> NavConfig:
     """Checklist mode: plan + harvest + plan_control (product flags collapsed)."""
     cfg = cfg_baseline()
     cfg.mode = "checklist"
+    packing = os.environ.get("NAV_COMPOSE_PACKING", "").strip().lower()
+    if packing in {"waterfill", "trim"}:
+        cfg.compose_packing_mode = packing
     return cfg
 
 

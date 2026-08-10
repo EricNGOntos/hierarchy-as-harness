@@ -62,6 +62,12 @@ class NavConfig:
     # COMPOSE child score = own_unit + compose_confidence_weight * collect_confidence
     # (see nav_compose._child_final_score); drives group_key / within-group rank.
     compose_confidence_weight: float = 0.5
+    # COMPOSE packing: "trim" (drop+refill) or "waterfill" (tiered full/snippet/enrich).
+    compose_packing_mode: str = "trim"
+    # Waterfill: fraction of budget reserved for coverage snippets (Tier2).
+    compose_coverage_budget_frac: float = 0.4
+    # Waterfill: chars for Tier2 snippet lines.
+    compose_snippet_chars: int = 80
     # Depth-0 group_rank preview budget: over this many chars, skip Assembled
     # Evidence / group_rank entirely (title+summary per parent group).
     compose_group_rank_max_chars: int = 10000
@@ -80,6 +86,9 @@ class NavConfig:
     planner_model_env: str = "NAV_PLANNER_MODEL"
     # Separate from navigate llm_max_tokens: plan JSON is larger.
     planner_llm_max_tokens: int = 1024
+    # Harvest multi-id JSON (collect_ids + per-id confidence) needs more than
+    # navigate's 256 — capped completion truncates mid-object and parses as empty.
+    harvest_llm_max_tokens: int = 1024
     # Checklist: navigate/harvest cycles per subgoal before drop. Min 1.
     subgoal_max_attempts: int = 2
     # Checklist: 0 = never replan; otherwise hard cap on structural replans.
@@ -128,9 +137,6 @@ class NavConfig:
             "enable_external_rerank",
             "compose_preview_snippet_chars",
             "compose_preview_max_children",
-            "compose_packing_mode",
-            "compose_coverage_budget_frac",
-            "compose_snippet_chars",
             "enable_query_planning",
             "enable_plan_orchestration",
             "enable_slot_extract",

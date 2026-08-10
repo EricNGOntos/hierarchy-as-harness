@@ -12,6 +12,8 @@
   "llm_model_env": "NAV_LLM_MODEL",
   "llm_temperature": 0.0,
   "llm_max_tokens": 256,
+  "planner_llm_max_tokens": 1024,
+  "harvest_llm_max_tokens": 1024,
   "budget_modes": {
     "critical_remaining_steps": 1,
     "tight_remaining_steps": 2

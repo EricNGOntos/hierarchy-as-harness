@@ -7,9 +7,9 @@ Nav modules call ``nav_chat`` / ``resolve_nav_model`` only — they must not rea
 
 Thinking policy (DeepSeek V4 defaults thinking ON if omitted):
 
-- ``action`` (navigate / harvest / verify / score): always disabled — short JSON
-  under ``llm_max_tokens`` (often 256).
-- ``planner`` (plan_query / plan_control): ``NAV_PLANNER_THINKING``; unset/auto
+- ``action`` (navigate / harvest / plan_control / refine / verify / score):
+  always disabled — short JSON under ``llm_max_tokens`` (often 256).
+- ``planner`` (plan_query and replan only): ``NAV_PLANNER_THINKING``; unset/auto
   → disabled. When enabled, callers should use ``planner_output_max_tokens``.
 
 Migration to Knowhere: inject the production callable with

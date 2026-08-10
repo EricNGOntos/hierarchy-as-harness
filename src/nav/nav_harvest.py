@@ -21,6 +21,7 @@ required beyond the 5 documented in docs/audit_plan_nav_overlap.md.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -33,6 +34,22 @@ from nav_types import ActionKind, LegalAction, NavConfig, NavState, Projection
 
 _HARVEST_PURPOSE_DEPTH0 = "nav_harvest_v1"
 _HARVEST_PURPOSE_CHILD = "nav_harvest_child_v1"
+
+
+def _extract_id_list_field(text: str, field: str) -> List[str]:
+    """Pull a JSON string-array field even when the surrounding object is truncated."""
+    m = re.search(
+        rf'"{field}"\s*:\s*\[(.*?)\]',
+        text or "",
+        flags=re.S | re.I,
+    )
+    if not m:
+        return []
+    return [
+        str(x).strip().upper()
+        for x in re.findall(r'"([^"]+)"', m.group(1))
+        if str(x).strip()
+    ]
 
 
 @dataclass
@@ -183,7 +200,11 @@ def harvest_policy_call(
                 {"role": "user", "content": user},
             ],
             temperature=float(config.llm_temperature),
-            max_tokens=int(config.llm_max_tokens),
+            max_tokens=max(
+                256,
+                int(getattr(config, "harvest_llm_max_tokens", 0) or 0)
+                or int(config.llm_max_tokens),
+            ),
             response_format={"type": "json_object"},
             context="Nav Harvest",
             usage_tag="nav_harvest",
@@ -199,6 +220,11 @@ def harvest_policy_call(
 
     collect_ids = [str(x).strip().upper() for x in (obj.get("collect_ids") or []) if str(x).strip()]
     dispatch_ids = [str(x).strip().upper() for x in (obj.get("dispatch_ids") or []) if str(x).strip()]
+    # Truncated completions (hit llm_max_tokens mid-JSON) fail object parse and
+    # used to look like an intentional empty selection — recover id arrays.
+    if not collect_ids and not dispatch_ids and text:
+        collect_ids = _extract_id_list_field(text, "collect_ids")
+        dispatch_ids = _extract_id_list_field(text, "dispatch_ids")
     search_assets = parse_search_assets(obj.get("search_assets"))
     collect_actions = [a for a in _actions_by_ids(actions, collect_ids) if a.kind == ActionKind.COLLECT]
     dispatch_actions = [a for a in _actions_by_ids(actions, dispatch_ids) if a.kind == ActionKind.DISPATCH]

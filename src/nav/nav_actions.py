@@ -4,6 +4,7 @@ import os
 from typing import Any, List, Optional
 
 from nav_address import is_dispatch_only_node
+from nav_knowhere import is_root_section
 from nav_projection import format_harvested_tag, format_hit_tag
 from nav_types import (
     ActionKind,
@@ -90,7 +91,7 @@ def build_legal_actions(
         collect_blocked = filter_collected and sid in (
             collected_sids | blocked
         )
-        if is_dispatch_only_node(ts, sid):
+        if is_dispatch_only_node(ts, sid) or is_root_section(ts, sid):
             collect_blocked = True
         if not collect_blocked:
             actions.append(

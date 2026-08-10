@@ -209,6 +209,12 @@ class NormalizePathTests(unittest.TestCase):
         self.assertEqual(normalize_section_path("a/b"), "a / b")
         self.assertEqual(normalize_section_path("a / b"), "a / b")
 
+    def test_root_path_normalizes_empty(self) -> None:
+        from nav_knowhere import ROOT_SECTION_PATH
+
+        self.assertEqual(normalize_section_path(ROOT_SECTION_PATH), "")
+        self.assertEqual(normalize_section_path(""), "")
+
 
 @unittest.skipUnless(
     os.environ.get("KNOWHERE_DB_SMOKE") == "1"

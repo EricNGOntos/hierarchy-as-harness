@@ -209,6 +209,38 @@ class NavComposePackTests(unittest.TestCase):
                 < fill.evidence_text.index("重大事故隐患定义")
             )
 
+    def test_refill_reclaims_budget_stranded_by_one_oversized_chunk(self) -> None:
+        """Dropping stops at the first fit; small tail chunks must be re-added."""
+        state = NavState(doc_id="doc", query="q", task_type="scope_collection")
+        state.unit_scores = {
+            "doc:L84": 0.9,
+            "doc:L93": 0.01,
+            "doc:L94": 0.01,
+            "doc:L95": 0.01,
+            "doc:L102": 0.01,
+            "doc:L103": 0.01,
+        }
+        collected = [
+            (self._chunk(84, "头部小块" + ("A" * 80)), 1.0),
+            (self._chunk(93, "巨块" + ("B" * 10000)), 1.0),
+            (self._chunk(94, "小块九四" + ("C" * 180)), 1.0),
+            (self._chunk(95, "小块九五" + ("D" * 180)), 1.0),
+            (self._chunk(102, "小块一零二" + ("E" * 180)), 1.0),
+            (self._chunk(103, "小块一零三" + ("F" * 180)), 1.0),
+        ]
+        fill = pack_nav_evidence(
+            collected, self.ts, state, self.cfg, budget_chars=1500
+        )
+        text = fill.evidence_text
+        self.assertNotIn("BBBB", text)
+        self.assertLessEqual(fill.evidence_chars_actual, 1500)
+        self.assertGreater(fill.evidence_chars_actual, 700)
+        kept_owners = {c.section_id for c in fill.kept_chunks}
+        self.assertIn("doc:L84", kept_owners)
+        self.assertGreaterEqual(len(kept_owners & {
+            "doc:L94", "doc:L95", "doc:L102", "doc:L103"
+        }), 3)
+
     def test_build_compose_preview_emits_g_ids_with_group_summary(self) -> None:
         state = NavState(doc_id="doc", query="q")
         state.unit_scores = {"doc:L94": 0.05, "doc:L84": 0.08}

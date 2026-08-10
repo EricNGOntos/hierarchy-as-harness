@@ -18,6 +18,7 @@ import re
 from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 from nav_address import NavLevel, address_level, owner_document
+from nav_knowhere import is_root_section
 
 # Knowhere DocumentChunk.chunk_type values + harvest JSON kind aliases.
 _KIND_TO_CHUNK_TYPE = {
@@ -27,7 +28,7 @@ _KIND_TO_CHUNK_TYPE = {
     "tables": "table",
 }
 
-# Soft prompt cap for the text inspector (replaces planning_ratio envelope).
+# Soft prompt char budget for the text inspector (episode budget is separate).
 _ASSET_FILTER_PROMPT_CHAR_BUDGET = 24000
 
 NavVlmBackend = Callable[..., Any]
@@ -198,10 +199,19 @@ def gather_scoped_asset_candidates(
     section_ids = _section_ids_under_bound_scope(ts, sid, resolved_doc)
     out: List[Dict[str, Any]] = []
     seen: Set[str] = set()
+    section_path_fn = getattr(provider, "section_path", None)
     for section_id in section_ids:
         owner = owner_document(ts, section_id, resolved_doc)
         if owner and owner != resolved_doc:
             continue
+        # Align with Knowhere: never treat Root as an asset owner.
+        if is_root_section(provider, section_id):
+            continue
+        owner_path = (
+            str(section_path_fn(section_id) or "").strip()
+            if callable(section_path_fn)
+            else str(section_id)
+        )
         for unit in self_units(section_id) or ():
             if str(getattr(unit, "chunk_type", "") or "").strip().lower() != wanted:
                 continue
@@ -226,7 +236,7 @@ def gather_scoped_asset_candidates(
                 doc_id=owner or resolved_doc,
                 text=text,
                 line_ids=(int(getattr(unit, "sort_order", 0) or 0),),
-                section_id=str(getattr(unit, "section_id", "") or section_id),
+                section_id=section_id,
             )
             out.append(
                 {
@@ -234,9 +244,9 @@ def gather_scoped_asset_candidates(
                     "chunk_type": wanted,
                     "content": str(getattr(unit, "content", "") or ""),
                     "file_path": file_path,
-                    "section_id": str(getattr(unit, "section_id", "") or section_id),
-                    "section_path": str(section_id),
-                    "owner_section_path": str(section_id),
+                    "section_id": section_id,
+                    "section_path": owner_path or str(section_id),
+                    "owner_section_path": owner_path or str(section_id),
                     "summary": summary,
                     "chunk_metadata": meta,
                     "display_text": text,
