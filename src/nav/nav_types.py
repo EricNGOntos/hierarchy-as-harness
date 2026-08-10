@@ -230,6 +230,8 @@ class SubgoalResult:
     satisfied: bool
     confidence: float = 0.0
     collected_section_ids: List[str] = field(default_factory=list)
+    # Explicit COLLECT targets this wave only (hydration descendants omitted).
+    explicit_collect_ids: List[str] = field(default_factory=list)
     extracted: Dict[str, str] = field(default_factory=dict)
     gap: str = ""
     chars_used: int = 0

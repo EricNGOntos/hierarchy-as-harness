@@ -18,7 +18,7 @@ from nav_types import NavConfig, NavState
 SubgoalDecisionKind = Literal["accept", "widen", "drop"]
 GlobalDecisionKind = Literal["continue", "replan", "done"]
 
-_CONTROL_PURPOSE = "nav_plan_control_v1"
+_CONTROL_PURPOSE = "nav_plan_control_v2"
 _SUBGOAL_DECISIONS = {"accept", "widen", "drop"}
 _GLOBAL_DECISIONS = {"continue", "replan", "done"}
 
@@ -36,22 +36,6 @@ class PlanControlDecision:
     global_action: GlobalDecisionKind = "continue"
     reason: str = ""
     raw: str = ""
-
-
-def _owner_section_ids_from_chunks(new_chunks: Sequence[Any]) -> List[str]:
-    """Unique owner section ids for this wave's new chunks, in first-seen order."""
-    from nav_compose import evidence_owner_section_id
-
-    out: List[str] = []
-    seen: set[str] = set()
-    for item in list(new_chunks or []):
-        chunk = item[0] if isinstance(item, (tuple, list)) and item else item
-        sid = evidence_owner_section_id(chunk) if chunk is not None else ""
-        if not sid or sid in seen:
-            continue
-        seen.add(sid)
-        out.append(sid)
-    return out
 
 
 def _section_summary_text(ts: Any, section_id: str) -> str:
@@ -86,11 +70,16 @@ def _digest_collected_summaries(
     new_chunks: Sequence[Any],
     collected_section_ids: Optional[Sequence[str]] = None,
 ) -> str:
-    """One line per collected section: path + its prebuilt summary (no re-truncate)."""
+    """One line per explicit COLLECT target: path + its prebuilt summary.
+
+    Hydration descendants are intentionally omitted — control only needs the
+    nodes the harvester chose, not every leaf sucked in under them.
+    """
     sids = [str(s).strip() for s in (collected_section_ids or []) if str(s).strip()]
     if not sids:
-        sids = _owner_section_ids_from_chunks(new_chunks)
-    if not sids:
+        # No explicit COLLECTs this wave: do not invent digest lines from
+        # hydrated chunk owners (that reintroduces the descendant flood).
+        del new_chunks  # kept in signature for call-site compatibility
         return ""
     lines: List[str] = []
     for sid in sids:
@@ -129,7 +118,7 @@ def _wave_subgoal_block(
         harvest_reason = str(harvest_meta.get("reason") or "").strip()
         if harvest_reason:
             lines.append(f"  harvest_reason: {harvest_reason}")
-    lines.append(f"  collected_summaries:\n{digest.strip() or '  (empty)'}")
+    lines.append(f"  explicit_collect_summaries:\n{digest.strip() or '  (empty)'}")
     return "\n".join(lines)
 
 
@@ -161,14 +150,15 @@ def _control_system_prompt() -> str:
         "episode evidence) and one shared search space. For each subgoal in "
         "this wave you are shown: its need/contract, attempt count, "
         "the harvester's own explanation (harvest_reason), and the section "
-        "summaries for nodes collected THIS wave only (never older evidence "
-        "from other subgoals; summaries are the prebuilt node summaries).\n\n"
+        "summaries for nodes explicitly COLLECTed THIS wave only (never "
+        "hydration descendants, and never older evidence from other subgoals; "
+        "summaries are the prebuilt node summaries).\n\n"
         "=== Per-subgoal decisions ===\n"
         "  - accept: this subgoal's need is covered by this wave's evidence.\n"
         "  - widen: not yet covered; keep the subgoal unsettled for another "
-        "harvest from the shared root. The last gap note is appended to the "
-        "next retrieval query, and nodes already reviewed/rejected for this "
-        "subgoal stay hidden. Do not name an entry point.\n"
+        "harvest from the shared root. Prior dead-ends stay dismissed; PLAN "
+        "rewrites this subgoal's retrieval_query from your note. "
+        "Do not name an entry point.\n"
         "  - drop: not covered and further attempts are unlikely to help "
         "(e.g. evidence is structurally absent, or harvest_reason shows the "
         "search has already reached the document root with nothing found); "
@@ -272,11 +262,15 @@ def plan_control(
         if sg is None:
             continue
         result = item.get("result")
-        collected_ids = list(getattr(result, "collected_section_ids", None) or [])
+        # Control digest = explicit COLLECT targets only (not hydrated descendants).
+        if hasattr(result, "explicit_collect_ids"):
+            digest_ids = list(getattr(result, "explicit_collect_ids", None) or [])
+        else:
+            digest_ids = list(getattr(result, "collected_section_ids", None) or [])
         digest = _digest_collected_summaries(
             ts,
             new_chunks=item.get("new_chunks") or [],
-            collected_section_ids=collected_ids,
+            collected_section_ids=digest_ids,
         )
         blocks.append(
             _wave_subgoal_block(

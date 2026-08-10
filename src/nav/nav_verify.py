@@ -216,6 +216,8 @@ def build_subgoal_result(
     new_chunks: Sequence[Tuple[Any, float]],
     collected_before: Set[str],
     use_llm_extract: bool = False,
+    explicit_collect_ids: Optional[Sequence[str]] = None,
+    explicit_before: Optional[Set[str]] = None,
 ) -> SubgoalResult:
     """Package this wave's evidence + optional downstream slot bindings.
 
@@ -233,6 +235,20 @@ def build_subgoal_result(
         retrieval_query=retrieval_query,
         use_llm=use_llm_extract,
     )
+    before_explicit = set(explicit_before or ())
+    explicit_wave = [
+        str(s).strip()
+        for s in (explicit_collect_ids or ())
+        if str(s).strip() and str(s).strip() not in before_explicit
+    ]
+    # Stable unique order.
+    seen: Set[str] = set()
+    explicit_ordered: List[str] = []
+    for sid in explicit_wave:
+        if sid in seen:
+            continue
+        seen.add(sid)
+        explicit_ordered.append(sid)
     return SubgoalResult(
         subgoal_id=subgoal.id,
         satisfied=chars > 0,
@@ -243,6 +259,7 @@ def build_subgoal_result(
         collected_section_ids=[
             s for s in state_collected_section_ids if s not in collected_before
         ],
+        explicit_collect_ids=explicit_ordered,
     )
 
 

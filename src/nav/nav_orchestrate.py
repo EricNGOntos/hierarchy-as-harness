@@ -153,6 +153,7 @@ def _wave_subgoal_result(
     retrieval_query: str,
     new_chunks: Sequence[Tuple[Any, float]],
     collected_before: Set[str],
+    explicit_before: Set[str],
 ) -> SubgoalResult:
     """Build this wave's result from *new* chunks only (never the global pool)."""
     return build_subgoal_result(
@@ -164,6 +165,8 @@ def _wave_subgoal_result(
         new_chunks=new_chunks,
         collected_before=collected_before,
         use_llm_extract=bool(config.is_checklist),
+        explicit_collect_ids=state.explicit_collect_ids,
+        explicit_before=explicit_before,
     )
 
 
@@ -239,6 +242,7 @@ def _execute_subgoal_harvest_once(
     # Always enter at namespace/document root; prior dead-ends stay hidden via
     # subgoal_dismissed_section_ids so the next harvest sees siblings instead.
     before_sections = set(state.collected_section_ids)
+    before_explicit = set(state.explicit_collect_ids)
     before_len = len(state.collected)
     with _relit_map(ts, state, config, query=rq):
         harvest_result = harvest(
@@ -259,6 +263,7 @@ def _execute_subgoal_harvest_once(
         retrieval_query=rq,
         new_chunks=new_chunks,
         collected_before=before_sections,
+        explicit_before=before_explicit,
     )
     _clear_focus(state)
     return {
@@ -345,7 +350,9 @@ def _apply_plan_control(
                     ),
                     gap=note,
                     selected_section_ids=list(
-                        getattr(result, "collected_section_ids", None) or []
+                        getattr(result, "explicit_collect_ids", None)
+                        or getattr(result, "collected_section_ids", None)
+                        or []
                     ),
                 )
                 if refined:

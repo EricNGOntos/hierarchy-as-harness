@@ -364,7 +364,8 @@ class TestNavOrchestrate(unittest.TestCase):
                     satisfied=False,
                     chars_used=0,
                     gap="empty_evidence",
-                    collected_section_ids=["sec-a"],
+                    collected_section_ids=["sec-a", "sec-a-child"],
+                    explicit_collect_ids=["sec-a"],
                 ),
                 "new_chunks": [],
             }

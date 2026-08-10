@@ -36,8 +36,8 @@ _CONTRACT_KINDS = {
 }
 _RELATION_KINDS = {"parent-child", "sibling"}
 _MAP_COVERAGE = {"sufficient", "partial", "insufficient"}
-_PLANNER_PURPOSE = "nav_query_plan_v2"
-_QUERY_REFINE_PURPOSE = "nav_query_refine_v1"
+_PLANNER_PURPOSE = "nav_query_plan_v3"
+_QUERY_REFINE_PURPOSE = "nav_query_refine_v2"
 
 
 @dataclass
@@ -599,9 +599,13 @@ def _planner_system_prompt(*, max_subgoals: int) -> str:
         "to list checklist items.\n"
         "3. Each subgoal produces at most ONE slot name in produces "
         "(enumeration = one list-valued slot).\n"
-        "4. retrieval_query is fed to lexical/hybrid retrieval over the shared map. "
-        "It MUST use the same language and terminology as the visible map titles "
-        "and the user query. Do not translate section terms into another script.\n"
+        "4. retrieval_query is a natural-language QUESTION for THIS subgoal only "
+        "(one or two short sentences). Prefer adapting the user query: keep or "
+        "split its wording, add/drop constraints as needed. Do NOT compress it "
+        "into a bag of keywords or title tokens. It is scored by lexical/hybrid "
+        "retrieval and shown on the map, so keep entity names and scope "
+        "constraints from the question. Same language/script as the map titles "
+        "and user query — do not translate section terms into another script.\n"
         "5. If a later retrieval_query needs a value from an earlier subgoal, "
         "write it as {{s1.slot}} (not prose). That implies depends_on.\n"
         "6. depends_on = hard data dependency. prefer_after = soft ordering only.\n"
@@ -663,7 +667,8 @@ def _language_repair_user(
         "Your previous plan had retrieval_query values that do not match the "
         "language/script of the map titles and user query. Those queries will "
         "fail lexical retrieval. Rewrite the FULL plan JSON. Keep structure, but "
-        "rewrite every mismatched retrieval_query using the map's own terms.\n"
+        "rewrite every mismatched retrieval_query as a natural-language question "
+        "in the map's own language and terms (not a keyword bag).\n"
         f"Mismatched retrieval_query lines:\n{bad_block}\n"
     )
 
@@ -788,13 +793,16 @@ def _refine_system_prompt() -> str:
         "Rules:\n"
         "1. Scope is this subgoal only. Rewrite for its need; do not pull in "
         "other subgoals' goals or other parts of a multi-part question.\n"
-        "2. Aim at the reported gap. A paraphrase or word-shuffle of the previous "
-        "query is useless — it would rank nodes the same way.\n"
-        "3. If prior selected nodes are listed, do not aim the query back at those "
-        "same nodes; use other map titles that may hold the missing evidence.\n"
-        "4. Emit lexical/hybrid search terms in the same language as the map "
-        "titles. Not a sentence, not the controller's wording.\n"
-        "5. Keep it under 30 words, no commentary.\n\n"
+        "2. Write a natural-language QUESTION (one or two short sentences), not "
+        "a bag of keywords. Start from the previous retrieval_query and revise "
+        "it by adding, dropping, or rephrasing constraints so it aims at the "
+        "reported gap. A paraphrase that ranks the same nodes is useless.\n"
+        "3. If prior selected nodes are listed, do not aim the question back at "
+        "those same nodes; steer toward other map regions that may hold the "
+        "missing evidence, using the map's own wording where helpful.\n"
+        "4. Same language/script as the map titles. Keep entity names and scope "
+        "constraints. Do not paste the controller's note verbatim.\n"
+        "5. Keep it under 40 words, no commentary.\n\n"
         'Return ONLY one JSON object: {"retrieval_query": "..."}'
     )
 
