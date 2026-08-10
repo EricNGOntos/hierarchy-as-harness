@@ -270,9 +270,9 @@ def choose_llm_action(
     assembled_preview: Optional[str] = None,
 ) -> tuple[LegalAction, dict]:
     from nav_llm import nav_chat, resolve_nav_model
-    from nav_token_budget import nav_token_budget_exhausted
+    from nav_token_budget import NavTokenLimit, nav_token_budget_exhausted
 
-    if nav_token_budget_exhausted():
+    def _token_limit_finish() -> tuple[LegalAction, dict]:
         finish = next((a for a in actions if a.kind == ActionKind.FINISH), None)
         if finish is None:
             finish = choose_rule_action(
@@ -283,6 +283,9 @@ def choose_llm_action(
             "stop_reason": "token_limit",
             "depth": depth,
         }
+
+    if nav_token_budget_exhausted():
+        return _token_limit_finish()
 
     model_env = config.subagent_model_env if depth > 0 else config.llm_model_env
     model = resolve_nav_model(
@@ -442,6 +445,8 @@ def choose_llm_action(
                 "fallback_action_id": fallback.action_id,
                 "depth": depth,
             }
+        except NavTokenLimit:
+            return _token_limit_finish()
         except RuntimeError as exc:
             last_error = exc
             if attempt < 2:

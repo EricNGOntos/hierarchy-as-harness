@@ -116,12 +116,10 @@ def _harvest_user_prompt(
     contract_line = f"{subgoal.contract.kind}" + (
         f" cardinality={card}" if card is not None else ""
     )
-    mentions = ", ".join(subgoal.contract.must_mention or []) or "-"
     return (
         f"Subgoal need: {subgoal.need or query}\n"
         f"Retrieval query: {query}\n"
-        f"Contract: {contract_line}\n"
-        f"Must mention (if any): {mentions}\n\n"
+        f"Contract: {contract_line}\n\n"
         f"=== Region Observation ===\n{observation}\n=== End Region Observation ===\n"
     )
 
@@ -150,7 +148,7 @@ def harvest_policy_call(
     """One LLM call; ``meta["search_assets"]`` holds normalized asset requests."""
     from nav_assets import parse_search_assets
     from nav_llm import nav_chat, resolve_nav_model
-    from nav_token_budget import nav_token_budget_exhausted
+    from nav_token_budget import NavTokenLimit, nav_token_budget_exhausted
 
     if nav_token_budget_exhausted():
         return [], [], {}, "token_limit", {
@@ -176,19 +174,26 @@ def harvest_policy_call(
     user = _harvest_user_prompt(subgoal=subgoal, query=query, observation=observation)
     purpose = _HARVEST_PURPOSE_DEPTH0 if depth == 0 else _HARVEST_PURPOSE_CHILD
 
-    cached = nav_chat(
-        purpose=purpose,
-        model=model,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-        temperature=float(config.llm_temperature),
-        max_tokens=int(config.llm_max_tokens),
-        response_format={"type": "json_object"},
-        context="Nav Harvest",
-        usage_tag="nav_harvest",
-    )
+    try:
+        cached = nav_chat(
+            purpose=purpose,
+            model=model,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            temperature=float(config.llm_temperature),
+            max_tokens=int(config.llm_max_tokens),
+            response_format={"type": "json_object"},
+            context="Nav Harvest",
+            usage_tag="nav_harvest",
+        )
+    except NavTokenLimit:
+        return [], [], {}, "token_limit", {
+            "stop_reason": "token_limit",
+            "search_assets": [],
+            "depth": depth,
+        }
     text = str(cached.get("content") or "").strip()
     obj = _extract_json_obj(text) or {}
 

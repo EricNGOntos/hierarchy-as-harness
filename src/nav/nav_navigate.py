@@ -369,13 +369,24 @@ def dispatch(
                 steps_out=None,  # parent records dispatch; child history merges via state
             )
         except Exception as exc:
-            report = RegionReport(
-                scope=rid,
-                summary="",
-                reason=f"dispatch_failed: {exc}",
-                skipped=True,
-                depth=child_depth,
-            )
+            from nav_token_budget import NavTokenLimit
+
+            if isinstance(exc, NavTokenLimit):
+                report = RegionReport(
+                    scope=rid,
+                    summary="",
+                    reason="token_limit",
+                    skipped=True,
+                    depth=child_depth,
+                )
+            else:
+                report = RegionReport(
+                    scope=rid,
+                    summary="",
+                    reason=f"dispatch_failed: {exc}",
+                    skipped=True,
+                    depth=child_depth,
+                )
         _merge_nav_state(state, child_state)
         if steps_out is not None:
             from agent_delivery.agent.types import AgentStep
@@ -685,8 +696,14 @@ def navigate(
             report.reason = report.reason or "max_steps"
 
     except Exception as exc:
-        report.skipped = True
-        report.reason = f"navigate_error: {exc}"
+        from nav_token_budget import NavTokenLimit
+
+        if isinstance(exc, NavTokenLimit):
+            report.skipped = True
+            report.reason = "token_limit"
+        else:
+            report.skipped = True
+            report.reason = f"navigate_error: {exc}"
     finally:
         state.current_scope = prev_scope
 

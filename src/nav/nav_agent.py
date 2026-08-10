@@ -305,6 +305,38 @@ def run_nav_episode(
     config: Optional[NavConfig] = None,
     toolspace: Optional[Any] = None,
 ) -> EpisodeResult:
+    from nav_token_budget import nav_token_episode
+
+    with nav_token_episode():
+        return _run_nav_episode_body(
+            tools,
+            query,
+            doc_id=doc_id,
+            corpus_doc_ids=corpus_doc_ids,
+            budget_chars=budget_chars,
+            task_type=task_type,
+            compose_format_constraints=compose_format_constraints,
+            compose_answer=compose_answer,
+            policy=policy,
+            config=config,
+            toolspace=toolspace,
+        )
+
+
+def _run_nav_episode_body(
+    tools: Optional[HierarchicalTools],
+    query: str,
+    *,
+    doc_id: Optional[str] = None,
+    corpus_doc_ids: Optional[Sequence[str]] = None,
+    budget_chars: int,
+    task_type: str = "unknown",
+    compose_format_constraints: str = "",
+    compose_answer: bool = True,
+    policy: str = "rule",
+    config: Optional[NavConfig] = None,
+    toolspace: Optional[Any] = None,
+) -> EpisodeResult:
     corpus_ids = [
         str(d).strip()
         for d in (corpus_doc_ids or [])

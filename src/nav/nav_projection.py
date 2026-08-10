@@ -10,7 +10,7 @@ from nav_types import NavConfig, Projection, SectionView, map_mode_enabled
 try:
     from section_summary_store import get_summary
 except Exception:  # pragma: no cover
-    def get_summary(section_id: str) -> Optional[str]:  # type: ignore
+    def get_summary(section_id: str, *, doc_id: str = "") -> Optional[str]:  # type: ignore
         return None
 
 
@@ -386,6 +386,7 @@ def format_harvested_tag(owner_subgoal_id: str) -> str:
 def _render_map(
     nodes: List[_MapNode],
     *,
+    ts: Any = None,
     doc_id: str,
     scope: Optional[str],
     char_limit: int,
@@ -406,6 +407,16 @@ def _render_map(
     lines.append(
         "map=title+summary" if inline_summary else "map=title-only (action IDs attached per node)"
     )
+
+    def _summary_doc_for(section_id: str) -> str:
+        if ts is None:
+            return str(doc_id or "")
+        try:
+            from nav_address import owner_document
+
+            return owner_document(ts, section_id, doc_id) or str(doc_id or "")
+        except Exception:
+            return str(doc_id or "")
 
     def render(node: _MapNode) -> None:
         nonlocal counter, any_hidden
@@ -428,7 +439,10 @@ def _render_map(
         lines.append(line)
         summary = ""
         if inline_summary:
-            summary = _clip_summary(get_summary(node.section_id) or "")
+            summary = _clip_summary(
+                get_summary(node.section_id, doc_id=_summary_doc_for(node.section_id))
+                or ""
+            )
             if summary:
                 lines.append(f"{indent}    summary: {summary}")
         visible.append(
@@ -528,6 +542,7 @@ def build_map(
     )
     text, tree_visible, id_map, truncated = _render_map(
         roots,
+        ts=ts,
         doc_id=doc_id,
         scope=scope,
         char_limit=char_limit,

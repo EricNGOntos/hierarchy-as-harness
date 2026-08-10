@@ -44,7 +44,6 @@ _QUERY_REFINE_PURPOSE = "nav_query_refine_v2"
 class Contract:
     kind: ContractKind = "single_fact"
     cardinality: Optional[int] = None
-    must_mention: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -192,7 +191,6 @@ def _parse_contract(raw: Any) -> Contract:
     return Contract(
         kind=kind,  # type: ignore[arg-type]
         cardinality=cardinality,
-        must_mention=_as_str_list(raw.get("must_mention")),
     )
 
 
@@ -632,7 +630,7 @@ def _planner_system_prompt(*, max_subgoals: int) -> str:
         '      "prefer_after": [],\n'
         '      "produces": ["entity"],\n'
         '      "contract": {"kind": "single_fact|enumeration|span|comparison|existence", '
-        '"cardinality": null, "must_mention": []}\n'
+        '"cardinality": null}\n'
         "    },\n"
         "    {\n"
         '      "id": "s2",\n'
@@ -688,7 +686,7 @@ def plan_query(
         resolve_nav_model,
         resolve_nav_thinking_mode,
     )
-    from nav_token_budget import nav_token_budget_exhausted
+    from nav_token_budget import NavTokenLimit, nav_token_budget_exhausted
 
     if nav_token_budget_exhausted():
         return fallback_plan(state.query, reason="token_limit")
@@ -776,6 +774,8 @@ def plan_query(
                 last_err = "language_mismatch"
                 continue
             return plan
+        except NavTokenLimit:
+            return fallback_plan(state.query, reason="token_limit")
         except Exception as exc:  # pragma: no cover - network/LLM path
             last_err = str(exc)
             continue
@@ -846,7 +846,7 @@ def refine_subgoal_query(
     previous query.
     """
     from nav_llm import nav_chat, resolve_nav_model
-    from nav_token_budget import nav_token_budget_exhausted
+    from nav_token_budget import NavTokenLimit, nav_token_budget_exhausted
 
     prev = (previous_query or subgoal.retrieval_query or "").strip()
     need = (subgoal.need or prev).strip()
@@ -892,6 +892,8 @@ def refine_subgoal_query(
             base_url_env="NAV_PLANNER_BASE_URL",
             usage_tag="nav_query_refine",
         )
+    except NavTokenLimit:
+        return ""
     except Exception:  # pragma: no cover - network/LLM path
         return ""
 

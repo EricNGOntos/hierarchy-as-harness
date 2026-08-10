@@ -67,16 +67,15 @@ def _fake_harvest_by_query(query_to_text: dict[str, str]):
 
 
 class TestNavSlots(unittest.TestCase):
-    def test_heuristic_extract_prefers_must_mention(self) -> None:
-        evidence = "本章规定对外重大合同应使用法人章办理用印。"
+    def test_heuristic_extract_uses_best_overlap_line(self) -> None:
+        evidence = "unrelated intro\nuse corporate seal for major contracts"
         slots = extract_slots_heuristic(
             ["seal_type"],
             evidence,
-            retrieval_query="印章类型",
+            retrieval_query="corporate seal",
             need="seal",
-            must_mention=["法人章"],
         )
-        self.assertEqual(slots.get("seal_type"), "法人章")
+        self.assertEqual(slots.get("seal_type"), "use corporate seal for major contracts")
 
     def test_demanded_slots_only_when_downstream_refs(self) -> None:
         plan = RetrievalPlan(
@@ -128,7 +127,7 @@ class TestNavSlots(unittest.TestCase):
                     need="type",
                     retrieval_query="印章类型",
                     produces=["seal_type"],
-                    contract=Contract(kind="single_fact", must_mention=["法人章"]),
+                    contract=Contract(kind="single_fact"),
                 ),
             ]
         )
@@ -205,14 +204,14 @@ class TestNavOrchestrate(unittest.TestCase):
                     need="a",
                     retrieval_query="法人章 适用范围",
                     produces=["seal_type"],
-                    contract=Contract(kind="single_fact", must_mention=["法人章"]),
+                    contract=Contract(kind="single_fact"),
                 ),
                 Subgoal(
                     id="s2",
                     need="b",
                     retrieval_query="档案保管 年限",
                     produces=["years"],
-                    contract=Contract(kind="single_fact", must_mention=["保管"]),
+                    contract=Contract(kind="single_fact"),
                 ),
             ]
         )
@@ -259,7 +258,7 @@ class TestNavOrchestrate(unittest.TestCase):
                     need="type",
                     retrieval_query="印章类型 法人章",
                     produces=["seal_type"],
-                    contract=Contract(kind="single_fact", must_mention=["法人章"]),
+                    contract=Contract(kind="single_fact"),
                 ),
                 Subgoal(
                     id="s2",
@@ -313,7 +312,7 @@ class TestNavOrchestrate(unittest.TestCase):
                     need="type",
                     retrieval_query="印章类型",
                     produces=["seal_type"],
-                    contract=Contract(kind="single_fact", must_mention=["法人章"]),
+                    contract=Contract(kind="single_fact"),
                 ),
             ]
         )

@@ -44,9 +44,11 @@ def _section_summary_text(ts: Any, section_id: str) -> str:
     if not sid:
         return ""
     try:
+        from nav_address import owner_document
         from section_summary_store import get_summary
 
-        text = str(get_summary(sid) or "").strip()
+        doc = owner_document(ts, sid, "") if ts is not None else ""
+        text = str(get_summary(sid, doc_id=doc) or "").strip()
         if text:
             return text
     except Exception:
@@ -240,7 +242,7 @@ def plan_control(
     wave_outputs: Sequence[Dict[str, Any]],
 ) -> PlanControlDecision:
     """One LLM call per wave: per-subgoal accept/widen/drop + global signal."""
-    from nav_token_budget import nav_token_budget_exhausted
+    from nav_token_budget import NavTokenLimit, nav_token_budget_exhausted
 
     by_id = {s.id: s for s in plan.subgoals}
     subgoal_ids = [str(item.get("subgoal_id")) for item in wave_outputs]
@@ -347,6 +349,11 @@ def plan_control(
                 decision.per_subgoal[sid] = SubgoalDecision(
                     subgoal_id=sid, decision="accept" if has_evidence else "widen"
                 )
+        return decision
+    except NavTokenLimit:
+        decision = _fallback_decision(subgoal_ids, signals)
+        decision.global_action = "done"
+        decision.reason = "token_limit"
         return decision
     except Exception:
         return _fallback_decision(subgoal_ids, signals)

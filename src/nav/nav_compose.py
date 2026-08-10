@@ -285,7 +285,8 @@ def _group_summary_text(ts: ToolSpace, section_id: str) -> str:
     try:
         from section_summary_store import get_summary
 
-        text = str(get_summary(sid) or "").strip()
+        doc = _section_doc_id(ts, sid, "")
+        text = str(get_summary(sid, doc_id=doc) or "").strip()
         if text:
             return text
     except Exception:

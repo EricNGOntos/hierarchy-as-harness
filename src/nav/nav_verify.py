@@ -62,8 +62,6 @@ def extract_slots_heuristic(
     *,
     retrieval_query: str = "",
     need: str = "",
-    must_mention: Optional[Sequence[str]] = None,
-    contract_kind: str = "single_fact",
 ) -> Dict[str, str]:
     """Deterministic slot fill from evidence (no LLM)."""
     text = evidence_text or ""
@@ -71,7 +69,6 @@ def extract_slots_heuristic(
     if not text.strip() or not names:
         return {}
     out: Dict[str, str] = {}
-    mentions = [m for m in (must_mention or []) if str(m).strip()]
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     q_tokens = set(_tokens(retrieval_query or need))
     best_line = ""
@@ -81,15 +78,10 @@ def extract_slots_heuristic(
         if overlap > best_overlap:
             best_overlap = overlap
             best_line = ln
+    if not best_line:
+        return out
     for name in names:
-        hit_mentions = [m for m in mentions if m in text]
-        if hit_mentions:
-            if contract_kind == "enumeration":
-                out[name] = "、".join(hit_mentions)
-            else:
-                out[name] = hit_mentions[0]
-        elif best_line:
-            out[name] = best_line
+        out[name] = best_line
     return out
 
 
@@ -186,8 +178,6 @@ def extract_slots(
         evidence_text,
         retrieval_query=retrieval_query or subgoal.retrieval_query,
         need=subgoal.need,
-        must_mention=subgoal.contract.must_mention,
-        contract_kind=subgoal.contract.kind,
     )
     llm_slots: Dict[str, str] = {}
     if use_llm:

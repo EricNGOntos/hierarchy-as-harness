@@ -134,7 +134,23 @@ def nav_chat(
     timeout: float = 60.0,
     usage_tag: str = "",
 ) -> Dict[str, Any]:
-    """Single entry for nav LLM calls. Credentials stay inside this boundary."""
+    """Single entry for nav LLM calls. Credentials stay inside this boundary.
+
+    Token hard-stop: refuse the call when the episode/process budget is already
+    exhausted (raises ``NavTokenLimit``). Successful calls credit usage to the
+    active episode counter when ``nav_token_episode()`` is entered.
+    """
+    from nav_token_budget import (
+        NavTokenLimit,
+        nav_token_budget_exhausted,
+        nav_token_limit,
+        nav_tokens_used,
+        record_episode_tokens,
+    )
+
+    if nav_token_budget_exhausted():
+        raise NavTokenLimit(used=nav_tokens_used(), limit=nav_token_limit())
+
     merged_extra = _merge_thinking_extra(extra, role=thinking_role, model=model)
 
     if _backend is not None:
@@ -153,6 +169,7 @@ def nav_chat(
             timeout=timeout,
             usage_tag=usage_tag,
         )
+        record_episode_tokens((result or {}).get("usage"))
         return result
 
     from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
@@ -187,4 +204,5 @@ def nav_chat(
     )
     if usage_tag:
         record_usage(usage_tag, cached.get("usage"))
+    record_episode_tokens(cached.get("usage"))
     return cached

@@ -29,13 +29,16 @@ def _load_doc(doc_id: str) -> Dict[str, Any]:
     return _doc_cache[doc_id]
 
 
-def get_summary(section_id: str) -> Optional[str]:
-    """Return non-LLM covers/leaf summary for section_id, or None if missing."""
+def get_summary(section_id: str, *, doc_id: str = "") -> Optional[str]:
+    """Return non-LLM covers/leaf summary for section_id, or None if missing.
+
+    ``doc_id`` selects the cache file; do not parse it out of ``section_id``.
+    """
     sid = str(section_id or "").strip()
-    if not sid or ":" not in sid:
+    doc = str(doc_id or "").strip()
+    if not sid or not doc:
         return None
-    doc_id = sid.split(":", 1)[0]
-    row = _load_doc(doc_id).get(sid)
+    row = _load_doc(doc).get(sid)
     if not isinstance(row, dict):
         return None
     text = str(row.get("summary") or "").strip()
