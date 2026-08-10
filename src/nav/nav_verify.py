@@ -2,8 +2,7 @@
 
 Extracts values only when a later subgoal's ``{{sN.slot}}`` (or short
 ``{{slot}}`` matching this subgoal's ``produces``) needs them. No contract
-verdict, no activation predicate — checklist reconciliation belongs solely
-to ``nav_control.plan_control``.
+Checklist reconciliation belongs solely to ``nav_control.plan_control``.
 """
 
 from __future__ import annotations
@@ -241,7 +240,6 @@ def build_subgoal_result(
         extracted=dict(extracted),
         chars_used=chars,
         gap="empty_evidence" if chars <= 0 else "",
-        verdict="",
         collected_section_ids=[
             s for s in state_collected_section_ids if s not in collected_before
         ],

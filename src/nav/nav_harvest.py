@@ -218,25 +218,6 @@ def harvest_policy_call(
     return collect_actions, dispatch_actions, confidence, reason, meta
 
 
-def resolve_parent_section_id(ts: Any, section_id: str, doc_id: str) -> Optional[str]:
-    """Direct parent of ``section_id`` in the full hierarchy — drives ``widen``.
-
-    Prefers a provider-exposed ``parent_id`` capability (``KnowhereProvider``
-    / any ``HierarchyProvider`` via ``ProviderToolSpace``); falls back to the
-    legacy line-indexed ``ToolSpace``'s parent-pointer table. Returns
-    ``None`` when ``section_id`` has no further parent (already at the
-    document's top level) — the caller then treats the *next* widen entry
-    point as the unrestricted document root.
-    """
-    fn = getattr(ts, "parent_id", None)
-    if callable(fn):
-        parent = fn(section_id)
-        return str(parent).strip() or None if parent else None
-    from nav_compose import direct_parent_id
-
-    return direct_parent_id(ts, section_id, doc_id)
-
-
 def harvest(
     ts: Any,
     state: NavState,
@@ -247,7 +228,7 @@ def harvest(
     query: str,
     steps_out: Optional[List[Any]] = None,
 ) -> HarvestResult:
-    """Anchor-entry, single-decision-per-node evidence harvest for one subgoal."""
+    """Single-decision-per-node evidence harvest for one subgoal."""
     result = HarvestResult(subgoal_id=subgoal.id)
     from nav_address import NavLevel, address_level
 
@@ -289,7 +270,7 @@ def _harvest_node(
     from nav_navigate import _apply_collect  # late import avoids cycle
 
     max_depth = max(0, int(getattr(config, "max_harvest_depth", 0) or 0))
-    show_harvested = bool(getattr(config, "show_harvested_in_map", False))
+    show_harvested = bool(config.is_checklist)
     subgoal_dismissed = state.subgoal_dismissed_section_ids.get(subgoal.id, set())
     projection = build_projection(
         ts,
@@ -378,7 +359,7 @@ def _harvest_node(
         cdetail = _apply_collect(ts, state, primary, config)
         new_roots = list(cdetail.get("collect_section_ids") or [])
         result.new_section_ids.extend(new_roots)
-        if bool(getattr(config, "show_harvested_in_map", False)):
+        if show_harvested:
             for sid in new_roots:
                 state.harvested_owner_subgoal[sid] = subgoal.id
 

@@ -10,10 +10,8 @@ from nav_types import (
 )
 from nav_agent import run_nav_episode
 from nav_plan import (
-    Activation,
     Contract,
     RetrievalPlan,
-    ScopeFilter,
     Subgoal,
     bind_slots,
     plan_query,
@@ -28,10 +26,8 @@ __all__ = [
     "SubgoalResult",
     "map_mode_enabled",
     "run_nav_episode",
-    "Activation",
     "Contract",
     "RetrievalPlan",
-    "ScopeFilter",
     "Subgoal",
     "bind_slots",
     "plan_query",

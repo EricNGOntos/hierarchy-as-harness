@@ -6,8 +6,8 @@ instead of this repo's line-indexed ToolSpace, so the only inputs are the
 section/chunk rows knowhere already stores.
 
 Arms:
-  - ``baseline``: map navigation alone
-  - ``shared``: coverage checklist + shared search space + harvest + plan_control
+  - ``baseline``: mode=navigate (map loop alone)
+  - ``shared``: mode=checklist (plan + harvest + plan_control)
 """
 from __future__ import annotations
 
@@ -113,23 +113,15 @@ def load_probe_toolspace(probe: dict) -> Tuple[Any, List[str], Any]:
 def cfg_baseline() -> NavConfig:
     cfg = NavConfig.from_dict(json.loads((ROOT / "config/nav_default.json").read_text()))
     cfg.map_mode = True
+    cfg.mode = "navigate"
     return cfg
 
 
 def cfg_shared() -> NavConfig:
-    """Checklist + shared search space + one-shot harvest + plan_control."""
+    """Checklist mode: plan + harvest + plan_control (product flags collapsed)."""
     cfg = cfg_baseline()
-    cfg.enable_query_planning = True
-    cfg.enable_plan_orchestration = True
-    cfg.enable_slot_extract = True
-    cfg.enable_one_shot_harvest = True
-    cfg.enable_plan_control = True
+    cfg.mode = "checklist"
     cfg.max_replans = 1
-    cfg.subgoal_max_attempts = 2
-    cfg.max_waves = 0
-    cfg.max_harvest_depth = 3
-    cfg.plan_control_digest_chars = 600
-    cfg.show_harvested_in_map = True
     return cfg
 
 

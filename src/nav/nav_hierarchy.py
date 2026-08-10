@@ -79,7 +79,7 @@ class ProviderToolSpace:
     ``unit_text(unit)`` / ``path_titles(section_id)``
         an evidence unit's body text, and a node's root-first title chain
     ``parent_id(section_id)``
-        direct parent section id (drives nav_harvest.resolve_parent_section_id)
+        direct parent section id (provider capability; unused by checklist widen)
 
     Without them the adapter keeps its original behaviour: one blob per
     subtree, no path channel, no parent-based widen (harvest falls back to

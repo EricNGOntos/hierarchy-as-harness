@@ -57,19 +57,16 @@ class HierarchyAdapterPortSeamTests(unittest.TestCase):
     def setUp(self) -> None:
         self.ts = _build_ts()
         self.config = NavConfig(
+            mode="checklist",
             map_mode=True,
             map_char_limit=4000,
-            enable_one_shot_harvest=True,
             max_harvest_depth=2,
-            enable_plan_control=True,
-            show_harvested_in_map=True,
         )
         self.subgoal = Subgoal(
             id="s1",
             need="What is the primary seal type and its rating?",
             retrieval_query="primary seal type rating",
             contract=Contract(kind="single_fact"),
-            route_hints=["doc1:L5"],
         )
         self.plan = RetrievalPlan(subgoals=[self.subgoal])
         self.state = NavState(doc_id="doc1", query=self.subgoal.retrieval_query, retrieval_plan=self.plan)
@@ -174,7 +171,6 @@ class HierarchyAdapterPortSeamTests(unittest.TestCase):
         self.state.satisfied_subgoal_ids.add("s1")
         self.state.subgoal_results["s1"] = {
             "satisfied": True,
-            "verdict": "SATISFIED",
             "collected_section_ids": ["doc1:L5"],
         }
         self.state.attempted_subgoal_ids.add("s1")

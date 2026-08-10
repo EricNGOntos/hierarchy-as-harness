@@ -34,20 +34,14 @@
   "compose_snippet_chars": 80,
   "enable_depth0_oversize_to_dispatch": true,
   "depth0_oversize_char_limit": 500,
-  "enable_query_planning": false,
+  "mode": "navigate",
   "planning_map_char_limit": 10000,
   "planner_max_subgoals": 0,
   "planner_model_env": "NAV_PLANNER_MODEL",
   "planner_llm_max_tokens": 1024,
-  "enable_plan_orchestration": false,
-  "enable_slot_extract": false,
   "subgoal_max_attempts": 2,
   "max_replans": 0,
   "max_waves": 0,
-  "enable_one_shot_harvest": false,
   "max_harvest_depth": 3,
-  "enable_plan_control": false,
-  "plan_control_digest_chars": 600,
-  "show_harvested_in_map": false,
-  "dispatch_concurrency": 1
+  "plan_control_digest_chars": 600
 }

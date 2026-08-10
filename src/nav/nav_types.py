@@ -3,7 +3,9 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple
+
+NavMode = Literal["navigate", "checklist"]
 
 
 class ActionKind(str, Enum):
@@ -50,8 +52,6 @@ class NavConfig:
     enable_recursive_dispatch: bool = True
     max_dispatch_depth: int = 3
     navigate_max_steps: int = 8
-    # Reserved for future asyncio.gather; experiment kernel stays serial (1).
-    dispatch_concurrency: int = 1
     subagent_model_env: str = "NAV_SUBAGENT_MODEL"
     # Scoped maps whose estimated (with-summary) size exceeds this threshold drop
     # inline summaries (title-only), nudging the agent to DISPATCH deeper rather
@@ -78,8 +78,8 @@ class NavConfig:
     enable_depth0_oversize_to_dispatch: bool = False
     # 0 = use episode evidence budget_chars (set in run_nav_episode).
     depth0_oversize_char_limit: int = 0
-    # M2 query planning (structure-conditioned). Off by default → zero regression.
-    enable_query_planning: bool = False
+    # Product mode: navigate = classic map loop; checklist = plan+harvest+control.
+    mode: NavMode = "navigate"
     # Display budget for the one-shot planning map; executor still uses map_char_limit.
     # 0 = reuse map_char_limit.
     planning_map_char_limit: int = 10000
@@ -88,31 +88,20 @@ class NavConfig:
     planner_model_env: str = "NAV_PLANNER_MODEL"
     # Separate from navigate llm_max_tokens: plan JSON is larger.
     planner_llm_max_tokens: int = 1024
-    # M4: replace single navigate with dependency-wave plan execution.
-    enable_plan_orchestration: bool = False
-    # LLM slot extract when a later subgoal references this subgoal's slots.
-    enable_slot_extract: bool = False
-    # M5: navigate cycles per subgoal when evidence is empty. Min 1.
+    # Checklist: navigate/harvest cycles per subgoal before drop. Min 1.
     subgoal_max_attempts: int = 2
-    # M5: 0 = never replan; otherwise hard cap on structural replans.
+    # Checklist: 0 = never replan; otherwise hard cap on structural replans.
     max_replans: int = 0
-    # M4: 0 = no extra wave cap (stop when no ready subgoals).
+    # Checklist: 0 = no extra wave cap (stop when no ready subgoals).
     max_waves: int = 0
-    # --- PLAN×NAV: one-shot harvest + plan_control ---
-    # Replace the multi-step ReAct navigate() with a single collect/dispatch
-    # decision per node; recursion only follows explicit DISPATCH selections.
-    enable_one_shot_harvest: bool = False
-    # Structural recursion depth cap for harvest() (mirrors max_dispatch_depth's
-    # existing default; harvest recursion is bounded independently of navigate()).
+    # Structural recursion depth cap for harvest() (checklist mode).
     max_harvest_depth: int = 3
-    # One LLM call per wave that reviews every subgoal's own new evidence.
-    enable_plan_control: bool = False
-    # Per-subgoal evidence digest cap shown to plan_control (not the full pool;
-    # kept small since plan_control runs once per wave over every subgoal).
+    # Per-subgoal evidence digest cap shown to plan_control.
     plan_control_digest_chars: int = 600
-    # Render collected branches as "[harvested:sN]" instead of removing them from
-    # the map/action space, so later subgoals and plan_control still see coverage.
-    show_harvested_in_map: bool = False
+
+    @property
+    def is_checklist(self) -> bool:
+        return str(self.mode or "").strip().lower() == "checklist"
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "NavConfig":
@@ -125,7 +114,7 @@ class NavConfig:
             flat["tight_remaining_steps"] = int(
                 budget_modes.get("tight_remaining_steps", cls.tight_remaining_steps)
             )
-        # Drop deprecated keys quietly (legacy map_peek/jump/expand/peek_content).
+        # Retired product flags (collapsed into mode=navigate|checklist).
         for dead in (
             "expand_top_k",
             "map_peek_top_k",
@@ -142,8 +131,17 @@ class NavConfig:
             "subgoal_budget_floor_frac",
             "enable_anchor_entry",
             "enable_settle_group_rank",
+            "enable_query_planning",
+            "enable_plan_orchestration",
+            "enable_slot_extract",
+            "enable_one_shot_harvest",
+            "enable_plan_control",
+            "show_harvested_in_map",
+            "dispatch_concurrency",
         ):
             flat.pop(dead, None)
+        raw_mode = str(flat.get("mode") or "navigate").strip().lower()
+        flat["mode"] = "checklist" if raw_mode == "checklist" else "navigate"
         allowed = {f.name for f in cls.__dataclass_fields__.values()}
         cfg = cls(**{k: v for k, v in flat.items() if k in allowed})
         if map_mode_enabled(None) and not cfg.map_mode:
@@ -234,7 +232,6 @@ class SubgoalResult:
     extracted: Dict[str, str] = field(default_factory=dict)
     gap: str = ""
     chars_used: int = 0
-    verdict: str = ""  # SATISFIED|RETRY_SAME_REGION|REBIND|REPLAN
 
 
 @dataclass
@@ -270,36 +267,26 @@ class NavState:
     retrieval_plan: Optional[Any] = None
     slot_bindings: Dict[str, str] = field(default_factory=dict)
     satisfied_subgoal_ids: set[str] = field(default_factory=set)
-    # Finished trying (success or attempts exhausted). Deps wait on satisfied only.
+    # Finished trying (accept or drop). Widen leaves a subgoal out of this set.
     attempted_subgoal_ids: set[str] = field(default_factory=set)
-    activated_subgoal_ids: set[str] = field(default_factory=set)
-    # M4/M5: soft focus for policy (never clips action space).
+    # Soft focus for policy (never clips action space).
     focus_subgoal_id: str = ""
     focus_subgoal_need: str = ""
     focus_subgoal_contract: str = ""
     focus_retrieval_query: str = ""
     focus_contract_kind: str = ""
-    # Soft scope preference for the active subgoal (doc_ids only; not action clip).
-    focus_scope_doc_ids: List[str] = field(default_factory=list)
     subgoal_results: Dict[str, Any] = field(default_factory=dict)
     replan_count: int = 0
-    # PLAN×NAV fusion: explicit collect-root section_id -> owning subgoal_id
-    # (drives "[harvested:sN]" map tags when show_harvested_in_map is on).
+    # Checklist: explicit collect-root section_id -> owning subgoal_id
+    # (drives "[harvested:sN]" map tags).
     harvested_owner_subgoal: Dict[str, str] = field(default_factory=dict)
-    # Per-subgoal sticky harvest entry point: None == document root (maximum
-    # breadth already). Moved by plan_control's "widen" (one level up to the
-    # parent scope) — see nav_orchestrate._apply_plan_control. Batch C will
-    # replace this with dismissed-dead-end retry.
-    subgoal_anchor: Dict[str, Optional[str]] = field(default_factory=dict)
-    # Per-subgoal "seen but not selected" section ids (visible collect/dispatch
-    # candidates a harvest call chose neither of, plus dispatched branches that
-    # yielded nothing) — hidden from that subgoal's later map views so widen
-    # surfaces siblings instead of re-offering the same dead ends. Scoped per
-    # subgoal, not merged into the global dismissed_section_ids below.
+    # Last widen gap note per subgoal; appended to the next harvest query.
+    subgoal_widen_gaps: Dict[str, str] = field(default_factory=dict)
+    # Per-subgoal "seen but not selected" section ids — hidden from later map
+    # views for that subgoal so widen surfaces siblings instead of dead ends.
     subgoal_dismissed_section_ids: Dict[str, set[str]] = field(default_factory=dict)
     # Per-subgoal wave-attempt counter (circuit breaker under plan_control).
     subgoal_attempt_counts: Dict[str, int] = field(default_factory=dict)
     # Terminal "drop" outcomes: disjoint from satisfied_subgoal_ids. Union of
-    # the two is "settled" — the only thing ready_subgoal_ids' dependency gate
-    # requires from a precursor (F1: a dropped precursor must not starve deps).
+    # the two is "settled" for dependency readiness.
     dropped_subgoal_ids: set[str] = field(default_factory=set)

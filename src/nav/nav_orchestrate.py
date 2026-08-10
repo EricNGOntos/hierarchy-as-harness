@@ -31,24 +31,17 @@ def ready_subgoal_ids(
     plan: RetrievalPlan,
     *,
     satisfied: Set[str],
-    activated: Set[str] | None = None,
     attempted: Optional[Set[str]] = None,
     dropped: Optional[Set[str]] = None,
 ) -> List[str]:
     """Subgoals eligible to run now (deps settled, not yet finished).
 
-    ``activated`` is accepted for call-site compatibility but ignored —
-    conditional activation was removed; readiness is depends_on only.
-
-    F1 fix: a dependency only needs to be *settled* (``satisfied`` or
-    ``dropped``). A dropped precursor must not starve every downstream
-    subgoal forever. Unbound ``{{slot}}`` queries degrade via
-    ``_unbound_retrieval_query`` instead of blocking readiness.
+    F1: a dependency only needs to be *settled* (``satisfied`` or ``dropped``).
+    Widen leaves a subgoal out of ``attempted`` so it stays ready next wave.
     """
-    del activated  # retired activation gate
     settled = set(satisfied) | set(dropped or ())
     known = {s.id for s in plan.subgoals}
-    done = set(attempted or ()) | set(satisfied)
+    done = set(attempted or ()) | set(satisfied) | set(dropped or ())
     out: List[str] = []
     for sg in plan.subgoals:
         if sg.id in done:
@@ -112,7 +105,6 @@ def _set_focus(state: NavState, subgoal: Subgoal, retrieval_query: str) -> None:
     state.focus_subgoal_contract = (
         f"{kind}" + (f" cardinality={card}" if card is not None else "")
     )
-    state.focus_scope_doc_ids = list(subgoal.scope_filter.doc_ids or [])
 
 
 def _clear_focus(state: NavState) -> None:
@@ -121,7 +113,6 @@ def _clear_focus(state: NavState) -> None:
     state.focus_subgoal_contract = ""
     state.focus_retrieval_query = ""
     state.focus_contract_kind = ""
-    state.focus_scope_doc_ids = []
 
 
 def _unbound_retrieval_query(subgoal: Subgoal) -> str:
@@ -170,53 +161,8 @@ def _wave_subgoal_result(
         retrieval_query=retrieval_query,
         new_chunks=new_chunks,
         collected_before=collected_before,
-        use_llm_extract=bool(getattr(config, "enable_slot_extract", False)),
+        use_llm_extract=bool(config.is_checklist),
     )
-
-
-def _execute_subgoal_navigate(
-    ts: Any,
-    state: NavState,
-    config: NavConfig,
-    plan: RetrievalPlan,
-    subgoal: Subgoal,
-    *,
-    steps_out: Optional[List[Any]],
-) -> Tuple[SubgoalResult, bool]:
-    """Navigate until this wave collects evidence or attempts are exhausted."""
-    max_attempts = max(1, int(getattr(config, "subgoal_max_attempts", 2) or 2))
-    rq = bind_slots(subgoal.retrieval_query, state.slot_bindings)
-    if unbound_slots(rq):
-        rq = _unbound_retrieval_query(subgoal)
-    last: Optional[SubgoalResult] = None
-    # Cross-subgoal report leakage (audit §1.6): each subgoal starts with a
-    # clean scratchpad; its own dispatch reports still accumulate across retries.
-    state.reports_context = ""
-
-    for _attempt in range(max_attempts):
-        before = set(state.collected_section_ids)
-        _set_focus(state, subgoal, rq)
-        before_len = len(state.collected)
-        child_steps: List[Any] = []
-        _run_navigate_for_query(ts, state, config, query=rq, steps_out=child_steps)
-        if steps_out is not None:
-            steps_out.extend(child_steps)
-        new_chunks = list(state.collected[before_len:])
-        last = _wave_subgoal_result(
-            plan,
-            state,
-            config,
-            subgoal,
-            retrieval_query=rq,
-            new_chunks=new_chunks,
-            collected_before=before,
-        )
-        if last.chars_used > 0:
-            return last, False
-
-    assert last is not None
-    want_replan = bool(int(getattr(config, "max_replans", 0) or 0) > 0 and not last.satisfied)
-    return last, want_replan
 
 
 def _execute_subgoal_harvest_once(
@@ -241,9 +187,12 @@ def _execute_subgoal_harvest_once(
         # producing this subgoal's referenced slot — degrade to a query with
         # the unresolved {{...}} braces stripped rather than stalling.
         rq = _unbound_retrieval_query(subgoal)
+    gap_note = str((state.subgoal_widen_gaps or {}).get(subgoal.id) or "").strip()
+    if gap_note:
+        rq = f"{rq}\n[widen gap] {gap_note}".strip()
     _set_focus(state, subgoal, rq)
-    # Harvest always enters at namespace/document root; widen (Batch C) will
-    # retry with dismissed dead-ends rather than an anchor stack.
+    # Always enter at namespace/document root; prior dead-ends stay hidden via
+    # subgoal_dismissed_section_ids so the next harvest sees siblings instead.
     before_sections = set(state.collected_section_ids)
     before_len = len(state.collected)
     harvest_result = harvest(
@@ -271,11 +220,11 @@ def _execute_subgoal_harvest_once(
         "result": signal,
         "new_chunks": new_chunks,
         "harvest": {
-            "anchor": None,
             "n_policy_calls": harvest_result.n_policy_calls,
             "visited_section_ids": list(harvest_result.visited_section_ids),
             "max_depth_hit": harvest_result.max_depth_hit,
             "reason": harvest_result.reason,
+            "widen_gap": gap_note,
         },
     }
 
@@ -292,16 +241,12 @@ def _apply_plan_control(
 ) -> Dict[str, Any]:
     """Apply one wave's plan_control decision; returns a TRACE-friendly detail.
 
-    F2 fix: ``widen`` is the only "try again differently" decision (no more
-    ``reharvest``) and is applied deterministically here, never by the LLM
-    naming an anchor — it steps ``state.subgoal_anchor[sid]`` up to the
-    parent of whatever it currently is (``nav_harvest.resolve_parent_section_id``).
-    Once the anchor is already the document root (``None`` — maximum
-    breadth), there is nowhere coarser to go, so widen degrades to a
-    deterministic ``drop`` instead of silently repeating the same harvest.
+    ``widen`` = leave the subgoal unsettled for the next wave. Harvest again
+    from the root with prior dead-ends dismissed and the last ``gap`` appended
+    to the retrieval query. Only ``subgoal_max_attempts`` turns widen into drop.
     """
+    del by_id  # reserved for future control context
     from nav_control import plan_control
-    from nav_harvest import resolve_parent_section_id
 
     decision = plan_control(ts, state, config, plan=plan, wave_outputs=outputs)
     max_attempts = max(1, int(getattr(config, "subgoal_max_attempts", 2) or 2))
@@ -316,25 +261,21 @@ def _apply_plan_control(
         if kind == "widen" and int(state.subgoal_attempt_counts.get(sid, 0)) >= max_attempts:
             kind = "drop"
 
-        if kind == "widen":
-            current = state.subgoal_anchor.get(sid)
-            if current is None:
-                # Already at the unrestricted document root: no coarser scope
-                # exists to widen into.
-                kind = "drop"
-            else:
-                state.subgoal_anchor[sid] = resolve_parent_section_id(ts, current, state.doc_id)
-
         if kind == "accept":
             result.satisfied = True
             state.subgoal_results[sid] = asdict(result)
             state.satisfied_subgoal_ids.add(sid)
             state.attempted_subgoal_ids.add(sid)
+            state.subgoal_widen_gaps.pop(sid, None)
         elif kind == "drop":
             state.dropped_subgoal_ids.add(sid)
             state.attempted_subgoal_ids.add(sid)
-        # kind == "widen": anchor already advanced above; next wave's harvest
-        # reads it back from state.subgoal_anchor (Batch C will replace this).
+            state.subgoal_widen_gaps.pop(sid, None)
+        else:
+            # widen: keep unsettled; stash gap for the next harvest query.
+            note = str(getattr(result, "gap", "") or "").strip()
+            if note:
+                state.subgoal_widen_gaps[sid] = note
 
     if steps_out is not None:
         from agent_delivery.agent.types import AgentStep  # type: ignore
@@ -361,28 +302,6 @@ def _apply_plan_control(
     }
 
 
-def _execute_subgoal_on_state(
-    ts: Any,
-    state: NavState,
-    config: NavConfig,
-    plan: RetrievalPlan,
-    subgoal_id: str,
-    *,
-    steps_out: Optional[List[Any]],
-) -> Dict[str, Any]:
-    by = {s.id: s for s in plan.subgoals}
-    result, want_replan = _execute_subgoal_navigate(
-        ts, state, config, plan, by[subgoal_id], steps_out=steps_out
-    )
-    _clear_focus(state)
-    return {
-        "subgoal_id": subgoal_id,
-        "result": result,
-        "new_chunks": [],
-        "want_replan": want_replan,
-    }
-
-
 def execute_plan(
     ts: Any,
     state: NavState,
@@ -402,8 +321,7 @@ def execute_plan(
         return {"fallback_navigate": True}
 
     max_waves = int(getattr(config, "max_waves", 0) or 0)
-    use_harvest = bool(getattr(config, "enable_one_shot_harvest", False))
-    use_control = bool(getattr(config, "enable_plan_control", False))
+    # Checklist mode always harvests + plan_controls (navigate-per-subgoal retired).
     wave_idx = 0
     summary: Dict[str, Any] = {"waves": [], "results": {}}
     episode_done = False
@@ -416,7 +334,6 @@ def execute_plan(
         ready = ready_subgoal_ids(
             plan,
             satisfied=set(state.satisfied_subgoal_ids),
-            activated=set(state.activated_subgoal_ids),
             attempted=set(state.attempted_subgoal_ids),
             dropped=set(state.dropped_subgoal_ids),
         )
@@ -433,12 +350,8 @@ def execute_plan(
         outputs: List[Dict[str, Any]] = []
 
         def _run_one(sid: str, working_state: NavState, out_steps: Optional[List[Any]]) -> Dict[str, Any]:
-            if use_harvest:
-                return _execute_subgoal_harvest_once(
-                    ts, working_state, config, plan, by_id[sid], steps_out=out_steps
-                )
-            return _execute_subgoal_on_state(
-                ts, working_state, config, plan, sid, steps_out=out_steps
+            return _execute_subgoal_harvest_once(
+                ts, working_state, config, plan, by_id[sid], steps_out=out_steps
             )
 
         # Serial wave execution (parallel fan-out retired with ThreadPoolExecutor).
@@ -467,25 +380,13 @@ def execute_plan(
                 state.subgoal_attempt_counts.get(sid, 0)
             ) + 1
 
-        replan_requested = False
-        if use_control:
-            control_detail = _apply_plan_control(
-                ts, state, config, plan=plan, outputs=outputs, by_id=by_id, steps_out=steps_out
-            )
-            wave_detail["plan_control"] = control_detail
-            replan_requested = bool(control_detail.get("replan"))
-            if control_detail.get("done"):
-                episode_done = True
-        else:
-            for item in outputs:
-                sid = item["subgoal_id"]
-                result = item["result"]
-                if item.get("want_replan"):
-                    replan_requested = True
-                # Close the node after attempts (success or exhausted).
-                state.attempted_subgoal_ids.add(sid)
-                if result.chars_used > 0:
-                    state.satisfied_subgoal_ids.add(sid)
+        control_detail = _apply_plan_control(
+            ts, state, config, plan=plan, outputs=outputs, by_id=by_id, steps_out=steps_out
+        )
+        wave_detail["plan_control"] = control_detail
+        replan_requested = bool(control_detail.get("replan"))
+        if control_detail.get("done"):
+            episode_done = True
 
         if steps_out is not None:
             steps_out.append(
@@ -506,16 +407,18 @@ def execute_plan(
                 state.retrieval_plan = new_plan
                 plan = new_plan
                 # A regenerated plan gets fresh subgoal ids (s1, s2, ... again),
-                # so per-id bookkeeping (satisfied/attempted/activated, qualified
-                # "sX.slot" bindings) cannot be safely carried over — those ids
-                # now mean something else. What IS safe and worth keeping (audit
-                # §2.4: "don't discard what's already accepted") is unqualified
-                # slot bindings (plain fact values) and every chunk already in
-                # state.collected — neither is reset here or anywhere else.
+                # so per-id bookkeeping (satisfied/attempted/dropped/widen gaps,
+                # qualified "sX.slot" bindings) cannot be safely carried over —
+                # those ids now mean something else. What IS safe and worth
+                # keeping is unqualified slot bindings (plain fact values) and
+                # every chunk already in state.collected.
                 state.satisfied_subgoal_ids = set()
                 state.attempted_subgoal_ids = set()
-                state.activated_subgoal_ids = set()
+                state.dropped_subgoal_ids = set()
                 state.subgoal_results = {}
+                state.subgoal_widen_gaps = {}
+                state.subgoal_attempt_counts = {}
+                state.subgoal_dismissed_section_ids = {}
                 state.slot_bindings = {
                     k: v for k, v in state.slot_bindings.items() if "." not in k
                 }
@@ -540,5 +443,5 @@ def execute_plan(
     summary["n_waves"] = wave_idx
     summary["satisfied"] = sorted(state.satisfied_subgoal_ids)
     summary["attempted"] = sorted(state.attempted_subgoal_ids)
-    summary["activated"] = sorted(state.activated_subgoal_ids)
+    summary["dropped"] = sorted(state.dropped_subgoal_ids)
     return summary

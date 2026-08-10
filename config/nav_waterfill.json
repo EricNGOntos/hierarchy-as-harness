@@ -33,6 +33,5 @@
   "compose_coverage_budget_frac": 0.4,
   "compose_snippet_chars": 80,
   "enable_depth0_oversize_to_dispatch": false,
-  "depth0_oversize_char_limit": 0,
-  "dispatch_concurrency": 1
+  "depth0_oversize_char_limit": 0
 }

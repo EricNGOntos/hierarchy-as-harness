@@ -3,8 +3,8 @@ name: MAP-NAV 融合迁移
 overview: 把 MAP-NAV 的折叠地图导航与 planning 重入回路迁进 Knowhere，替换文档选择与 EXPAND/BACK；动作集为 COLLECT/DISPATCH/FINISH + SEARCH_IMAGES/SEARCH_TABLES；递归 DISPATCH 用 asyncio.gather 实现并发（首版默认关）；预算简化为单一 10 万 token 上限。先在实验仓验证再接入生产。
 todos:
   - id: doc
-    content: 新建 docs/knowhere_mapnav_fusion.md，记录三方实测对比（按 reference_answer 计分）、各项设计决策的依据与反证、以及刻意不做的清单
-    status: pending
+    content: 新建 docs/knowhere_mapnav_fusion.md，记录两臂实测对比（按 reference_answer 计分）、各项设计决策的依据与反证、以及刻意不做的清单
+    status: completed
   - id: address
     content: 内核【阻塞项】：引入 NavAddress(level=namespace/document/section/chunk) 用生产真实主键取代 __corpus__:__root / {doc}:__doc_root / doc:L{n}；改掉 is_synthetic_dispatch_only、path_ledger、nav_compose:129、nav_map_scores:392-411、nav_navigate:344-361 的字符串判定
     status: completed
@@ -28,7 +28,7 @@ todos:
     status: completed
   - id: validate
     content: 实验仓：跑 baseline / shared 两臂对照（旧 fusion 臂已退役）；q2 要拿回 2.3 水文基本资料整个邻域，q4 要在默认预算下拿到证据
-    status: pending
+    status: completed
   - id: loader
     content: Knowhere：KnowhereProvider 补按 (user_id, namespace) 的 AsyncSession loader，一次查询预加载 sections+chunks 成同步快照，按 current_job_result_id 做 revision 隔离
     status: pending

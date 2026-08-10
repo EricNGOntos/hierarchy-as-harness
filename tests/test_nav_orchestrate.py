@@ -15,7 +15,6 @@ for source_dir in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
         sys.path.insert(0, str(source_dir))
 
 from nav_control import PlanControlDecision, SubgoalDecision  # noqa: E402
-from nav_hierarchy import InMemoryHierarchyProvider, InMemoryNode, ProviderToolSpace  # noqa: E402
 from nav_orchestrate import ready_subgoal_ids  # noqa: E402
 from nav_plan import Contract, RetrievalPlan, Subgoal  # noqa: E402
 from nav_types import NavConfig, NavState  # noqa: E402
@@ -24,6 +23,47 @@ from nav_verify import (  # noqa: E402
     demanded_slot_names,
     extract_slots_heuristic,
 )
+
+
+class _Chunk:
+    def __init__(self, text: str, node_id: str = "n1") -> None:
+        self.text = text
+        self.node_id = node_id
+
+
+def _checklist_cfg(**overrides) -> NavConfig:
+    base = dict(mode="checklist", map_char_limit=5000, subgoal_max_attempts=2)
+    base.update(overrides)
+    return NavConfig(**base)
+
+
+def _control_accept_if_evidence(*, plan, wave_outputs):
+    per = {}
+    for item in wave_outputs:
+        sid = item["subgoal_id"]
+        chars = int(getattr(item["result"], "chars_used", 0) or 0)
+        per[sid] = SubgoalDecision(
+            subgoal_id=sid, decision="accept" if chars > 0 else "drop"
+        )
+    return PlanControlDecision(per_subgoal=per, global_action="continue")
+
+
+def _fake_harvest_by_query(query_to_text: dict[str, str]):
+    def fake_harvest(ts, state, config, *, subgoal, entry_scope, query, steps_out=None):
+        del ts, config, subgoal, entry_scope, steps_out
+        for key, text in query_to_text.items():
+            if key in (query or ""):
+                state.collected.append((_Chunk(text, node_id=f"n-{key}"), 1.0))
+                state.collected_section_ids.add(f"doc:{key}")
+                break
+        return SimpleNamespace(
+            n_policy_calls=1,
+            visited_section_ids=[],
+            max_depth_hit=False,
+            reason="ok",
+        )
+
+    return fake_harvest
 
 
 class TestNavSlots(unittest.TestCase):
@@ -77,7 +117,8 @@ class TestNavSlots(unittest.TestCase):
             ["s1", "s2"],
         )
 
-    def test_empty_evidence_retries_then_marks_satisfied(self) -> None:
+    def test_empty_evidence_dropped_by_plan_control(self) -> None:
+        """Checklist harvest is one-shot per wave; empty → control drops (no silent accept)."""
         from nav_orchestrate import execute_plan
 
         plan = RetrievalPlan(
@@ -92,32 +133,18 @@ class TestNavSlots(unittest.TestCase):
             ]
         )
         state = NavState(doc_id="doc", query="q", retrieval_plan=plan)
-        cfg = NavConfig(
-            enable_plan_orchestration=True,
-            map_char_limit=5000,
-            subgoal_max_attempts=2,
-        )
+        cfg = _checklist_cfg()
 
-        class _Chunk:
-            def __init__(self, text: str) -> None:
-                self.text = text
-                self.node_id = "n1"
-
-        calls = {"n": 0}
-
-        def fake_nav(ts, *, state, scope, query, config, depth=0, budget=None, steps_out=None):
-            calls["n"] += 1
-            if calls["n"] == 1:
-                pass
-            else:
-                state.collected.append((_Chunk("对外重大合同应使用法人章。"), 1.0))
-                state.collected_section_ids.add("doc:L1")
-
-        with patch("nav_orchestrate.navigate", side_effect=fake_nav):
+        with patch("nav_harvest.harvest", side_effect=_fake_harvest_by_query({})), patch(
+            "nav_control.plan_control",
+            side_effect=lambda *a, **k: _control_accept_if_evidence(
+                plan=k["plan"], wave_outputs=k["wave_outputs"]
+            ),
+        ):
             execute_plan(MagicMock(), state, cfg, steps_out=[], episode_query="q")
-        self.assertGreaterEqual(calls["n"], 2)
-        self.assertIn("s1", state.satisfied_subgoal_ids)
+        self.assertIn("s1", state.dropped_subgoal_ids)
         self.assertIn("s1", state.attempted_subgoal_ids)
+        self.assertNotIn("s1", state.satisfied_subgoal_ids)
 
     def test_apply_bindings_writes_qualified_keys(self) -> None:
         sg = Subgoal(id="s1", need="a", retrieval_query="a", produces=["seal_type"])
@@ -145,9 +172,9 @@ class TestNavOrchestrate(unittest.TestCase):
                 ),
             ]
         )
-        ready0 = ready_subgoal_ids(plan, satisfied=set(), activated=set())
+        ready0 = ready_subgoal_ids(plan, satisfied=set())
         self.assertEqual(ready0, ["s1", "s3"])
-        ready1 = ready_subgoal_ids(plan, satisfied={"s1"}, activated=set())
+        ready1 = ready_subgoal_ids(plan, satisfied={"s1"})
         self.assertEqual(ready1, ["s2", "s3"])
 
     def test_dropped_precursor_settles_deps_like_satisfied(self) -> None:
@@ -159,16 +186,16 @@ class TestNavOrchestrate(unittest.TestCase):
             ]
         )
         still_blocked = ready_subgoal_ids(
-            plan, satisfied=set(), activated=set(), dropped=set(), attempted={"s1"}
+            plan, satisfied=set(), dropped=set(), attempted={"s1"}
         )
         self.assertEqual(still_blocked, [])
         unblocked = ready_subgoal_ids(
-            plan, satisfied=set(), activated=set(), dropped={"s1"}, attempted={"s1"}
+            plan, satisfied=set(), dropped={"s1"}, attempted={"s1"}
         )
         self.assertEqual(unblocked, ["s2"])
 
     def test_same_wave_subgoals_run_own_queries(self) -> None:
-        """Independent subgoals never share one navigate call or one result."""
+        """Independent subgoals never share one harvest call or one result."""
         from nav_orchestrate import execute_plan
 
         plan = RetrievalPlan(
@@ -190,22 +217,24 @@ class TestNavOrchestrate(unittest.TestCase):
             ]
         )
         state = NavState(doc_id="doc", query="q", retrieval_plan=plan)
-        cfg = NavConfig(enable_plan_orchestration=True, map_char_limit=5000)
-
-        class _Chunk:
-            def __init__(self, text: str) -> None:
-                self.text = text
-                self.node_id = "n1"
-
+        cfg = _checklist_cfg()
         calls: list[str] = []
 
-        def fake_nav(ts, *, state, scope, query, config, depth=0, budget=None, steps_out=None):
+        def fake_harvest(ts, state, config, *, subgoal, entry_scope, query, steps_out=None):
             calls.append(query)
             if "法人章" in query:
                 state.collected.append((_Chunk("对外重大合同应使用法人章。"), 1.0))
                 state.collected_section_ids.add("doc:L1")
+            return SimpleNamespace(
+                n_policy_calls=1, visited_section_ids=[], max_depth_hit=False, reason="ok"
+            )
 
-        with patch("nav_orchestrate.navigate", side_effect=fake_nav):
+        with patch("nav_harvest.harvest", side_effect=fake_harvest), patch(
+            "nav_control.plan_control",
+            side_effect=lambda *a, **k: _control_accept_if_evidence(
+                plan=k["plan"], wave_outputs=k["wave_outputs"]
+            ),
+        ):
             execute_plan(MagicMock(), state, cfg, steps_out=[], episode_query="q")
 
         self.assertTrue(any("法人章" in c and "档案保管" not in c for c in calls))
@@ -213,14 +242,14 @@ class TestNavOrchestrate(unittest.TestCase):
         self.assertIn("s1", state.satisfied_subgoal_ids)
         self.assertNotIn("s2", state.satisfied_subgoal_ids)
 
-    def test_config_flags_default_off(self) -> None:
+    def test_config_mode_defaults_navigate(self) -> None:
         cfg = NavConfig.from_dict({})
-        self.assertFalse(cfg.enable_plan_orchestration)
-        self.assertFalse(cfg.enable_slot_extract)
+        self.assertEqual(cfg.mode, "navigate")
+        self.assertFalse(cfg.is_checklist)
         self.assertEqual(cfg.max_replans, 0)
         self.assertEqual(cfg.max_waves, 0)
 
-    def test_execute_plan_wave_order_with_mocked_navigate(self) -> None:
+    def test_execute_plan_wave_order_with_mocked_harvest(self) -> None:
         from nav_orchestrate import execute_plan
 
         plan = RetrievalPlan(
@@ -231,7 +260,6 @@ class TestNavOrchestrate(unittest.TestCase):
                     retrieval_query="印章类型 法人章",
                     produces=["seal_type"],
                     contract=Contract(kind="single_fact", must_mention=["法人章"]),
-                    budget_share=0.5,
                 ),
                 Subgoal(
                     id="s2",
@@ -240,21 +268,14 @@ class TestNavOrchestrate(unittest.TestCase):
                     depends_on=["s1"],
                     produces=["proc"],
                     contract=Contract(kind="single_fact"),
-                    budget_share=0.5,
                 ),
             ]
         )
         state = NavState(doc_id="doc", query="q", retrieval_plan=plan)
-        cfg = NavConfig(enable_plan_orchestration=True, map_char_limit=5000)
+        cfg = _checklist_cfg()
+        calls: list[str] = []
 
-        class _Chunk:
-            def __init__(self, text: str) -> None:
-                self.text = text
-                self.node_id = "n1"
-
-        calls = []
-
-        def fake_nav(ts, *, state, scope, query, config, depth=0, budget=None, steps_out=None):
+        def fake_harvest(ts, state, config, *, subgoal, entry_scope, query, steps_out=None):
             calls.append(query)
             if "印章类型" in query:
                 state.collected.append((_Chunk("对外重大合同应使用法人章。"), 1.0))
@@ -262,8 +283,16 @@ class TestNavOrchestrate(unittest.TestCase):
             else:
                 state.collected.append((_Chunk("用印审批程序见第四章。"), 1.0))
                 state.collected_section_ids.add("doc:L2")
+            return SimpleNamespace(
+                n_policy_calls=1, visited_section_ids=[], max_depth_hit=False, reason="ok"
+            )
 
-        with patch("nav_orchestrate.navigate", side_effect=fake_nav):
+        with patch("nav_harvest.harvest", side_effect=fake_harvest), patch(
+            "nav_control.plan_control",
+            side_effect=lambda *a, **k: _control_accept_if_evidence(
+                plan=k["plan"], wave_outputs=k["wave_outputs"]
+            ),
+        ):
             detail = execute_plan(MagicMock(), state, cfg, steps_out=[], episode_query="q")
         self.assertGreaterEqual(len(calls), 2)
         self.assertIn("印章类型", calls[0])
@@ -299,52 +328,43 @@ class TestNavOrchestrate(unittest.TestCase):
         self.assertEqual(extracted, {})
 
         state = NavState(doc_id="doc", query="q", retrieval_plan=plan)
-        cfg = NavConfig(
-            enable_plan_orchestration=True,
-            enable_slot_extract=True,
-            map_char_limit=5000,
-        )
+        cfg = _checklist_cfg()
 
-        class _Chunk:
-            def __init__(self, text: str) -> None:
-                self.text = text
-
-        def fake_nav(ts, *, state, scope, query, config, depth=0, budget=None, steps_out=None):
-            state.collected.append((_Chunk("对外重大合同应使用法人章。"), 1.0))
-            state.collected_section_ids.add("doc:L1")
-
-        with patch("nav_orchestrate.navigate", side_effect=fake_nav), patch(
-            "nav_verify.extract_slots_llm"
-        ) as llm:
+        with patch(
+            "nav_harvest.harvest",
+            side_effect=_fake_harvest_by_query({"印章类型": "对外重大合同应使用法人章。"}),
+        ), patch(
+            "nav_control.plan_control",
+            side_effect=lambda *a, **k: _control_accept_if_evidence(
+                plan=k["plan"], wave_outputs=k["wave_outputs"]
+            ),
+        ), patch("nav_verify.extract_slots_llm") as llm:
             execute_plan(MagicMock(), state, cfg, steps_out=[], episode_query="q")
         llm.assert_not_called()
         self.assertEqual(state.slot_bindings, {})
 
-    def test_widen_moves_anchor_to_parent_then_drops_at_root(self) -> None:
-        """F2 fix: widen is deterministic move-to-parent; exhausting the
-        document with nowhere coarser to go degrades to drop, never an
-        anchor="" empty-loop repeat of the exact same harvest."""
-        from nav_orchestrate import _apply_plan_control
+    def test_widen_retries_with_gap_then_drops_at_max_attempts(self) -> None:
+        """Widen keeps the subgoal unsettled, stashes gap for the next harvest
+        query, and only drops once subgoal_attempt_counts >= subgoal_max_attempts.
 
-        nodes = {
-            "doc1:ROOT": InMemoryNode(
-                section_id="doc1:ROOT", title="Root", children=["doc1:A"]
-            ),
-            "doc1:A": InMemoryNode(section_id="doc1:A", title="A", children=["doc1:A1"]),
-            "doc1:A1": InMemoryNode(section_id="doc1:A1", title="A1", content="x"),
-        }
-        provider = InMemoryHierarchyProvider(roots_by_doc={"doc1": ["doc1:ROOT"]}, nodes=nodes)
-        ts = ProviderToolSpace(provider)
+        (execute_plan increments attempt_counts before calling this helper.)
+        """
+        from nav_orchestrate import _apply_plan_control
 
         subgoal = Subgoal(id="s1", need="x", retrieval_query="x")
         plan = RetrievalPlan(subgoals=[subgoal])
         state = NavState(doc_id="doc1", query="x", retrieval_plan=plan)
-        state.subgoal_anchor["s1"] = "doc1:A1"
-        cfg = NavConfig(subgoal_max_attempts=5)
+        cfg = NavConfig(subgoal_max_attempts=3)
+        ts = MagicMock()
         outputs = [
             {
                 "subgoal_id": "s1",
-                "result": SimpleNamespace(satisfied=False, chars_used=0, gap="empty_evidence"),
+                "result": SimpleNamespace(
+                    satisfied=False,
+                    chars_used=0,
+                    gap="empty_evidence",
+                    collected_section_ids=[],
+                ),
                 "new_chunks": [],
             }
         ]
@@ -353,30 +373,31 @@ class TestNavOrchestrate(unittest.TestCase):
             global_action="continue",
         )
 
+        state.subgoal_attempt_counts["s1"] = 1
         with patch("nav_control.plan_control", return_value=widen_decision):
             _apply_plan_control(
                 ts, state, cfg, plan=plan, outputs=outputs, by_id={"s1": subgoal}, steps_out=None
             )
-        self.assertEqual(state.subgoal_anchor["s1"], "doc1:A")
+        self.assertNotIn("s1", state.dropped_subgoal_ids)
+        self.assertNotIn("s1", state.attempted_subgoal_ids)
+        self.assertEqual(state.subgoal_widen_gaps.get("s1"), "empty_evidence")
 
+        state.subgoal_attempt_counts["s1"] = 2
         with patch("nav_control.plan_control", return_value=widen_decision):
             _apply_plan_control(
                 ts, state, cfg, plan=plan, outputs=outputs, by_id={"s1": subgoal}, steps_out=None
             )
-        self.assertEqual(state.subgoal_anchor["s1"], "doc1:ROOT")
+        self.assertNotIn("s1", state.dropped_subgoal_ids)
+        self.assertEqual(state.subgoal_widen_gaps.get("s1"), "empty_evidence")
 
-        with patch("nav_control.plan_control", return_value=widen_decision):
-            _apply_plan_control(
-                ts, state, cfg, plan=plan, outputs=outputs, by_id={"s1": subgoal}, steps_out=None
-            )
-        self.assertIsNone(state.subgoal_anchor["s1"])
-
+        state.subgoal_attempt_counts["s1"] = 3
         with patch("nav_control.plan_control", return_value=widen_decision):
             _apply_plan_control(
                 ts, state, cfg, plan=plan, outputs=outputs, by_id={"s1": subgoal}, steps_out=None
             )
         self.assertIn("s1", state.dropped_subgoal_ids)
         self.assertIn("s1", state.attempted_subgoal_ids)
+        self.assertNotIn("s1", state.subgoal_widen_gaps)
 
 
 if __name__ == "__main__":

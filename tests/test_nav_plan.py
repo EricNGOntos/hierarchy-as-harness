@@ -13,11 +13,9 @@ for source_dir in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
         sys.path.insert(0, str(source_dir))
 
 from nav_plan import (  # noqa: E402
-    Activation,
     bind_slots,
     extract_plan_json,
     fallback_plan,
-    is_always_active,
     parse_retrieval_plan,
     planning_char_limit,
     retrieval_query_language_mismatch,
@@ -169,15 +167,13 @@ class TestNavPlan(unittest.TestCase):
         self.assertTrue(ok, why)
         self.assertEqual(plan.map_coverage, "partial")
         self.assertEqual([c.id for c in plan.coverage_checklist], ["c1", "c2"])
-        self.assertEqual(plan.subgoals[0].route_hints, [])
-        self.assertEqual(plan.subgoals[0].scope_filter.doc_ids, [])
+        # Legacy per-subgoal fields in JSON are ignored (no longer on Subgoal).
+        self.assertFalse(hasattr(plan.subgoals[0], "route_hints"))
+        self.assertFalse(hasattr(plan.subgoals[0], "scope_filter"))
+        self.assertFalse(hasattr(plan.subgoals[0], "budget_share"))
+        self.assertFalse(hasattr(plan.subgoals[2], "activation"))
         self.assertIn("s1", plan.subgoals[1].depends_on)
         self.assertEqual(plan.subgoals[0].produces, ["seal_type"])
-        # Activation forks are ignored; every subgoal stays always-active.
-        self.assertEqual(plan.subgoals[2].activation.mode, "always")
-        self.assertTrue(all(is_always_active(s) for s in plan.subgoals))
-        # budget_share is retired: declared weights are ignored, never normalized.
-        self.assertTrue(all(s.budget_share == 0.0 for s in plan.subgoals))
         # unrelated edges dropped
         self.assertTrue(all(e.kind != "unrelated" for e in plan.relations))
 
@@ -226,8 +222,9 @@ class TestNavPlan(unittest.TestCase):
         ok, why = validate_retrieval_plan(plan)
         self.assertTrue(ok, why)
         alt = plan.subgoal_by_id()["s1_alt"]
-        self.assertEqual(alt.activation.mode, "always")
-        self.assertEqual(alt.activation.on, "")
+        # Legacy alternatives/activation are ignored; alt stays a normal subgoal.
+        self.assertEqual(alt.id, "s1_alt")
+        self.assertFalse(hasattr(alt, "activation"))
 
     def test_multi_produces_trimmed(self) -> None:
         obj = {
@@ -268,7 +265,7 @@ class TestNavPlan(unittest.TestCase):
         self.assertTrue(ok, why)
         self.assertTrue(plan.fallback)
         self.assertEqual(plan.subgoals[0].retrieval_query, "what is X")
-        self.assertEqual(plan.subgoals[0].activation.mode, "always")
+        self.assertFalse(hasattr(plan.subgoals[0], "activation"))
         self.assertEqual(len(plan.coverage_checklist), 1)
         self.assertEqual(plan.coverage_checklist[0].fact, "what is X")
 
@@ -278,15 +275,16 @@ class TestNavPlan(unittest.TestCase):
         cfg2 = NavConfig(map_char_limit=5000, planning_map_char_limit=0)
         self.assertEqual(planning_char_limit(cfg2), 5000)
 
-    def test_config_from_dict_keeps_planning_off(self) -> None:
+    def test_config_from_dict_defaults_navigate_mode(self) -> None:
         cfg = NavConfig.from_dict(
             {
                 "map_char_limit": 5000,
-                "enable_query_planning": False,
+                "enable_query_planning": False,  # retired; ignored
                 "planning_map_char_limit": 10000,
             }
         )
-        self.assertFalse(cfg.enable_query_planning)
+        self.assertEqual(cfg.mode, "navigate")
+        self.assertFalse(cfg.is_checklist)
         self.assertEqual(cfg.planning_map_char_limit, 10000)
 
     def test_thinking_mode_helpers(self) -> None:

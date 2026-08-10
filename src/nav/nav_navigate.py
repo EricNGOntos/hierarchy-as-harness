@@ -156,17 +156,15 @@ def _fork_nav_state(state: NavState, *, doc_id: Optional[str] = None) -> NavStat
         slot_bindings=dict(state.slot_bindings),
         satisfied_subgoal_ids=set(state.satisfied_subgoal_ids),
         attempted_subgoal_ids=set(state.attempted_subgoal_ids),
-        activated_subgoal_ids=set(state.activated_subgoal_ids),
         focus_subgoal_id=state.focus_subgoal_id,
         focus_subgoal_need=state.focus_subgoal_need,
         focus_subgoal_contract=state.focus_subgoal_contract,
         focus_retrieval_query=state.focus_retrieval_query,
         focus_contract_kind=state.focus_contract_kind,
-        focus_scope_doc_ids=list(state.focus_scope_doc_ids or []),
         subgoal_results=dict(state.subgoal_results),
         replan_count=int(state.replan_count or 0),
         harvested_owner_subgoal=dict(state.harvested_owner_subgoal),
-        subgoal_anchor=dict(state.subgoal_anchor),
+        subgoal_widen_gaps=dict(state.subgoal_widen_gaps),
         subgoal_dismissed_section_ids={
             k: set(v) for k, v in (state.subgoal_dismissed_section_ids or {}).items()
         },
@@ -195,10 +193,9 @@ def _merge_nav_state(parent: NavState, child: NavState) -> None:
     parent.slot_bindings.update(child.slot_bindings)
     parent.satisfied_subgoal_ids.update(child.satisfied_subgoal_ids)
     parent.attempted_subgoal_ids.update(child.attempted_subgoal_ids)
-    parent.activated_subgoal_ids.update(child.activated_subgoal_ids)
     parent.subgoal_results.update(child.subgoal_results)
     parent.harvested_owner_subgoal.update(child.harvested_owner_subgoal)
-    parent.subgoal_anchor.update(child.subgoal_anchor)
+    parent.subgoal_widen_gaps.update(child.subgoal_widen_gaps)
     for sid, ids in (child.subgoal_dismissed_section_ids or {}).items():
         parent.subgoal_dismissed_section_ids.setdefault(sid, set()).update(ids)
     parent.dropped_subgoal_ids.update(child.dropped_subgoal_ids)
@@ -318,7 +315,7 @@ def dispatch(
     if not region_ids:
         return []
 
-    # Serial only (dispatch_concurrency reserved for future asyncio.gather).
+    # Serial DISPATCH (asyncio.gather reserved for Knowhere production).
     namespace_parent = uses_document_nodes(ts) and not str(state.doc_id or "").strip()
     reports: List[RegionReport] = []
 
@@ -412,9 +409,7 @@ def navigate(
                 dismissed_section_ids=state.dismissed_section_ids,
                 highlight_ids=state.highlight_ids,
                 harvested_section_ids=(
-                    state.harvested_owner_subgoal
-                    if bool(getattr(config, "show_harvested_in_map", False))
-                    else None
+                    state.harvested_owner_subgoal if config.is_checklist else None
                 ),
             )
             # Experimental non-recursive mode: if a deep region overflows the

@@ -73,8 +73,7 @@ def _wave_subgoal_block(
     ]
     if harvest_meta:
         lines.append(
-            "  harvest: anchor="
-            f"{harvest_meta.get('anchor') or '-'} "
+            "  harvest: "
             f"visited={len(harvest_meta.get('visited_section_ids') or [])} "
             f"policy_calls={harvest_meta.get('n_policy_calls', 0)}"
         )
@@ -116,11 +115,10 @@ def _control_system_prompt() -> str:
         "collected THIS wave only (never older evidence from other subgoals).\n\n"
         "=== Per-subgoal decisions ===\n"
         "  - accept: this subgoal's need is covered by this wave's evidence.\n"
-        "  - widen: not yet covered, and this region plausibly does not "
-        "hold the answer; step out to the parent scope and look again with a "
-        "coarser view (handled automatically — you do not name an anchor, "
-        "and nodes already reviewed and rejected for this subgoal will not "
-        "be shown again).\n"
+        "  - widen: not yet covered; keep the subgoal unsettled for another "
+        "harvest from the shared root. The last gap note is appended to the "
+        "next retrieval query, and nodes already reviewed/rejected for this "
+        "subgoal stay hidden. Do not name an entry point.\n"
         "  - drop: not covered and further attempts are unlikely to help "
         "(e.g. evidence is structurally absent, or harvest_reason shows the "
         "search has already reached the document root with nothing found); "

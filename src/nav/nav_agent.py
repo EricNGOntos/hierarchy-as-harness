@@ -356,7 +356,7 @@ def run_nav_episode(
         state.unit_scores, k=int(cfg.collect_top_k)
     )
 
-    if bool(getattr(cfg, "enable_query_planning", False)):
+    if cfg.is_checklist:
         from nav_plan import plan_query
 
         plan_t0 = time.perf_counter()
@@ -379,8 +379,8 @@ def run_nav_episode(
             )
         )
 
-    # Top-level: plan orchestration (M4/M5) or classic single navigate.
-    if bool(getattr(cfg, "enable_plan_orchestration", False)) and state.retrieval_plan is not None:
+    # Checklist: wave orchestration; navigate mode: classic single navigate.
+    if cfg.is_checklist and state.retrieval_plan is not None:
         from nav_orchestrate import execute_plan
 
         orch_t0 = time.perf_counter()

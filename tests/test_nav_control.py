@@ -59,7 +59,7 @@ class PlanControlTests(unittest.TestCase):
     def setUp(self) -> None:
         self.plan = _plan_two()
         self.state = NavState(doc_id="doc", query="q", retrieval_plan=self.plan)
-        self.config = NavConfig(enable_plan_control=True, plan_control_digest_chars=200)
+        self.config = NavConfig(mode="checklist", plan_control_digest_chars=200)
 
     def test_no_wave_outputs_returns_continue(self) -> None:
         decision = plan_control(None, self.state, self.config, plan=self.plan, wave_outputs=[])

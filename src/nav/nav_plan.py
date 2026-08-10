@@ -1,8 +1,7 @@
 """Structure-conditioned query planning (M2).
 
 Looks at a planning map observation and emits a coverage checklist plus an
-auditable RetrievalPlan over one shared search space (no per-subgoal
-scope_filter / route_hints / activation forks).
+auditable RetrievalPlan over one shared search space.
 """
 
 from __future__ import annotations
@@ -26,7 +25,6 @@ ContractKind = Literal[
 ]
 RelationKind = Literal["parent-child", "sibling"]
 MapCoverage = Literal["sufficient", "partial", "insufficient"]
-ActivationMode = Literal["always", "on"]
 
 _SLOT_REF_RE = re.compile(r"\{\{\s*([A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)?)\s*\}\}")
 _CONTRACT_KINDS = {
@@ -49,24 +47,6 @@ class Contract:
 
 
 @dataclass
-class ScopeFilter:
-    """Optional hard constraints on where a subgoal may look."""
-
-    doc_ids: List[str] = field(default_factory=list)
-    modality: List[str] = field(default_factory=list)
-    section_kind: List[str] = field(default_factory=list)
-
-
-@dataclass
-class Activation:
-    """When this subgoal may run. Conditional goals must set mode=on."""
-
-    mode: ActivationMode = "always"
-    on: str = ""  # parent subgoal id when mode=on
-    when: str = ""  # natural-language predicate over parent's extracted slots
-
-
-@dataclass
 class Subgoal:
     id: str
     need: str
@@ -75,13 +55,6 @@ class Subgoal:
     prefer_after: List[str] = field(default_factory=list)
     contract: Contract = field(default_factory=Contract)
     produces: List[str] = field(default_factory=list)
-    # Retired by the single-shared-space model: never parsed, never normalized.
-    # Still declared because default-off consumers (fold weights, evidence
-    # ledger, anchor entry) read them; they now always see the neutral value.
-    scope_filter: ScopeFilter = field(default_factory=ScopeFilter)
-    budget_share: float = 0.0
-    activation: Activation = field(default_factory=Activation)
-    route_hints: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -302,10 +275,6 @@ def plan_has_language_mismatch(plan: RetrievalPlan, reference: str) -> bool:
     )
 
 
-def is_always_active(subgoal: Subgoal) -> bool:
-    return (subgoal.activation.mode or "always") != "on"
-
-
 def _has_cycle(subgoals: List[Subgoal]) -> bool:
     deps: Dict[str, List[str]] = {s.id: list(s.depends_on) for s in subgoals}
     visiting: Set[str] = set()
@@ -453,7 +422,6 @@ def parse_retrieval_plan(
                 prefer_after=_as_str_list(row.get("prefer_after")),
                 contract=_parse_contract(row.get("contract")),
                 produces=produces,
-                activation=Activation(),
             )
         )
 
@@ -461,10 +429,6 @@ def parse_retrieval_plan(
     for s in subgoals:
         s.depends_on = [d for d in s.depends_on if d in known and d != s.id]
         s.prefer_after = [d for d in s.prefer_after if d in known and d != s.id]
-        # Shared search space: ignore per-subgoal scope / map anchors.
-        s.scope_filter = ScopeFilter()
-        s.route_hints = []
-        s.activation = Activation()
 
     _apply_slot_dependency_inference(subgoals)
     for s in subgoals:
@@ -527,7 +491,6 @@ def fallback_plan(query: str, *, reason: str = "fallback") -> RetrievalPlan:
                 need=q,
                 retrieval_query=q,
                 contract=Contract(kind="single_fact"),
-                activation=Activation(),
             )
         ],
         coverage_checklist=[CoverageItem(id="c1", fact=q)],
@@ -557,12 +520,6 @@ def validate_retrieval_plan(plan: RetrievalPlan) -> Tuple[bool, str]:
             return False, f"bad_contract:{s.id}"
         if len(s.produces) > 1:
             return False, f"multi_produces:{s.id}"
-        if s.activation.mode == "on":
-            parent = (s.activation.on or "").strip()
-            if parent not in known or parent == s.id:
-                return False, f"bad_activation:{s.id}"
-            if parent not in s.depends_on:
-                return False, f"activation_missing_depends:{s.id}"
         for ref in unbound_slots(s.retrieval_query) + unbound_slots(s.need):
             owner, _name = _slot_owner_and_name(ref)
             if owner and owner in known and owner not in s.depends_on and owner != s.id:
@@ -601,9 +558,7 @@ def build_planning_observation(
         dismissed_section_ids=state.dismissed_section_ids,
         highlight_ids=state.highlight_ids,
         harvested_section_ids=(
-            state.harvested_owner_subgoal
-            if bool(getattr(config, "show_harvested_in_map", False))
-            else None
+            state.harvested_owner_subgoal if config.is_checklist else None
         ),
     )
     actions = build_legal_actions(
@@ -649,8 +604,7 @@ def _planner_system_prompt(*, max_subgoals: int) -> str:
         "5. If a later retrieval_query needs a value from an earlier subgoal, "
         "write it as {{s1.slot}} (not prose). That implies depends_on.\n"
         "6. depends_on = hard data dependency. prefer_after = soft ordering only.\n"
-        "7. Do NOT emit scope_filter, route_hints, budget_share, or activation forks; "
-        "all subgoals share the same search space and are always active.\n"
+        "7. All subgoals share one search space — do not invent per-subgoal scopes.\n"
         "8. relations only for parent-child or sibling (omit unrelated pairs).\n"
         "9. map_coverage: sufficient | partial | insufficient — whether the planning "
         "map shows enough structure to ground this plan.\n"

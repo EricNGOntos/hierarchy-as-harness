@@ -13,10 +13,12 @@
 | `scope_inline_summary_budget_mult` | 3.0 | 阈值 = evidence 预算 × 该倍数（预算 500 → 1500） |
 | `navigate_max_steps` | 8 | 子 agent 步数 |
 | `max_steps` | 8 | 根 agent 步数 |
-| `dispatch_concurrency` | 1 | 实验仓串行；预留未来 asyncio.gather |
+| `mode` | `navigate` | `navigate` = baseline 地图循环；`checklist` = plan+harvest+control |
 | `subagent_model_env` | NAV_SUBAGENT_MODEL | 深层模型 env |
 
-Deprecated keys quietly dropped: `expand_top_k`, `map_peek_top_k`, `map_jump_top_k`, `peek_content_*`, …
+DISPATCH 实验仓一律串行（`ThreadPoolExecutor` 已删）。Deprecated keys quietly
+dropped: `expand_top_k`, `map_peek_*`, `dispatch_concurrency`,
+`enable_anchor_entry`, `enable_*_illumination`, `budget_ledger`, …
 
 ## State fields (current)
 

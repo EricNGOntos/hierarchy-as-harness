@@ -12,9 +12,9 @@ for source_dir in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
     if str(source_dir) not in sys.path:
         sys.path.insert(0, str(source_dir))
 
-from nav_harvest import harvest, resolve_parent_section_id  # noqa: E402
+from nav_harvest import harvest  # noqa: E402
 from nav_hierarchy import InMemoryHierarchyProvider, InMemoryNode, ProviderToolSpace  # noqa: E402
-from nav_plan import Contract, ScopeFilter, Subgoal  # noqa: E402
+from nav_plan import Contract, Subgoal  # noqa: E402
 from nav_types import ActionKind, NavConfig, NavState  # noqa: E402
 
 
@@ -168,16 +168,6 @@ class HarvestRecursionTests(unittest.TestCase):
         self.assertIn("enter A", result.reason)
         self.assertIn("found A1", result.reason)
 
-
-class ResolveParentSectionIdTests(unittest.TestCase):
-    def test_returns_direct_parent_via_provider_toolspace(self) -> None:
-        ts = _build_ts()
-        self.assertEqual(resolve_parent_section_id(ts, "doc1:A1", "doc1"), "doc1:A")
-        self.assertEqual(resolve_parent_section_id(ts, "doc1:A", "doc1"), "doc1:ROOT")
-
-    def test_no_parent_at_top_level_returns_none(self) -> None:
-        ts = _build_ts()
-        self.assertIsNone(resolve_parent_section_id(ts, "doc1:ROOT", "doc1"))
 
 
 if __name__ == "__main__":
