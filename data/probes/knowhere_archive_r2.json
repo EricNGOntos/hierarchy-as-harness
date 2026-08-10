@@ -1,8 +1,4 @@
 {
-  "doc": {
-    "track_dir": "/Users/wuchengke/.knowhere/_debug_parse/zh_四川省大渡河长河坝水电站可行性研究报告2.pdf/text_track",
-    "doc_id": "zh_四川省大渡河长河坝水电站可行性研究报告2"
-  },
   "cases": [
     {
       "id": "q1_wang_roles_r2",
@@ -21,7 +17,8 @@
           "id": "f2",
           "fact": "本报告正文未检出其作为审查人的署名"
         }
-      ]
+      ],
+      "doc_id": "doc_29ab3dcc9e03"
     },
     {
       "id": "q2_hydrology_stations",
@@ -51,7 +48,15 @@
           "id": "f4",
           "fact": "流量测验：流速仪与浮标结合，各站系列与方法详见2.3.1–2.3.3"
         }
-      ]
+      ],
+      "doc_id": "doc_29ab3dcc9e03"
     }
-  ]
+  ],
+  "docs": [
+    {
+      "document_id": "doc_29ab3dcc9e03",
+      "title": "可行性研究报告2（水文泥沙）"
+    }
+  ],
+  "namespace": "changheba_archive"
 }

@@ -83,13 +83,29 @@ def _digest_collected_summaries(
         return ""
     lines: List[str] = []
     for sid in sids:
-        title = sid.split(":", 1)[-1] if ":" in sid else sid
+        title = _section_display_title(ts, sid)
         summary = _section_summary_text(ts, sid)
         if summary:
             lines.append(f"- {title}: {summary}")
         else:
             lines.append(f"- {title}: (no summary)")
     return "\n".join(lines)
+
+
+def _section_display_title(ts: Any, section_id: str) -> str:
+    """Human title for control digest — never parse section_id strings."""
+    sid = str(section_id or "").strip()
+    if not sid:
+        return ""
+    if ts is not None:
+        try:
+            st = ts.get_structure(sid) or {}
+            title = str(st.get("preview") or st.get("title") or "").strip()
+            if title:
+                return title
+        except Exception:
+            pass
+    return sid
 
 
 def _wave_subgoal_block(

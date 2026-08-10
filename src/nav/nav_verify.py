@@ -1,24 +1,18 @@
 """Slot binding helpers for plan orchestration.
 
 Extracts values only when a later subgoal's ``{{sN.slot}}`` (or short
-``{{slot}}`` matching this subgoal's ``produces``) needs them. No contract
+``{{slot}}`` matching this subgoal's ``produces``) needs them.
 Checklist reconciliation belongs solely to ``nav_control.plan_control``.
+Slot fill is LLM-only (no lexical/heuristic line dump).
 """
 
 from __future__ import annotations
 
 import json
-import re
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 from nav_plan import RetrievalPlan, Subgoal, unbound_slots
 from nav_types import NavConfig, SubgoalResult
-
-_TOKEN_RE = re.compile(r"[\w\u4e00-\u9fff]+", re.UNICODE)
-
-
-def _tokens(text: str) -> List[str]:
-    return [t.lower() for t in _TOKEN_RE.findall(text or "") if t.strip()]
 
 
 def evidence_chars(text: str) -> int:
@@ -54,35 +48,6 @@ def demanded_slot_names(plan: RetrievalPlan, producer: Subgoal) -> List[str]:
         # Preserve planner order; drop produces nobody consumes.
         return [p for p in (producer.produces or []) if str(p).strip() in wanted]
     return sorted(wanted)
-
-
-def extract_slots_heuristic(
-    slots: Sequence[str],
-    evidence_text: str,
-    *,
-    retrieval_query: str = "",
-    need: str = "",
-) -> Dict[str, str]:
-    """Deterministic slot fill from evidence (no LLM)."""
-    text = evidence_text or ""
-    names = [str(s).strip() for s in slots if str(s).strip()]
-    if not text.strip() or not names:
-        return {}
-    out: Dict[str, str] = {}
-    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
-    q_tokens = set(_tokens(retrieval_query or need))
-    best_line = ""
-    best_overlap = -1
-    for ln in lines:
-        overlap = len(q_tokens & set(_tokens(ln))) if q_tokens else 0
-        if overlap > best_overlap:
-            best_overlap = overlap
-            best_line = ln
-    if not best_line:
-        return out
-    for name in names:
-        out[name] = best_line
-    return out
 
 
 def extract_slots_llm(
@@ -163,37 +128,23 @@ def extract_slots(
     config: NavConfig,
     *,
     retrieval_query: str = "",
-    use_llm: bool = False,
 ) -> Tuple[Dict[str, str], float]:
-    """Fill only slots demanded by downstream subgoals.
-
-    Heuristic always runs when slots are demanded; LLM only when ``use_llm``.
-    """
+    """LLM-fill slots demanded by downstream subgoals; empty if none demanded."""
     slots = demanded_slot_names(plan, subgoal)
     if not slots:
         conf = 1.0 if (evidence_text or "").strip() else 0.0
         return {}, conf
-    heuristic = extract_slots_heuristic(
+    filled = extract_slots_llm(
         slots,
         evidence_text,
-        retrieval_query=retrieval_query or subgoal.retrieval_query,
+        config,
         need=subgoal.need,
+        retrieval_query=retrieval_query or subgoal.retrieval_query,
+        contract_kind=subgoal.contract.kind,
+        cardinality=subgoal.contract.cardinality,
     )
-    llm_slots: Dict[str, str] = {}
-    if use_llm:
-        llm_slots = extract_slots_llm(
-            slots,
-            evidence_text,
-            config,
-            need=subgoal.need,
-            retrieval_query=retrieval_query or subgoal.retrieval_query,
-            contract_kind=subgoal.contract.kind,
-            cardinality=subgoal.contract.cardinality,
-        )
-    merged = dict(heuristic)
-    merged.update(llm_slots)
-    filled = sum(1 for s in slots if (merged.get(s) or "").strip())
-    return merged, float(filled) / float(len(slots))
+    n = sum(1 for s in slots if (filled.get(s) or "").strip())
+    return filled, float(n) / float(len(slots))
 
 
 def build_subgoal_result(
@@ -205,7 +156,6 @@ def build_subgoal_result(
     retrieval_query: str,
     new_chunks: Sequence[Tuple[Any, float]],
     collected_before: Set[str],
-    use_llm_extract: bool = False,
     explicit_collect_ids: Optional[Sequence[str]] = None,
     explicit_before: Optional[Set[str]] = None,
 ) -> SubgoalResult:
@@ -223,7 +173,6 @@ def build_subgoal_result(
         evidence,
         config,
         retrieval_query=retrieval_query,
-        use_llm=use_llm_extract,
     )
     before_explicit = set(explicit_before or ())
     explicit_wave = [
@@ -231,7 +180,6 @@ def build_subgoal_result(
         for s in (explicit_collect_ids or ())
         if str(s).strip() and str(s).strip() not in before_explicit
     ]
-    # Stable unique order.
     seen: Set[str] = set()
     explicit_ordered: List[str] = []
     for sid in explicit_wave:

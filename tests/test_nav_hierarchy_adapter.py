@@ -145,7 +145,6 @@ class HierarchyAdapterPortSeamTests(unittest.TestCase):
             retrieval_query=self.subgoal.retrieval_query,
             new_chunks=new_chunks,
             collected_before=set(),
-            use_llm_extract=False,
         )
 
         def fake_nav_chat(**kwargs):

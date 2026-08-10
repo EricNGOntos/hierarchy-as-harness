@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Run MAP-NAV over a knowhere document, BM25-only, no vectors.
+"""Run MAP-NAV over Knowhere documents already published to Postgres.
 
-Drives ``run_nav_episode`` through ``KnowhereProvider`` + ``ProviderToolSpace``
-instead of this repo's line-indexed ToolSpace, so the only inputs are the
-section/chunk rows knowhere already stores.
+Loads ``document_sections`` / ``document_chunks`` for the document's
+``current_job_result_id`` (local Docker or prod DSN via ``KNOWHERE_DATABASE_URL``).
 
 Arms:
   - ``baseline``: mode=navigate (map loop alone)
@@ -38,9 +37,9 @@ from nav_agent import run_nav_episode  # noqa: E402
 from nav_compose import evidence_owner_section_id  # noqa: E402
 from nav_hierarchy import ProviderToolSpace  # noqa: E402
 from nav_knowhere import (  # noqa: E402
-    KnowhereProvider,
     NamespaceKnowhereProvider,
-    load_debug_parse,
+    load_document_from_db,
+    load_namespace_from_db,
 )
 from nav_map_scores import (  # noqa: E402
     compute_corpus_map_and_unit_scores,
@@ -84,30 +83,59 @@ def export_summaries(provider: Any, dest_dir: Path) -> int:
 
 
 def load_probe_toolspace(probe: dict) -> Tuple[Any, List[str], Any]:
-    """Single-doc ``doc`` or multi-doc ``docs`` → toolspace + corpus ids + provider."""
+    """Load from Docker/prod Postgres; return toolspace + corpus ids + provider."""
     docs = list(probe.get("docs") or ())
     if not docs and probe.get("doc"):
         docs = [probe["doc"]]
+    if not docs and probe.get("namespace"):
+        ns = load_namespace_from_db(namespace=str(probe["namespace"]))
+        return ProviderToolSpace(ns), list(ns.document_ids()), ns
     if not docs:
-        raise ValueError("probe requires doc or docs")
+        raise ValueError("probe requires docs[].document_id or namespace")
 
-    providers: List[KnowhereProvider] = []
+    document_ids: List[str] = []
     titles: Dict[str, str] = {}
     for spec in docs:
-        provider = load_debug_parse(
-            spec["track_dir"], doc_id=spec.get("doc_id") or None
-        )
-        providers.append(provider)
+        did = str(spec.get("document_id") or "").strip()
+        if not did:
+            raise ValueError(f"probe doc missing document_id: {spec!r}")
+        document_ids.append(did)
         title = str(spec.get("title") or "").strip()
         if title:
-            titles[provider.doc_id] = title
+            titles[did] = title
 
-    if len(providers) == 1:
-        provider = providers[0]
+    if len(document_ids) == 1:
+        provider = load_document_from_db(document_ids[0])
         return ProviderToolSpace(provider), [], provider
 
-    ns = NamespaceKnowhereProvider(providers, titles=titles or None)
+    ns = load_namespace_from_db(
+        namespace=str(probe.get("namespace") or "").strip(),
+        document_ids=document_ids,
+        titles=titles or None,
+    )
     return ProviderToolSpace(ns), list(ns.document_ids()), ns
+
+
+def resolve_gold_section_ids(
+    provider: Any, doc_id: str, gold_paths: Sequence[str]
+) -> List[str]:
+    """Map human gold_paths → production ``sec_*`` ids (empty if unresolved)."""
+    out: List[str] = []
+    for raw in gold_paths or ():
+        path = str(raw or "").strip()
+        if not path:
+            continue
+        if hasattr(provider, "resolve_path"):
+            # Namespace provider takes doc_id; single-doc ignores extra kw if needed
+            try:
+                hit = provider.resolve_path(path, doc_id=doc_id)
+            except TypeError:
+                hit = provider.resolve_path(path)
+        else:
+            hit = None
+        if hit:
+            out.append(str(hit))
+    return out
 
 
 def cfg_baseline() -> NavConfig:
@@ -187,13 +215,14 @@ def run_case(
     case: dict,
     *,
     toolspace: Any,
+    provider: Any,
     arm: str,
     budget: int,
     corpus_doc_ids: Optional[Sequence[str]] = None,
     default_doc_id: str = "",
 ) -> dict:
     gold_doc = str(case.get("doc_id") or default_doc_id or "").strip()
-    gold = [f"{gold_doc}:{p}" for p in case.get("gold_paths") or ()] if gold_doc else []
+    gold = resolve_gold_section_ids(provider, gold_doc, case.get("gold_paths") or ())
     reset_usage()
     before = snapshot_usage()
     started = time.perf_counter()
@@ -329,14 +358,23 @@ def main() -> None:
             if args.case and case["id"] != args.case:
                 continue
             gold_doc = str(case.get("doc_id") or default_doc_id or "").strip()
-            gold = (
-                [f"{gold_doc}:{p}" for p in case.get("gold_paths") or ()]
-                if gold_doc
-                else []
+            gold_paths = [str(p).strip() for p in (case.get("gold_paths") or ()) if str(p).strip()]
+            gold = resolve_gold_section_ids(provider, gold_doc, gold_paths)
+            missing_paths = [
+                p
+                for p in gold_paths
+                if p
+                and (
+                    provider.resolve_path(p, doc_id=gold_doc)
+                    if isinstance(provider, NamespaceKnowhereProvider)
+                    else provider.resolve_path(p)
+                )
+                is None
+            ]
+            print(
+                f"\n[case] {case['id']}  gold={len(gold)} "
+                f"missing_gold_paths={missing_paths}"
             )
-            known = set(provider.all_section_ids())
-            missing = [g for g in gold if g not in known]
-            print(f"\n[case] {case['id']}  gold={len(gold)} missing_gold={missing}")
             for g in gold:
                 units = provider.self_units(g)
                 text = "\n".join(provider.unit_text(u) for u in units)
@@ -384,6 +422,7 @@ def main() -> None:
             row = run_case(
                 case,
                 toolspace=toolspace,
+                provider=provider,
                 arm=arm,
                 budget=args.budget_chars,
                 corpus_doc_ids=corpus_doc_ids or None,

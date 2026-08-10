@@ -164,7 +164,6 @@ def _wave_subgoal_result(
         retrieval_query=retrieval_query,
         new_chunks=new_chunks,
         collected_before=collected_before,
-        use_llm_extract=bool(config.is_checklist),
         explicit_collect_ids=state.explicit_collect_ids,
         explicit_before=explicit_before,
     )

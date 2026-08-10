@@ -21,7 +21,6 @@ from nav_types import NavConfig, NavState  # noqa: E402
 from nav_verify import (  # noqa: E402
     apply_bindings_from_result,
     demanded_slot_names,
-    extract_slots_heuristic,
 )
 
 
@@ -67,16 +66,6 @@ def _fake_harvest_by_query(query_to_text: dict[str, str]):
 
 
 class TestNavSlots(unittest.TestCase):
-    def test_heuristic_extract_uses_best_overlap_line(self) -> None:
-        evidence = "unrelated intro\nuse corporate seal for major contracts"
-        slots = extract_slots_heuristic(
-            ["seal_type"],
-            evidence,
-            retrieval_query="corporate seal",
-            need="seal",
-        )
-        self.assertEqual(slots.get("seal_type"), "use corporate seal for major contracts")
-
     def test_demanded_slots_only_when_downstream_refs(self) -> None:
         plan = RetrievalPlan(
             subgoals=[
@@ -322,7 +311,6 @@ class TestNavOrchestrate(unittest.TestCase):
             plan.subgoals[0],
             "对外重大合同应使用法人章。",
             NavConfig(),
-            use_llm=True,
         )
         self.assertEqual(extracted, {})
 

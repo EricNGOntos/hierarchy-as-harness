@@ -58,11 +58,11 @@ class DigestCollectedSummariesTests(unittest.TestCase):
 
         class _TS:
             def get_structure(self, section_id: str) -> dict:
-                return {"preview": "title", "summary": long_summary}
+                return {"preview": "1.1.3 勘测设计过程", "summary": long_summary}
 
         digest = _digest_collected_summaries(
             _TS(),
-            collected_section_ids=["doc:附件/1.1.3 勘测设计过程"],
+            collected_section_ids=["sec_survey"],
         )
         self.assertIn("1.1.3 勘测设计过程", digest)
         self.assertIn(long_summary, digest)
@@ -71,9 +71,8 @@ class DigestCollectedSummariesTests(unittest.TestCase):
     def test_empty_without_explicit_collect_ids(self) -> None:
         class _TS:
             def get_structure(self, section_id: str) -> dict:
-                return {"preview": section_id.split(":")[-1], "summary": f"sum:{section_id}"}
+                return {"preview": "parent", "summary": f"sum:{section_id}"}
 
-        # Without explicit COLLECT ids, do not invent digest from hydrated owners.
         digest = _digest_collected_summaries(
             _TS(),
             collected_section_ids=[],
@@ -83,14 +82,14 @@ class DigestCollectedSummariesTests(unittest.TestCase):
     def test_only_listed_explicit_collects(self) -> None:
         class _TS:
             def get_structure(self, section_id: str) -> dict:
-                return {"preview": section_id.split(":")[-1], "summary": f"sum:{section_id}"}
+                return {"preview": section_id, "summary": f"sum:{section_id}"}
 
         digest = _digest_collected_summaries(
             _TS(),
-            collected_section_ids=["doc:parent"],
+            collected_section_ids=["sec_parent"],
         )
-        self.assertIn("sum:doc:parent", digest)
-        self.assertNotIn("sum:doc:child", digest)
+        self.assertIn("sum:sec_parent", digest)
+        self.assertNotIn("sum:sec_child", digest)
 
     def test_empty_when_nothing_collected(self) -> None:
         self.assertEqual(

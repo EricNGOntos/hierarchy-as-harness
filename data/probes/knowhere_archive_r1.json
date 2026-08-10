@@ -1,8 +1,4 @@
 {
-  "doc": {
-    "track_dir": "/Users/wuchengke/.knowhere/_debug_parse/zh_四川省大渡河长河坝水电站可行性研究报告1.pdf/text_track",
-    "doc_id": "zh_四川省大渡河长河坝水电站可行性研究报告1"
-  },
   "cases": [
     {
       "id": "q1_wang_roles_r1",
@@ -22,7 +18,8 @@
           "id": "f2",
           "fact": "在《长河坝水电站可行性研究阶段若干审查、咨询意见汇编》中署名为审查人之一"
         }
-      ]
+      ],
+      "doc_id": "doc_4b0c671767af"
     },
     {
       "id": "q3_status_and_supply_scope",
@@ -42,7 +39,8 @@
           "id": "f2",
           "fact": "供电送入四川主网，方向为华中电网东部四省及华东电网（本阶段初拟华东四省一市）"
         }
-      ]
+      ],
+      "doc_id": "doc_4b0c671767af"
     },
     {
       "id": "q4_difficulties_and_key_tech",
@@ -67,7 +65,15 @@
           "id": "f3",
           "fact": "上坝址拱坝半挖“拱上拱”因风险大未作为代表方案"
         }
-      ]
+      ],
+      "doc_id": "doc_4b0c671767af"
     }
-  ]
+  ],
+  "docs": [
+    {
+      "document_id": "doc_4b0c671767af",
+      "title": "可行性研究报告1（综合说明）"
+    }
+  ],
+  "namespace": "changheba_archive"
 }

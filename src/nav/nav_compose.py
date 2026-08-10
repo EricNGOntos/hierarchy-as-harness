@@ -101,30 +101,42 @@ def _section_title(ts: ToolSpace, section_id: str, doc_id: str, *, max_chars: in
     sid = str(section_id or "").strip()
     if not sid:
         return ""
+
+    def _clip(text: str) -> str:
+        t = (text or "").strip()
+        if len(t) > max_chars:
+            return t[:max_chars].rstrip()
+        return t
+
+    # Prefer structure title (Knowhere / ProviderToolSpace); never parse ids.
+    try:
+        st = ts.get_structure(sid)
+    except Exception:
+        st = None
+    if isinstance(st, dict):
+        raw = st.get("preview") or st.get("title") or ""
+        if isinstance(raw, str) and raw.strip():
+            return _clip(raw.strip())
+
     resolved = _section_doc_id(ts, sid, doc_id)
     idx = getattr(ts, "_idx", None)
     if idx is None:
-        return sid.split(":")[-1]
+        return sid
     loc = getattr(idx, "_node_to_doc_line", {}).get(sid)
     b = getattr(idx, "_bundles", {}).get(resolved) if loc and resolved and loc[0] == resolved else None
     if not b:
-        # Document node → first-line title.
         level = address_level(ts, sid)
         if level == NavLevel.DOCUMENT and resolved:
             bb = getattr(idx, "_bundles", {}).get(resolved)
             if bb and bb.lines:
                 title = (bb.lines[0].content or "").strip()
-                if len(title) > max_chars:
-                    title = title[:max_chars].rstrip()
-                return title or sid.split(":")[-1]
-        return sid.split(":")[-1]
+                return _clip(title) if title else sid
+        return sid
     _, j = loc
     if j < 0 or j >= len(b.lines):
-        return sid.split(":")[-1]
+        return sid
     title = (b.lines[j].content or "").strip()
-    if len(title) > max_chars:
-        title = title[:max_chars].rstrip()
-    return title or sid.split(":")[-1]
+    return _clip(title) if title else sid
 
 
 def _chunk_body(chunk: Chunk) -> str:
@@ -323,7 +335,7 @@ def build_compose_preview(
         gid = f"G{i}"
         if g.parent_id:
             g_map[gid] = str(g.parent_id)
-        title = g.parent_title or (g.parent_id or "").split(":")[-1] or gid
+        title = g.parent_title or str(g.parent_id or "").strip() or gid
         lines.append(f"[{gid}] §{title}")
         summary = _group_summary_text(ts, str(g.parent_id or ""))
         if summary:
