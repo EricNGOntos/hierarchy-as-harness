@@ -54,13 +54,16 @@ class TestNavVerify(unittest.TestCase):
         self.assertEqual(out.verdict, "REBIND")
         self.assertFalse(out.result.satisfied)
 
-    def test_verify_enumeration_cardinality(self) -> None:
+    def test_verify_is_mechanical_not_a_contract_judge(self) -> None:
+        """Cardinality / must_mention are plan_control's call, not the rule signal's."""
         sg = Subgoal(
             id="s1",
             need="list",
             retrieval_query="duties",
             produces=["items"],
-            contract=Contract(kind="enumeration", cardinality=3),
+            contract=Contract(
+                kind="enumeration", cardinality=3, must_mention=["法人章"]
+            ),
         )
         out = verify_contract(
             sg,
@@ -68,14 +71,12 @@ class TestNavVerify(unittest.TestCase):
             evidence_text="a、b",
             confidence=1.0,
         )
-        self.assertEqual(out.verdict, "RETRY_SAME_REGION")
-        out_ok = verify_contract(
-            sg,
-            extracted={"items": "a、b、c"},
-            evidence_text="a、b、c",
-            confidence=1.0,
+        self.assertEqual(out.verdict, "SATISFIED")
+        empty = verify_contract(
+            sg, extracted={"items": "a"}, evidence_text="", confidence=1.0
         )
-        self.assertEqual(out_ok.verdict, "SATISFIED")
+        self.assertEqual(empty.verdict, "RETRY_SAME_REGION")
+        self.assertEqual(empty.gap, "empty_evidence")
 
     def test_activation_when_substring_and_empty(self) -> None:
         self.assertTrue(
@@ -165,9 +166,8 @@ class TestNavVerify(unittest.TestCase):
         def fake_nav(ts, *, state, scope, query, config, depth=0, budget=None, steps_out=None):
             calls["n"] += 1
             if calls["n"] == 1:
-                # First pass: evidence without required mention → WIDEN/RETRY path
-                state.collected.append((_Chunk("本章规定用印审批程序。"), 1.0))
-                state.collected_section_ids.add("doc:L0")
+                # First pass collects nothing → mechanical empty_evidence retry.
+                pass
             else:
                 state.collected.append((_Chunk("对外重大合同应使用法人章。"), 1.0))
                 state.collected_section_ids.add("doc:L1")

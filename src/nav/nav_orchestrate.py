@@ -20,7 +20,6 @@ from nav_illuminate import illuminate_from_plan, refresh_fold_from_subgoal_score
 from nav_navigate import navigate
 from nav_plan import (
     RetrievalPlan,
-    ScopeFilter,
     Subgoal,
     bind_slots,
     is_always_active,
@@ -137,11 +136,6 @@ def _clear_focus(state: NavState) -> None:
     state.focus_scope_doc_ids = []
 
 
-def _widen_scope_filter(subgoal: Subgoal) -> None:
-    """Clear scope_filter so the next attempt can look more broadly."""
-    subgoal.scope_filter = ScopeFilter()
-
-
 def _unbound_retrieval_query(subgoal: Subgoal) -> str:
     """Drop unresolved slot braces for REBIND degrade."""
     raw = _SLOT_STRIP_RE.sub(" ", subgoal.retrieval_query or "").strip()
@@ -244,7 +238,7 @@ def _execute_subgoal_with_verdicts(
     *,
     steps_out: Optional[List[Any]],
 ) -> Tuple[SubgoalResult, bool]:
-    """Run navigate→verify with RETRY/WIDEN/REBIND. Returns (result, want_replan)."""
+    """Run navigate→verify with RETRY/REBIND. Returns (result, want_replan)."""
     max_attempts = max(1, int(getattr(config, "subgoal_max_attempts", 2) or 2))
     rq = bind_slots(subgoal.retrieval_query, state.slot_bindings)
     last: Optional[SubgoalResult] = None
@@ -257,9 +251,6 @@ def _execute_subgoal_with_verdicts(
 
     for attempt in range(max_attempts):
         before = set(state.collected_section_ids)
-
-        if last is not None and last.verdict == "WIDEN":
-            _widen_scope_filter(subgoal)
 
         if last is not None and last.verdict == "REBIND":
             # First: re-extract (LLM if verify enabled) from the SAME evidence
@@ -296,7 +287,7 @@ def _execute_subgoal_with_verdicts(
             last.satisfied = True
             last.verdict = "SATISFIED"
             return last, False
-        if last.verdict in {"RETRY_SAME_REGION", "WIDEN", "REBIND"}:
+        if last.verdict in {"RETRY_SAME_REGION", "REBIND"}:
             continue
         if last.verdict == "REPLAN":
             want_replan = True
@@ -308,7 +299,7 @@ def _execute_subgoal_with_verdicts(
     if (
         not last.satisfied
         and int(getattr(config, "max_replans", 0) or 0) > 0
-        and last.verdict in {"RETRY_SAME_REGION", "WIDEN", "REBIND", "REPLAN"}
+        and last.verdict in {"RETRY_SAME_REGION", "REBIND", "REPLAN"}
     ):
         last.verdict = "REPLAN"
         want_replan = True

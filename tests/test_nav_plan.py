@@ -176,10 +176,8 @@ class TestNavPlan(unittest.TestCase):
         # Activation forks are ignored; every subgoal stays always-active.
         self.assertEqual(plan.subgoals[2].activation.mode, "always")
         self.assertTrue(all(is_always_active(s) for s in plan.subgoals))
-        self.assertAlmostEqual(
-            sum(s.budget_share for s in plan.subgoals),
-            1.0,
-        )
+        # budget_share is retired: declared weights are ignored, never normalized.
+        self.assertTrue(all(s.budget_share == 0.0 for s in plan.subgoals))
         # unrelated edges dropped
         self.assertTrue(all(e.kind != "unrelated" for e in plan.relations))
 

@@ -43,11 +43,13 @@ class TestNavTokenBudget(unittest.TestCase):
         self.assertEqual(nav_tokens_used(), 100)
         self.assertTrue(nav_token_budget_exhausted())
 
-    def test_zero_limit_disables_hard_stop(self) -> None:
-        os.environ["RETRIEVAL_NAV_TOKEN_LIMIT"] = "0"
+    def test_non_positive_or_invalid_falls_back_to_default(self) -> None:
         reset_usage()
-        record_usage("nav", {"total_tokens": 10_000_000})
-        self.assertFalse(nav_token_budget_exhausted())
+        for raw in ("0", "-1", "abc"):
+            os.environ["RETRIEVAL_NAV_TOKEN_LIMIT"] = raw
+            self.assertEqual(nav_token_limit(), 100_000)
+        record_usage("nav", {"total_tokens": 100_000})
+        self.assertTrue(nav_token_budget_exhausted())
 
     def test_harvest_skips_llm_when_exhausted(self) -> None:
         from nav_harvest import harvest_policy_call

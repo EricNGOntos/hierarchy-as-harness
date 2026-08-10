@@ -911,7 +911,7 @@ def _ledger_participants(state: NavState) -> List[Any]:
 
 
 def _tier2_priority_ids(state: NavState, participants: Sequence[Any]) -> List[str]:
-    """Unsatisfied first (enumeration gaps preferred), then plan order."""
+    """Unsatisfied first (enumeration contracts preferred), then plan order."""
     scored: List[Tuple[int, int, str]] = []
     for i, sg in enumerate(participants):
         sid = str(sg.id)
@@ -919,17 +919,14 @@ def _tier2_priority_ids(state: NavState, participants: Sequence[Any]) -> List[st
         if isinstance(raw, dict):
             satisfied = bool(raw.get("satisfied"))
             verdict = str(raw.get("verdict") or "")
-            gap = str(raw.get("gap") or "")
-            kind = str(getattr(getattr(sg, "contract", None), "kind", "") or "")
         else:
             satisfied = bool(getattr(raw, "satisfied", False))
             verdict = str(getattr(raw, "verdict", "") or "")
-            gap = str(getattr(raw, "gap", "") or "")
-            kind = str(getattr(getattr(sg, "contract", None), "kind", "") or "")
+        kind = str(getattr(getattr(sg, "contract", None), "kind", "") or "")
         if satisfied or verdict == "SATISFIED":
             continue
-        # 0 = enumeration shortfall; 1 = other unsatisfied
-        band = 0 if (kind == "enumeration" or gap.startswith("enumeration_short")) else 1
+        # 0 = enumeration contract; 1 = other unsatisfied
+        band = 0 if kind == "enumeration" else 1
         scored.append((band, i, sid))
     scored.sort()
     return [sid for _b, _i, sid in scored]

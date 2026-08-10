@@ -3,9 +3,12 @@
 
 Drives ``run_nav_episode`` through ``KnowhereProvider`` + ``ProviderToolSpace``
 instead of this repo's line-indexed ToolSpace, so the only inputs are the
-section/chunk rows knowhere already stores. Two arms per case: ``baseline``
-(map navigation alone) and ``fusion`` (query planning + anchor entry + one-shot
-harvest + plan control).
+section/chunk rows knowhere already stores.
+
+Arms:
+  - ``baseline``: map navigation alone
+  - ``fusion``: legacy PLAN×NAV (per-subgoal split / anchor / share — for contrast)
+  - ``shared``: P0 new scheme (coverage checklist + shared search space + plan_control)
 """
 from __future__ import annotations
 
@@ -45,6 +48,7 @@ from nav_map_scores import (  # noqa: E402
     compute_map_and_unit_scores,
     select_map_highlights,
 )
+from nav_probe_score import score_case_answer  # noqa: E402
 from nav_projection import build_map  # noqa: E402
 from nav_types import NavConfig  # noqa: E402
 import section_summary_store  # noqa: E402
@@ -114,6 +118,7 @@ def cfg_baseline() -> NavConfig:
 
 
 def cfg_fusion() -> NavConfig:
+    """Legacy PLAN×NAV contrast arm (split-space switches left on for history)."""
     cfg = cfg_baseline()
     cfg.enable_query_planning = True
     cfg.enable_per_subgoal_illumination = True
@@ -135,7 +140,28 @@ def cfg_fusion() -> NavConfig:
     return cfg
 
 
-ARMS = {"baseline": cfg_baseline, "fusion": cfg_fusion}
+def cfg_shared() -> NavConfig:
+    """P0 new scheme: checklist + shared space; retired splitters stay off."""
+    cfg = cfg_baseline()
+    cfg.enable_query_planning = True
+    cfg.enable_plan_orchestration = True
+    cfg.enable_contract_verify = True
+    cfg.enable_one_shot_harvest = True
+    cfg.enable_plan_control = True
+    cfg.max_replans = 1
+    cfg.subgoal_max_attempts = 2
+    cfg.max_waves = 0
+    cfg.max_harvest_depth = 3
+    cfg.plan_control_digest_chars = 600
+    cfg.show_harvested_in_map = True
+    return cfg
+
+
+ARMS = {
+    "baseline": cfg_baseline,
+    "fusion": cfg_fusion,
+    "shared": cfg_shared,
+}
 
 
 def usage_delta(before: dict, after: dict) -> dict:
@@ -164,19 +190,6 @@ def gold_hit(gold: Sequence[str], got: Sequence[str]) -> dict:
         "n_hit": len(hit),
         "recall": round(len(hit) / len(gold_set), 3) if gold_set else 0.0,
         "miss": [g for g in gold_set if g not in got_set],
-    }
-
-
-def key_checks(case: dict, answer: str, evidence: str) -> dict:
-    keys = [str(k) for k in case.get("answer_keys") or ()]
-    distractors = [str(k) for k in case.get("distractor_keys") or ()]
-    in_answer = [k for k in keys if k in answer]
-    in_evidence = [k for k in keys if k in evidence]
-    return {
-        "answer_keys_hit": f"{len(in_answer)}/{len(keys)}",
-        "answer_keys_missing": [k for k in keys if k not in answer],
-        "evidence_keys_hit": f"{len(in_evidence)}/{len(keys)}",
-        "distractors_in_answer": [k for k in distractors if k in answer],
     }
 
 
@@ -253,7 +266,6 @@ def run_case(
         return row
 
     answer = episode.composed_answer or ""
-    evidence = episode.evidence_text or ""
     # Gold is labelled at knowhere's section granularity, so score the owning
     # sections of the packed evidence rather than this repo's line-node ids.
     packed_sections = list(
@@ -264,12 +276,16 @@ def run_case(
         )
     )
     pack = gold_hit(gold, packed_sections)
+    ref_score = score_case_answer(case, answer)
     row.update(
         {
             "pack_recall": pack["recall"],
             "pack_hit": f"{pack['n_hit']}/{pack['n_gold']}",
             "pack_miss": pack["miss"],
-            "checks": key_checks(case, answer, evidence),
+            "reference_score": ref_score.get("case_score", 0.0),
+            "reference_grades": ref_score.get("grades") or {},
+            "reference_n_facts": ref_score.get("n_facts", 0),
+            "reference_score_error": ref_score.get("error"),
             "evidence_chars": episode.evidence_chars_actual,
             "packed_sections": packed_sections,
             "composed_answer": answer[:4000],
@@ -279,10 +295,32 @@ def run_case(
     return row
 
 
+def summarize_arm_scores(rows: Sequence[dict]) -> Dict[str, Any]:
+    """Per-arm sum of case reference_score (each case max 1.0)."""
+    by_arm: Dict[str, List[float]] = {}
+    for row in rows:
+        if "error" in row and "reference_score" not in row:
+            continue
+        arm = str(row.get("arm") or "")
+        by_arm.setdefault(arm, []).append(float(row.get("reference_score") or 0.0))
+    return {
+        arm: {
+            "n_cases": len(scores),
+            "total": round(sum(scores), 4),
+            "mean": round(sum(scores) / len(scores), 4) if scores else 0.0,
+            "per_case": scores,
+        }
+        for arm, scores in by_arm.items()
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--probe", default=str(ROOT / "data/probes/knowhere_changheba.json"))
-    parser.add_argument("--arms", default="baseline,fusion")
+    parser.add_argument(
+        "--probe",
+        default=str(ROOT / "data/probes/knowhere_archive_corpus.json"),
+    )
+    parser.add_argument("--arms", default="baseline,fusion,shared")
     parser.add_argument("--budget-chars", type=int, default=12000)
     parser.add_argument("--case", default="", help="run only this case id")
     parser.add_argument("--dry-run", action="store_true", help="print the map, run no LLM")
@@ -395,16 +433,25 @@ def main() -> None:
             total = row["usage"]["_total"]
             print(
                 f"  sec={row['seconds']} pack={row['pack_recall']} ({row['pack_hit']}) "
-                f"answer_keys={row['checks']['answer_keys_hit']} "
-                f"distractor={row['checks']['distractors_in_answer']} "
+                f"ref_score={row['reference_score']} "
+                f"grades={row.get('reference_grades')} "
                 f"api={total['api_calls']} prompt={total['prompt_tokens']} "
                 f"actions={row['action_counts']}",
                 flush=True,
             )
 
+    arm_scores = summarize_arm_scores(rows)
+    summary = {"rows": rows, "arm_reference_scores": arm_scores}
     (OUT / "summary.json").write_text(
-        json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8"
+        json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+    print("\n=== arm reference_score totals (max = n_cases) ===", flush=True)
+    for arm, stats in arm_scores.items():
+        print(
+            f"  {arm}: total={stats['total']} mean={stats['mean']} "
+            f"n={stats['n_cases']} per_case={stats['per_case']}",
+            flush=True,
+        )
 
 
 if __name__ == "__main__":

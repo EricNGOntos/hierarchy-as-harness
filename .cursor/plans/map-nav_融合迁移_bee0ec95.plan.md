@@ -25,7 +25,7 @@ todos:
     status: completed
   - id: scoring
     content: 实验仓：把 reference_answer 事实清单计分（对/半对/错）固化进 run_knowhere_probe.py，取代会产生假阳性的 answer_keys 关键词命中
-    status: pending
+    status: completed
   - id: validate
     content: 实验仓：跑 baseline / 旧 fusion / 新方案三臂对照；q2 要拿回 2.3 水文基本资料整个邻域，q4 要在默认预算下拿到证据
     status: pending

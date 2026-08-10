@@ -74,11 +74,13 @@ class Subgoal:
     depends_on: List[str] = field(default_factory=list)
     prefer_after: List[str] = field(default_factory=list)
     contract: Contract = field(default_factory=Contract)
+    produces: List[str] = field(default_factory=list)
+    # Retired by the single-shared-space model: never parsed, never normalized.
+    # Still declared because default-off consumers (fold weights, evidence
+    # ledger, anchor entry) read them; they now always see the neutral value.
     scope_filter: ScopeFilter = field(default_factory=ScopeFilter)
     budget_share: float = 0.0
-    produces: List[str] = field(default_factory=list)
     activation: Activation = field(default_factory=Activation)
-    # Optional map anchors: N* display ids and/or section_ids visible on the plan map.
     route_hints: List[str] = field(default_factory=list)
 
 
@@ -304,29 +306,6 @@ def is_always_active(subgoal: Subgoal) -> bool:
     return (subgoal.activation.mode or "always") != "on"
 
 
-def _normalize_budget_shares(subgoals: List[Subgoal]) -> None:
-    """Normalize budget only among always-active subgoals.
-
-    Conditional subgoals keep their declared relative claim and do not dilute
-    the always-active pool (they draw from a reserve when activated later).
-    """
-    always = [s for s in subgoals if is_always_active(s)]
-    if not always:
-        always = list(subgoals)
-    shares = [max(0.0, float(s.budget_share or 0.0)) for s in always]
-    total = sum(shares)
-    if total > 0.0:
-        for s, w in zip(always, shares):
-            s.budget_share = float(w) / total
-        return
-    n = len(always)
-    if n <= 0:
-        return
-    even = 1.0 / float(n)
-    for s in always:
-        s.budget_share = even
-
-
 def _has_cycle(subgoals: List[Subgoal]) -> bool:
     deps: Dict[str, List[str]] = {s.id: list(s.depends_on) for s in subgoals}
     visiting: Set[str] = set()
@@ -473,7 +452,6 @@ def parse_retrieval_plan(
                 depends_on=_as_str_list(row.get("depends_on")),
                 prefer_after=_as_str_list(row.get("prefer_after")),
                 contract=_parse_contract(row.get("contract")),
-                budget_share=float(row.get("budget_share") or 0.0),
                 produces=produces,
                 activation=Activation(),
             )
@@ -519,7 +497,6 @@ def parse_retrieval_plan(
     if _has_cycle(subgoals):
         _break_dependency_cycles(subgoals)
 
-    _normalize_budget_shares(subgoals)
     reason = str(obj.get("reason") or obj.get("plan_reason") or "").strip()
     coverage = _parse_map_coverage(obj.get("map_coverage") or obj.get("coverage"))
     checklist = _parse_coverage_checklist(
@@ -550,7 +527,6 @@ def fallback_plan(query: str, *, reason: str = "fallback") -> RetrievalPlan:
                 need=q,
                 retrieval_query=q,
                 contract=Contract(kind="single_fact"),
-                budget_share=1.0,
                 activation=Activation(),
             )
         ],

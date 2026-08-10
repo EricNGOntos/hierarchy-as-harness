@@ -96,7 +96,7 @@ class NavConfig:
     enable_plan_orchestration: bool = False
     # M5: contract verify + slot extract + activation + limited replan.
     enable_contract_verify: bool = False
-    # M5: navigate+verify cycles per subgoal (RETRY/WIDEN/REBIND). Min 1.
+    # M5: navigate+verify cycles per subgoal (RETRY/REBIND). Min 1.
     subgoal_max_attempts: int = 2
     # M5: 0 = never replan; otherwise hard cap on structural replans.
     max_replans: int = 0
@@ -116,7 +116,7 @@ class NavConfig:
     # Structural recursion depth cap for harvest() (mirrors max_dispatch_depth's
     # existing default; harvest recursion is bounded independently of navigate()).
     max_harvest_depth: int = 3
-    # Replace per-subgoal verdict auto-escalation (RETRY/WIDEN/REBIND -> REPLAN)
+    # Replace per-subgoal verdict auto-escalation (RETRY/REBIND -> REPLAN)
     # with one LLM call per wave that reviews every subgoal's own new evidence.
     enable_plan_control: bool = False
     # Per-subgoal evidence digest cap shown to plan_control (not the full pool;
@@ -244,7 +244,7 @@ class SubgoalResult:
     extracted: Dict[str, str] = field(default_factory=dict)
     gap: str = ""
     chars_used: int = 0
-    verdict: str = ""  # SATISFIED|RETRY_SAME_REGION|WIDEN|REBIND|REPLAN
+    verdict: str = ""  # SATISFIED|RETRY_SAME_REGION|REBIND|REPLAN
 
 
 @dataclass

@@ -15,13 +15,12 @@ _DEFAULT_TOKEN_LIMIT = 100_000
 
 
 def nav_token_limit() -> int:
-    raw = os.environ.get(_ENV_TOKEN_LIMIT, "").strip()
-    if not raw:
-        return _DEFAULT_TOKEN_LIMIT
+    """Always a positive limit: unset / invalid / non-positive fall back to the default."""
     try:
-        return max(0, int(raw))
+        limit = int(os.environ.get(_ENV_TOKEN_LIMIT, "").strip())
     except ValueError:
-        return _DEFAULT_TOKEN_LIMIT
+        limit = 0
+    return limit if limit > 0 else _DEFAULT_TOKEN_LIMIT
 
 
 def nav_tokens_used() -> int:
@@ -34,7 +33,4 @@ def nav_tokens_used() -> int:
 
 
 def nav_token_budget_exhausted() -> bool:
-    limit = nav_token_limit()
-    if limit <= 0:
-        return False
-    return nav_tokens_used() >= limit
+    return nav_tokens_used() >= nav_token_limit()

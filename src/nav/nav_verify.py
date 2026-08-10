@@ -1,7 +1,9 @@
-"""M5: contract verification, slot extraction, activation predicates.
+"""M5: mechanical evidence/slot signal, slot extraction, activation predicates.
 
 Soft plan: verdicts never clip the action space — they only drive bindings,
-satisfaction marks, fold refresh, and optional replan.
+satisfaction marks, fold refresh, and optional replan. Whether a need is
+actually answered is decided by ``nav_control.plan_control`` against the plan's
+coverage checklist, not here.
 """
 
 from __future__ import annotations
@@ -18,7 +20,6 @@ from nav_types import NavConfig, SubgoalResult
 Verdict = Literal[
     "SATISFIED",
     "RETRY_SAME_REGION",
-    "WIDEN",
     "REBIND",
     "REPLAN",
 ]
@@ -39,15 +40,6 @@ def _tokens(text: str) -> List[str]:
 
 def evidence_chars(text: str) -> int:
     return len((text or "").strip())
-
-
-def split_enumeration_items(value: str) -> List[str]:
-    """Split a produced enumeration value on common list separators."""
-    raw = (value or "").strip()
-    if not raw:
-        return []
-    parts = re.split(r"[\n;；|/]+|(?:\s*[、，,]\s*)", raw)
-    return [p.strip() for p in parts if p.strip()]
 
 
 def extract_slots_heuristic(
@@ -204,11 +196,15 @@ def verify_contract(
     evidence_text: str,
     confidence: float,
 ) -> VerifyOutcome:
-    """Rule-based contract check → typed verdict (no language hardcoding)."""
+    """Mechanical zero-cost signal: is there evidence, and are declared slots bound?
+
+    It deliberately does NOT judge whether the need is answered — contract kind,
+    cardinality and must_mention are conclusions, and ``plan_control`` is the
+    single authority that reconciles evidence against the coverage checklist.
+    """
     chars = evidence_chars(evidence_text)
     needed = [str(s).strip() for s in (subgoal.produces or []) if str(s).strip()]
     missing = [s for s in needed if not str(extracted.get(s) or "").strip()]
-    kind = (subgoal.contract.kind or "single_fact").strip().lower()
 
     base = SubgoalResult(
         subgoal_id=subgoal.id,
@@ -229,25 +225,6 @@ def verify_contract(
         base.gap = "missing_slots:" + ",".join(missing)
         base.verdict = "REBIND" if needed else "RETRY_SAME_REGION"
         return VerifyOutcome(verdict=base.verdict, result=base, gap=base.gap)  # type: ignore[arg-type]
-
-    if kind == "enumeration":
-        card = subgoal.contract.cardinality
-        if card is not None and int(card) > 0 and needed:
-            items = split_enumeration_items(extracted.get(needed[0], ""))
-            if len(items) < int(card):
-                base.gap = f"enumeration_short:{len(items)}<{int(card)}"
-                base.verdict = "RETRY_SAME_REGION"
-                return VerifyOutcome(
-                    verdict="RETRY_SAME_REGION", result=base, gap=base.gap
-                )
-
-    mentions = [m for m in (subgoal.contract.must_mention or []) if str(m).strip()]
-    if mentions:
-        absent = [m for m in mentions if m not in (evidence_text or "")]
-        if absent:
-            base.gap = "must_mention_missing:" + ",".join(absent)
-            base.verdict = "WIDEN"
-            return VerifyOutcome(verdict="WIDEN", result=base, gap=base.gap)
 
     base.satisfied = True
     base.verdict = "SATISFIED"
