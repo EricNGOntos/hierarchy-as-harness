@@ -14,17 +14,33 @@ for source_dir in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
         sys.path.insert(0, str(source_dir))
 
 from agent_delivery.code.index_retrieval import Chunk  # noqa: E402
-from nav_control import _digest_evidence, plan_control  # noqa: E402
+from nav_control import _digest_collected_summaries, plan_control  # noqa: E402
 from nav_plan import Contract, RetrievalPlan, Subgoal  # noqa: E402
 from nav_types import NavConfig, NavState  # noqa: E402
 
 
-def _chunk(text: str) -> Chunk:
-    return Chunk(node_id="doc:L1__path", doc_id="doc", text=text, line_ids=(1,), section_id="doc:L1")
+def _chunk(text: str, *, section_id: str = "doc:L1") -> Chunk:
+    return Chunk(
+        node_id=f"{section_id}__path",
+        doc_id="doc",
+        text=text,
+        line_ids=(1,),
+        section_id=section_id,
+    )
 
 
-def _signal(*, chars_used: int = 0, gap: str = "") -> SimpleNamespace:
-    return SimpleNamespace(chars_used=chars_used, gap=gap, satisfied=chars_used > 0)
+def _signal(
+    *,
+    chars_used: int = 0,
+    gap: str = "",
+    collected_section_ids: list[str] | None = None,
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        chars_used=chars_used,
+        gap=gap,
+        satisfied=chars_used > 0,
+        collected_section_ids=list(collected_section_ids or []),
+    )
 
 
 def _plan_two() -> RetrievalPlan:
@@ -36,30 +52,49 @@ def _plan_two() -> RetrievalPlan:
     )
 
 
-class DigestEvidenceTests(unittest.TestCase):
-    def test_respects_char_limit(self) -> None:
-        chunks = [(_chunk("A" * 50), 1.0), (_chunk("B" * 50), 0.9)]
-        digest = _digest_evidence(chunks, limit=60)
-        # Content budget is 60 chars; join separators are not counted against it.
-        content_chars = digest.replace("\n", "")
-        self.assertEqual(len(content_chars), 60)
-        self.assertEqual(content_chars, "A" * 50 + "B" * 10)
+class DigestCollectedSummariesTests(unittest.TestCase):
+    def test_uses_section_summaries_without_char_cut(self) -> None:
+        long_summary = "S" * 400
 
-    def test_empty_when_limit_zero(self) -> None:
-        chunks = [(_chunk("A" * 10), 1.0)]
-        self.assertEqual(_digest_evidence(chunks, limit=0), "")
+        class _TS:
+            def get_structure(self, section_id: str) -> dict:
+                return {"preview": "title", "summary": long_summary}
 
-    def test_skips_blank_chunks(self) -> None:
-        chunks = [(_chunk("   "), 1.0), (_chunk("real evidence"), 0.5)]
-        digest = _digest_evidence(chunks, limit=100)
-        self.assertEqual(digest, "real evidence")
+        digest = _digest_collected_summaries(
+            _TS(),
+            new_chunks=[],
+            collected_section_ids=["doc:附件/1.1.3 勘测设计过程"],
+        )
+        self.assertIn("1.1.3 勘测设计过程", digest)
+        self.assertIn(long_summary, digest)
+        self.assertEqual(digest.count(long_summary), 1)
+
+    def test_falls_back_to_chunk_owners(self) -> None:
+        class _TS:
+            def get_structure(self, section_id: str) -> dict:
+                return {"preview": section_id.split(":")[-1], "summary": f"sum:{section_id}"}
+
+        digest = _digest_collected_summaries(
+            _TS(),
+            new_chunks=[(_chunk("ignored body", section_id="doc:A"), 1.0), (_chunk("x", section_id="doc:B"), 0.5)],
+            collected_section_ids=[],
+        )
+        self.assertIn("sum:doc:A", digest)
+        self.assertIn("sum:doc:B", digest)
+        self.assertNotIn("ignored body", digest)
+
+    def test_empty_when_nothing_collected(self) -> None:
+        self.assertEqual(
+            _digest_collected_summaries(None, new_chunks=[], collected_section_ids=[]),
+            "",
+        )
 
 
 class PlanControlTests(unittest.TestCase):
     def setUp(self) -> None:
         self.plan = _plan_two()
         self.state = NavState(doc_id="doc", query="q", retrieval_plan=self.plan)
-        self.config = NavConfig(mode="checklist", plan_control_digest_chars=200)
+        self.config = NavConfig(mode="checklist")
 
     def test_no_wave_outputs_returns_continue(self) -> None:
         decision = plan_control(None, self.state, self.config, plan=self.plan, wave_outputs=[])

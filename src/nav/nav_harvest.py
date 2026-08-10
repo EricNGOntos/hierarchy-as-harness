@@ -43,7 +43,7 @@ class HarvestResult:
     n_policy_calls: int = 0
     max_depth_hit: bool = False
     # "<scope>: <reason>" per policy call this harvest tree made, joined by
-    # " | " — plan_control reads this alongside new_evidence to judge widen
+    # " | " — plan_control reads this alongside collected section summaries to judge widen
     # vs drop (previously only reached AgentStep.detail, never the controller).
     reason: str = ""
     search_assets: List[Dict[str, Any]] = field(default_factory=list)

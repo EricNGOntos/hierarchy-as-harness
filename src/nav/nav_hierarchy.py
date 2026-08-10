@@ -117,6 +117,7 @@ class ProviderToolSpace:
             "section_id": section_id,
             "level": 0,
             "preview": meta.title,
+            "summary": str(meta.summary or ""),
             "n_lines": 1,
             "n_chunks": int(meta.n_chunks),
             "children": [

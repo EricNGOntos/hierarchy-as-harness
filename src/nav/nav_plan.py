@@ -37,6 +37,7 @@ _CONTRACT_KINDS = {
 _RELATION_KINDS = {"parent-child", "sibling"}
 _MAP_COVERAGE = {"sufficient", "partial", "insufficient"}
 _PLANNER_PURPOSE = "nav_query_plan_v2"
+_QUERY_REFINE_PURPOSE = "nav_query_refine_v1"
 
 
 @dataclass
@@ -776,3 +777,120 @@ def plan_query(
     plan = fallback_plan(state.query, reason=f"fallback:{last_err or 'unparsed'}")
     plan.raw = last_raw[:2000]
     return plan
+
+
+def _refine_system_prompt() -> str:
+    return (
+        "You rewrite ONE retrieval_query for a single subgoal on a hierarchical "
+        "document map.\n"
+        "A previous attempt for THIS subgoal failed. A controller reported what "
+        "is still missing. You see the folded title map.\n\n"
+        "Rules:\n"
+        "1. Scope is this subgoal only. Rewrite for its need; do not pull in "
+        "other subgoals' goals or other parts of a multi-part question.\n"
+        "2. Aim at the reported gap. A paraphrase or word-shuffle of the previous "
+        "query is useless — it would rank nodes the same way.\n"
+        "3. If prior selected nodes are listed, do not aim the query back at those "
+        "same nodes; use other map titles that may hold the missing evidence.\n"
+        "4. Emit lexical/hybrid search terms in the same language as the map "
+        "titles. Not a sentence, not the controller's wording.\n"
+        "5. Keep it under 30 words, no commentary.\n\n"
+        'Return ONLY one JSON object: {"retrieval_query": "..."}'
+    )
+
+
+def _section_titles_for_refine(ts: Any, section_ids: Sequence[str]) -> List[str]:
+    """Titles of previously selected nodes, falling back to the section id."""
+    out: List[str] = []
+    seen: Set[str] = set()
+    for raw in section_ids or ():
+        sid = str(raw or "").strip()
+        if not sid or sid in seen:
+            continue
+        seen.add(sid)
+        title = ""
+        try:
+            st = ts.get_structure(sid) or {}
+            title = str(st.get("title") or "").strip()
+        except Exception:
+            title = ""
+        out.append(title or sid)
+    return out
+
+
+def refine_subgoal_query(
+    ts: Any,
+    state: NavState,
+    config: NavConfig,
+    *,
+    subgoal: Subgoal,
+    previous_query: str,
+    gap: str,
+    selected_section_ids: Optional[Sequence[str]] = None,
+) -> str:
+    """PLAN-side rewrite of one subgoal's retrieval_query after ``widen``.
+
+    ``plan_control`` can say *what* is missing but never sees the map, so it
+    cannot write a query that matches the corpus' own terms. This is the one
+    call that can: it reads the planning map and turns the gap into new search
+    terms for THIS subgoal only. Returns "" when the rewrite fails, echoes the
+    previous query, or lands in the wrong script — the caller then keeps the
+    previous query.
+    """
+    from nav_llm import nav_chat, resolve_nav_model
+    from nav_token_budget import nav_token_budget_exhausted
+
+    prev = (previous_query or subgoal.retrieval_query or "").strip()
+    need = (subgoal.need or prev).strip()
+    if nav_token_budget_exhausted():
+        return ""
+
+    projection, observation = build_planning_observation(ts, state, config)
+    # Language check against this subgoal + map titles only (no episode query).
+    reference = language_reference_text(query=need, projection=projection)
+    selected_titles = _section_titles_for_refine(ts, selected_section_ids or ())
+    if selected_titles:
+        selected_block = "Prior selected nodes:\n" + "\n".join(
+            f"- {t}" for t in selected_titles
+        )
+    else:
+        selected_block = "Prior selected nodes: (none)"
+    model = resolve_nav_model(
+        model_env=config.planner_model_env,
+        fallback_envs=(config.llm_model_env, "COMPOSE_MODEL"),
+    )
+    user = (
+        f"Subgoal need: {need}\n"
+        f"Previous retrieval_query (failed): {prev}\n"
+        f"Reported gap: {(gap or '').strip() or '(none given)'}\n"
+        f"{selected_block}\n\n"
+        f"=== Planning Map ===\n{observation}\n=== End Planning Map ===\n\n"
+        "Return the rewritten retrieval_query JSON."
+    )
+    try:
+        cached = nav_chat(
+            purpose=_QUERY_REFINE_PURPOSE,
+            model=model,
+            messages=[
+                {"role": "system", "content": _refine_system_prompt()},
+                {"role": "user", "content": user},
+            ],
+            temperature=float(config.llm_temperature),
+            max_tokens=max(128, int(config.llm_max_tokens or 0)),
+            response_format={"type": "json_object"},
+            thinking_role="planner",
+            context="Nav Query Refine",
+            api_key_env="NAV_PLANNER_API_KEY",
+            base_url_env="NAV_PLANNER_BASE_URL",
+            usage_tag="nav_query_refine",
+        )
+    except Exception:  # pragma: no cover - network/LLM path
+        return ""
+
+    obj = extract_plan_json(str(cached.get("content") or "")) or {}
+    refined = str(obj.get("retrieval_query") or obj.get("query") or "").strip()
+    if not refined or refined == prev:
+        return ""
+    if retrieval_query_language_mismatch(refined, reference):
+        return ""
+    return refined

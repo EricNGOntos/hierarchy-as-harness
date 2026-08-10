@@ -42,16 +42,24 @@ document 根进入。
 | --- | --- |
 | accept | 写入 `satisfied_subgoal_ids`，结案 |
 | drop | 写入 `dropped_subgoal_ids`，结案（下游依赖视作 settled） |
-| widen | **不结案**；`gap` → `subgoal_widen_gaps[sid]`；死胡同已在 harvest 写入 `subgoal_dismissed_section_ids`；下一波从根重跑并拼 gap。`subgoal_attempt_counts >= subgoal_max_attempts` 强制 drop |
+| widen | **不结案**；`note` → `subgoal_widen_gaps[sid]`，交给 PLAN 的 `refine_subgoal_query()`（只看本 subgoal 的 need / 失败检索式 / gap / 本波已选节点标题 + 规划地图）改写查询 → `subgoal_refined_queries[sid]`；死胡同已在 harvest 写入 `subgoal_dismissed_section_ids`；下一波从根重跑。`subgoal_attempt_counts >= subgoal_max_attempts` 强制 drop |
+
+widen 的分工：control 知道「缺什么」但看不到地图，所以只出 gap；PLAN 看得到
+标题树，才写得出对得上语料用词的检索式。gap 文本本身**不进** harvest 的 prompt。
+
+checklist 每次 harvest 都按该 subgoal 当前 `retrieval_query`（含 refine 覆盖）重算
+`map_scores` / `unit_scores` / `highlight_ids`（`nav_orchestrate._relit_map`），采完
+恢复 episode 照明。第一波与 widen 后统一，不再用用户原问题排图。
 
 已删除：`reharvest` 决策、`subgoal_anchor`、`resolve_harvest_anchor`、
-「widen = 上移父节点」。
+「widen = 上移父节点」、把 gap 机械拼进 `retrieval_query` 的 `[widen gap]` 前缀。
 
 ### 2.4 证据归属与 REPLAN
 
 - 本波证据用 `collected_before` 差分，不把全局池塞进单个 subgoal 的 control 卡片。
 - REPLAN：清空 per-id 记账（satisfied / attempted / dropped / results / widen gaps /
-  attempt counts / dismissed）；保留无限定 `slot_bindings` 与已 collect 的 chunk。
+  refined queries / attempt counts / dismissed）；保留无限定 `slot_bindings` 与已
+  collect 的 chunk。
 
 ### 2.5 `[harvested:sN]`
 

@@ -165,6 +165,7 @@ def _fork_nav_state(state: NavState, *, doc_id: Optional[str] = None) -> NavStat
         replan_count=int(state.replan_count or 0),
         harvested_owner_subgoal=dict(state.harvested_owner_subgoal),
         subgoal_widen_gaps=dict(state.subgoal_widen_gaps),
+        subgoal_refined_queries=dict(state.subgoal_refined_queries),
         subgoal_dismissed_section_ids={
             k: set(v) for k, v in (state.subgoal_dismissed_section_ids or {}).items()
         },
@@ -196,6 +197,7 @@ def _merge_nav_state(parent: NavState, child: NavState) -> None:
     parent.subgoal_results.update(child.subgoal_results)
     parent.harvested_owner_subgoal.update(child.harvested_owner_subgoal)
     parent.subgoal_widen_gaps.update(child.subgoal_widen_gaps)
+    parent.subgoal_refined_queries.update(child.subgoal_refined_queries)
     for sid, ids in (child.subgoal_dismissed_section_ids or {}).items():
         parent.subgoal_dismissed_section_ids.setdefault(sid, set()).update(ids)
     parent.dropped_subgoal_ids.update(child.dropped_subgoal_ids)

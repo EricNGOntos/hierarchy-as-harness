@@ -96,7 +96,8 @@ class NavConfig:
     max_waves: int = 0
     # Structural recursion depth cap for harvest() (checklist mode).
     max_harvest_depth: int = 3
-    # Per-subgoal evidence digest cap shown to plan_control.
+    # Retired: plan_control now shows full prebuilt section summaries (already
+    # head/tail clipped at summary-build time), not a raw-evidence char cut.
     plan_control_digest_chars: int = 600
 
     @property
@@ -280,8 +281,12 @@ class NavState:
     # Checklist: explicit collect-root section_id -> owning subgoal_id
     # (drives "[harvested:sN]" map tags).
     harvested_owner_subgoal: Dict[str, str] = field(default_factory=dict)
-    # Last widen gap note per subgoal; appended to the next harvest query.
+    # Last widen gap note per subgoal (what plan_control said was missing).
+    # Input to the PLAN-side query rewrite; never concatenated into a query.
     subgoal_widen_gaps: Dict[str, str] = field(default_factory=dict)
+    # PLAN's rewritten retrieval_query per subgoal after widen. Overrides the
+    # planned query for the next harvest, and re-scores the shared map with it.
+    subgoal_refined_queries: Dict[str, str] = field(default_factory=dict)
     # Per-subgoal "seen but not selected" section ids — hidden from later map
     # views for that subgoal so widen surfaces siblings instead of dead ends.
     subgoal_dismissed_section_ids: Dict[str, set[str]] = field(default_factory=dict)

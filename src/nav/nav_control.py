@@ -38,23 +38,74 @@ class PlanControlDecision:
     raw: str = ""
 
 
-def _digest_evidence(new_chunks: Sequence[Any], *, limit: int) -> str:
-    parts: List[str] = []
-    total = 0
-    for chunk, _score in list(new_chunks or []):
-        text = str(getattr(chunk, "text", "") or getattr(chunk, "content", "") or "").strip()
-        if not text or total >= limit:
+def _owner_section_ids_from_chunks(new_chunks: Sequence[Any]) -> List[str]:
+    """Unique owner section ids for this wave's new chunks, in first-seen order."""
+    from nav_compose import evidence_owner_section_id
+
+    out: List[str] = []
+    seen: set[str] = set()
+    for item in list(new_chunks or []):
+        chunk = item[0] if isinstance(item, (tuple, list)) and item else item
+        sid = evidence_owner_section_id(chunk) if chunk is not None else ""
+        if not sid or sid in seen:
             continue
-        take = text[: max(0, limit - total)]
-        parts.append(take)
-        total += len(take)
-    return "\n".join(parts)
+        seen.add(sid)
+        out.append(sid)
+    return out
+
+
+def _section_summary_text(ts: Any, section_id: str) -> str:
+    """Full stored section summary (already head/tail clipped at build time)."""
+    sid = str(section_id or "").strip()
+    if not sid:
+        return ""
+    try:
+        from section_summary_store import get_summary
+
+        text = str(get_summary(sid) or "").strip()
+        if text:
+            return text
+    except Exception:
+        pass
+    if ts is not None:
+        try:
+            st = ts.get_structure(sid) or {}
+            text = str(st.get("summary") or "").strip()
+            if text:
+                return text
+            # Last resort: title/preview only (still no raw-body truncation here).
+            return str(st.get("preview") or "").strip()
+        except Exception:
+            return ""
+    return ""
+
+
+def _digest_collected_summaries(
+    ts: Any,
+    *,
+    new_chunks: Sequence[Any],
+    collected_section_ids: Optional[Sequence[str]] = None,
+) -> str:
+    """One line per collected section: path + its prebuilt summary (no re-truncate)."""
+    sids = [str(s).strip() for s in (collected_section_ids or []) if str(s).strip()]
+    if not sids:
+        sids = _owner_section_ids_from_chunks(new_chunks)
+    if not sids:
+        return ""
+    lines: List[str] = []
+    for sid in sids:
+        title = sid.split(":", 1)[-1] if ":" in sid else sid
+        summary = _section_summary_text(ts, sid)
+        if summary:
+            lines.append(f"- {title}: {summary}")
+        else:
+            lines.append(f"- {title}: (no summary)")
+    return "\n".join(lines)
 
 
 def _wave_subgoal_block(
     subgoal: Subgoal,
     *,
-    signal: Any,
     digest: str,
     harvest_meta: Optional[Dict[str, Any]],
     attempt_count: int,
@@ -63,12 +114,10 @@ def _wave_subgoal_block(
     contract_line = f"{subgoal.contract.kind}" + (
         f" cardinality={card}" if card is not None else ""
     )
-    chars = int(getattr(signal, "chars_used", 0) or 0)
     lines = [
         f"[{subgoal.id}] need: {subgoal.need}",
         f"  contract: {contract_line}",
         "  search_space: shared (no per-subgoal scope/anchor)",
-        f"  wave_evidence_chars: {chars}",
         f"  attempt: {attempt_count}",
     ]
     if harvest_meta:
@@ -80,7 +129,7 @@ def _wave_subgoal_block(
         harvest_reason = str(harvest_meta.get("reason") or "").strip()
         if harvest_reason:
             lines.append(f"  harvest_reason: {harvest_reason}")
-    lines.append(f"  new_evidence: {digest.strip() or '(empty)'}")
+    lines.append(f"  collected_summaries:\n{digest.strip() or '  (empty)'}")
     return "\n".join(lines)
 
 
@@ -110,9 +159,10 @@ def _control_system_prompt() -> str:
         "per-region stop/retry judgments with one decision.\n\n"
         "The plan has a global coverage_checklist (facts that must appear in "
         "episode evidence) and one shared search space. For each subgoal in "
-        "this wave you are shown: its need/contract, wave_evidence_chars, "
-        "the harvester's own explanation (harvest_reason), and the evidence "
-        "collected THIS wave only (never older evidence from other subgoals).\n\n"
+        "this wave you are shown: its need/contract, attempt count, "
+        "the harvester's own explanation (harvest_reason), and the section "
+        "summaries for nodes collected THIS wave only (never older evidence "
+        "from other subgoals; summaries are the prebuilt node summaries).\n\n"
         "=== Per-subgoal decisions ===\n"
         "  - accept: this subgoal's need is covered by this wave's evidence.\n"
         "  - widen: not yet covered; keep the subgoal unsettled for another "
@@ -215,18 +265,22 @@ def plan_control(
         decision.reason = "token_limit"
         return decision
 
-    digest_limit = max(0, int(getattr(config, "plan_control_digest_chars", 600) or 0))
     blocks: List[str] = []
     for item in wave_outputs:
         sid = str(item.get("subgoal_id"))
         sg = by_id.get(sid)
         if sg is None:
             continue
-        digest = _digest_evidence(item.get("new_chunks") or [], limit=digest_limit)
+        result = item.get("result")
+        collected_ids = list(getattr(result, "collected_section_ids", None) or [])
+        digest = _digest_collected_summaries(
+            ts,
+            new_chunks=item.get("new_chunks") or [],
+            collected_section_ids=collected_ids,
+        )
         blocks.append(
             _wave_subgoal_block(
                 sg,
-                signal=item.get("result"),
                 digest=digest,
                 harvest_meta=item.get("harvest"),
                 attempt_count=int(state.subgoal_attempt_counts.get(sid, 0)),

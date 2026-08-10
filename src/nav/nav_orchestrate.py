@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import re
 import time
+from contextlib import contextmanager
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Set, Tuple
 
 from nav_navigate import navigate
 from nav_plan import (
@@ -19,6 +20,7 @@ from nav_plan import (
     Subgoal,
     bind_slots,
     plan_query,
+    refine_subgoal_query,
     unbound_slots,
 )
 from nav_types import NavConfig, NavState, SubgoalResult
@@ -165,6 +167,49 @@ def _wave_subgoal_result(
     )
 
 
+@contextmanager
+def _relit_map(
+    ts: Any,
+    state: NavState,
+    config: NavConfig,
+    *,
+    query: str,
+) -> Iterator[None]:
+    """Score the shared map against the harvest ``query`` for one call.
+
+    Episode-level ``state.map_scores`` is computed from the original user query.
+    Checklist harvests run under a per-subgoal ``retrieval_query``, so the map
+    must be re-scored against that string — otherwise the ranking disagrees with
+    the query the policy is told to pursue. Scoring failures degrade to the
+    episode lighting.
+    """
+    relit: Optional[Tuple[Dict[str, float], Dict[str, float], List[str]]] = None
+    q = (query or "").strip()
+    if q:
+        try:
+            from nav_map_scores import relight_map_for_query
+
+            scores, units, highlights = relight_map_for_query(
+                ts,
+                doc_id=state.doc_id,
+                query=q,
+                top_k=int(config.collect_top_k),
+            )
+            if scores:
+                relit = (scores, units, highlights)
+        except Exception:
+            relit = None
+    if relit is None:
+        yield
+        return
+    saved = (state.map_scores, state.unit_scores, state.highlight_ids)
+    state.map_scores, state.unit_scores, state.highlight_ids = relit
+    try:
+        yield
+    finally:
+        state.map_scores, state.unit_scores, state.highlight_ids = saved
+
+
 def _execute_subgoal_harvest_once(
     ts: Any,
     state: NavState,
@@ -187,23 +232,24 @@ def _execute_subgoal_harvest_once(
         # producing this subgoal's referenced slot — degrade to a query with
         # the unresolved {{...}} braces stripped rather than stalling.
         rq = _unbound_retrieval_query(subgoal)
-    gap_note = str((state.subgoal_widen_gaps or {}).get(subgoal.id) or "").strip()
-    if gap_note:
-        rq = f"{rq}\n[widen gap] {gap_note}".strip()
+    refined = str((state.subgoal_refined_queries or {}).get(subgoal.id) or "").strip()
+    if refined:
+        rq = refined
     _set_focus(state, subgoal, rq)
     # Always enter at namespace/document root; prior dead-ends stay hidden via
     # subgoal_dismissed_section_ids so the next harvest sees siblings instead.
     before_sections = set(state.collected_section_ids)
     before_len = len(state.collected)
-    harvest_result = harvest(
-        ts,
-        state,
-        config,
-        subgoal=subgoal,
-        entry_scope=None,
-        query=rq,
-        steps_out=steps_out,
-    )
+    with _relit_map(ts, state, config, query=rq):
+        harvest_result = harvest(
+            ts,
+            state,
+            config,
+            subgoal=subgoal,
+            entry_scope=None,
+            query=rq,
+            steps_out=steps_out,
+        )
     new_chunks = list(state.collected[before_len:])
     signal = _wave_subgoal_result(
         plan,
@@ -224,7 +270,8 @@ def _execute_subgoal_harvest_once(
             "visited_section_ids": list(harvest_result.visited_section_ids),
             "max_depth_hit": harvest_result.max_depth_hit,
             "reason": harvest_result.reason,
-            "widen_gap": gap_note,
+            "widen_gap": str((state.subgoal_widen_gaps or {}).get(subgoal.id) or ""),
+            "refined_query": refined,
         },
     }
 
@@ -241,11 +288,11 @@ def _apply_plan_control(
 ) -> Dict[str, Any]:
     """Apply one wave's plan_control decision; returns a TRACE-friendly detail.
 
-    ``widen`` = leave the subgoal unsettled for the next wave. Harvest again
-    from the root with prior dead-ends dismissed and the last ``gap`` appended
-    to the retrieval query. Only ``subgoal_max_attempts`` turns widen into drop.
+    ``widen`` = leave the subgoal unsettled for the next wave. plan_control says
+    what is missing; PLAN turns that into a new retrieval_query, which then
+    re-scores the shared map for the next harvest. Prior dead-ends stay
+    dismissed. Only ``subgoal_max_attempts`` turns widen into drop.
     """
-    del by_id  # reserved for future control context
     from nav_control import plan_control
 
     decision = plan_control(ts, state, config, plan=plan, wave_outputs=outputs)
@@ -267,15 +314,42 @@ def _apply_plan_control(
             state.satisfied_subgoal_ids.add(sid)
             state.attempted_subgoal_ids.add(sid)
             state.subgoal_widen_gaps.pop(sid, None)
+            state.subgoal_refined_queries.pop(sid, None)
         elif kind == "drop":
             state.dropped_subgoal_ids.add(sid)
             state.attempted_subgoal_ids.add(sid)
             state.subgoal_widen_gaps.pop(sid, None)
+            state.subgoal_refined_queries.pop(sid, None)
         else:
-            # widen: keep unsettled; stash gap for the next harvest query.
-            note = str(getattr(result, "gap", "") or "").strip()
+            # widen: control's note says what is missing. It is never fed to
+            # harvest as text — PLAN reads it against the map and rewrites the
+            # query, which is what actually re-ranks the next harvest.
+            note = ""
+            if sub_decision is not None:
+                note = str(sub_decision.note or "").strip()
+            if not note:
+                note = str(getattr(result, "gap", "") or "").strip()
             if note:
                 state.subgoal_widen_gaps[sid] = note
+            subgoal = by_id.get(sid)
+            if subgoal is not None:
+                refined = refine_subgoal_query(
+                    ts,
+                    state,
+                    config,
+                    subgoal=subgoal,
+                    previous_query=str(
+                        state.subgoal_refined_queries.get(sid)
+                        or subgoal.retrieval_query
+                        or ""
+                    ),
+                    gap=note,
+                    selected_section_ids=list(
+                        getattr(result, "collected_section_ids", None) or []
+                    ),
+                )
+                if refined:
+                    state.subgoal_refined_queries[sid] = refined
 
     if steps_out is not None:
         from agent_delivery.agent.types import AgentStep  # type: ignore
@@ -417,6 +491,7 @@ def execute_plan(
                 state.dropped_subgoal_ids = set()
                 state.subgoal_results = {}
                 state.subgoal_widen_gaps = {}
+                state.subgoal_refined_queries = {}
                 state.subgoal_attempt_counts = {}
                 state.subgoal_dismissed_section_ids = {}
                 state.slot_bindings = {

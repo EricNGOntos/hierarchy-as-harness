@@ -343,15 +343,16 @@ class TestNavOrchestrate(unittest.TestCase):
         llm.assert_not_called()
         self.assertEqual(state.slot_bindings, {})
 
-    def test_widen_retries_with_gap_then_drops_at_max_attempts(self) -> None:
-        """Widen keeps the subgoal unsettled, stashes gap for the next harvest
-        query, and only drops once subgoal_attempt_counts >= subgoal_max_attempts.
+    def test_widen_asks_plan_to_rewrite_query_then_drops_at_max_attempts(self) -> None:
+        """Widen keeps the subgoal unsettled and hands control's gap to PLAN,
+        whose rewritten query overrides the planned one for the next harvest.
+        Only drops once subgoal_attempt_counts >= subgoal_max_attempts.
 
         (execute_plan increments attempt_counts before calling this helper.)
         """
         from nav_orchestrate import _apply_plan_control
 
-        subgoal = Subgoal(id="s1", need="x", retrieval_query="x")
+        subgoal = Subgoal(id="s1", need="x", retrieval_query="原查询")
         plan = RetrievalPlan(subgoals=[subgoal])
         state = NavState(doc_id="doc1", query="x", retrieval_plan=plan)
         cfg = NavConfig(subgoal_max_attempts=3)
@@ -363,42 +364,117 @@ class TestNavOrchestrate(unittest.TestCase):
                     satisfied=False,
                     chars_used=0,
                     gap="empty_evidence",
-                    collected_section_ids=[],
+                    collected_section_ids=["sec-a"],
                 ),
                 "new_chunks": [],
             }
         ]
         widen_decision = PlanControlDecision(
-            per_subgoal={"s1": SubgoalDecision(subgoal_id="s1", decision="widen")},
+            per_subgoal={
+                "s1": SubgoalDecision(
+                    subgoal_id="s1", decision="widen", note="difficulties missing"
+                )
+            },
             global_action="continue",
         )
 
+        def _widen_wave(refined: str) -> MagicMock:
+            with patch(
+                "nav_control.plan_control", return_value=widen_decision
+            ), patch(
+                "nav_orchestrate.refine_subgoal_query", return_value=refined
+            ) as refine:
+                _apply_plan_control(
+                    ts,
+                    state,
+                    cfg,
+                    plan=plan,
+                    outputs=outputs,
+                    by_id={"s1": subgoal},
+                    steps_out=None,
+                )
+            return refine
+
         state.subgoal_attempt_counts["s1"] = 1
-        with patch("nav_control.plan_control", return_value=widen_decision):
-            _apply_plan_control(
-                ts, state, cfg, plan=plan, outputs=outputs, by_id={"s1": subgoal}, steps_out=None
-            )
+        refine = _widen_wave("勘察设计难点")
         self.assertNotIn("s1", state.dropped_subgoal_ids)
         self.assertNotIn("s1", state.attempted_subgoal_ids)
-        self.assertEqual(state.subgoal_widen_gaps.get("s1"), "empty_evidence")
+        # Control's note reaches PLAN as the gap, alongside the failed query
+        # and this wave's selected section ids.
+        self.assertEqual(refine.call_args.kwargs["gap"], "difficulties missing")
+        self.assertEqual(refine.call_args.kwargs["previous_query"], "原查询")
+        self.assertEqual(refine.call_args.kwargs["selected_section_ids"], ["sec-a"])
+        self.assertEqual(state.subgoal_widen_gaps.get("s1"), "difficulties missing")
+        self.assertEqual(state.subgoal_refined_queries.get("s1"), "勘察设计难点")
 
+        # A second widen rewrites from the last rewrite, not the planned query.
         state.subgoal_attempt_counts["s1"] = 2
-        with patch("nav_control.plan_control", return_value=widen_decision):
-            _apply_plan_control(
-                ts, state, cfg, plan=plan, outputs=outputs, by_id={"s1": subgoal}, steps_out=None
-            )
+        refine = _widen_wave("枢纽布置 地质条件")
         self.assertNotIn("s1", state.dropped_subgoal_ids)
-        self.assertEqual(state.subgoal_widen_gaps.get("s1"), "empty_evidence")
+        self.assertEqual(refine.call_args.kwargs["previous_query"], "勘察设计难点")
+        self.assertEqual(state.subgoal_refined_queries.get("s1"), "枢纽布置 地质条件")
 
         state.subgoal_attempt_counts["s1"] = 3
-        with patch("nav_control.plan_control", return_value=widen_decision):
-            _apply_plan_control(
-                ts, state, cfg, plan=plan, outputs=outputs, by_id={"s1": subgoal}, steps_out=None
-            )
+        _widen_wave("never used")
         self.assertIn("s1", state.dropped_subgoal_ids)
         self.assertIn("s1", state.attempted_subgoal_ids)
         self.assertNotIn("s1", state.subgoal_widen_gaps)
+        self.assertNotIn("s1", state.subgoal_refined_queries)
 
+    def test_harvest_always_relights_map_with_retrieval_query(self) -> None:
+        """Every harvest (wave-1 planned query or later refine) re-scores the
+        map against the retrieval_query in force, then restores episode lighting."""
+        from nav_orchestrate import _execute_subgoal_harvest_once
+
+        subgoal = Subgoal(id="s1", need="x", retrieval_query="原查询")
+        plan = RetrievalPlan(subgoals=[subgoal])
+        state = NavState(doc_id="doc1", query="x", retrieval_plan=plan)
+        state.map_scores = {"a": 1.0}
+        state.unit_scores = {"a": 1.0}
+        state.highlight_ids = ["a"]
+        cfg = _checklist_cfg()
+        seen: dict = {}
+
+        def _fake_harvest(ts_arg, st, config, *, subgoal, entry_scope, query, steps_out):
+            seen["query"] = query
+            seen["map_scores"] = dict(st.map_scores)
+            seen["highlight_ids"] = list(st.highlight_ids)
+            return SimpleNamespace(
+                n_policy_calls=1,
+                visited_section_ids=[],
+                max_depth_hit=False,
+                reason="",
+                search_assets=[],
+            )
+
+        with patch("nav_harvest.harvest", side_effect=_fake_harvest), patch(
+            "nav_map_scores.relight_map_for_query",
+            return_value=({"b": 2.0}, {"b": 2.0}, ["b"]),
+        ) as relight:
+            _execute_subgoal_harvest_once(
+                MagicMock(), state, cfg, plan, subgoal, steps_out=None
+            )
+
+        self.assertEqual(seen["query"], "原查询")
+        self.assertEqual(relight.call_args.kwargs["query"], "原查询")
+        self.assertEqual(seen["map_scores"], {"b": 2.0})
+        self.assertEqual(seen["highlight_ids"], ["b"])
+        self.assertEqual(state.map_scores, {"a": 1.0})
+        self.assertEqual(state.highlight_ids, ["a"])
+
+        # Refined override also relights against the rewritten query.
+        state.subgoal_refined_queries["s1"] = "勘察设计难点"
+        with patch("nav_harvest.harvest", side_effect=_fake_harvest), patch(
+            "nav_map_scores.relight_map_for_query",
+            return_value=({"c": 3.0}, {"c": 3.0}, ["c"]),
+        ) as relight:
+            out = _execute_subgoal_harvest_once(
+                MagicMock(), state, cfg, plan, subgoal, steps_out=None
+            )
+        self.assertEqual(seen["query"], "勘察设计难点")
+        self.assertEqual(relight.call_args.kwargs["query"], "勘察设计难点")
+        self.assertEqual(out["harvest"]["refined_query"], "勘察设计难点")
+        self.assertEqual(state.map_scores, {"a": 1.0})
 
 if __name__ == "__main__":
     unittest.main()

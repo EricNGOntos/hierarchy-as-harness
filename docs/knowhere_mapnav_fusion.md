@@ -17,12 +17,14 @@
 旧 **fusion** 臂（illuminate / ledger / sticky anchor / 一串 enable_*）已退役，
 不再维护对照。
 
-## 2. 计分
+## 2. 两套分（勿混）
 
-- **主分**：`reference_facts` 语义分级（对=1 / 半对=0.5 / 错=0），由
-  `nav_probe_score.score_case_answer` 固化进 probe。
-- **辅分**：`pack_recall`（gold section 是否进证据包）。关键词 `answer_keys`
-  易假阳性，不用作主分。
+| 指标 | 量的是什么 | 怎么算 |
+| --- | --- | --- |
+| **pack** (`pack_hit` / `pack_recall`) | **检索定位**：最终证据包里有没有命中 probe 标注的 `gold_paths` section | `kept_chunks` → owner section ∩ gold；与答案文本无关 |
+| **ref** (`reference_score`) | **答案语义**：compose 写出的答案相对 `reference_facts` 对不对 | LLM 对每条 fact 判 对=1 / 半对=0.5 / 错=0，再平均 |
+
+二者独立：可以 **pack=0 但 ref>0**（采到别的节，文字碰巧盖住部分事实）；也可以 **pack 满但 ref 低**（节对了，compose 写错/漏写）。主分用 ref；pack 只诊断「有没有采到该采的节」。
 
 ## 3. Thinking 策略
 
@@ -68,7 +70,7 @@ PYTHONPATH=src/nav:src/realdata python bin/run_knowhere_probe.py \
 | q1_wang_roles_r2 | 1.0 | 1.0 | 0/1 | 1/1 | |
 | q2_hydrology_stations | 1.0 | 0.75 | 4/4 | **4/4** | shared 首波 widen→次波 drop，**非首波即弃**；邻域收回 |
 | q3_status_and_supply_scope | 1.0 | 1.0 | 2/2 | 2/2 | |
-| q4_difficulties_and_key_tech | 0.6667 | 0.6667 | 2/3 | 0/3 | shared 多轮 widen；答案有分但 gold pack 仍空 |
+| q4_difficulties_and_key_tech | 0.6667 | 0.6667 | 2/3 | **0/3** | shared 证据在 `1.1.3`/`1.7` 等旁路节，未进 3 个 gold；f1/f2 文字仍判对、f3 错 → ref=2/3 |
 | **合计（5 case mean）** | **3.6667** | **3.9167** | | | shared 略高于 baseline |
 
 清理前对照（旧 fusion 臂，同 probe）：shared/fusion 一度全 0；widen≈drop。

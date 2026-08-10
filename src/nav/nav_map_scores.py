@@ -421,3 +421,31 @@ def select_map_highlights(unit_scores: Dict[str, float], k: int = 6) -> List[str
         if len(out) >= limit:
             break
     return out
+
+
+def relight_map_for_query(
+    ts: Any,
+    *,
+    doc_id: str,
+    query: str,
+    top_k: int = 6,
+) -> Tuple[Dict[str, float], Dict[str, float], List[str]]:
+    """Re-score the whole shared map against ``query``.
+
+    Same namespace / single-doc split as the episode-level pass in ``nav_agent``:
+    an empty ``doc_id`` means the corpus root, where document ids are map nodes
+    and ``ts.document_ids()`` is already restricted to the episode's corpus.
+    """
+    doc = str(doc_id or "").strip()
+    if doc:
+        map_scores, unit_scores = compute_map_and_unit_scores(
+            ts, doc_id=doc, query=query
+        )
+    else:
+        doc_ids = [str(d) for d in (ts.document_ids() or ()) if str(d).strip()]
+        if not doc_ids:
+            return {}, {}, []
+        map_scores, unit_scores = compute_corpus_map_and_unit_scores(
+            ts, doc_ids=doc_ids, query=query
+        )
+    return map_scores, unit_scores, select_map_highlights(unit_scores, k=int(top_k))
