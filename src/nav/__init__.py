@@ -19,7 +19,6 @@ from nav_plan import (
     plan_query,
 )
 from nav_orchestrate import execute_plan
-from nav_illuminate import illuminate_from_plan
 
 __all__ = [
     "ActionKind",
@@ -37,5 +36,4 @@ __all__ = [
     "bind_slots",
     "plan_query",
     "execute_plan",
-    "illuminate_from_plan",
 ]

@@ -7,8 +7,7 @@ section/chunk rows knowhere already stores.
 
 Arms:
   - ``baseline``: map navigation alone
-  - ``fusion``: legacy PLAN×NAV (per-subgoal split / anchor / share — for contrast)
-  - ``shared``: P0 new scheme (coverage checklist + shared search space + plan_control)
+  - ``shared``: coverage checklist + shared search space + harvest + plan_control
 """
 from __future__ import annotations
 
@@ -117,31 +116,8 @@ def cfg_baseline() -> NavConfig:
     return cfg
 
 
-def cfg_fusion() -> NavConfig:
-    """Legacy PLAN×NAV contrast arm (split-space switches left on for history)."""
-    cfg = cfg_baseline()
-    cfg.enable_query_planning = True
-    cfg.enable_per_subgoal_illumination = True
-    cfg.enable_goal_conditioned_folding = True
-    cfg.enable_plan_orchestration = True
-    cfg.enable_slot_extract = True
-    cfg.enable_subgoal_budget_ledger = True
-    cfg.subgoal_budget_floor_frac = 1.0
-    cfg.max_replans = 1
-    cfg.subgoal_max_attempts = 2
-    cfg.max_waves = 0
-    cfg.enable_anchor_entry = True
-    cfg.enable_one_shot_harvest = True
-    cfg.max_harvest_depth = 3
-    cfg.enable_plan_control = True
-    cfg.plan_control_digest_chars = 600
-    cfg.show_harvested_in_map = True
-    cfg.enable_settle_group_rank = True
-    return cfg
-
-
 def cfg_shared() -> NavConfig:
-    """P0 new scheme: checklist + shared space; retired splitters stay off."""
+    """Checklist + shared search space + one-shot harvest + plan_control."""
     cfg = cfg_baseline()
     cfg.enable_query_planning = True
     cfg.enable_plan_orchestration = True
@@ -159,7 +135,6 @@ def cfg_shared() -> NavConfig:
 
 ARMS = {
     "baseline": cfg_baseline,
-    "fusion": cfg_fusion,
     "shared": cfg_shared,
 }
 
@@ -320,7 +295,7 @@ def main() -> None:
         "--probe",
         default=str(ROOT / "data/probes/knowhere_archive_corpus.json"),
     )
-    parser.add_argument("--arms", default="baseline,fusion,shared")
+    parser.add_argument("--arms", default="baseline,shared")
     parser.add_argument("--budget-chars", type=int, default=12000)
     parser.add_argument("--case", default="", help="run only this case id")
     parser.add_argument("--dry-run", action="store_true", help="print the map, run no LLM")

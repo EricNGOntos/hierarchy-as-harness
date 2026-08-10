@@ -1,12 +1,9 @@
-"""M4/M5/M6: wave orchestration over a RetrievalPlan.
+"""M4/M5: wave orchestration over a RetrievalPlan.
 
 Execution order = dependency DAG ∩ soft prefer_after. Each subgoal runs its own
 harvest/navigate so evidence attribution stays per-subgoal. Slot values are
 extracted only when a later subgoal references them; checklist acceptance is
 owned by ``plan_control``.
-
-M6 ``BudgetLedger`` / ``settle_subgoal_evidence`` live in ``nav_compose``
-(wired from ``run_nav_episode`` after orchestration).
 """
 
 from __future__ import annotations
@@ -16,7 +13,6 @@ import time
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
-from nav_illuminate import illuminate_from_plan, refresh_fold_from_subgoal_scores
 from nav_navigate import navigate
 from nav_plan import (
     RetrievalPlan,
@@ -237,7 +233,7 @@ def _execute_subgoal_harvest_once(
     Retry / widen / drop / replan authority belongs to ``plan_control`` across
     waves (see ``nav_control.plan_control``), not to this single call.
     """
-    from nav_harvest import harvest, resolve_harvest_anchor
+    from nav_harvest import harvest
 
     rq = bind_slots(subgoal.retrieval_query, state.slot_bindings)
     if unbound_slots(rq):
@@ -246,7 +242,8 @@ def _execute_subgoal_harvest_once(
         # the unresolved {{...}} braces stripped rather than stalling.
         rq = _unbound_retrieval_query(subgoal)
     _set_focus(state, subgoal, rq)
-    anchor = resolve_harvest_anchor(subgoal, state, config, ts=ts)
+    # Harvest always enters at namespace/document root; widen (Batch C) will
+    # retry with dismissed dead-ends rather than an anchor stack.
     before_sections = set(state.collected_section_ids)
     before_len = len(state.collected)
     harvest_result = harvest(
@@ -254,7 +251,7 @@ def _execute_subgoal_harvest_once(
         state,
         config,
         subgoal=subgoal,
-        entry_scope=anchor,
+        entry_scope=None,
         query=rq,
         steps_out=steps_out,
     )
@@ -274,7 +271,7 @@ def _execute_subgoal_harvest_once(
         "result": signal,
         "new_chunks": new_chunks,
         "harvest": {
-            "anchor": anchor,
+            "anchor": None,
             "n_policy_calls": harvest_result.n_policy_calls,
             "visited_section_ids": list(harvest_result.visited_section_ids),
             "max_depth_hit": harvest_result.max_depth_hit,
@@ -337,7 +334,7 @@ def _apply_plan_control(
             state.dropped_subgoal_ids.add(sid)
             state.attempted_subgoal_ids.add(sid)
         # kind == "widen": anchor already advanced above; next wave's harvest
-        # reads it back from state.subgoal_anchor via resolve_harvest_anchor.
+        # reads it back from state.subgoal_anchor (Batch C will replace this).
 
     if steps_out is not None:
         from agent_delivery.agent.types import AgentStep  # type: ignore
@@ -432,9 +429,6 @@ def execute_plan(
             "subgoal_results": [],
         }
 
-        if bool(getattr(config, "enable_per_subgoal_illumination", False)):
-            refresh_fold_from_subgoal_scores(state, config)
-
         by_id = {s.id: s for s in plan.subgoals}
         outputs: List[Dict[str, Any]] = []
 
@@ -493,10 +487,6 @@ def execute_plan(
                 if result.chars_used > 0:
                     state.satisfied_subgoal_ids.add(sid)
 
-        if bool(getattr(config, "enable_per_subgoal_illumination", False)):
-            illuminate_from_plan(ts, state, config)
-            refresh_fold_from_subgoal_scores(state, config)
-
         if steps_out is not None:
             steps_out.append(
                 AgentStep(
@@ -529,8 +519,6 @@ def execute_plan(
                 state.slot_bindings = {
                     k: v for k, v in state.slot_bindings.items() if "." not in k
                 }
-                if bool(getattr(config, "enable_per_subgoal_illumination", False)):
-                    illuminate_from_plan(ts, state, config)
                 if steps_out is not None:
                     steps_out.append(
                         AgentStep(

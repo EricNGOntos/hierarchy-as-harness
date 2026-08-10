@@ -12,7 +12,7 @@ for source_dir in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
     if str(source_dir) not in sys.path:
         sys.path.insert(0, str(source_dir))
 
-from nav_harvest import harvest, resolve_harvest_anchor, resolve_parent_section_id  # noqa: E402
+from nav_harvest import harvest, resolve_parent_section_id  # noqa: E402
 from nav_hierarchy import InMemoryHierarchyProvider, InMemoryNode, ProviderToolSpace  # noqa: E402
 from nav_plan import Contract, ScopeFilter, Subgoal  # noqa: E402
 from nav_types import ActionKind, NavConfig, NavState  # noqa: E402
@@ -20,14 +20,14 @@ from nav_types import ActionKind, NavConfig, NavState  # noqa: E402
 
 def _build_ts() -> ProviderToolSpace:
     nodes = {
-        "doc1:__doc_root": InMemoryNode(
-            section_id="doc1:__doc_root", title="Manual", children=["doc1:A"]
+        "doc1:ROOT": InMemoryNode(
+            section_id="doc1:ROOT", title="Manual", children=["doc1:A"]
         ),
         "doc1:A": InMemoryNode(section_id="doc1:A", title="Section A", children=["doc1:A1", "doc1:A2"]),
         "doc1:A1": InMemoryNode(section_id="doc1:A1", title="A1", content="alpha content"),
         "doc1:A2": InMemoryNode(section_id="doc1:A2", title="A2", content="beta content"),
     }
-    provider = InMemoryHierarchyProvider(roots_by_doc={"doc1": ["doc1:__doc_root"]}, nodes=nodes)
+    provider = InMemoryHierarchyProvider(roots_by_doc={"doc1": ["doc1:ROOT"]}, nodes=nodes)
     return ProviderToolSpace(provider)
 
 
@@ -59,7 +59,7 @@ class HarvestRecursionTests(unittest.TestCase):
 
         with patch("nav_harvest.harvest_policy_call", side_effect=fake_policy):
             result = harvest(
-                self.ts, state, config, subgoal=subgoal, entry_scope="doc1:__doc_root", query="A"
+                self.ts, state, config, subgoal=subgoal, entry_scope="doc1:ROOT", query="A"
             )
 
         self.assertEqual(result.n_policy_calls, 1)
@@ -75,7 +75,7 @@ class HarvestRecursionTests(unittest.TestCase):
 
         def fake_policy(ts, state, config, *, subgoal, query, projection, actions, depth):
             scope = projection.scope
-            if scope == "doc1:__doc_root":
+            if scope == "doc1:ROOT":
                 dispatch = [a for a in actions if a.kind == ActionKind.DISPATCH and a.section_id == "doc1:A"]
                 return [], dispatch, {}, "enter A", {}
             # Inside doc1:A: A1/A2 are leaves (no DISPATCH action exists for them),
@@ -86,7 +86,7 @@ class HarvestRecursionTests(unittest.TestCase):
 
         with patch("nav_harvest.harvest_policy_call", side_effect=fake_policy):
             result = harvest(
-                self.ts, state, config, subgoal=subgoal, entry_scope="doc1:__doc_root", query="A"
+                self.ts, state, config, subgoal=subgoal, entry_scope="doc1:ROOT", query="A"
             )
 
         self.assertEqual(result.n_policy_calls, 2)
@@ -136,14 +136,14 @@ class HarvestRecursionTests(unittest.TestCase):
         subgoal = _subgoal()
 
         def fake_policy(ts, state, config, *, subgoal, query, projection, actions, depth):
-            if projection.scope == "doc1:__doc_root":
+            if projection.scope == "doc1:ROOT":
                 dispatch = [a for a in actions if a.kind == ActionKind.DISPATCH and a.section_id == "doc1:A"]
                 return [], dispatch, {}, "look inside A", {}
             return [], [], {}, "nothing here either", {}
 
         with patch("nav_harvest.harvest_policy_call", side_effect=fake_policy):
             harvest(
-                self.ts, state, config, subgoal=subgoal, entry_scope="doc1:__doc_root", query="A"
+                self.ts, state, config, subgoal=subgoal, entry_scope="doc1:ROOT", query="A"
             )
 
         self.assertIn("doc1:A", state.subgoal_dismissed_section_ids.get("s1", set()))
@@ -154,7 +154,7 @@ class HarvestRecursionTests(unittest.TestCase):
         subgoal = _subgoal()
 
         def fake_policy(ts, state, config, *, subgoal, query, projection, actions, depth):
-            if projection.scope == "doc1:__doc_root":
+            if projection.scope == "doc1:ROOT":
                 dispatch = [a for a in actions if a.kind == ActionKind.DISPATCH and a.section_id == "doc1:A"]
                 return [], dispatch, {}, "enter A", {}
             collect = [a for a in actions if a.kind == ActionKind.COLLECT and a.section_id == "doc1:A1"]
@@ -162,74 +162,22 @@ class HarvestRecursionTests(unittest.TestCase):
 
         with patch("nav_harvest.harvest_policy_call", side_effect=fake_policy):
             result = harvest(
-                self.ts, state, config, subgoal=subgoal, entry_scope="doc1:__doc_root", query="A"
+                self.ts, state, config, subgoal=subgoal, entry_scope="doc1:ROOT", query="A"
             )
 
         self.assertIn("enter A", result.reason)
         self.assertIn("found A1", result.reason)
 
 
-class ResolveHarvestAnchorTests(unittest.TestCase):
-    def test_disabled_flag_returns_none(self) -> None:
-        state = NavState(doc_id="doc1", query="A")
-        config = _config(enable_anchor_entry=False)
-        subgoal = _subgoal(route_hints=["doc1:A1"])
-        self.assertIsNone(resolve_harvest_anchor(subgoal, state, config))
-
-    def test_anchor_is_sticky_across_calls(self) -> None:
-        """First resolution is cached; later state changes don't reshuffle it."""
-        state = NavState(doc_id="doc1", query="A")
-        config = _config(enable_anchor_entry=True)
-        subgoal = _subgoal(route_hints=["doc1:A1", "doc1:A2"])
-        first = resolve_harvest_anchor(subgoal, state, config)
-        self.assertEqual(first, "doc1:A1")
-        # Even though A1 is now collected, the cached anchor does not change
-        # here — only plan_control's widen (nav_orchestrate) ever moves it.
-        state.collected_section_ids.add("doc1:A1")
-        self.assertEqual(resolve_harvest_anchor(subgoal, state, config), "doc1:A1")
-
-    def test_skips_hints_already_dismissed_by_this_subgoal(self) -> None:
-        state = NavState(doc_id="doc1", query="A")
-        state.subgoal_dismissed_section_ids["s1"] = {"doc1:A1"}
-        config = _config(enable_anchor_entry=True)
-        subgoal = _subgoal(route_hints=["doc1:A1", "doc1:A2"])
-        self.assertEqual(resolve_harvest_anchor(subgoal, state, config), "doc1:A2")
-
-
 class ResolveParentSectionIdTests(unittest.TestCase):
     def test_returns_direct_parent_via_provider_toolspace(self) -> None:
         ts = _build_ts()
         self.assertEqual(resolve_parent_section_id(ts, "doc1:A1", "doc1"), "doc1:A")
-        self.assertEqual(resolve_parent_section_id(ts, "doc1:A", "doc1"), "doc1:__doc_root")
+        self.assertEqual(resolve_parent_section_id(ts, "doc1:A", "doc1"), "doc1:ROOT")
 
     def test_no_parent_at_top_level_returns_none(self) -> None:
         ts = _build_ts()
-        self.assertIsNone(resolve_parent_section_id(ts, "doc1:__doc_root", "doc1"))
-
-    def test_skips_already_collected_hints(self) -> None:
-        state = NavState(doc_id="doc1", query="A")
-        state.collected_section_ids.add("doc1:A1")
-        config = _config(enable_anchor_entry=True)
-        subgoal = _subgoal(route_hints=["doc1:A1", "doc1:A2"])
-        self.assertEqual(resolve_harvest_anchor(subgoal, state, config), "doc1:A2")
-
-    def test_skips_hints_outside_declared_doc_scope(self) -> None:
-        state = NavState(doc_id="doc1", query="A")
-        config = _config(enable_anchor_entry=True)
-        subgoal = _subgoal(
-            route_hints=["doc2:B1", "doc1:A1"],
-            scope_filter=ScopeFilter(doc_ids=["doc1"]),
-        )
-        self.assertEqual(
-            resolve_harvest_anchor(subgoal, state, config, ts=_build_ts()),
-            "doc1:A1",
-        )
-
-    def test_no_usable_hint_returns_none(self) -> None:
-        state = NavState(doc_id="doc1", query="A")
-        config = _config(enable_anchor_entry=True)
-        subgoal = _subgoal(route_hints=[])
-        self.assertIsNone(resolve_harvest_anchor(subgoal, state, config))
+        self.assertIsNone(resolve_parent_section_id(ts, "doc1:ROOT", "doc1"))
 
 
 if __name__ == "__main__":

@@ -81,15 +81,7 @@ def address_level(ts: Any, node_id: str) -> Optional[NavLevel]:
 
 def is_dispatch_only_node(ts: Any, node_id: str) -> bool:
     """True when the node is document/namespace scoped (DISPATCH only)."""
-    level = address_level(ts, node_id)
-    if level is not None:
-        return is_dispatch_only_level(level)
-    # Legacy ToolSpace still uses synthetic suffix ids until that path is retired.
-    try:
-        from agent_delivery.code.tool_space import is_synthetic_dispatch_only
-    except Exception:  # pragma: no cover
-        return False
-    return bool(is_synthetic_dispatch_only(node_id))
+    return is_dispatch_only_level(address_level(ts, node_id))
 
 
 def owner_document(ts: Any, node_id: str, fallback: str = "") -> str:

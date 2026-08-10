@@ -27,7 +27,7 @@ todos:
     content: 实验仓：把 reference_answer 事实清单计分（对/半对/错）固化进 run_knowhere_probe.py，取代会产生假阳性的 answer_keys 关键词命中
     status: completed
   - id: validate
-    content: 实验仓：跑 baseline / 旧 fusion / 新方案三臂对照；q2 要拿回 2.3 水文基本资料整个邻域，q4 要在默认预算下拿到证据
+    content: 实验仓：跑 baseline / shared 两臂对照（旧 fusion 臂已退役）；q2 要拿回 2.3 水文基本资料整个邻域，q4 要在默认预算下拿到证据
     status: pending
   - id: loader
     content: Knowhere：KnowhereProvider 补按 (user_id, namespace) 的 AsyncSession loader，一次查询预加载 sections+chunks 成同步快照，按 current_job_result_id 做 revision 隔离
@@ -220,9 +220,9 @@ DISPATCH 给四样东西：
 ### P1 验证（不过这关不进生产）
 
 - **scoring**：把 `reference_answer` 事实清单计分固化进 `bin/run_knowhere_probe.py`，取代 `answer_keys` 关键词命中
-- **validate**：三臂对照 baseline / 旧 fusion / 新方案
+- **validate**：两臂对照 baseline / shared（旧 fusion 对照臂已删，不再维护）
 - 两个必须复现的 case：q2 拿回 `2.3 水文基本资料` 整个邻域（4/4）；q4 在**默认预算**下拿到证据
-- 通过线：新方案要同时超过 baseline 的 3 分与 Knowhere 默认预算的 3.5 分。达不到就回到 P0 找原因，不要带着退步接生产
+- 通过线：shared 要同时超过 baseline 的 3 分与 Knowhere 默认预算的 3.5 分。达不到就回到 P0 找原因，不要带着退步接生产
 
 ### P2 Knowhere 接入
 

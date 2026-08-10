@@ -10,10 +10,8 @@ from agent_delivery.code.compose_llm import compose_answer_llm
 from agent_delivery.code.hierarchical_tools import HierarchicalTools
 from agent_delivery.code.index_retrieval import Chunk
 from agent_delivery.code.tool_space import (
-    CORPUS_DOC_ID,
     Refusal,
     ToolSpace,
-    is_corpus_doc_id,
 )
 from nav_address import (
     is_dispatch_only_node,
@@ -23,7 +21,6 @@ from nav_address import (
 from nav_compose import (
     evidence_owner_section_id,
     pack_nav_evidence,
-    settle_subgoal_evidence,
     unit_score_for_evidence_chunk,
 )
 from nav_map_scores import (
@@ -87,11 +84,11 @@ def _resolve_action_doc_id(
     else:
         sid = str(action_or_sid or "").strip()
     resolved = owner_document(ts, sid, "") if ts is not None else ""
-    if resolved and not is_corpus_doc_id(resolved):
+    if resolved:
         return resolved
-    if state.doc_id and not is_corpus_doc_id(state.doc_id):
+    if state.doc_id:
         return state.doc_id
-    return str(resolved or state.doc_id or "")
+    return ""
 
 
 def _purge_descendant_evidence(
@@ -151,7 +148,7 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
     if is_dispatch_only_node(ts, sid):
         return []
     doc = _resolve_action_doc_id(action, state, ts)
-    if not doc or is_corpus_doc_id(doc):
+    if not doc:
         return []
     materialize = getattr(ts, "_materialize_leaf_path_chunks", None)
     if callable(materialize):
@@ -293,7 +290,7 @@ def run_nav_episode(
     corpus_ids = [
         str(d).strip()
         for d in (corpus_doc_ids or [])
-        if str(d).strip() and not is_corpus_doc_id(str(d).strip())
+        if str(d).strip()
     ]
     episode_doc = str(doc_id or "").strip()
     if not episode_doc and not corpus_ids:
@@ -337,14 +334,11 @@ def run_nav_episode(
         raise ValueError("Nav Agent requires either tools or an injected toolspace")
 
     # Namespace / multi-doc: document ids are map nodes; empty scope is the root.
-    # Legacy ToolSpace still uses the CORPUS_DOC_ID sentinel until that path is retired.
     namespace_mode = bool(corpus_ids) and uses_document_nodes(ts)
     if namespace_mode:
         if not corpus_ids:
             corpus_ids = list(ts.document_ids())
         episode_doc = ""
-    elif corpus_ids:
-        episode_doc = CORPUS_DOC_ID
 
     state = NavState(doc_id=episode_doc, query=query, task_type=task_type)
     steps: List[AgentStep] = []
@@ -352,11 +346,6 @@ def run_nav_episode(
         section_ids = list(ts.sections_for_doc(""))
         state.map_scores, state.unit_scores = compute_corpus_map_and_unit_scores(
             ts, doc_ids=corpus_ids, query=query
-        )
-    elif is_corpus_doc_id(episode_doc):
-        section_ids = ts.sections_for_doc(CORPUS_DOC_ID)
-        state.map_scores, state.unit_scores = compute_corpus_map_and_unit_scores(
-            ts, doc_ids=ts.corpus_doc_ids, query=query
         )
     else:
         section_ids = ts.sections_for_doc(episode_doc)
@@ -390,22 +379,6 @@ def run_nav_episode(
             )
         )
 
-    if bool(getattr(cfg, "enable_per_subgoal_illumination", False)):
-        from nav_illuminate import illuminate_from_plan
-
-        illum_t0 = time.perf_counter()
-        illum_detail = illuminate_from_plan(ts, state, cfg)
-        if illum_detail is not None:
-            illum_detail = dict(illum_detail)
-            illum_detail["seconds"] = time.perf_counter() - illum_t0
-            steps.append(
-                AgentStep(
-                    step_idx=len(steps) + 1,
-                    action="illuminate",
-                    detail=illum_detail,
-                )
-            )
-
     # Top-level: plan orchestration (M4/M5) or classic single navigate.
     if bool(getattr(cfg, "enable_plan_orchestration", False)) and state.retrieval_plan is not None:
         from nav_orchestrate import execute_plan
@@ -435,37 +408,13 @@ def run_nav_episode(
             steps_out=steps,
         )
 
-    fill = None
-    ledger_detail = None
-    if (
-        bool(getattr(cfg, "enable_subgoal_budget_ledger", False))
-        and state.retrieval_plan is not None
-        and bool(getattr(cfg, "enable_plan_orchestration", False))
-    ):
-        fill, ledger = settle_subgoal_evidence(
-            _dedupe_scored(list(state.collected)),
-            ts,
-            state,
-            cfg,
-            budget_chars=budget_chars,
-        )
-        if ledger is not None:
-            ledger_detail = ledger.to_dict()
-            steps.append(
-                AgentStep(
-                    step_idx=len(steps) + 1,
-                    action="budget_ledger",
-                    detail=ledger_detail,
-                )
-            )
-    if fill is None:
-        fill = pack_nav_evidence(
-            _dedupe_scored(list(state.collected)),
-            ts,
-            state,
-            cfg,
-            budget_chars=budget_chars,
-        )
+    fill = pack_nav_evidence(
+        _dedupe_scored(list(state.collected)),
+        ts,
+        state,
+        cfg,
+        budget_chars=budget_chars,
+    )
     scored_chunks = list(fill.scored_chunks)
     retrieval_seconds = time.perf_counter() - retrieval_t0
     composed = ""

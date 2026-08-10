@@ -88,10 +88,6 @@ class NavConfig:
     planner_model_env: str = "NAV_PLANNER_MODEL"
     # Separate from navigate llm_max_tokens: plan JSON is larger.
     planner_llm_max_tokens: int = 1024
-    # M3: after planning, re-score the map per bindable subgoal retrieval_query.
-    enable_per_subgoal_illumination: bool = False
-    # M3: fold merge uses budget_share weights + satisfied decay (else equal max).
-    enable_goal_conditioned_folding: bool = False
     # M4: replace single navigate with dependency-wave plan execution.
     enable_plan_orchestration: bool = False
     # LLM slot extract when a later subgoal references this subgoal's slots.
@@ -102,22 +98,14 @@ class NavConfig:
     max_replans: int = 0
     # M4: 0 = no extra wave cap (stop when no ready subgoals).
     max_waves: int = 0
-    # M6: settle evidence with per-subgoal floors + leftover recirculation.
-    enable_subgoal_budget_ledger: bool = False
-    # Fraction of episode budget reserved as floors by budget_share (rest starts in Tier-2 pool).
-    subgoal_budget_floor_frac: float = 1.0
-    # --- PLAN×NAV fusion (2026-08): anchor entry + one-shot harvest + plan_control ---
-    # Enter a subgoal's harvest at its resolved route_hints anchor instead of the
-    # document/corpus root. Per-subgoal fallback to root when no anchor resolves.
-    enable_anchor_entry: bool = False
+    # --- PLAN×NAV: one-shot harvest + plan_control ---
     # Replace the multi-step ReAct navigate() with a single collect/dispatch
     # decision per node; recursion only follows explicit DISPATCH selections.
     enable_one_shot_harvest: bool = False
     # Structural recursion depth cap for harvest() (mirrors max_dispatch_depth's
     # existing default; harvest recursion is bounded independently of navigate()).
     max_harvest_depth: int = 3
-    # Replace per-subgoal verdict auto-escalation (RETRY/REBIND -> REPLAN)
-    # with one LLM call per wave that reviews every subgoal's own new evidence.
+    # One LLM call per wave that reviews every subgoal's own new evidence.
     enable_plan_control: bool = False
     # Per-subgoal evidence digest cap shown to plan_control (not the full pool;
     # kept small since plan_control runs once per wave over every subgoal).
@@ -125,9 +113,6 @@ class NavConfig:
     # Render collected branches as "[harvested:sN]" instead of removing them from
     # the map/action space, so later subgoals and plan_control still see coverage.
     show_harvested_in_map: bool = False
-    # Compute group_priority once at settle time instead of once per per-subgoal
-    # navigate() call (which otherwise lets the last subgoal's rank win globally).
-    enable_settle_group_rank: bool = False
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "NavConfig":
@@ -151,6 +136,12 @@ class NavConfig:
             "dispatch_group_size",
             "dispatch_max_workers",
             "enable_contract_verify",
+            "enable_per_subgoal_illumination",
+            "enable_goal_conditioned_folding",
+            "enable_subgoal_budget_ledger",
+            "subgoal_budget_floor_frac",
+            "enable_anchor_entry",
+            "enable_settle_group_rank",
         ):
             flat.pop(dead, None)
         allowed = {f.name for f in cls.__dataclass_fields__.values()}
@@ -178,9 +169,7 @@ class SectionView:
     is_highlight: bool = False
     parent_id: Optional[str] = None
     summary: str = ""
-    # M3: which subgoal illuminations marked this node a Hit (for [Hit:s1,s3]).
-    hit_sources: List[str] = field(default_factory=list)
-    # PLAN×NAV fusion: subgoal id that collected this node's branch, when the
+    # PLAN×NAV: subgoal id that collected this node's branch, when the
     # node stays visible (collapsed, no descendant expansion) instead of being
     # deleted from the map — for [harvested:sN].
     harvested_by: str = ""
@@ -280,11 +269,6 @@ class NavState:
     # M2: structured retrieval plan + slot bindings for delayed query fill.
     retrieval_plan: Optional[Any] = None
     slot_bindings: Dict[str, str] = field(default_factory=dict)
-    # M3: per-subgoal illumination caches + fold provenance.
-    subgoal_map_scores: Dict[str, Dict[str, float]] = field(default_factory=dict)
-    subgoal_unit_scores: Dict[str, Dict[str, float]] = field(default_factory=dict)
-    hit_sources: Dict[str, List[str]] = field(default_factory=dict)
-    active_subgoal_ids: List[str] = field(default_factory=list)
     satisfied_subgoal_ids: set[str] = field(default_factory=set)
     # Finished trying (success or attempts exhausted). Deps wait on satisfied only.
     attempted_subgoal_ids: set[str] = field(default_factory=set)
@@ -303,9 +287,9 @@ class NavState:
     # (drives "[harvested:sN]" map tags when show_harvested_in_map is on).
     harvested_owner_subgoal: Dict[str, str] = field(default_factory=dict)
     # Per-subgoal sticky harvest entry point: None == document root (maximum
-    # breadth already). Set once by resolve_harvest_anchor's first
-    # resolution, moved only by plan_control's "widen" decision (one level up
-    # to the parent scope each time) — see nav_orchestrate._apply_plan_control.
+    # breadth already). Moved by plan_control's "widen" (one level up to the
+    # parent scope) — see nav_orchestrate._apply_plan_control. Batch C will
+    # replace this with dismissed-dead-end retry.
     subgoal_anchor: Dict[str, Optional[str]] = field(default_factory=dict)
     # Per-subgoal "seen but not selected" section ids (visible collect/dispatch
     # candidates a harvest call chose neither of, plus dispatched branches that

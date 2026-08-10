@@ -182,10 +182,7 @@ def format_actionable_map_observation(
     for view in rows:
         indent = "  " * max(0, int(view.depth_from_scope))
         leaf_tag = " [Leaf]" if not view.has_children else ""
-        hit_tag = format_hit_tag(
-            is_highlight=bool(view.is_highlight),
-            hit_sources=getattr(view, "hit_sources", None) or [],
-        )
+        hit_tag = format_hit_tag(is_highlight=bool(view.is_highlight))
         harvested_tag = format_harvested_tag(getattr(view, "harvested_by", "") or "")
         map_id = view.map_id or "?"
         meta = f"({view.n_chunks} chunks)"

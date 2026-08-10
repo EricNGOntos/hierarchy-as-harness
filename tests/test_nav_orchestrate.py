@@ -327,13 +327,13 @@ class TestNavOrchestrate(unittest.TestCase):
         from nav_orchestrate import _apply_plan_control
 
         nodes = {
-            "doc1:__doc_root": InMemoryNode(
-                section_id="doc1:__doc_root", title="Root", children=["doc1:A"]
+            "doc1:ROOT": InMemoryNode(
+                section_id="doc1:ROOT", title="Root", children=["doc1:A"]
             ),
             "doc1:A": InMemoryNode(section_id="doc1:A", title="A", children=["doc1:A1"]),
             "doc1:A1": InMemoryNode(section_id="doc1:A1", title="A1", content="x"),
         }
-        provider = InMemoryHierarchyProvider(roots_by_doc={"doc1": ["doc1:__doc_root"]}, nodes=nodes)
+        provider = InMemoryHierarchyProvider(roots_by_doc={"doc1": ["doc1:ROOT"]}, nodes=nodes)
         ts = ProviderToolSpace(provider)
 
         subgoal = Subgoal(id="s1", need="x", retrieval_query="x")
@@ -363,7 +363,7 @@ class TestNavOrchestrate(unittest.TestCase):
             _apply_plan_control(
                 ts, state, cfg, plan=plan, outputs=outputs, by_id={"s1": subgoal}, steps_out=None
             )
-        self.assertEqual(state.subgoal_anchor["s1"], "doc1:__doc_root")
+        self.assertEqual(state.subgoal_anchor["s1"], "doc1:ROOT")
 
         with patch("nav_control.plan_control", return_value=widen_decision):
             _apply_plan_control(

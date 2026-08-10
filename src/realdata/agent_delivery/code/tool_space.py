@@ -88,6 +88,63 @@ class ToolSpace:
     def corpus_mode(self) -> bool:
         return bool(self._corpus_doc_ids)
 
+    def document_ids(self) -> List[str]:
+        """Namespace-mode document nodes (bare doc ids). Empty when not corpus."""
+        return list(self._corpus_doc_ids)
+
+    def address_level(self, node_id: str) -> Optional[str]:
+        """Return namespace|document|section for NavAddress (string, not Enum)."""
+        sid = str(node_id or "").strip()
+        if not sid or is_corpus_root_section(sid):
+            return "namespace"
+        if sid in self._corpus_doc_ids or is_doc_root_section(sid):
+            return "document"
+        if sid.endswith(":__prefix"):
+            return "section"
+        if sid in self._idx._node_to_doc_line or sid in self._idx.fact_by_section:
+            return "section"
+        return None
+
+    def owner_document(self, node_id: str) -> Optional[str]:
+        """Owning document_id; never returns the ``__corpus__`` sentinel."""
+        sid = str(node_id or "").strip()
+        if not sid:
+            return None
+        if sid in self._corpus_doc_ids:
+            return sid
+        synth = self._synthetic_doc_id(sid)
+        if synth and not is_corpus_doc_id(synth):
+            return synth
+        loc = self._idx._node_to_doc_line.get(sid)
+        if loc:
+            return str(loc[0])
+        return None
+
+    def parent_id(self, section_id: str) -> Optional[str]:
+        """Direct parent: top sections → document id (corpus); document → None."""
+        sid = str(section_id or "").strip()
+        if not sid or is_corpus_root_section(sid):
+            return None
+        if sid in self._corpus_doc_ids or is_doc_root_section(sid):
+            return None
+        doc = self.owner_document(sid)
+        if not doc:
+            return None
+        if sid in self._doc_navigable_top_sections(doc):
+            return doc
+        loc = self._idx._node_to_doc_line.get(sid)
+        b = self._idx._bundles.get(doc)
+        parents = self._idx._doc_parents.get(doc, [])
+        if not loc or loc[0] != doc or not b:
+            return None
+        _, j = loc
+        if j >= len(parents):
+            return None
+        p = parents[j]
+        if p is None or p < 0 or p >= len(b.lines):
+            return None
+        return line_node_id(doc, b.lines[p].line_id)
+
     def _synthetic_root_enabled(self) -> bool:
         return _env_enabled("NAV_SYNTHETIC_ROOT_SECTIONS", "1")
 
@@ -100,6 +157,7 @@ class ToolSpace:
         return "auto"
 
     def _doc_root_id(self, doc_id: str) -> str:
+        """Legacy internal id for single-doc synthetic root (no-anchor docs)."""
         return f"{doc_id}:__doc_root"
 
     def _prefix_id(self, doc_id: str) -> str:
@@ -108,10 +166,16 @@ class ToolSpace:
     def _corpus_root_id(self) -> str:
         return CORPUS_ROOT_SECTION_ID
 
+    def _is_document_node(self, node_id: str) -> bool:
+        sid = str(node_id or "").strip()
+        return sid in self._corpus_doc_ids or is_doc_root_section(sid)
+
     def _synthetic_doc_id(self, section_id: str) -> Optional[str]:
         sid = str(section_id or "").strip()
         if is_corpus_root_section(sid):
             return CORPUS_DOC_ID
+        if sid in self._corpus_doc_ids:
+            return sid
         if sid.endswith(":__doc_root"):
             return sid[: -len(":__doc_root")]
         if sid.endswith(":__prefix"):
@@ -232,24 +296,27 @@ class ToolSpace:
     def _synthetic_child_rows(
         self, section_id: str, doc_id: str, limit: int = 24
     ) -> List[dict]:
-        # Corpus search-space root → one node per allowlisted document.
-        if is_corpus_root_section(section_id) or (
-            is_corpus_doc_id(doc_id) and section_id == self._corpus_root_id()
+        # Namespace root (empty / legacy corpus root) → bare document nodes.
+        if (
+            not str(section_id or "").strip()
+            or is_corpus_root_section(section_id)
+            or (is_corpus_doc_id(doc_id) and section_id == self._corpus_root_id())
         ):
-            children: List[dict] = []
-            for did in self._corpus_doc_ids:
-                children.append(
-                    {
-                        "section_id": self._doc_root_id(did),
-                        "level": 0,
-                        "preview": self._doc_title_preview(did),
-                    }
-                )
-                if len(children) >= limit:
-                    break
-            return children
-        # Document root in corpus mode (and generally): expose navigable top sections.
-        if is_doc_root_section(section_id):
+            if self._corpus_doc_ids:
+                children: List[dict] = []
+                for did in self._corpus_doc_ids:
+                    children.append(
+                        {
+                            "section_id": did,
+                            "level": 0,
+                            "preview": self._doc_title_preview(did),
+                        }
+                    )
+                    if len(children) >= limit:
+                        break
+                return children
+        # Document node (bare doc id or legacy ``{doc}:__doc_root``).
+        if self._is_document_node(section_id):
             real_doc = self._synthetic_doc_id(section_id) or doc_id
             if is_corpus_doc_id(real_doc):
                 return []
@@ -274,7 +341,10 @@ class ToolSpace:
                     break
             if out:
                 return out
-            return self._synthetic_child_rows_from_bounds(section_id, real_doc, limit=limit)
+            # No-anchor docs: fall back to legacy synthetic root bounds under bare id.
+            return self._synthetic_child_rows_from_bounds(
+                self._doc_root_id(real_doc), real_doc, limit=limit
+            )
         return self._synthetic_child_rows_from_bounds(section_id, doc_id, limit=limit)
 
     # --- 1) get_map ---
@@ -292,10 +362,9 @@ class ToolSpace:
         return "sections:\n" + "\n".join(lines_out)
 
     def _sections_for_doc(self, doc_id: str) -> List[str]:
-        if is_corpus_doc_id(doc_id):
-            if not self._corpus_doc_ids:
-                return []
-            return [self._corpus_root_id()]
+        # Namespace root: empty scope (or legacy ``__corpus__``) → document nodes.
+        if not str(doc_id or "").strip() or is_corpus_doc_id(doc_id):
+            return list(self._corpus_doc_ids)
         b = self._idx._bundles.get(doc_id)
         if b and b.lines:
             anchors = self._top_level_anchor_indices(doc_id)
@@ -663,24 +732,26 @@ class ToolSpace:
 
     # --- 2) get_structure ---
     def get_structure(self, section_id: str) -> dict:
-        # Corpus search-space root (no line pool; children are document roots).
-        if is_corpus_root_section(section_id):
+        # Namespace root (empty / legacy corpus root): children are document nodes.
+        if not str(section_id or "").strip() or is_corpus_root_section(section_id):
             children = self._children_for_section_path(
-                section_id, CORPUS_DOC_ID, limit=max(1, len(self._corpus_doc_ids) or 1)
+                section_id or "",
+                "",
+                limit=max(1, len(self._corpus_doc_ids) or 1),
             )
             return {
-                "section_id": section_id,
+                "section_id": section_id or "",
                 "level": 0,
                 "n_chunks": 0,
                 "n_leaf_path_chunks": 0,
                 "n_lines": 0,
-                "preview": "corpus search space",
+                "preview": "namespace",
                 "children": children,
                 "exists": bool(self._corpus_doc_ids),
             }
         loc = self._idx._node_to_doc_line.get(section_id)
         doc_id = loc[0] if loc else (self._synthetic_doc_id(section_id) or "")
-        if is_doc_root_section(section_id) and doc_id and not is_corpus_doc_id(doc_id):
+        if self._is_document_node(section_id) and doc_id and not is_corpus_doc_id(doc_id):
             children = self._children_for_section_path(section_id, doc_id)
             preview = self._doc_title_preview(doc_id)
             b = self._idx._bundles.get(doc_id)

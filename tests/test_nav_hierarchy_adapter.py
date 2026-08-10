@@ -2,7 +2,7 @@
 
 Builds a pure in-memory ``HierarchyProvider`` (no ToolSpace, no BM25/dense
 index, no ``_idx``) and drives ``harvest()`` -> ``plan_control()`` ->
-``settle_subgoal_evidence()`` against it through ``ProviderToolSpace``. The
+``pack_nav_evidence()`` against it through ``ProviderToolSpace``. The
 only two LLM call sites (``harvest_policy_call`` / ``plan_control``'s chat
 completion) are mocked deterministically; everything else is real code.
 This is the acceptance check for the knowhere-main portability claim: no
@@ -23,7 +23,7 @@ for source_dir in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
         sys.path.insert(0, str(source_dir))
 
 from nav_control import plan_control  # noqa: E402
-from nav_compose import settle_subgoal_evidence  # noqa: E402
+from nav_compose import pack_nav_evidence  # noqa: E402
 from nav_harvest import harvest  # noqa: E402
 from nav_hierarchy import InMemoryHierarchyProvider, InMemoryNode, ProviderToolSpace  # noqa: E402
 from nav_plan import Contract, RetrievalPlan, Subgoal  # noqa: E402
@@ -33,8 +33,8 @@ from nav_verify import build_subgoal_result  # noqa: E402
 
 def _build_ts() -> ProviderToolSpace:
     nodes = {
-        "doc1:__doc_root": InMemoryNode(
-            section_id="doc1:__doc_root", title="Manual", children=["doc1:L1", "doc1:L5"]
+        "doc1:ROOT": InMemoryNode(
+            section_id="doc1:ROOT", title="Manual", children=["doc1:L1", "doc1:L5"]
         ),
         "doc1:L1": InMemoryNode(
             section_id="doc1:L1", title="Intro", content="This manual covers seal types."
@@ -46,7 +46,7 @@ def _build_ts() -> ProviderToolSpace:
         ),
     }
     provider = InMemoryHierarchyProvider(
-        roots_by_doc={"doc1": ["doc1:__doc_root"]},
+        roots_by_doc={"doc1": ["doc1:ROOT"]},
         nodes=nodes,
         summaries={"doc1:L5": "Details the mechanical face seal rating."},
     )
@@ -59,7 +59,6 @@ class HierarchyAdapterPortSeamTests(unittest.TestCase):
         self.config = NavConfig(
             map_mode=True,
             map_char_limit=4000,
-            enable_anchor_entry=True,
             enable_one_shot_harvest=True,
             max_harvest_depth=2,
             enable_plan_control=True,
@@ -179,7 +178,7 @@ class HierarchyAdapterPortSeamTests(unittest.TestCase):
             "collected_section_ids": ["doc1:L5"],
         }
         self.state.attempted_subgoal_ids.add("s1")
-        settled, _ledger = settle_subgoal_evidence(
+        settled = pack_nav_evidence(
             self.state.collected, self.ts, self.state, self.config, budget_chars=2000
         )
         self.assertIn("mechanical face seal", settled.evidence_text)

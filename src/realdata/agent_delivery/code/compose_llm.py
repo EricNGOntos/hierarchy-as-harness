@@ -3,6 +3,7 @@ Plan §3.4：结构化 Compose。
 
 - `compose_answer_llm`：OpenAI 兼容 Chat Completions，输出单行 JSON；须配置 `OPENAI_API_KEY`，
   可选 `OPENAI_BASE_URL`（如 DeepSeek / 转发网关）、`COMPOSE_MODEL`、`COMPOSE_TEMPERATURE`（默认 0）。
+  Thinking 默认关闭（``COMPOSE_THINKING=disabled``）；DeepSeek V4 若省略会默认开 think。
 - `compose_structured_string`：仅用于离线调试/测试，主评测路径（runner_bodyrich / react_agent）不调用。
 
 主路径由 `runner_bodyrich._configure_bodyrich_task_judge` 强制 `COMPOSE_USE_LLM=1`；LLM 失败或
@@ -17,10 +18,25 @@ from typing import List, Optional, Sequence
 
 from .index_retrieval import Chunk
 from .llm_api_cache import cached_chat_completion
-from .llm_config import load_llm_env, make_openai_client
+from .llm_config import (
+    chat_thinking_extra,
+    load_llm_env,
+    make_openai_client,
+    resolve_thinking_mode,
+)
 from .llm_usage import record_usage
 
 load_llm_env()
+
+
+def _compose_thinking_extra(model: str) -> dict:
+    """Compose emits short JSON — default thinking off (DS V4 defaults ON if omitted).
+
+    Override with ``COMPOSE_THINKING=enabled`` when intentionally profiling think mode.
+    """
+    raw = os.environ.get("COMPOSE_THINKING", "").strip() or "disabled"
+    mode = resolve_thinking_mode(raw) or "disabled"
+    return chat_thinking_extra(mode=mode, model=model)
 
 
 def _task_type_compose_guidance(task_type: str) -> str:
@@ -566,36 +582,39 @@ def compose_answer_llm(
         "\n禁止输出无关键（如 evidence_line_ids、analysis、reasoning）；"
         "只输出 schema 所需最小字段；不要把 JSON 键名写进字符串值。"
     )
+    think_extra = _compose_thinking_extra(model)
+    temp = float(os.environ.get("COMPOSE_TEMPERATURE", "0").strip() or "0")
+    max_tokens = _compose_max_tokens(max_answer_chars)
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You output only one line of valid JSON. No code fences. "
+                "Answer strictly from evidence."
+            ),
+        },
+        {"role": "user", "content": user},
+    ]
     try:
         cached = cached_chat_completion(
             client,
             purpose="compose",
             model=model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You output only one line of valid JSON. No code fences. Answer strictly from evidence.",
-                },
-                {"role": "user", "content": user},
-            ],
+            messages=messages,
             response_format={"type": "json_object"},
-            temperature=float(os.environ.get("COMPOSE_TEMPERATURE", "0").strip() or "0"),
-            max_tokens=_compose_max_tokens(max_answer_chars),
+            temperature=temp,
+            max_tokens=max_tokens,
+            extra=think_extra,
         )
     except Exception:
         cached = cached_chat_completion(
             client,
             purpose="compose",
             model=model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You output only one line of valid JSON. No code fences. Answer strictly from evidence.",
-                },
-                {"role": "user", "content": user},
-            ],
-            temperature=float(os.environ.get("COMPOSE_TEMPERATURE", "0").strip() or "0"),
-            max_tokens=_compose_max_tokens(max_answer_chars),
+            messages=messages,
+            temperature=temp,
+            max_tokens=max_tokens,
+            extra=think_extra,
         )
     record_usage("compose", cached.get("usage"))
     text = str(cached.get("content") or "").strip()

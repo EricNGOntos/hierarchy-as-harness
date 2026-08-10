@@ -218,47 +218,6 @@ def harvest_policy_call(
     return collect_actions, dispatch_actions, confidence, reason, meta
 
 
-def resolve_harvest_anchor(
-    subgoal: Subgoal,
-    state: NavState,
-    config: NavConfig,
-    ts: Any = None,
-) -> Optional[str]:
-    """Per-subgoal harvest entry scope, sticky across waves.
-
-    Resolved once from ``route_hints`` (first hint that is not already fully
-    collected, not already dismissed by this subgoal, and not outside a
-    declared ``scope_filter.doc_ids``), else the document root (``None``).
-    The result is cached on ``state.subgoal_anchor`` so later calls this
-    episode return the same value without re-scanning ``route_hints`` — the
-    only thing that ever moves it afterwards is plan_control's ``widen``
-    decision (``nav_orchestrate._apply_plan_control``, one level up to the
-    parent scope each time via ``resolve_parent_section_id``).
-    """
-    if not bool(getattr(config, "enable_anchor_entry", False)):
-        return None
-    if subgoal.id in state.subgoal_anchor:
-        return state.subgoal_anchor[subgoal.id]
-
-    from nav_address import owner_document
-
-    dismissed = state.subgoal_dismissed_section_ids.get(subgoal.id, set())
-    allowed_docs = {d for d in (subgoal.scope_filter.doc_ids or []) if str(d).strip()}
-    anchor: Optional[str] = None
-    for hint in subgoal.route_hints or []:
-        sid = str(hint or "").strip()
-        if not sid or sid in state.collected_section_ids or sid in dismissed:
-            continue
-        if allowed_docs:
-            doc = owner_document(ts, sid, "") if ts is not None else ""
-            if doc not in allowed_docs:
-                continue
-        anchor = sid
-        break
-    state.subgoal_anchor[subgoal.id] = anchor
-    return anchor
-
-
 def resolve_parent_section_id(ts: Any, section_id: str, doc_id: str) -> Optional[str]:
     """Direct parent of ``section_id`` in the full hierarchy — drives ``widen``.
 
@@ -298,13 +257,8 @@ def harvest(
         level = address_level(ts, entry_scope)
         if level in (NavLevel.NAMESPACE, NavLevel.DOCUMENT):
             initial_depth = 0
-        elif level is None:
-            try:
-                from agent_delivery.code.tool_space import is_doc_root_section
-            except Exception:  # pragma: no cover
-                is_doc_root_section = lambda _sid: False  # type: ignore
-            initial_depth = 0 if is_doc_root_section(entry_scope) else 1
         else:
+            # SECTION / unknown → already inside a document.
             initial_depth = 1
     _harvest_node(
         ts,
@@ -347,7 +301,6 @@ def _harvest_node(
         collected_section_ids=state.collected_section_ids,
         dismissed_section_ids=state.dismissed_section_ids | subgoal_dismissed,
         highlight_ids=state.highlight_ids,
-        hit_sources=state.hit_sources or None,
         harvested_section_ids=state.harvested_owner_subgoal if show_harvested else None,
     )
     actions = build_legal_actions(

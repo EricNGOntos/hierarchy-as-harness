@@ -2,12 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from agent_delivery.code.tool_space import (
-    CORPUS_DOC_ID,
-    ToolSpace,
-    is_corpus_doc_id,
-    is_doc_root_section,
-)
+from agent_delivery.code.tool_space import ToolSpace
 from agent_delivery.code.index_retrieval import Chunk
 from nav_address import NavLevel, address_level, owner_document, uses_document_nodes
 from nav_actions import build_legal_actions, format_actionable_map_observation
@@ -104,9 +99,7 @@ def _split_oversize_collect_actions(
         sid = str(act.section_id or "").strip()
         if not sid:
             continue
-        act_doc = owner_document(ts, sid, "") or (
-            state.doc_id if not is_corpus_doc_id(state.doc_id) else ""
-        )
+        act_doc = owner_document(ts, sid, "") or str(state.doc_id or "")
         chars = _estimate_branch_chars(ts, sid, act_doc) if act_doc else 0
         has_kids = _section_has_children(ts, sid, act_doc or state.doc_id, projection)
         if limit > 0 and chars > limit and has_kids:
@@ -161,14 +154,6 @@ def _fork_nav_state(state: NavState, *, doc_id: Optional[str] = None) -> NavStat
         group_priority=dict(state.group_priority),
         retrieval_plan=state.retrieval_plan,
         slot_bindings=dict(state.slot_bindings),
-        subgoal_map_scores={
-            k: dict(v) for k, v in (state.subgoal_map_scores or {}).items()
-        },
-        subgoal_unit_scores={
-            k: dict(v) for k, v in (state.subgoal_unit_scores or {}).items()
-        },
-        hit_sources={k: list(v) for k, v in (state.hit_sources or {}).items()},
-        active_subgoal_ids=list(state.active_subgoal_ids),
         satisfied_subgoal_ids=set(state.satisfied_subgoal_ids),
         attempted_subgoal_ids=set(state.attempted_subgoal_ids),
         activated_subgoal_ids=set(state.activated_subgoal_ids),
@@ -322,8 +307,7 @@ def dispatch(
     """Run navigate() on each region id (fork/merge state).
 
     Namespace→document DISPATCH is depth-neutral (document episode starts at
-    depth 0). Namespace→section DISPATCH starts at depth 1. Legacy ToolSpace
-    corpus→``{doc}:__doc_root`` keeps the same depth rules until retired.
+    depth 0). Namespace→section DISPATCH starts at depth 1.
     """
     scope_now = str(state.current_scope or "").strip()
     region_ids = [
@@ -335,14 +319,13 @@ def dispatch(
         return []
 
     # Serial only (dispatch_concurrency reserved for future asyncio.gather).
-    corpus_parent = is_corpus_doc_id(state.doc_id)
     namespace_parent = uses_document_nodes(ts) and not str(state.doc_id or "").strip()
     reports: List[RegionReport] = []
 
     for rid in region_ids:
         level = address_level(ts, rid)
         child_doc = owner_document(ts, rid, "")
-        # Namespace / corpus parent: switch episode doc_id to the real document.
+        # Namespace parent: switch episode doc_id to the real document.
         enter_doc = False
         child_depth = depth + 1
         if namespace_parent and level == NavLevel.DOCUMENT:
@@ -352,15 +335,6 @@ def dispatch(
         elif namespace_parent and child_doc:
             enter_doc = True
             child_depth = 1
-        elif corpus_parent:
-            legacy_doc = child_doc
-            enter_doc = (
-                bool(legacy_doc)
-                and not is_corpus_doc_id(legacy_doc)
-                and legacy_doc != CORPUS_DOC_ID
-            )
-            if enter_doc:
-                child_depth = 0 if is_doc_root_section(rid) else 1
         if enter_doc and child_doc:
             child_state = _fork_nav_state(state, doc_id=str(child_doc))
         else:
@@ -437,7 +411,6 @@ def navigate(
                 collected_section_ids=state.collected_section_ids,
                 dismissed_section_ids=state.dismissed_section_ids,
                 highlight_ids=state.highlight_ids,
-                hit_sources=state.hit_sources or None,
                 harvested_section_ids=(
                     state.harvested_owner_subgoal
                     if bool(getattr(config, "show_harvested_in_map", False))
@@ -478,21 +451,10 @@ def navigate(
 
             group_map: Dict[str, str] = {}
             assembled_preview = ""
-            # settle-group-rank (fix-group-rank): under a RetrievalPlan every
-            # subgoal's navigate() runs at depth 0, so this per-step preview
-            # would re-request (and overwrite) group_priority once per
-            # subgoal — the last subgoal to run always wins globally. When
-            # enable_settle_group_rank is on, ranking happens exactly once at
-            # settle time (nav_compose._build_groups' own score-order fallback)
-            # instead, so this per-step request is skipped for plan episodes.
-            settle_group_rank_active = bool(
-                getattr(config, "enable_settle_group_rank", False)
-            ) and state.retrieval_plan is not None
             if (
                 depth == 0
                 and bool(getattr(config, "enable_external_rerank", True))
                 and state.collected
-                and not settle_group_rank_active
             ):
                 from nav_compose import build_compose_preview, dedupe_scored
 
@@ -737,10 +699,10 @@ def sort_collected_by_doc_order(
     ts: ToolSpace,
     doc_id: str,
 ) -> List[Tuple[Chunk, float]]:
-    """Order evidence by (doc_id, line). Cross-doc when doc_id is the corpus sentinel."""
+    """Order evidence by (doc_id, line). Cross-doc when episode doc_id is empty."""
     idx = getattr(ts, "_idx", None)
     node_map = getattr(idx, "_node_to_doc_line", {}) if idx is not None else {}
-    corpus = is_corpus_doc_id(doc_id)
+    cross_doc = not str(doc_id or "").strip()
 
     def key(item: Tuple[Chunk, float]) -> Tuple[str, int, int, str]:
         chunk, _score = item
@@ -748,18 +710,18 @@ def sort_collected_by_doc_order(
         line_ids = list(chunk.line_ids or ())
         if line_ids:
             ln = min(line_ids)
-            return (cdoc if corpus else "", ln, ln, chunk.node_id)
+            return (cdoc if cross_doc else "", ln, ln, chunk.node_id)
         loc = node_map.get(chunk.node_id) or node_map.get(
             str(getattr(chunk, "section_id", "") or "")
         )
         if loc and len(loc) >= 2:
             loc_doc, loc_line = str(loc[0]), loc[1]
-            if corpus or loc_doc == doc_id:
+            if cross_doc or loc_doc == doc_id:
                 try:
                     li = int(loc_line)
-                    return (loc_doc if corpus else "", li, li, chunk.node_id)
+                    return (loc_doc if cross_doc else "", li, li, chunk.node_id)
                 except Exception:
                     pass
-        return (cdoc if corpus else "\uffff", 10**9, 10**9, chunk.node_id)
+        return (cdoc if cross_doc else "\uffff", 10**9, 10**9, chunk.node_id)
 
     return sorted(scored, key=key)
