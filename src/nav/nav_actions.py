@@ -204,9 +204,7 @@ def format_actionable_map_observation(
                 lines.append(f"  finish={act.action_id}")
             else:
                 lines.append(f"  {act.action_id} ({act.kind.value})")
-    # TODO(knowhere-align): KNOWHERE also exposes SEARCH_IMAGES / SEARCH_TABLES
-    # under Global actions (gated by total_images/total_tables + budget). Not used
-    # in this paper experiment; restore when migrating back.
+    # SEARCH_* is harvest ``search_assets`` (nav_assets), not a map-row action.
     return "\n".join(lines)
 
 

@@ -50,8 +50,8 @@ class NavConfig:
     enable_recursive_dispatch: bool = True
     max_dispatch_depth: int = 3
     navigate_max_steps: int = 8
-    dispatch_group_size: int = 5
-    dispatch_max_workers: int = 4
+    # Reserved for future asyncio.gather; experiment kernel stays serial (1).
+    dispatch_concurrency: int = 1
     subagent_model_env: str = "NAV_SUBAGENT_MODEL"
     # Scoped maps whose estimated (with-summary) size exceeds this threshold drop
     # inline summaries (title-only), nudging the agent to DISPATCH deeper rather
@@ -148,6 +148,8 @@ class NavConfig:
             "peek_content_fanout",
             "peek_content_chars",
             "map_collapse_min_score",
+            "dispatch_group_size",
+            "dispatch_max_workers",
         ):
             flat.pop(dead, None)
         allowed = {f.name for f in cls.__dataclass_fields__.values()}

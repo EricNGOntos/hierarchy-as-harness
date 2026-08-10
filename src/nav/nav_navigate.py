@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import concurrent.futures
-import threading
 from typing import Any, Dict, List, Optional, Tuple
 
 from agent_delivery.code.tool_space import (
@@ -140,7 +138,7 @@ def _estimate_region_chars(projection_text: str) -> int:
 
 
 def _fork_nav_state(state: NavState, *, doc_id: Optional[str] = None) -> NavState:
-    """Copy mutable evidence fields so concurrent subagents do not race."""
+    """Copy mutable evidence fields for an isolated child navigate()."""
     return NavState(
         doc_id=str(doc_id) if doc_id is not None else state.doc_id,
         query=state.query,
@@ -336,14 +334,12 @@ def dispatch(
     if not region_ids:
         return []
 
-    group_size = max(1, int(config.dispatch_group_size))
-    max_workers = max(1, int(config.dispatch_max_workers))
-    child_budget = max(500, int(budget * 0.85))
-    merge_lock = threading.Lock()
+    # Serial only (dispatch_concurrency reserved for future asyncio.gather).
     corpus_parent = is_corpus_doc_id(state.doc_id)
     namespace_parent = uses_document_nodes(ts) and not str(state.doc_id or "").strip()
+    reports: List[RegionReport] = []
 
-    def _run_one(rid: str) -> RegionReport:
+    for rid in region_ids:
         level = address_level(ts, rid)
         child_doc = owner_document(ts, rid, "")
         # Namespace / corpus parent: switch episode doc_id to the real document.
@@ -365,11 +361,10 @@ def dispatch(
             )
             if enter_doc:
                 child_depth = 0 if is_doc_root_section(rid) else 1
-        with merge_lock:
-            if enter_doc and child_doc:
-                child_state = _fork_nav_state(state, doc_id=str(child_doc))
-            else:
-                child_state = _fork_nav_state(state)
+        if enter_doc and child_doc:
+            child_state = _fork_nav_state(state, doc_id=str(child_doc))
+        else:
+            child_state = _fork_nav_state(state)
         try:
             report = navigate(
                 ts,
@@ -378,7 +373,7 @@ def dispatch(
                 query=query,
                 config=config,
                 depth=child_depth,
-                budget=child_budget,
+                budget=budget,
                 steps_out=None,  # parent records dispatch; child history merges via state
             )
         except Exception as exc:
@@ -389,46 +384,19 @@ def dispatch(
                 skipped=True,
                 depth=child_depth,
             )
-        with merge_lock:
-            _merge_nav_state(state, child_state)
-            if steps_out is not None:
-                from agent_delivery.agent.types import AgentStep
+        _merge_nav_state(state, child_state)
+        if steps_out is not None:
+            from agent_delivery.agent.types import AgentStep
 
-                for h in child_state.action_history:
-                    steps_out.append(
-                        AgentStep(
-                            step_idx=len(steps_out) + 1,
-                            action=f"nav_{h.get('kind', 'step')}",
-                            detail=dict(h),
-                        )
+            for h in child_state.action_history:
+                steps_out.append(
+                    AgentStep(
+                        step_idx=len(steps_out) + 1,
+                        action=f"nav_{h.get('kind', 'step')}",
+                        detail=dict(h),
                     )
-        return report
-
-    reports: List[RegionReport] = []
-    if max_workers <= 1 or len(region_ids) == 1:
-        for rid in region_ids:
-            reports.append(_run_one(rid))
-        return reports
-
-    for start in range(0, len(region_ids), group_size):
-        batch = region_ids[start : start + group_size]
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=min(max_workers, len(batch))
-        ) as pool:
-            futs = {pool.submit(_run_one, rid): rid for rid in batch}
-            for fut in concurrent.futures.as_completed(futs):
-                try:
-                    reports.append(fut.result())
-                except Exception as exc:
-                    rid = futs[fut]
-                    reports.append(
-                        RegionReport(
-                            scope=rid,
-                            reason=f"dispatch_failed: {exc}",
-                            skipped=True,
-                            depth=depth + 1,
-                        )
-                    )
+                )
+        reports.append(report)
     return reports
 
 

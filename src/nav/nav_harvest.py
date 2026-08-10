@@ -46,6 +46,8 @@ class HarvestResult:
     # " | " — plan_control reads this alongside new_evidence to judge widen
     # vs drop (previously only reached AgentStep.detail, never the controller).
     reason: str = ""
+    search_assets: List[Dict[str, Any]] = field(default_factory=list)
+    n_assets_added: int = 0
 
 
 def _actions_by_ids(actions: Sequence[LegalAction], ids: Sequence[str]) -> List[LegalAction]:
@@ -84,11 +86,15 @@ def _harvest_system_prompt(*, dispatch_available: bool) -> str:
         "for this subgoal, so when in doubt prefer dispatch over silently "
         "skipping a node.\n"
         "  - Provide confidence in [0,1] for every collect id (object map "
-        "keyed by action id, or a single scalar when there is exactly one).\n\n"
+        "keyed by action id, or a single scalar when there is exactly one).\n"
+        "  - search_assets: optional list of {kind:\"images\"|\"tables\", "
+        "query, scope?} when the subgoal needs figure/table evidence only "
+        "(or in addition). kind filters Knowhere chunk_type; scope defaults "
+        "to the current region. Asset search does not dismiss map nodes.\n\n"
         "=== End Rules ===\n\n"
         "Return ONLY one JSON object, e.g.:\n"
-        '{"collect_ids":["C1"],"dispatch_ids":[],"confidence":{"C1":0.8},'
-        '"reason":"short reason"}\n'
+        '{"collect_ids":["C1"],"dispatch_ids":[],"search_assets":[],'
+        '"confidence":{"C1":0.8},"reason":"short reason"}\n'
         "Do not include any explanation outside the JSON.\n\n"
         "IMPORTANT:\n"
         "1. All agent-generated text (reason) MUST be in English.\n"
@@ -139,12 +145,21 @@ def harvest_policy_call(
     actions: Sequence[LegalAction],
     depth: int,
 ) -> Tuple[List[LegalAction], List[LegalAction], Dict[str, float], str, Dict[str, Any]]:
-    """One LLM call: returns (collect_actions, dispatch_actions, confidence, reason, meta)."""
+    """One LLM call; ``meta["search_assets"]`` holds normalized asset requests."""
     import os
 
     from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
     from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
     from agent_delivery.code.llm_usage import record_usage  # type: ignore
+    from nav_assets import parse_search_assets
+    from nav_token_budget import nav_token_budget_exhausted
+
+    if nav_token_budget_exhausted():
+        return [], [], {}, "token_limit", {
+            "stop_reason": "token_limit",
+            "search_assets": [],
+            "depth": depth,
+        }
 
     require_llm_env(context="Nav Harvest")
     key = os.environ.get("OPENAI_API_KEY", "").strip()
@@ -183,13 +198,20 @@ def harvest_policy_call(
 
     collect_ids = [str(x).strip().upper() for x in (obj.get("collect_ids") or []) if str(x).strip()]
     dispatch_ids = [str(x).strip().upper() for x in (obj.get("dispatch_ids") or []) if str(x).strip()]
+    search_assets = parse_search_assets(obj.get("search_assets"))
     collect_actions = [a for a in _actions_by_ids(actions, collect_ids) if a.kind == ActionKind.COLLECT]
     dispatch_actions = [a for a in _actions_by_ids(actions, dispatch_ids) if a.kind == ActionKind.DISPATCH]
     fallback_used = False
-    if not collect_actions and not dispatch_actions and not collect_ids and not dispatch_ids:
+    if (
+        not collect_actions
+        and not dispatch_actions
+        and not collect_ids
+        and not dispatch_ids
+        and not search_assets
+    ):
         # Genuinely empty selection == implicit finish; not a parse failure.
         pass
-    elif not collect_actions and not dispatch_actions:
+    elif not collect_actions and not dispatch_actions and not search_assets:
         collect_actions, dispatch_actions = _rule_fallback_selection(actions)
         fallback_used = True
 
@@ -200,6 +222,7 @@ def harvest_policy_call(
         "raw": text[:500],
         "depth": depth,
         "fallback_used": fallback_used,
+        "search_assets": search_assets,
     }
     return collect_actions, dispatch_actions, confidence, reason, meta
 
@@ -359,12 +382,16 @@ def _harvest_node(
         tag = node_scope or "root"
         result.reason = f"{result.reason} | {tag}: {reason}" if result.reason else f"{tag}: {reason}"
 
+    search_assets = list(meta.get("search_assets") or [])
+    result.search_assets.extend(search_assets)
+
     # Only the current node and its direct children are an actual decision at
     # this call — deeper rows are shown for context inside the same
     # full-depth map but belong to whichever recursive call lands on their
     # own direct parent. Dismissing them here would pre-empt that call (e.g.
     # a leaf two levels down would never get its own chance once its
     # grandparent is DISPATCHed instead of collected).
+    # search_assets does not count as selecting a map node (F5).
     depth_from_scope = {v.section_id: v.depth_from_scope for v in projection.tree_sections}
     decided_now = [a for a in actionable if depth_from_scope.get(a.section_id or "", 99) <= 1]
     selected_ids = {a.section_id for a in (*collect_actions, *dispatch_actions) if a.section_id}
@@ -387,8 +414,9 @@ def _harvest_node(
                     "depth": depth,
                     "collect_ids": [a.action_id for a in collect_actions],
                     "dispatch_ids": [a.action_id for a in dispatch_actions],
+                    "search_assets": search_assets,
                     "reason": reason,
-                    **meta,
+                    **{k: v for k, v in meta.items() if k != "search_assets"},
                 },
             )
         )
@@ -409,6 +437,33 @@ def _harvest_node(
         if bool(getattr(config, "show_harvested_in_map", False)):
             for sid in new_roots:
                 state.harvested_owner_subgoal[sid] = subgoal.id
+
+    if search_assets:
+        from nav_assets import apply_search_assets
+
+        n_added, asset_trace = apply_search_assets(
+            ts,
+            state,
+            config,
+            requests=search_assets,
+            default_scope=node_scope,
+        )
+        result.n_assets_added += n_added
+        if steps_out is not None and asset_trace:
+            from agent_delivery.agent.types import AgentStep  # type: ignore
+
+            steps_out.append(
+                AgentStep(
+                    step_idx=len(steps_out) + 1,
+                    action="search_assets",
+                    detail={
+                        "subgoal_id": subgoal.id,
+                        "scope": node_scope,
+                        "n_added": n_added,
+                        "requests": asset_trace,
+                    },
+                )
+            )
 
     if dispatch_actions and depth >= max_depth:
         result.max_depth_hit = True

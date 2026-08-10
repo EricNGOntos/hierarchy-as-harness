@@ -485,7 +485,7 @@ class MapModeUnitTests(unittest.TestCase):
             enable_recursive_dispatch=False,
             max_steps=4,
             navigate_max_steps=3,
-            dispatch_max_workers=1,
+            dispatch_concurrency=1,
             collect_k=4,
         )
         state = NavState(doc_id="doc", query="Deep Leaf", task_type="niche_fact")

@@ -13,12 +13,11 @@ from __future__ import annotations
 
 import re
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 from nav_illuminate import illuminate_from_plan, refresh_fold_from_subgoal_scores
-from nav_navigate import _fork_nav_state, _merge_nav_state, navigate
+from nav_navigate import navigate
 from nav_plan import (
     RetrievalPlan,
     ScopeFilter,
@@ -534,32 +533,9 @@ def execute_plan(
                 ts, working_state, config, plan, sid, steps_out=out_steps
             )
 
-        if len(ready) <= 1:
-            for sid in ready:
-                outputs.append(_run_one(sid, state, steps_out))
-        else:
-            max_workers = max(1, min(len(ready), int(config.dispatch_max_workers or 1)))
-            forks = [(sid, _fork_nav_state(state)) for sid in ready]
-
-            def _run_fork(item: Tuple[str, NavState]):
-                subgoal_id, child = item
-                fork_steps: List[Any] = []
-                res = _run_one(subgoal_id, child, fork_steps)
-                return child, res, fork_steps
-
-            with ThreadPoolExecutor(max_workers=max_workers) as pool:
-                futs = [pool.submit(_run_fork, item) for item in forks]
-                for fut in as_completed(futs):
-                    child, result_item, fork_steps = fut.result()
-                    _merge_nav_state(state, child)
-                    state.slot_bindings.update(child.slot_bindings)
-                    state.satisfied_subgoal_ids.update(child.satisfied_subgoal_ids)
-                    state.attempted_subgoal_ids.update(child.attempted_subgoal_ids)
-                    state.activated_subgoal_ids.update(child.activated_subgoal_ids)
-                    state.subgoal_results.update(child.subgoal_results)
-                    if steps_out is not None and fork_steps:
-                        steps_out.extend(fork_steps)
-                    outputs.append(result_item)
+        # Serial wave execution (parallel fan-out retired with ThreadPoolExecutor).
+        for sid in ready:
+            outputs.append(_run_one(sid, state, steps_out))
 
         # Bookkeeping shared by both decision paths.
         for item in outputs:

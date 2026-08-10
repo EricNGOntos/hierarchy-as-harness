@@ -126,14 +126,18 @@ class ScopeCollectTests(unittest.TestCase):
             ["doc:L10__path", "doc:L20__path", "doc:L30__path"],
         )
 
-    def test_non_scope_collect_keeps_index_order(self) -> None:
+    def test_non_map_collect_also_hydrates_full_subtree_doc_order(self) -> None:
+        """P0.3: COLLECT never truncates at collect_k; compose trims later."""
         tools = _FakeToolSpace(
             self.chunks,
             {"doc:L30__path": 1.0, "doc:L10__path": 0.1, "doc:L20__path": 0.5},
         )
         state = NavState(doc_id="doc", query="query", task_type="niche_fact")
         scored = _collect_subtree(tools, self.action, state, NavConfig(collect_k=2))
-        self.assertEqual([chunk.node_id for chunk, _ in scored], ["doc:L30__path", "doc:L20__path"])
+        self.assertEqual(
+            [chunk.node_id for chunk, _ in scored],
+            ["doc:L10__path", "doc:L20__path", "doc:L30__path"],
+        )
 
     def test_outline_collect_builds_chunks_from_bundle_lines(self) -> None:
         lines = [

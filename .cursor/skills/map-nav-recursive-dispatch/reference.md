@@ -13,8 +13,7 @@
 | `scope_inline_summary_budget_mult` | 3.0 | 阈值 = evidence 预算 × 该倍数（预算 500 → 1500） |
 | `navigate_max_steps` | 8 | 子 agent 步数 |
 | `max_steps` | 8 | 根 agent 步数 |
-| `dispatch_group_size` | 5 | 并发分组 |
-| `dispatch_max_workers` | 4 | 线程池；子状态 fork/merge |
+| `dispatch_concurrency` | 1 | 实验仓串行；预留未来 asyncio.gather |
 | `subagent_model_env` | NAV_SUBAGENT_MODEL | 深层模型 env |
 
 Deprecated keys quietly dropped: `expand_top_k`, `map_peek_top_k`, `map_jump_top_k`, `peek_content_*`, …

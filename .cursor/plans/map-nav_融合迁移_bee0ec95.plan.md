@@ -13,16 +13,16 @@ todos:
     status: completed
   - id: actions
     content: 动作集：COLLECT/DISPATCH/FINISH + SEARCH_IMAGES/SEARCH_TABLES；harvest 一次调用返回 collect_ids + dispatch_ids + search_assets；COLLECT 取子树语义；资产动作接新单一预算（改掉 assets.py 对 planning_ratio 的依赖）
-    status: pending
+    status: completed
   - id: dispatch_concurrency
     content: DISPATCH 并发：废弃 ThreadPoolExecutor，改为 asyncio.gather；首版默认关闭（串行），打开时「检查+记账」必须在 asyncio.Lock 内原子化，避免 fan-out 冲破 10 万上限
-    status: pending
+    status: completed
   - id: checklist
     content: 实验仓：nav_plan.plan_query 改为产出覆盖清单 + 单一共享检索空间，去掉 per-subgoal 的 scope_filter/route_hints/独立 anchor；plan_control 的 accept/widen/drop 对账对象改为全局清单
-    status: pending
+    status: completed
   - id: budget_simplify
     content: 预算简化为单一 token 上限（默认 10 万）：删 BudgetWallet、三池 BudgetLedger、doc_caps、planning_ratio、reserve/refund/overdraft、trim_evidence_to_budget；超限即停并返回已收集内容
-    status: pending
+    status: completed
   - id: scoring
     content: 实验仓：把 reference_answer 事实清单计分（对/半对/错）固化进 run_knowhere_probe.py，取代会产生假阳性的 answer_keys 关键词命中
     status: pending

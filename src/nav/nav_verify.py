@@ -105,7 +105,10 @@ def extract_slots_llm(
         from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
         from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
         from agent_delivery.code.llm_usage import record_usage  # type: ignore
+        from nav_token_budget import nav_token_budget_exhausted
     except Exception:
+        return {}
+    if nav_token_budget_exhausted():
         return {}
 
     require_llm_env(context="Nav Slot Extract")
@@ -284,7 +287,10 @@ def activation_when_holds(
         from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
         from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
         from agent_delivery.code.llm_usage import record_usage  # type: ignore
+        from nav_token_budget import nav_token_budget_exhausted
     except Exception:
+        return False
+    if nav_token_budget_exhausted():
         return False
     require_llm_env(context="Nav Activation When")
     key = (

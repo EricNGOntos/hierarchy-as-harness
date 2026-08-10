@@ -139,10 +139,9 @@ class KnowhereProvider:
             return self.doc_id
         return None
 
-    def document_ids(self) -> List[str]:
-        return [self.doc_id]
-
     # --- the 5 required capabilities -------------------------------------
+    # Namespace mode (document ids as map nodes) is only
+    # ``NamespaceKnowhereProvider.document_ids`` — single-doc providers omit it.
 
     def roots(self, doc_id: str) -> Sequence[str]:
         return list(self._roots) if str(doc_id) == self.doc_id else []

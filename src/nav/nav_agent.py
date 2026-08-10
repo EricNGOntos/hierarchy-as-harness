@@ -139,31 +139,12 @@ def _line_order(pool: List[Chunk]) -> List[Chunk]:
     return sorted(pool, key=lambda c: (min(c.line_ids or (10**9,)), c.node_id))
 
 
-def _collect_by_unit_score(
-    pool: List[Chunk],
-    state: NavState,
-    config: NavConfig,
-) -> List[Tuple[Chunk, float]]:
-    """Directed hydrate: order/truncate by unit score (single_fact / span)."""
-    if not pool:
-        return []
-    bonus = float(config.read_score_bonus)
-    scored = [
-        (chunk, float(unit_score_for_evidence_chunk(chunk, state.unit_scores)) + bonus)
-        for chunk in pool
-    ]
-    scored.sort(
-        key=lambda item: (
-            -float(item[1]),
-            min(getattr(item[0], "line_ids", None) or (10**9,)),
-            str(getattr(item[0], "node_id", "") or ""),
-        )
-    )
-    k = max(1, int(config.collect_k or 1))
-    return scored[:k]
-
-
 def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config: NavConfig) -> List[Tuple[Chunk, float]]:
+    """Hydrate ``section_id ∪ descendants`` in document order.
+
+    No collect-time top-K / unit-score truncation — final size is controlled by
+    compose ``budget_chars`` waterfill (P0.3 / MAP-NAV subtree collect).
+    """
     sid = action.section_id
     if not sid:
         return []
@@ -176,22 +157,7 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
     if callable(materialize):
         pool = list(materialize(sid, doc))
         if pool:
-            # Contract-driven hydrate when a soft-focus subgoal is active (M5/A3).
-            kind = str(getattr(state, "focus_contract_kind", "") or "").strip().lower()
-            if map_mode_enabled(config) or bool(getattr(state, "unit_scores", None)):
-                if kind in {"single_fact", "span", "comparison", "existence"}:
-                    return _collect_by_unit_score(pool, state, config)
-                return _collect_in_doc_order(pool, config)
-            idx = getattr(ts, "_idx", None)
-            if idx is None:
-                return _collect_in_doc_order(pool, config)
-            scored = idx.search(
-                state.query,
-                pool,
-                min(len(pool), int(config.collect_k)),
-                doc_id_filter=doc,
-            )
-            return [(c, float(s) + float(config.read_score_bonus)) for c, s in scored]
+            return _collect_in_doc_order(pool, config)
     rc = ts.read_chunks(sid, state.query, doc_id=doc, k=int(config.collect_k))
     if isinstance(rc, Refusal):
         state.refusal_events.append(

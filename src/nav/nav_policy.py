@@ -157,8 +157,7 @@ def _system_prompt(
     include a relative group_rank over [G*] ids.
 
     Style follows KNOWHERE collector rules (action IDs on node lines, English
-    reason, no invented targets). TODO(knowhere-align): restore SEARCH_IMAGES /
-    SEARCH_TABLES and outline:true side-effects when migrating back.
+    reason, no invented targets). Asset SEARCH is via harvest search_assets.
     """
     role = (
         "You are a document navigation agent running an observe-act loop."
@@ -181,7 +180,7 @@ def _system_prompt(
     ]
     if dispatch_available:
         action_semantics.append(
-            "  - dispatch=D*: hand the listed region(s) to concurrent subagent "
+            "  - dispatch=D*: hand the listed region(s) to a child subagent "
             "explorers; you receive their reports without moving your own viewpoint."
         )
     action_semantics.append("  - finish=F*: end navigation for this scope / document.")
@@ -274,6 +273,19 @@ def choose_llm_action(
     from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
     from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
     from agent_delivery.code.llm_usage import record_usage  # type: ignore
+    from nav_token_budget import nav_token_budget_exhausted
+
+    if nav_token_budget_exhausted():
+        finish = next((a for a in actions if a.kind == ActionKind.FINISH), None)
+        if finish is None:
+            finish = choose_rule_action(
+                state, projection, actions, step_idx=step_idx, config=config
+            )
+        return finish, {
+            "reason": "token_limit",
+            "stop_reason": "token_limit",
+            "depth": depth,
+        }
 
     require_llm_env(context="Nav Agent")
     key = os.environ.get("OPENAI_API_KEY", "").strip()

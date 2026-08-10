@@ -72,6 +72,7 @@ def _wave_subgoal_block(
     lines = [
         f"[{subgoal.id}] need: {subgoal.need}",
         f"  contract: {contract_line}",
+        "  search_space: shared (no per-subgoal scope/anchor)",
         f"  rule_signal: verdict={getattr(signal, 'verdict', '')} "
         f"gap={getattr(signal, 'gap', '') or '-'} "
         f"satisfied={bool(getattr(signal, 'satisfied', False))}",
@@ -92,7 +93,14 @@ def _wave_subgoal_block(
 
 
 def _plan_overview_block(plan: RetrievalPlan, state: NavState) -> str:
-    lines = []
+    lines = ["coverage_checklist:"]
+    checklist = list(getattr(plan, "coverage_checklist", None) or [])
+    if checklist:
+        for item in checklist:
+            lines.append(f"- {item.id}: {item.fact}")
+    else:
+        lines.append("- (none)")
+    lines.append("subgoals:")
     for sg in plan.subgoals:
         status = (
             "satisfied"
@@ -108,29 +116,29 @@ def _control_system_prompt() -> str:
         "You are the single retrieval-plan controller for one wave of a "
         "hierarchical document retrieval episode. You replace all separate "
         "per-region stop/retry judgments with one decision.\n\n"
-        "For each subgoal in this wave you are shown: its need/contract, a "
-        "zero-cost rule signal (from a deterministic contract checker), the "
-        "harvester's own explanation of what it saw and why it did or did "
-        "not select each node (harvest_reason), and the evidence collected "
-        "THIS wave only (never older evidence from other subgoals).\n\n"
+        "The plan has a global coverage_checklist (facts that must appear in "
+        "episode evidence) and one shared search space. For each subgoal in "
+        "this wave you are shown: its need/contract, a zero-cost rule signal, "
+        "the harvester's own explanation (harvest_reason), and the evidence "
+        "collected THIS wave only (never older evidence from other subgoals).\n\n"
         "=== Per-subgoal decisions ===\n"
-        "  - accept: contract is satisfied by this wave's evidence; done.\n"
-        "  - widen: not yet satisfied, and this region plausibly does not "
+        "  - accept: this subgoal's need is covered by this wave's evidence.\n"
+        "  - widen: not yet covered, and this region plausibly does not "
         "hold the answer; step out to the parent scope and look again with a "
         "coarser view (handled automatically — you do not name an anchor, "
         "and nodes already reviewed and rejected for this subgoal will not "
         "be shown again).\n"
-        "  - drop: not satisfied and further attempts are unlikely to help "
+        "  - drop: not covered and further attempts are unlikely to help "
         "(e.g. evidence is structurally absent, or harvest_reason shows the "
         "search has already reached the document root with nothing found); "
         "stop trying this subgoal.\n\n"
         "=== Global decision ===\n"
         "  - continue: proceed to the next wave with current subgoal set.\n"
         "  - replan: the retrieval plan's decomposition itself is wrong "
-        "(e.g. missing subgoals, wrong dependencies) and needs regenerating. "
+        "(e.g. missing checklist facts, wrong dependencies) and needs regenerating. "
         "Only choose this for a structural plan problem, not for an "
         "individual subgoal's evidence gap (use widen/drop for those).\n"
-        "  - done: the plan's information need is met (or cannot be met "
+        "  - done: the coverage_checklist is met (or cannot be met "
         "further); stop the episode.\n\n"
         "Return ONLY one JSON object:\n"
         "{\n"
@@ -201,11 +209,18 @@ def plan_control(
     wave_outputs: Sequence[Dict[str, Any]],
 ) -> PlanControlDecision:
     """One LLM call per wave: per-subgoal accept/widen/drop + global signal."""
+    from nav_token_budget import nav_token_budget_exhausted
+
     by_id = {s.id: s for s in plan.subgoals}
     subgoal_ids = [str(item.get("subgoal_id")) for item in wave_outputs]
     signals = {str(item.get("subgoal_id")): item.get("result") for item in wave_outputs}
     if not subgoal_ids:
         return PlanControlDecision(global_action="continue")
+    if nav_token_budget_exhausted():
+        decision = _fallback_decision(subgoal_ids, signals)
+        decision.global_action = "done"
+        decision.reason = "token_limit"
+        return decision
 
     digest_limit = max(0, int(getattr(config, "plan_control_digest_chars", 600) or 0))
     blocks: List[str] = []

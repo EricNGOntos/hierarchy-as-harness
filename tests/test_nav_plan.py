@@ -102,10 +102,14 @@ class TestNavPlan(unittest.TestCase):
             )
         )
 
-    def test_parse_activation_and_budget_skips_conditional(self) -> None:
+    def test_parse_shared_space_strips_scope_and_activation(self) -> None:
         obj = {
-            "reason": "conditional branch",
+            "reason": "shared space",
             "map_coverage": "partial",
+            "coverage_checklist": [
+                {"id": "c1", "fact": "seal type"},
+                {"id": "c2", "fact": "seal scope"},
+            ],
             "subgoals": [
                 {
                     "id": "s1",
@@ -116,6 +120,7 @@ class TestNavPlan(unittest.TestCase):
                     "activation": {"mode": "always"},
                     "contract": {"kind": "single_fact"},
                     "route_hints": ["N1"],
+                    "scope_filter": {"doc_ids": ["doc"]},
                 },
                 {
                     "id": "s2",
@@ -163,15 +168,18 @@ class TestNavPlan(unittest.TestCase):
         ok, why = validate_retrieval_plan(plan)
         self.assertTrue(ok, why)
         self.assertEqual(plan.map_coverage, "partial")
-        self.assertEqual(plan.subgoals[0].route_hints, ["doc:L1"])
+        self.assertEqual([c.id for c in plan.coverage_checklist], ["c1", "c2"])
+        self.assertEqual(plan.subgoals[0].route_hints, [])
+        self.assertEqual(plan.subgoals[0].scope_filter.doc_ids, [])
         self.assertIn("s1", plan.subgoals[1].depends_on)
         self.assertEqual(plan.subgoals[0].produces, ["seal_type"])
-        self.assertEqual(plan.subgoals[2].activation.mode, "on")
-        self.assertIn("s1", plan.subgoals[2].depends_on)
-        # always-active s1+s2 share the normalized pool; s3 keeps its claim
-        self.assertAlmostEqual(plan.subgoals[0].budget_share + plan.subgoals[1].budget_share, 1.0)
-        self.assertTrue(is_always_active(plan.subgoals[0]))
-        self.assertFalse(is_always_active(plan.subgoals[2]))
+        # Activation forks are ignored; every subgoal stays always-active.
+        self.assertEqual(plan.subgoals[2].activation.mode, "always")
+        self.assertTrue(all(is_always_active(s) for s in plan.subgoals))
+        self.assertAlmostEqual(
+            sum(s.budget_share for s in plan.subgoals),
+            1.0,
+        )
         # unrelated edges dropped
         self.assertTrue(all(e.kind != "unrelated" for e in plan.relations))
 
@@ -263,6 +271,8 @@ class TestNavPlan(unittest.TestCase):
         self.assertTrue(plan.fallback)
         self.assertEqual(plan.subgoals[0].retrieval_query, "what is X")
         self.assertEqual(plan.subgoals[0].activation.mode, "always")
+        self.assertEqual(len(plan.coverage_checklist), 1)
+        self.assertEqual(plan.coverage_checklist[0].fact, "what is X")
 
     def test_planning_char_limit(self) -> None:
         cfg = NavConfig(map_char_limit=5000, planning_map_char_limit=10000)

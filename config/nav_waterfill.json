@@ -22,8 +22,6 @@
   "enable_recursive_dispatch": true,
   "max_dispatch_depth": 3,
   "navigate_max_steps": 8,
-  "dispatch_group_size": 5,
-  "dispatch_max_workers": 4,
   "subagent_model_env": "NAV_SUBAGENT_MODEL",
   "scope_inline_summary_char_limit": 1500,
   "scope_inline_summary_budget_mult": 3.0,
@@ -35,5 +33,6 @@
   "compose_coverage_budget_frac": 0.4,
   "compose_snippet_chars": 80,
   "enable_depth0_oversize_to_dispatch": false,
-  "depth0_oversize_char_limit": 0
+  "depth0_oversize_char_limit": 0,
+  "dispatch_concurrency": 1
 }
