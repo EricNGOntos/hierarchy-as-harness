@@ -246,7 +246,7 @@ class TestNavOrchestrate(unittest.TestCase):
         cfg = NavConfig.from_dict({})
         self.assertEqual(cfg.mode, "navigate")
         self.assertFalse(cfg.is_checklist)
-        self.assertEqual(cfg.max_replans, 0)
+        self.assertEqual(cfg.max_replans, 1)
         self.assertEqual(cfg.max_waves, 0)
 
     def test_execute_plan_wave_order_with_mocked_harvest(self) -> None:

@@ -83,7 +83,8 @@ class NavConfig:
     # Checklist: navigate/harvest cycles per subgoal before drop. Min 1.
     subgoal_max_attempts: int = 2
     # Checklist: 0 = never replan; otherwise hard cap on structural replans.
-    max_replans: int = 0
+    # Default 1 so shared-checklist probe/harness match without silent overrides.
+    max_replans: int = 1
     # Checklist: 0 = no extra wave cap (stop when no ready subgoals).
     max_waves: int = 0
     # Structural recursion depth cap for harvest() (checklist mode).
@@ -259,7 +260,7 @@ class NavState:
     # Explicit COLLECT confidence by section_id; hydration-only descendants stay 0.
     collect_confidence: Dict[str, float] = field(default_factory=dict)
     # Explicit COLLECT targets only (batch action sids); hydration descendants omitted.
-    # Drives COMPOSE selection_count (owner hit + any-ancestor hit → 0/1/2).
+    # Used by plan_control digest and compose progressive trim (protect explicit owners).
     explicit_collect_ids: set[str] = field(default_factory=set)
     # External agent relative priority over nearest-parent groups: parent_id -> score
     # (higher packs first). Empty = no external rerank yet.
@@ -295,3 +296,6 @@ class NavState:
     # Terminal "drop" outcomes: disjoint from satisfied_subgoal_ids. Union of
     # the two is "settled" for dependency readiness.
     dropped_subgoal_ids: set[str] = field(default_factory=set)
+    # SEARCH_* inspector results injected into the next harvest observation
+    # (Knowhere asset tool context). Cleared/overwritten by apply_search_assets.
+    asset_observation_context: str = ""

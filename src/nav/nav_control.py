@@ -67,7 +67,6 @@ def _section_summary_text(ts: Any, section_id: str) -> str:
 def _digest_collected_summaries(
     ts: Any,
     *,
-    new_chunks: Sequence[Any],
     collected_section_ids: Optional[Sequence[str]] = None,
 ) -> str:
     """One line per explicit COLLECT target: path + its prebuilt summary.
@@ -79,7 +78,6 @@ def _digest_collected_summaries(
     if not sids:
         # No explicit COLLECTs this wave: do not invent digest lines from
         # hydrated chunk owners (that reintroduces the descendant flood).
-        del new_chunks  # kept in signature for call-site compatibility
         return ""
     lines: List[str] = []
     for sid in sids:
@@ -269,7 +267,6 @@ def plan_control(
             digest_ids = list(getattr(result, "collected_section_ids", None) or [])
         digest = _digest_collected_summaries(
             ts,
-            new_chunks=item.get("new_chunks") or [],
             collected_section_ids=digest_ids,
         )
         blocks.append(

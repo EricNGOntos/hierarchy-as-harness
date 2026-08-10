@@ -177,6 +177,9 @@ def _fork_nav_state(state: NavState, *, doc_id: Optional[str] = None) -> NavStat
         },
         subgoal_attempt_counts=dict(state.subgoal_attempt_counts),
         dropped_subgoal_ids=set(state.dropped_subgoal_ids),
+        asset_observation_context=str(
+            getattr(state, "asset_observation_context", "") or ""
+        ),
     )
 
 
@@ -197,6 +200,12 @@ def _merge_nav_state(parent: NavState, child: NavState) -> None:
     parent.collect_confidence.update(child.collect_confidence)
     parent.explicit_collect_ids.update(child.explicit_collect_ids)
     parent.group_priority.update(child.group_priority)
+    child_asset = str(getattr(child, "asset_observation_context", "") or "").strip()
+    if child_asset:
+        prev = str(getattr(parent, "asset_observation_context", "") or "").strip()
+        parent.asset_observation_context = (
+            f"{prev}\n\n{child_asset}".strip() if prev else child_asset
+        )
     parent.slot_bindings.update(child.slot_bindings)
     parent.satisfied_subgoal_ids.update(child.satisfied_subgoal_ids)
     parent.attempted_subgoal_ids.update(child.attempted_subgoal_ids)

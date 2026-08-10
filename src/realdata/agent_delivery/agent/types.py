@@ -58,3 +58,5 @@ class EpisodeResult:
     truncated_last: bool = False
     refusal_events: List[Dict[str, object]] = field(default_factory=list)
     phase_timings: Dict[str, float] = field(default_factory=dict)
+    # Code-derived episode stop label (not LLM): e.g. completed / token_limit.
+    stop_reason: str = "completed"

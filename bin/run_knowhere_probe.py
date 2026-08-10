@@ -121,7 +121,6 @@ def cfg_shared() -> NavConfig:
     """Checklist mode: plan + harvest + plan_control (product flags collapsed)."""
     cfg = cfg_baseline()
     cfg.mode = "checklist"
-    cfg.max_replans = 1
     return cfg
 
 

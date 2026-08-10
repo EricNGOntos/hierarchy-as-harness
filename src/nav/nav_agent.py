@@ -273,6 +273,24 @@ def _section_and_descendants(ts: ToolSpace, section_id: str, doc_id: str) -> set
     return out
 
 
+def _episode_stop_reason(steps: Sequence[Any]) -> str:
+    """Code-derived episode stop label from budget state / step meta (not LLM)."""
+    from nav_token_budget import nav_token_budget_exhausted
+
+    if nav_token_budget_exhausted():
+        return "token_limit"
+    for step in steps:
+        detail = getattr(step, "detail", None) or {}
+        if not isinstance(detail, dict):
+            continue
+        sr = str(detail.get("stop_reason") or "").strip()
+        if sr:
+            return sr
+        if str(detail.get("reason") or "").strip() == "token_limit":
+            return "token_limit"
+    return "completed"
+
+
 def run_nav_episode(
     tools: Optional[HierarchicalTools],
     query: str,
@@ -470,4 +488,5 @@ def run_nav_episode(
             "compose_seconds": compose_seconds,
             "online_response_seconds": retrieval_seconds + compose_seconds,
         },
+        stop_reason=_episode_stop_reason(steps),
     )

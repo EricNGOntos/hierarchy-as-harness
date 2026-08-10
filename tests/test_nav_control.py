@@ -62,22 +62,20 @@ class DigestCollectedSummariesTests(unittest.TestCase):
 
         digest = _digest_collected_summaries(
             _TS(),
-            new_chunks=[],
             collected_section_ids=["doc:附件/1.1.3 勘测设计过程"],
         )
         self.assertIn("1.1.3 勘测设计过程", digest)
         self.assertIn(long_summary, digest)
         self.assertEqual(digest.count(long_summary), 1)
 
-    def test_falls_back_to_chunk_owners(self) -> None:
+    def test_empty_without_explicit_collect_ids(self) -> None:
         class _TS:
             def get_structure(self, section_id: str) -> dict:
                 return {"preview": section_id.split(":")[-1], "summary": f"sum:{section_id}"}
 
-        # Without explicit COLLECT ids, hydrated chunk owners must NOT appear.
+        # Without explicit COLLECT ids, do not invent digest from hydrated owners.
         digest = _digest_collected_summaries(
             _TS(),
-            new_chunks=[(_chunk("ignored body", section_id="doc:A"), 1.0), (_chunk("x", section_id="doc:B"), 0.5)],
             collected_section_ids=[],
         )
         self.assertEqual(digest, "")
@@ -89,7 +87,6 @@ class DigestCollectedSummariesTests(unittest.TestCase):
 
         digest = _digest_collected_summaries(
             _TS(),
-            new_chunks=[(_chunk("body", section_id="doc:child"), 1.0)],
             collected_section_ids=["doc:parent"],
         )
         self.assertIn("sum:doc:parent", digest)
@@ -97,7 +94,7 @@ class DigestCollectedSummariesTests(unittest.TestCase):
 
     def test_empty_when_nothing_collected(self) -> None:
         self.assertEqual(
-            _digest_collected_summaries(None, new_chunks=[], collected_section_ids=[]),
+            _digest_collected_summaries(None, collected_section_ids=[]),
             "",
         )
 

@@ -35,7 +35,7 @@
   "planner_model_env": "NAV_PLANNER_MODEL",
   "planner_llm_max_tokens": 1024,
   "subgoal_max_attempts": 2,
-  "max_replans": 0,
+  "max_replans": 1,
   "max_waves": 0,
   "max_harvest_depth": 3,
   "plan_control_digest_chars": 600

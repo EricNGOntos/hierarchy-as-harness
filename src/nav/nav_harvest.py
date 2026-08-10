@@ -90,7 +90,9 @@ def _harvest_system_prompt(*, dispatch_available: bool) -> str:
         "  - search_assets: optional list of {kind:\"images\"|\"tables\", "
         "query, scope?} when the subgoal needs figure/table evidence only "
         "(or in addition). kind filters Knowhere chunk_type; scope defaults "
-        "to the current region. Asset search does not dismiss map nodes.\n\n"
+        "to the current region and must stay inside one document "
+        "(document root allowed; never the whole namespace). "
+        "Asset search does not dismiss map nodes.\n\n"
         "=== End Rules ===\n\n"
         "Return ONLY one JSON object, e.g.:\n"
         '{"collect_ids":["C1"],"dispatch_ids":[],"search_assets":[],'
@@ -168,6 +170,9 @@ def harvest_policy_call(
     observation = format_actionable_map_observation(
         projection, list(actions), inline_summary=projection.scope is not None
     )
+    asset_ctx = str(getattr(state, "asset_observation_context", "") or "").strip()
+    if asset_ctx:
+        observation = f"{asset_ctx}\n\n{observation}"
     user = _harvest_user_prompt(subgoal=subgoal, query=query, observation=observation)
     purpose = _HARVEST_PURPOSE_DEPTH0 if depth == 0 else _HARVEST_PURPOSE_CHILD
 
