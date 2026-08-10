@@ -394,12 +394,21 @@ def _harvest_node(
         result.max_depth_hit = True
         return
 
+    from nav_address import next_dispatch_depth
+
     for act in dispatch_actions:
         sid = str(act.section_id or "").strip()
         if not sid or sid == str(node_scope or ""):
             continue
         result.visited_section_ids.append(sid)
         before_collected = len(result.new_section_ids)
+        child_depth = next_dispatch_depth(
+            ts,
+            parent_doc_id=str(state.doc_id or ""),
+            parent_scope=str(node_scope or ""),
+            child_id=sid,
+            depth=depth,
+        )
         _harvest_node(
             ts,
             state,
@@ -407,7 +416,7 @@ def _harvest_node(
             subgoal=subgoal,
             node_scope=sid,
             query=query,
-            depth=depth + 1,
+            depth=child_depth,
             steps_out=steps_out,
             result=result,
         )

@@ -490,8 +490,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--nav-config",
         type=Path,
         default=None,
-        help="nav config JSON (default: config/nav_default.json = waterfill+oversize; "
-        "use config/nav_greedy.json for greedy packing ablation)",
+        help="nav config JSON (default: config/nav_default.json; "
+        "nav_greedy.json disables depth0 oversize→dispatch)",
     )
     parser.add_argument(
         "--search-scope",
@@ -540,7 +540,8 @@ def main() -> int:
     if cfg.llm_max_tokens < 256:
         cfg.llm_max_tokens = 256
     print(
-        f"[replay] nav_config={nav_cfg_path} packing={cfg.compose_packing_mode}",
+        f"[replay] nav_config={nav_cfg_path} "
+        f"oversize_dispatch={cfg.enable_depth0_oversize_to_dispatch}",
         flush=True,
     )
 

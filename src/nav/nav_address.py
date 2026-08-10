@@ -128,3 +128,35 @@ def uses_document_nodes(ts: Any) -> bool:
     provider = getattr(ts, "_provider", None)
     target = provider if provider is not None else ts
     return callable(getattr(type(target), "document_ids", None))
+
+
+def next_dispatch_depth(
+    ts: Any,
+    *,
+    parent_doc_id: str = "",
+    parent_scope: str = "",
+    child_id: str,
+    depth: int,
+) -> int:
+    """Child navigate/harvest depth after DISPATCH into ``child_id``.
+
+    Namespace → document is depth-neutral (child starts at 0). Namespace →
+    section under a document starts at 1. Once already inside a document or
+    section scope, always ``depth + 1``. Shared by ``dispatch()`` and harvest
+    recursion so the two paths agree.
+    """
+    parent_sid = str(parent_scope or "").strip()
+    if parent_sid:
+        parent_level = address_level(ts, parent_sid)
+        if parent_level in (NavLevel.DOCUMENT, NavLevel.SECTION, NavLevel.CHUNK):
+            return int(depth) + 1
+
+    namespace_parent = uses_document_nodes(ts) and not str(parent_doc_id or "").strip()
+    if not namespace_parent:
+        return int(depth) + 1
+    level = address_level(ts, child_id)
+    if level == NavLevel.DOCUMENT:
+        return 0
+    if owner_document(ts, child_id, ""):
+        return 1
+    return int(depth) + 1

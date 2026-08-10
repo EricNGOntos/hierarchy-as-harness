@@ -60,19 +60,11 @@ class NavConfig:
     scope_inline_summary_char_limit: int = 1500
     scope_inline_summary_budget_mult: float = 3.0
     # COMPOSE child score = own_unit + compose_confidence_weight * collect_confidence
-    # (see nav_compose._child_final_score); drives greedy budget-fill order.
+    # (see nav_compose._child_final_score); drives group_key / within-group rank.
     compose_confidence_weight: float = 0.5
-    # Depth-0 external relative rerank of parent groups (compose preview + group_rank).
-    enable_external_rerank: bool = True
-    compose_preview_snippet_chars: int = 60
-    # 0 = show every child in the preview (no per-group child cap).
-    compose_preview_max_children: int = 0
-    # Evidence packing: "greedy" (legacy fill) | "waterfill" (tiered full+snippet coverage).
-    compose_packing_mode: str = "waterfill"
-    # Waterfill: fraction of budget reserved for cross-group snippet breadth (Tier2).
-    compose_coverage_budget_frac: float = 0.4
-    # Waterfill: max chars per snippet line when breadth-filling.
-    compose_snippet_chars: int = 80
+    # Depth-0 group_rank preview budget: over this many chars, skip Assembled
+    # Evidence / group_rank entirely (title+summary per parent group).
+    compose_group_rank_max_chars: int = 10000
     # Depth-0 hard rewrite: after agent chooses COLLECT, if branch text length
     # exceeds the limit and the node has children, rewrite that sid to DISPATCH.
     enable_depth0_oversize_to_dispatch: bool = False
@@ -132,6 +124,12 @@ class NavConfig:
             "subgoal_budget_floor_frac",
             "enable_anchor_entry",
             "enable_settle_group_rank",
+            "enable_external_rerank",
+            "compose_preview_snippet_chars",
+            "compose_preview_max_children",
+            "compose_packing_mode",
+            "compose_coverage_budget_frac",
+            "compose_snippet_chars",
             "enable_query_planning",
             "enable_plan_orchestration",
             "enable_slot_extract",

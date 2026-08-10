@@ -4,7 +4,13 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from agent_delivery.code.tool_space import ToolSpace
 from agent_delivery.code.index_retrieval import Chunk
-from nav_address import NavLevel, address_level, owner_document, uses_document_nodes
+from nav_address import (
+    NavLevel,
+    address_level,
+    next_dispatch_depth,
+    owner_document,
+    uses_document_nodes,
+)
 from nav_actions import build_legal_actions, format_actionable_map_observation
 from nav_policy import choose_llm_action, choose_rule_action
 from nav_projection import build_projection
@@ -324,16 +330,20 @@ def dispatch(
     for rid in region_ids:
         level = address_level(ts, rid)
         child_doc = owner_document(ts, rid, "")
+        child_depth = next_dispatch_depth(
+            ts,
+            parent_doc_id=str(state.doc_id or ""),
+            parent_scope=scope_now,
+            child_id=rid,
+            depth=depth,
+        )
         # Namespace parent: switch episode doc_id to the real document.
         enter_doc = False
-        child_depth = depth + 1
         if namespace_parent and level == NavLevel.DOCUMENT:
             enter_doc = True
             child_doc = rid
-            child_depth = 0
         elif namespace_parent and child_doc:
             enter_doc = True
-            child_depth = 1
         if enter_doc and child_doc:
             child_state = _fork_nav_state(state, doc_id=str(child_doc))
         else:
@@ -448,13 +458,10 @@ def navigate(
 
             group_map: Dict[str, str] = {}
             assembled_preview = ""
-            if (
-                depth == 0
-                and bool(getattr(config, "enable_external_rerank", True))
-                and state.collected
-            ):
+            if depth == 0 and state.collected:
                 from nav_compose import build_compose_preview, dedupe_scored
 
+                # Empty when preview exceeds compose_group_rank_max_chars → skip rank.
                 assembled_preview, group_map = build_compose_preview(
                     dedupe_scored(list(state.collected)),
                     ts,

@@ -16,6 +16,7 @@ from nav_address import (  # noqa: E402
     is_dispatch_only_level,
     is_dispatch_only_node,
     namespace_root,
+    next_dispatch_depth,
     owner_document,
     uses_document_nodes,
 )
@@ -69,6 +70,75 @@ class NavAddressTests(unittest.TestCase):
     def test_address_frozen(self) -> None:
         addr = NavAddress(NavLevel.SECTION, "  sec-1  ")
         self.assertEqual(addr.id, "sec-1")
+
+    def test_next_dispatch_depth_namespace_to_document_is_neutral(self) -> None:
+        ts = SimpleNamespace(_provider=_Provider())
+        self.assertEqual(
+            next_dispatch_depth(
+                ts, parent_doc_id="", parent_scope="", child_id="doc-a", depth=0
+            ),
+            0,
+        )
+
+    def test_next_dispatch_depth_namespace_to_section_starts_at_one(self) -> None:
+        ts = SimpleNamespace(_provider=_Provider())
+        self.assertEqual(
+            next_dispatch_depth(
+                ts, parent_doc_id="", parent_scope="", child_id="sec-1", depth=0
+            ),
+            1,
+        )
+
+    def test_next_dispatch_depth_inside_document_increments(self) -> None:
+        ts = SimpleNamespace(_provider=_Provider())
+        self.assertEqual(
+            next_dispatch_depth(
+                ts,
+                parent_doc_id="doc-a",
+                parent_scope="doc-a",
+                child_id="sec-1",
+                depth=0,
+            ),
+            1,
+        )
+        self.assertEqual(
+            next_dispatch_depth(
+                ts,
+                parent_doc_id="",
+                parent_scope="doc-a",
+                child_id="sec-1",
+                depth=0,
+            ),
+            1,
+        )
+        self.assertEqual(
+            next_dispatch_depth(
+                ts,
+                parent_doc_id="",
+                parent_scope="sec-1",
+                child_id="chk-1",
+                depth=1,
+            ),
+            2,
+        )
+
+    def test_next_dispatch_depth_single_doc_always_increments(self) -> None:
+        # No document_ids() on provider → not namespace mode.
+        class _Single:
+            def address_level(self, node_id: str):
+                return NavLevel.SECTION
+
+            def owner_document(self, node_id: str):
+                return "only-doc"
+
+        ts = SimpleNamespace(_provider=_Single())
+        self.assertFalse(uses_document_nodes(ts))
+        self.assertEqual(
+            next_dispatch_depth(
+                ts, parent_doc_id="only-doc", parent_scope="sec-a", child_id="sec-b", depth=1
+            ),
+            2,
+        )
 
 
 if __name__ == "__main__":

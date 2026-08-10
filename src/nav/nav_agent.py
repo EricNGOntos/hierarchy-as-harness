@@ -140,7 +140,7 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
     """Hydrate ``section_id ∪ descendants`` in document order.
 
     No collect-time top-K / unit-score truncation — final size is controlled by
-    compose ``budget_chars`` waterfill (P0.3 / MAP-NAV subtree collect).
+    compose ``budget_chars`` progressive trim (MAP-NAV subtree collect).
     """
     sid = action.section_id
     if not sid:

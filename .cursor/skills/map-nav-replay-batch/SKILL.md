@@ -167,7 +167,7 @@ map_nav_trace/replay_YYYYMMDD_HHMMSS/
 |----|-----------|
 | 任务集 | `data/tasks/tasks_realdata_bodyrich_latest_clean_400.jsonl`（400 题） |
 | 语料 | `data/corpus/test_data_full_realdata_clean_latest.jsonl` |
-| Nav 配置 | `config/nav_default.json`（默认 waterfill+oversize；消融 greedy 用 `config/nav_greedy.json`） |
+| Nav 配置 | `config/nav_default.json`（默认 oversize→dispatch；关闭用 `config/nav_greedy.json`） |
 | LLM 环境 | `load_llm_env()`；模型 `NAV_LLM_MODEL` / `NAV_SUBAGENT_MODEL` |
 | Embedding | 默认 `text-embedding-v3` remote；缓存 `cache/embeddings/` |
 | LLM 缓存 | `cache/llm_api_cache.jsonl`（复跑同轨迹会 hit，快很多） |
