@@ -66,6 +66,9 @@ def unit_score_for_evidence_chunk(chunk: Chunk, unit_scores: Dict[str, float]) -
     if nid.endswith("__intro"):
         base = nid[: -len("__intro")]
         return float(scores.get(f"{base}__self", scores.get(base, 0.0)) or 0.0)
+    if nid.endswith("__self"):
+        base = nid[: -len("__self")]
+        return float(scores.get(f"{base}__self", scores.get(base, 0.0)) or 0.0)
     if nid.endswith("__outline"):
         base = nid[: -len("__outline")]
         sid = str(getattr(chunk, "section_id", "") or "")

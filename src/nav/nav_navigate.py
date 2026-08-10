@@ -30,6 +30,42 @@ def _batch_actions(chosen: LegalAction) -> List[LegalAction]:
     return [chosen]
 
 
+def _section_ancestor_depth(ts: ToolSpace, state: NavState, section_id: str) -> int:
+    """Structural depth ≈ ancestor count (deeper nodes sort first for COLLECT)."""
+    sid = str(section_id or "").strip()
+    if not sid:
+        return 0
+    doc = owner_document(ts, sid, "") or str(state.doc_id or "")
+    relations = getattr(ts, "section_relation_ids", None)
+    if not callable(relations):
+        relations = getattr(ts, "relations", None)
+    if callable(relations) and doc:
+        try:
+            ancestors, _desc = relations(sid, doc)
+            return len(ancestors or ())
+        except Exception:
+            return 0
+    return 0
+
+
+def _batch_collect_deepest_first(
+    ts: ToolSpace, state: NavState, chosen: LegalAction
+) -> List[LegalAction]:
+    """Order a COLLECT batch deepest-first so parent purge after child hydrate is stable."""
+    acts = [
+        a
+        for a in _batch_actions(chosen)
+        if str(getattr(a, "section_id", "") or "").strip()
+    ]
+    acts.sort(
+        key=lambda a: (
+            -_section_ancestor_depth(ts, state, str(a.section_id)),
+            str(a.section_id),
+        )
+    )
+    return acts
+
+
 def _chunk_plain_chars(chunk: Chunk) -> int:
     text = (getattr(chunk, "text", None) or "").strip()
     if not text:
@@ -255,7 +291,7 @@ def _apply_collect(
     total_purged = 0
     sids: List[str] = []
     conf_by_sid = dict((chosen.metadata or {}).get("confidence_by_section") or {})
-    for act in _batch_actions(chosen):
+    for act in _batch_collect_deepest_first(ts, state, chosen):
         sid = str(act.section_id or "").strip()
         if not sid:
             continue

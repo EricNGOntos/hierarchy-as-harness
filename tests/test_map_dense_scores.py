@@ -138,6 +138,25 @@ class CollectHydrationTests(unittest.TestCase):
         )
         self.assertAlmostEqual(_unit_score_for_evidence_chunk(path, scores), 0.8)
         self.assertAlmostEqual(_unit_score_for_evidence_chunk(intro, scores), 0.5)
+        self_hit = Chunk(
+            node_id="doc:L1__self",
+            doc_id="doc",
+            text="z",
+            line_ids=(1,),
+            section_id="doc:L1",
+        )
+        self.assertAlmostEqual(_unit_score_for_evidence_chunk(self_hit, scores), 0.5)
+        # Prefer __self key; fall back to bare section id when missing.
+        self_fallback = Chunk(
+            node_id="doc:L3__self",
+            doc_id="doc",
+            text="w",
+            line_ids=(3,),
+            section_id="doc:L3",
+        )
+        self.assertAlmostEqual(
+            _unit_score_for_evidence_chunk(self_fallback, scores), 0.8
+        )
 
     def test_collect_hydrates_all_chunks_in_doc_order(self) -> None:
         pool = [

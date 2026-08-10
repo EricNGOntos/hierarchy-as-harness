@@ -17,7 +17,11 @@ def choose_rule_action(
     step_idx: int,
     config: NavConfig,
 ) -> LegalAction:
-    """Deterministic fallback when LLM returns an illegal action."""
+    """Deterministic pick for ``policy=rule`` (and rare last-resort paths).
+
+    Illegal LLM action_ids do **not** use this COLLECT-first path; they FINISH
+    the scope and record ``refusal_events`` (see ``choose_llm_action``).
+    """
     del state, projection, step_idx, config
 
     def first(kind: ActionKind) -> Optional[LegalAction]:
@@ -30,6 +34,22 @@ def choose_rule_action(
     if act:
         return act
     return first(ActionKind.FINISH) or actions[-1]
+
+
+def _finish_or_rule(
+    state: NavState,
+    projection: Projection,
+    actions: List[LegalAction],
+    *,
+    step_idx: int,
+    config: NavConfig,
+) -> LegalAction:
+    finish = next((a for a in actions if a.kind == ActionKind.FINISH), None)
+    if finish is not None:
+        return finish
+    return choose_rule_action(
+        state, projection, actions, step_idx=step_idx, config=config
+    )
 
 
 def _extract_json_obj(text: str) -> Optional[dict]:
@@ -150,7 +170,7 @@ def _system_prompt(
     The prompt is state-adaptive: when no DISPATCH action is legal at this layer
     (e.g. recursion off and depth>0), all DISPATCH semantics/examples/preferences
     are removed and the model is told this layer is COLLECT/FINISH only. This
-    prevents the model from emitting illegal D* that would trigger rule fallback.
+    prevents the model from emitting illegal D* that would finish the scope.
 
     When has_preview is True (depth-0 with assembled evidence groups), FINISH must
     include a relative group_rank over [G*] ids.
@@ -273,11 +293,9 @@ def choose_llm_action(
     from nav_token_budget import NavTokenLimit, nav_token_budget_exhausted
 
     def _token_limit_finish() -> tuple[LegalAction, dict]:
-        finish = next((a for a in actions if a.kind == ActionKind.FINISH), None)
-        if finish is None:
-            finish = choose_rule_action(
-                state, projection, actions, step_idx=step_idx, config=config
-            )
+        finish = _finish_or_rule(
+            state, projection, actions, step_idx=step_idx, config=config
+        )
         return finish, {
             "reason": "token_limit",
             "stop_reason": "token_limit",
@@ -434,12 +452,28 @@ def choose_llm_action(
             if attempt < 2:
                 time.sleep(min(2.0, 0.4 * (attempt + 1)))
                 continue
-            fallback = choose_rule_action(
+            # Do not silently COLLECT the first tree row — finish this scope.
+            fallback = _finish_or_rule(
                 state, projection, actions, step_idx=step_idx, config=config
+            )
+            state.refusal_events.append(
+                {
+                    "tool": "policy",
+                    "status": "illegal_action",
+                    "message": (
+                        f"illegal action_id={aid!r} after retries; "
+                        f"finishing scope with {fallback.action_id}"
+                    ),
+                    "illegal_action_id": aid,
+                    "fallback_action_id": fallback.action_id,
+                    "fallback_kind": fallback.kind.value,
+                    "depth": depth,
+                    "step_idx": step_idx,
+                }
             )
             return fallback, {
                 "model": model,
-                "reason": "rule_fallback_illegal_action",
+                "reason": "illegal_action_finish",
                 "raw": text[:500],
                 "illegal_action_id": aid,
                 "fallback_action_id": fallback.action_id,

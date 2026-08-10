@@ -283,7 +283,6 @@ def _build_map_tree(
     ts: Any,
     *,
     root_ids: List[str],
-    query: str,
     map_scores: Dict[str, float],
     children_limit: int,
     max_nodes: int = 20000,
@@ -318,8 +317,6 @@ def _build_map_tree(
         preview = str(st.get("preview") or "").replace("\n", " ").strip()
         title = preview if preview else section_id
         score = float(map_scores.get(section_id, 0.0) or 0.0)
-        if score <= 0.0:
-            score = _lexical_score(query, f"{title} {section_id}")
         return _MapNode(
             section_id=section_id,
             depth=depth,
@@ -502,7 +499,6 @@ def build_map(
     roots = _build_map_tree(
         ts,
         root_ids=root_ids,
-        query=query,
         map_scores=scores,
         children_limit=max(1, int(config.map_children_limit)),
         collected_section_ids=collected_section_ids,
