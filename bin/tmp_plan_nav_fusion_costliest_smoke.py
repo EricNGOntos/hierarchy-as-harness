@@ -65,7 +65,7 @@ def _cfg_fusion() -> NavConfig:
     cfg.enable_per_subgoal_illumination = True
     cfg.enable_goal_conditioned_folding = True
     cfg.enable_plan_orchestration = True
-    cfg.enable_contract_verify = True
+    cfg.enable_slot_extract = True
     cfg.enable_subgoal_budget_ledger = True
     cfg.subgoal_budget_floor_frac = 1.0
     cfg.max_replans = 1

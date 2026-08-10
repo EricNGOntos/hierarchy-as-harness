@@ -146,12 +146,8 @@ def harvest_policy_call(
     depth: int,
 ) -> Tuple[List[LegalAction], List[LegalAction], Dict[str, float], str, Dict[str, Any]]:
     """One LLM call; ``meta["search_assets"]`` holds normalized asset requests."""
-    import os
-
-    from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
-    from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
-    from agent_delivery.code.llm_usage import record_usage  # type: ignore
     from nav_assets import parse_search_assets
+    from nav_llm import nav_chat, resolve_nav_model
     from nav_token_budget import nav_token_budget_exhausted
 
     if nav_token_budget_exhausted():
@@ -161,16 +157,11 @@ def harvest_policy_call(
             "depth": depth,
         }
 
-    require_llm_env(context="Nav Harvest")
-    key = os.environ.get("OPENAI_API_KEY", "").strip()
     model_env = config.subagent_model_env if depth > 0 else config.llm_model_env
-    model = (
-        os.environ.get(model_env, "").strip()
-        or os.environ.get(config.llm_model_env, "").strip()
-        or os.environ.get("COMPOSE_MODEL", "gpt-4o-mini")
+    model = resolve_nav_model(
+        model_env=model_env,
+        fallback_envs=(config.llm_model_env, "COMPOSE_MODEL"),
     )
-    base_url = os.environ.get("OPENAI_BASE_URL", "").strip() or None
-    client = make_openai_client(api_key=key, base_url=base_url)
 
     dispatch_available = any(a.kind == ActionKind.DISPATCH for a in actions)
     system = _harvest_system_prompt(dispatch_available=dispatch_available)
@@ -180,8 +171,7 @@ def harvest_policy_call(
     user = _harvest_user_prompt(subgoal=subgoal, query=query, observation=observation)
     purpose = _HARVEST_PURPOSE_DEPTH0 if depth == 0 else _HARVEST_PURPOSE_CHILD
 
-    cached = cached_chat_completion(
-        client,
+    cached = nav_chat(
         purpose=purpose,
         model=model,
         messages=[
@@ -191,8 +181,9 @@ def harvest_policy_call(
         temperature=float(config.llm_temperature),
         max_tokens=int(config.llm_max_tokens),
         response_format={"type": "json_object"},
+        context="Nav Harvest",
+        usage_tag="nav_harvest",
     )
-    record_usage("nav_harvest", cached.get("usage"))
     text = str(cached.get("content") or "").strip()
     obj = _extract_json_obj(text) or {}
 

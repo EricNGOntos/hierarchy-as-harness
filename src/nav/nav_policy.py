@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import time
 from typing import Any, List, Optional
@@ -270,9 +269,7 @@ def choose_llm_action(
     group_map: Optional[dict[str, str]] = None,
     assembled_preview: Optional[str] = None,
 ) -> tuple[LegalAction, dict]:
-    from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
-    from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
-    from agent_delivery.code.llm_usage import record_usage  # type: ignore
+    from nav_llm import nav_chat, resolve_nav_model
     from nav_token_budget import nav_token_budget_exhausted
 
     if nav_token_budget_exhausted():
@@ -287,16 +284,11 @@ def choose_llm_action(
             "depth": depth,
         }
 
-    require_llm_env(context="Nav Agent")
-    key = os.environ.get("OPENAI_API_KEY", "").strip()
     model_env = config.subagent_model_env if depth > 0 else config.llm_model_env
-    model = (
-        os.environ.get(model_env, "").strip()
-        or os.environ.get(config.llm_model_env, "").strip()
-        or os.environ.get("COMPOSE_MODEL", "gpt-4o-mini")
+    model = resolve_nav_model(
+        model_env=model_env,
+        fallback_envs=(config.llm_model_env, "COMPOSE_MODEL"),
     )
-    base_url = os.environ.get("OPENAI_BASE_URL", "").strip() or None
-    client = make_openai_client(api_key=key, base_url=base_url)
     agent_state = _format_agent_state(
         state, step_idx, config, max_steps=max_steps
     )
@@ -370,8 +362,7 @@ def choose_llm_action(
     last_error: Optional[Exception] = None
     for attempt in range(3):
         try:
-            cached = cached_chat_completion(
-                client,
+            cached = nav_chat(
                 purpose=purpose,
                 model=model,
                 messages=[
@@ -381,8 +372,9 @@ def choose_llm_action(
                 temperature=float(config.llm_temperature),
                 max_tokens=int(config.llm_max_tokens),
                 response_format={"type": "json_object"},
+                context="Nav Agent",
+                usage_tag="nav",
             )
-            record_usage("nav", cached.get("usage"))
             text = str(cached.get("content") or "").strip()
             obj = _extract_json_obj(text) or {}
             aid = str(obj.get("action_id") or obj.get("id") or "").strip().upper()

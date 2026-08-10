@@ -94,9 +94,9 @@ class NavConfig:
     enable_goal_conditioned_folding: bool = False
     # M4: replace single navigate with dependency-wave plan execution.
     enable_plan_orchestration: bool = False
-    # M5: contract verify + slot extract + activation + limited replan.
-    enable_contract_verify: bool = False
-    # M5: navigate+verify cycles per subgoal (RETRY/REBIND). Min 1.
+    # LLM slot extract when a later subgoal references this subgoal's slots.
+    enable_slot_extract: bool = False
+    # M5: navigate cycles per subgoal when evidence is empty. Min 1.
     subgoal_max_attempts: int = 2
     # M5: 0 = never replan; otherwise hard cap on structural replans.
     max_replans: int = 0
@@ -150,6 +150,7 @@ class NavConfig:
             "map_collapse_min_score",
             "dispatch_group_size",
             "dispatch_max_workers",
+            "enable_contract_verify",
         ):
             flat.pop(dead, None)
         allowed = {f.name for f in cls.__dataclass_fields__.values()}

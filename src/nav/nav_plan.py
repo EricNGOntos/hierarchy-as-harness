@@ -723,46 +723,29 @@ def plan_query(
     projection: Optional[Projection] = None,
 ) -> RetrievalPlan:
     """LLM plan over the planning map. Falls back to a single subgoal on failure."""
-    from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
-    from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
-    from agent_delivery.code.llm_usage import record_usage  # type: ignore
+    from nav_llm import (  # type: ignore
+        nav_chat,
+        planner_output_max_tokens,
+        resolve_nav_model,
+        resolve_nav_thinking_mode,
+    )
     from nav_token_budget import nav_token_budget_exhausted
 
     if nav_token_budget_exhausted():
         return fallback_plan(state.query, reason="token_limit")
 
-    require_llm_env(context="Nav Query Planner")
     if projection is None or observation is None:
         projection, observation = build_planning_observation(ts, state, config)
 
-    from agent_delivery.code.llm_config import (  # type: ignore
-        chat_thinking_extra,
-        resolve_chat_credentials,
-        resolve_thinking_mode,
+    model = resolve_nav_model(
+        model_env=config.planner_model_env,
+        fallback_envs=(config.llm_model_env, "COMPOSE_MODEL"),
     )
-
-    model = (
-        os.environ.get(config.planner_model_env, "").strip()
-        or os.environ.get(config.llm_model_env, "").strip()
-        or os.environ.get("COMPOSE_MODEL", "").strip()
-        or "gpt-4o-mini"
-    )
-    key, base_url = resolve_chat_credentials(
-        model=model,
-        api_key_env="NAV_PLANNER_API_KEY",
-        base_url_env="NAV_PLANNER_BASE_URL",
-    )
-    if not key:
-        key = os.environ.get("OPENAI_API_KEY", "").strip()
-    thinking_mode = resolve_thinking_mode(
-        os.environ.get("NAV_PLANNER_THINKING", "").strip() or None
-    )
-    think_extra = chat_thinking_extra(mode=thinking_mode, model=model)
+    thinking_mode = resolve_nav_thinking_mode(role="planner")
     # Thinking can exceed the default 60s client timeout.
     timeout_s = float(os.environ.get("NAV_PLANNER_TIMEOUT_SECONDS", "").strip() or "0")
     if timeout_s <= 0:
         timeout_s = 300.0 if thinking_mode == "enabled" else 90.0
-    client = make_openai_client(api_key=key, base_url=base_url, timeout=timeout_s)
     max_subgoals = int(getattr(config, "planner_max_subgoals", 0) or 0)
     system = _planner_system_prompt(max_subgoals=max_subgoals)
     reference = language_reference_text(query=state.query, projection=projection)
@@ -772,25 +755,19 @@ def plan_query(
         f"=== Planning Map ===\n{observation}\n=== End Planning Map ===\n\n"
         "Return the retrieval plan JSON."
     )
-    max_tokens = max(
-        int(config.llm_max_tokens or 0),
-        int(getattr(config, "planner_llm_max_tokens", 0) or 0),
-        256,
+    max_tokens = planner_output_max_tokens(
+        max(
+            int(config.llm_max_tokens or 0),
+            int(getattr(config, "planner_llm_max_tokens", 0) or 0),
+            256,
+        )
     )
-    # Reasoning tokens consume the same max_tokens budget as the final JSON.
-    # Without headroom, think mode returns HTTP 200 with empty content.
-    think_max = int(os.environ.get("NAV_PLANNER_THINK_MAX_TOKENS", "").strip() or "0")
-    if thinking_mode == "enabled":
-        if think_max <= 0:
-            think_max = 16384
-        max_tokens = max(max_tokens, think_max)
     last_raw = ""
     last_err = ""
     language_repair_used = False
     for _attempt in range(3):
         try:
-            cached = cached_chat_completion(
-                client,
+            cached = nav_chat(
                 purpose=_PLANNER_PURPOSE,
                 model=model,
                 messages=[
@@ -800,9 +777,13 @@ def plan_query(
                 temperature=float(config.llm_temperature),
                 max_tokens=max_tokens,
                 response_format={"type": "json_object"},
-                extra=think_extra or None,
+                thinking_role="planner",
+                context="Nav Query Planner",
+                api_key_env="NAV_PLANNER_API_KEY",
+                base_url_env="NAV_PLANNER_BASE_URL",
+                timeout=timeout_s,
+                usage_tag="nav_plan",
             )
-            record_usage("nav_plan", cached.get("usage"))
             content = str(cached.get("content") or "").strip()
             reasoning = str(cached.get("reasoning_content") or "").strip()
             last_raw = content

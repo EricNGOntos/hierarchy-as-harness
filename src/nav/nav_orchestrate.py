@@ -1,9 +1,9 @@
 """M4/M5/M6: wave orchestration over a RetrievalPlan.
 
 Execution order = dependency DAG ∩ soft prefer_after. Each subgoal runs its own
-navigate→verify so evidence attribution stays per-subgoal.
-Soft plan: never clips C*/D*/F* action space — only changes query focus,
-bindings, fold weights, and TRACE.
+harvest/navigate so evidence attribution stays per-subgoal. Slot values are
+extracted only when a later subgoal references them; checklist acceptance is
+owned by ``plan_control``.
 
 M6 ``BudgetLedger`` / ``settle_subgoal_evidence`` live in ``nav_compose``
 (wired from ``run_nav_episode`` after orchestration).
@@ -22,18 +22,11 @@ from nav_plan import (
     RetrievalPlan,
     Subgoal,
     bind_slots,
-    is_always_active,
     plan_query,
     unbound_slots,
 )
 from nav_types import NavConfig, NavState, SubgoalResult
-from nav_verify import (
-    activation_when_holds,
-    apply_bindings_from_result,
-    build_evidence_text_from_chunks,
-    extract_slots,
-    verify_contract,
-)
+from nav_verify import apply_bindings_from_result, build_subgoal_result
 
 _SLOT_STRIP_RE = re.compile(r"\{\{\s*[^}]+\s*\}\}")
 
@@ -42,28 +35,27 @@ def ready_subgoal_ids(
     plan: RetrievalPlan,
     *,
     satisfied: Set[str],
-    activated: Set[str],
+    activated: Set[str] | None = None,
     attempted: Optional[Set[str]] = None,
     dropped: Optional[Set[str]] = None,
 ) -> List[str]:
-    """Subgoals eligible to run now (deps settled, activated, not yet finished).
+    """Subgoals eligible to run now (deps settled, not yet finished).
+
+    ``activated`` is accepted for call-site compatibility but ignored —
+    conditional activation was removed; readiness is depends_on only.
 
     F1 fix: a dependency only needs to be *settled* (``satisfied`` or
-    ``dropped``, never both — see ``NavState.dropped_subgoal_ids``), not
-    specifically ``satisfied``. A dropped precursor must not starve every
-    downstream subgoal forever. Readiness no longer requires the retrieval
-    query to be fully slot-bound either: once deps are settled the caller
-    degrades an unbound query (``_unbound_retrieval_query``) instead of
-    waiting on a slot that a dropped precursor will never produce.
+    ``dropped``). A dropped precursor must not starve every downstream
+    subgoal forever. Unbound ``{{slot}}`` queries degrade via
+    ``_unbound_retrieval_query`` instead of blocking readiness.
     """
+    del activated  # retired activation gate
     settled = set(satisfied) | set(dropped or ())
     known = {s.id for s in plan.subgoals}
     done = set(attempted or ()) | set(satisfied)
     out: List[str] = []
     for sg in plan.subgoals:
         if sg.id in done:
-            continue
-        if not is_always_active(sg) and sg.id not in activated:
             continue
         deps = [d for d in (sg.depends_on or []) if d in known]
         if any(d not in settled for d in deps):
@@ -163,7 +155,8 @@ def _run_navigate_for_query(
     )
 
 
-def _verify_subgoal(
+def _wave_subgoal_result(
+    plan: RetrievalPlan,
     state: NavState,
     config: NavConfig,
     subgoal: Subgoal,
@@ -171,138 +164,62 @@ def _verify_subgoal(
     retrieval_query: str,
     new_chunks: Sequence[Tuple[Any, float]],
     collected_before: Set[str],
-    force_llm_extract: bool = False,
 ) -> SubgoalResult:
-    """Verify against THIS call's own new evidence only (never the global pool).
-
-    ``new_chunks`` must be the chunks collected since ``collected_before`` was
-    snapshotted — mixing in older/other-subgoal evidence here is exactly the
-    attribution leak audited in docs/audit_plan_nav_overlap.md §1.4-1.
-    """
-    evidence = build_evidence_text_from_chunks(new_chunks)
-    use_llm = bool(getattr(config, "enable_contract_verify", False)) or force_llm_extract
-    extracted, conf = extract_slots(
-        subgoal,
-        evidence,
+    """Build this wave's result from *new* chunks only (never the global pool)."""
+    return build_subgoal_result(
+        plan,
+        state.collected_section_ids,
         config,
-        retrieval_query=retrieval_query,
-        use_llm=use_llm,
-    )
-    # Rule verify always runs; LLM extract is optional.
-    outcome = verify_contract(
         subgoal,
-        extracted=extracted,
-        evidence_text=evidence,
-        confidence=conf,
+        retrieval_query=retrieval_query,
+        new_chunks=new_chunks,
+        collected_before=collected_before,
+        use_llm_extract=bool(getattr(config, "enable_slot_extract", False)),
     )
-    result = outcome.result
-    result.collected_section_ids = [
-        s for s in state.collected_section_ids if s not in collected_before
-    ] or list(result.collected_section_ids)
-    return result
 
 
-def _activate_conditionals(
-    plan: RetrievalPlan,
-    state: NavState,
-    config: NavConfig,
-    *,
-    parent_id: str,
-    parent_result: SubgoalResult,
-) -> List[str]:
-    activated_now: List[str] = []
-    for sg in plan.subgoals:
-        if is_always_active(sg):
-            continue
-        if sg.activation.on != parent_id:
-            continue
-        if sg.id in state.activated_subgoal_ids:
-            continue
-        if activation_when_holds(
-            sg.activation.when,
-            parent_extracted=parent_result.extracted,
-            parent_satisfied=bool(parent_result.satisfied),
-            config=config,
-            use_llm=bool(getattr(config, "enable_contract_verify", False)),
-        ):
-            state.activated_subgoal_ids.add(sg.id)
-            activated_now.append(sg.id)
-    return activated_now
-
-
-def _execute_subgoal_with_verdicts(
+def _execute_subgoal_navigate(
     ts: Any,
     state: NavState,
     config: NavConfig,
+    plan: RetrievalPlan,
     subgoal: Subgoal,
     *,
     steps_out: Optional[List[Any]],
 ) -> Tuple[SubgoalResult, bool]:
-    """Run navigate→verify with RETRY/REBIND. Returns (result, want_replan)."""
+    """Navigate until this wave collects evidence or attempts are exhausted."""
     max_attempts = max(1, int(getattr(config, "subgoal_max_attempts", 2) or 2))
     rq = bind_slots(subgoal.retrieval_query, state.slot_bindings)
+    if unbound_slots(rq):
+        rq = _unbound_retrieval_query(subgoal)
     last: Optional[SubgoalResult] = None
-    last_new_chunks: List[Tuple[Any, float]] = []
-    want_replan = False
     # Cross-subgoal report leakage (audit §1.6): each subgoal starts with a
-    # clean scratchpad; its own dispatch reports still accumulate across its
-    # own retries below.
+    # clean scratchpad; its own dispatch reports still accumulate across retries.
     state.reports_context = ""
 
-    for attempt in range(max_attempts):
+    for _attempt in range(max_attempts):
         before = set(state.collected_section_ids)
-
-        if last is not None and last.verdict == "REBIND":
-            # First: re-extract (LLM if verify enabled) from the SAME evidence
-            # collected by the previous attempt. If still bad, degrade query.
-            re_extract = _verify_subgoal(
-                state,
-                config,
-                subgoal,
-                retrieval_query=rq,
-                new_chunks=last_new_chunks,
-                collected_before=before,
-                force_llm_extract=True,
-            )
-            if re_extract.satisfied or re_extract.verdict == "SATISFIED":
-                return re_extract, False
-            rq = _unbound_retrieval_query(subgoal)
-
         _set_focus(state, subgoal, rq)
         before_len = len(state.collected)
         child_steps: List[Any] = []
         _run_navigate_for_query(ts, state, config, query=rq, steps_out=child_steps)
         if steps_out is not None:
             steps_out.extend(child_steps)
-        last_new_chunks = list(state.collected[before_len:])
-        last = _verify_subgoal(
+        new_chunks = list(state.collected[before_len:])
+        last = _wave_subgoal_result(
+            plan,
             state,
             config,
             subgoal,
             retrieval_query=rq,
-            new_chunks=last_new_chunks,
+            new_chunks=new_chunks,
             collected_before=before,
         )
-        if last.satisfied or last.verdict == "SATISFIED":
-            last.satisfied = True
-            last.verdict = "SATISFIED"
+        if last.chars_used > 0:
             return last, False
-        if last.verdict in {"RETRY_SAME_REGION", "REBIND"}:
-            continue
-        if last.verdict == "REPLAN":
-            want_replan = True
-            break
-        break
 
     assert last is not None
-    # Attempts exhausted without satisfaction → optional structural replan.
-    if (
-        not last.satisfied
-        and int(getattr(config, "max_replans", 0) or 0) > 0
-        and last.verdict in {"RETRY_SAME_REGION", "REBIND", "REPLAN"}
-    ):
-        last.verdict = "REPLAN"
-        want_replan = True
+    want_replan = bool(int(getattr(config, "max_replans", 0) or 0) > 0 and not last.satisfied)
     return last, want_replan
 
 
@@ -310,6 +227,7 @@ def _execute_subgoal_harvest_once(
     ts: Any,
     state: NavState,
     config: NavConfig,
+    plan: RetrievalPlan,
     subgoal: Subgoal,
     *,
     steps_out: Optional[List[Any]],
@@ -341,7 +259,8 @@ def _execute_subgoal_harvest_once(
         steps_out=steps_out,
     )
     new_chunks = list(state.collected[before_len:])
-    signal = _verify_subgoal(
+    signal = _wave_subgoal_result(
+        plan,
         state,
         config,
         subgoal,
@@ -394,7 +313,8 @@ def _apply_plan_control(
         sid = item["subgoal_id"]
         result: SubgoalResult = item["result"]
         sub_decision = decision.per_subgoal.get(sid)
-        kind = sub_decision.decision if sub_decision else ("accept" if result.satisfied else "widen")
+        has_evidence = int(getattr(result, "chars_used", 0) or 0) > 0
+        kind = sub_decision.decision if sub_decision else ("accept" if has_evidence else "widen")
         # Circuit breaker: bound widen loops regardless of plan_control.
         if kind == "widen" and int(state.subgoal_attempt_counts.get(sid, 0)) >= max_attempts:
             kind = "drop"
@@ -410,11 +330,9 @@ def _apply_plan_control(
 
         if kind == "accept":
             result.satisfied = True
-            result.verdict = "SATISFIED"
             state.subgoal_results[sid] = asdict(result)
             state.satisfied_subgoal_ids.add(sid)
             state.attempted_subgoal_ids.add(sid)
-            _activate_conditionals(plan, state, config, parent_id=sid, parent_result=result)
         elif kind == "drop":
             state.dropped_subgoal_ids.add(sid)
             state.attempted_subgoal_ids.add(sid)
@@ -456,11 +374,16 @@ def _execute_subgoal_on_state(
     steps_out: Optional[List[Any]],
 ) -> Dict[str, Any]:
     by = {s.id: s for s in plan.subgoals}
-    result, want_replan = _execute_subgoal_with_verdicts(
-        ts, state, config, by[subgoal_id], steps_out=steps_out
+    result, want_replan = _execute_subgoal_navigate(
+        ts, state, config, plan, by[subgoal_id], steps_out=steps_out
     )
     _clear_focus(state)
-    return {"subgoal_id": subgoal_id, "result": result, "want_replan": want_replan}
+    return {
+        "subgoal_id": subgoal_id,
+        "result": result,
+        "new_chunks": [],
+        "want_replan": want_replan,
+    }
 
 
 def execute_plan(
@@ -518,7 +441,7 @@ def execute_plan(
         def _run_one(sid: str, working_state: NavState, out_steps: Optional[List[Any]]) -> Dict[str, Any]:
             if use_harvest:
                 return _execute_subgoal_harvest_once(
-                    ts, working_state, config, by_id[sid], steps_out=out_steps
+                    ts, working_state, config, plan, by_id[sid], steps_out=out_steps
                 )
             return _execute_subgoal_on_state(
                 ts, working_state, config, plan, sid, steps_out=out_steps
@@ -534,7 +457,12 @@ def execute_plan(
             result: SubgoalResult = item["result"]
             state.subgoal_results[sid] = asdict(result)
             wave_detail["subgoal_results"].append(
-                {"subgoal_id": sid, "verdict": result.verdict, "gap": result.gap}
+                {
+                    "subgoal_id": sid,
+                    "chars_used": result.chars_used,
+                    "gap": result.gap,
+                    "extracted": dict(result.extracted or {}),
+                }
             )
             summary["results"][sid] = asdict(result)
             if result.extracted:
@@ -558,15 +486,12 @@ def execute_plan(
             for item in outputs:
                 sid = item["subgoal_id"]
                 result = item["result"]
-                if item.get("want_replan") or result.verdict == "REPLAN":
+                if item.get("want_replan"):
                     replan_requested = True
                 # Close the node after attempts (success or exhausted).
                 state.attempted_subgoal_ids.add(sid)
-                if result.satisfied or result.verdict == "SATISFIED":
+                if result.chars_used > 0:
                     state.satisfied_subgoal_ids.add(sid)
-                    _activate_conditionals(
-                        plan, state, config, parent_id=sid, parent_result=result
-                    )
 
         if bool(getattr(config, "enable_per_subgoal_illumination", False)):
             illuminate_from_plan(ts, state, config)

@@ -1,37 +1,21 @@
-"""M5: mechanical evidence/slot signal, slot extraction, activation predicates.
+"""Slot binding helpers for plan orchestration.
 
-Soft plan: verdicts never clip the action space — they only drive bindings,
-satisfaction marks, fold refresh, and optional replan. Whether a need is
-actually answered is decided by ``nav_control.plan_control`` against the plan's
-coverage checklist, not here.
+Extracts values only when a later subgoal's ``{{sN.slot}}`` (or short
+``{{slot}}`` matching this subgoal's ``produces``) needs them. No contract
+verdict, no activation predicate — checklist reconciliation belongs solely
+to ``nav_control.plan_control``.
 """
 
 from __future__ import annotations
 
 import json
-import os
 import re
-from dataclasses import dataclass
-from typing import Any, Dict, List, Literal, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
-from nav_plan import Subgoal
+from nav_plan import RetrievalPlan, Subgoal, unbound_slots
 from nav_types import NavConfig, SubgoalResult
 
-Verdict = Literal[
-    "SATISFIED",
-    "RETRY_SAME_REGION",
-    "REBIND",
-    "REPLAN",
-]
-
 _TOKEN_RE = re.compile(r"[\w\u4e00-\u9fff]+", re.UNICODE)
-
-
-@dataclass
-class VerifyOutcome:
-    verdict: Verdict
-    result: SubgoalResult
-    gap: str = ""
 
 
 def _tokens(text: str) -> List[str]:
@@ -42,24 +26,55 @@ def evidence_chars(text: str) -> int:
     return len((text or "").strip())
 
 
+def _slot_owner_and_name(ref: str) -> Tuple[Optional[str], str]:
+    token = (ref or "").strip()
+    if not token:
+        return None, ""
+    if "." in token:
+        owner, name = token.split(".", 1)
+        return owner.strip() or None, name.strip()
+    return None, token
+
+
+def demanded_slot_names(plan: RetrievalPlan, producer: Subgoal) -> List[str]:
+    """Slots this subgoal must fill because a *later* subgoal references them."""
+    wanted: Set[str] = set()
+    produces = {str(p).strip() for p in (producer.produces or []) if str(p).strip()}
+    for sg in plan.subgoals:
+        if sg.id == producer.id:
+            continue
+        for ref in unbound_slots(sg.retrieval_query) + unbound_slots(sg.need):
+            owner, name = _slot_owner_and_name(ref)
+            if not name:
+                continue
+            if owner == producer.id:
+                wanted.add(name)
+            elif owner is None and name in produces:
+                wanted.add(name)
+    if produces:
+        # Preserve planner order; drop produces nobody consumes.
+        return [p for p in (producer.produces or []) if str(p).strip() in wanted]
+    return sorted(wanted)
+
+
 def extract_slots_heuristic(
-    subgoal: Subgoal,
+    slots: Sequence[str],
     evidence_text: str,
     *,
     retrieval_query: str = "",
+    need: str = "",
+    must_mention: Optional[Sequence[str]] = None,
+    contract_kind: str = "single_fact",
 ) -> Dict[str, str]:
-    """Deterministic slot fill from evidence (no LLM, no magic thresholds).
-
-    Prefer contract.must_mention hits; else the evidence line with the largest
-    token overlap against the retrieval query / need.
-    """
+    """Deterministic slot fill from evidence (no LLM)."""
     text = evidence_text or ""
-    if not text.strip() or not subgoal.produces:
+    names = [str(s).strip() for s in slots if str(s).strip()]
+    if not text.strip() or not names:
         return {}
     out: Dict[str, str] = {}
-    mentions = [m for m in (subgoal.contract.must_mention or []) if str(m).strip()]
+    mentions = [m for m in (must_mention or []) if str(m).strip()]
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
-    q_tokens = set(_tokens(retrieval_query or subgoal.need or subgoal.retrieval_query))
+    q_tokens = set(_tokens(retrieval_query or need))
     best_line = ""
     best_overlap = -1
     for ln in lines:
@@ -67,13 +82,10 @@ def extract_slots_heuristic(
         if overlap > best_overlap:
             best_overlap = overlap
             best_line = ln
-    for slot in subgoal.produces:
-        name = str(slot).strip()
-        if not name:
-            continue
+    for name in names:
         hit_mentions = [m for m in mentions if m in text]
         if hit_mentions:
-            if subgoal.contract.kind == "enumeration":
+            if contract_kind == "enumeration":
                 out[name] = "、".join(hit_mentions)
             else:
                 out[name] = hit_mentions[0]
@@ -83,37 +95,30 @@ def extract_slots_heuristic(
 
 
 def extract_slots_llm(
-    subgoal: Subgoal,
+    slots: Sequence[str],
     evidence_text: str,
     config: NavConfig,
     *,
+    need: str = "",
     retrieval_query: str = "",
+    contract_kind: str = "single_fact",
+    cardinality: Optional[int] = None,
 ) -> Dict[str, str]:
-    """Ask the LLM for produced slot values; empty on failure."""
-    slots = [str(s).strip() for s in (subgoal.produces or []) if str(s).strip()]
-    if not slots or not (evidence_text or "").strip():
+    """Ask the LLM for slot values; empty on failure."""
+    names = [str(s).strip() for s in slots if str(s).strip()]
+    if not names or not (evidence_text or "").strip():
         return {}
     try:
-        from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
-        from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
-        from agent_delivery.code.llm_usage import record_usage  # type: ignore
+        from nav_llm import nav_chat, resolve_nav_model
         from nav_token_budget import nav_token_budget_exhausted
     except Exception:
         return {}
     if nav_token_budget_exhausted():
         return {}
 
-    require_llm_env(context="Nav Slot Extract")
-    key = os.environ.get("OPENAI_API_KEY", "").strip()
-    model = (
-        os.environ.get(config.planner_model_env, "").strip()
-        or os.environ.get(config.llm_model_env, "").strip()
-        or os.environ.get("COMPOSE_MODEL", "").strip()
-        or "gpt-4o-mini"
-    )
-    client = make_openai_client(
-        api_key=key,
-        base_url=os.environ.get("OPENAI_BASE_URL", "").strip() or None,
+    model = resolve_nav_model(
+        model_env=config.planner_model_env,
+        fallback_envs=(config.llm_model_env, "COMPOSE_MODEL"),
     )
     system = (
         "Extract slot values for a retrieval subgoal from evidence text.\n"
@@ -122,20 +127,15 @@ def extract_slots_llm(
         "Do not invent facts absent from the evidence."
     )
     user = (
-        f"Need: {subgoal.need}\n"
-        f"Retrieval query: {retrieval_query or subgoal.retrieval_query}\n"
-        f"Slots to fill: {json.dumps(slots, ensure_ascii=False)}\n"
-        f"Contract: {subgoal.contract.kind}"
-        + (
-            f", cardinality={subgoal.contract.cardinality}"
-            if subgoal.contract.cardinality
-            else ""
-        )
+        f"Need: {need}\n"
+        f"Retrieval query: {retrieval_query or need}\n"
+        f"Slots to fill: {json.dumps(names, ensure_ascii=False)}\n"
+        f"Contract: {contract_kind}"
+        + (f", cardinality={cardinality}" if cardinality is not None else "")
         + f"\n\n=== Evidence ===\n{evidence_text[:6000]}\n=== End Evidence ===\n"
     )
     try:
-        cached = cached_chat_completion(
-            client,
+        cached = nav_chat(
             purpose="nav_slot_extract_v1",
             model=model,
             messages=[
@@ -145,15 +145,18 @@ def extract_slots_llm(
             temperature=float(config.llm_temperature),
             max_tokens=max(256, int(config.llm_max_tokens or 256)),
             response_format={"type": "json_object"},
+            context="Nav Slot Extract",
+            api_key_env="NAV_PLANNER_API_KEY",
+            base_url_env="NAV_PLANNER_BASE_URL",
+            usage_tag="nav_slot_extract",
         )
-        record_usage("nav_verify", cached.get("usage"))
         raw = str(cached.get("content") or "").strip()
         obj = json.loads(raw) if raw.startswith("{") else {}
         slots_obj = obj.get("slots") if isinstance(obj, dict) else None
         if not isinstance(slots_obj, dict):
             return {}
         out: Dict[str, str] = {}
-        for name in slots:
+        for name in names:
             val = str(slots_obj.get(name) or "").strip()
             if val:
                 out[name] = val
@@ -163,162 +166,86 @@ def extract_slots_llm(
 
 
 def extract_slots(
+    plan: RetrievalPlan,
     subgoal: Subgoal,
     evidence_text: str,
     config: NavConfig,
     *,
     retrieval_query: str = "",
-    use_llm: bool = True,
+    use_llm: bool = False,
 ) -> Tuple[Dict[str, str], float]:
-    """LLM extract when enabled; always fall back to heuristic. confidence in [0,1]."""
+    """Fill only slots demanded by downstream subgoals.
+
+    Heuristic always runs when slots are demanded; LLM only when ``use_llm``.
+    """
+    slots = demanded_slot_names(plan, subgoal)
+    if not slots:
+        conf = 1.0 if (evidence_text or "").strip() else 0.0
+        return {}, conf
     heuristic = extract_slots_heuristic(
-        subgoal, evidence_text, retrieval_query=retrieval_query
+        slots,
+        evidence_text,
+        retrieval_query=retrieval_query or subgoal.retrieval_query,
+        need=subgoal.need,
+        must_mention=subgoal.contract.must_mention,
+        contract_kind=subgoal.contract.kind,
     )
     llm_slots: Dict[str, str] = {}
-    if use_llm and bool(getattr(config, "enable_contract_verify", False)):
+    if use_llm:
         llm_slots = extract_slots_llm(
-            subgoal, evidence_text, config, retrieval_query=retrieval_query
+            slots,
+            evidence_text,
+            config,
+            need=subgoal.need,
+            retrieval_query=retrieval_query or subgoal.retrieval_query,
+            contract_kind=subgoal.contract.kind,
+            cardinality=subgoal.contract.cardinality,
         )
     merged = dict(heuristic)
     merged.update(llm_slots)
-    needed = [str(s).strip() for s in (subgoal.produces or []) if str(s).strip()]
-    if not needed:
-        conf = 1.0 if (evidence_text or "").strip() else 0.0
-        return merged, conf
-    filled = sum(1 for s in needed if (merged.get(s) or "").strip())
-    return merged, float(filled) / float(len(needed))
+    filled = sum(1 for s in slots if (merged.get(s) or "").strip())
+    return merged, float(filled) / float(len(slots))
 
 
-def verify_contract(
+def build_subgoal_result(
+    plan: RetrievalPlan,
+    state_collected_section_ids: Sequence[str],
+    config: NavConfig,
     subgoal: Subgoal,
     *,
-    extracted: Dict[str, str],
-    evidence_text: str,
-    confidence: float,
-) -> VerifyOutcome:
-    """Mechanical zero-cost signal: is there evidence, and are declared slots bound?
+    retrieval_query: str,
+    new_chunks: Sequence[Tuple[Any, float]],
+    collected_before: Set[str],
+    use_llm_extract: bool = False,
+) -> SubgoalResult:
+    """Package this wave's evidence + optional downstream slot bindings.
 
-    It deliberately does NOT judge whether the need is answered — contract kind,
-    cardinality and must_mention are conclusions, and ``plan_control`` is the
-    single authority that reconciles evidence against the coverage checklist.
+    ``satisfied`` here means "this wave collected non-empty evidence" — bookkeeping
+    for dependency readiness when plan_control is off. Checklist acceptance is
+    decided only by ``plan_control``.
     """
-    chars = evidence_chars(evidence_text)
-    needed = [str(s).strip() for s in (subgoal.produces or []) if str(s).strip()]
-    missing = [s for s in needed if not str(extracted.get(s) or "").strip()]
-
-    base = SubgoalResult(
+    evidence = build_evidence_text_from_chunks(new_chunks)
+    chars = evidence_chars(evidence)
+    extracted, conf = extract_slots(
+        plan,
+        subgoal,
+        evidence,
+        config,
+        retrieval_query=retrieval_query,
+        use_llm=use_llm_extract,
+    )
+    return SubgoalResult(
         subgoal_id=subgoal.id,
-        satisfied=False,
-        confidence=float(confidence),
+        satisfied=chars > 0,
+        confidence=float(conf),
         extracted=dict(extracted),
         chars_used=chars,
-        gap="",
+        gap="empty_evidence" if chars <= 0 else "",
         verdict="",
+        collected_section_ids=[
+            s for s in state_collected_section_ids if s not in collected_before
+        ],
     )
-
-    if chars <= 0:
-        base.gap = "empty_evidence"
-        base.verdict = "RETRY_SAME_REGION"
-        return VerifyOutcome(verdict="RETRY_SAME_REGION", result=base, gap=base.gap)
-
-    if missing:
-        base.gap = "missing_slots:" + ",".join(missing)
-        base.verdict = "REBIND" if needed else "RETRY_SAME_REGION"
-        return VerifyOutcome(verdict=base.verdict, result=base, gap=base.gap)  # type: ignore[arg-type]
-
-    base.satisfied = True
-    base.verdict = "SATISFIED"
-    base.gap = ""
-    return VerifyOutcome(verdict="SATISFIED", result=base, gap="")
-
-
-def activation_when_holds(
-    when: str,
-    *,
-    parent_extracted: Dict[str, str],
-    parent_satisfied: bool,
-    config: Optional[NavConfig] = None,
-    use_llm: bool = False,
-) -> bool:
-    """Evaluate a conditional activation predicate.
-
-    Empty ``when`` ⇒ activate whenever the parent is satisfied.
-    Non-empty: prefer full slot-value substring match; optional LLM. No token-bag overlap.
-    """
-    if not parent_satisfied:
-        return False
-    pred = (when or "").strip()
-    if not pred:
-        return True
-
-    values = [str(v).strip() for v in (parent_extracted or {}).values() if str(v).strip()]
-    for val in values:
-        if val in pred or pred in val:
-            return True
-
-    if not use_llm or config is None:
-        return False
-    if not bool(getattr(config, "enable_contract_verify", False)):
-        return False
-    try:
-        from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
-        from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
-        from agent_delivery.code.llm_usage import record_usage  # type: ignore
-        from nav_token_budget import nav_token_budget_exhausted
-    except Exception:
-        return False
-    if nav_token_budget_exhausted():
-        return False
-    require_llm_env(context="Nav Activation When")
-    key = (
-        os.environ.get("NAV_PLANNER_API_KEY", "").strip()
-        or os.environ.get("DS_KEY", "").strip()
-        or os.environ.get("OPENAI_API_KEY", "").strip()
-    )
-    model = (
-        os.environ.get(config.planner_model_env, "").strip()
-        or os.environ.get(config.llm_model_env, "").strip()
-        or os.environ.get("COMPOSE_MODEL", "").strip()
-        or "gpt-4o-mini"
-    )
-    base = (
-        os.environ.get("NAV_PLANNER_BASE_URL", "").strip()
-        or os.environ.get("DS_URL", "").strip()
-        or os.environ.get("OPENAI_BASE_URL", "").strip()
-        or None
-    )
-    client = make_openai_client(api_key=key, base_url=base)
-    try:
-        cached = cached_chat_completion(
-            client,
-            purpose="nav_activation_when_v1",
-            model=model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Decide if a conditional retrieval branch should run.\n"
-                        'Return ONLY JSON: {"activate": true|false, "reason": "..."}.'
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        f"Condition: {pred}\n"
-                        f"Parent extracted slots: "
-                        f"{json.dumps(parent_extracted, ensure_ascii=False)}\n"
-                    ),
-                },
-            ],
-            temperature=0.0,
-            max_tokens=128,
-            response_format={"type": "json_object"},
-        )
-        record_usage("nav_verify", cached.get("usage"))
-        obj = json.loads(str(cached.get("content") or "").strip() or "{}")
-        return bool(obj.get("activate"))
-    except Exception:
-        return False
 
 
 def apply_bindings_from_result(

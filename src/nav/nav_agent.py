@@ -313,7 +313,8 @@ def run_nav_episode(
     nav_policy = (policy or cfg.policy or "llm").strip().lower()
     if nav_policy != "llm":
         raise ValueError(
-            f"Nav Agent 仅支持 llm 策略（须配置 OPENAI_API_KEY）；收到 policy={policy!r}。"
+            f"Nav Agent 仅支持 llm 策略（须配置 DS_KEY 或 OPENAI_API_KEY）；"
+            f"收到 policy={policy!r}。"
             "请设置 --nav-policy llm 或删除 NAV_POLICY=rule。"
         )
     cfg.policy = "llm"

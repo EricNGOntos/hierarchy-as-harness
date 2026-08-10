@@ -8,8 +8,7 @@ Case score = mean of its fact grades (max 1.0 per case).
 from __future__ import annotations
 
 import json
-import os
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Dict, List, Mapping, Sequence
 
 # Plan §1: 对=1 / 半对=0.5 / 错=0
 GRADE_CORRECT = 1.0
@@ -132,22 +131,11 @@ def score_answer_against_facts(
             "error": "empty_answer",
         }
 
-    from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
-    from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
-    from agent_delivery.code.llm_usage import record_usage  # type: ignore
+    from nav_llm import nav_chat, resolve_nav_model
 
-    require_llm_env(context="Nav Probe Reference Score")
-    model = (
-        os.environ.get("NAV_PROBE_SCORE_MODEL", "").strip()
-        or os.environ.get("NAV_PLANNER_MODEL", "").strip()
-        or os.environ.get("NAV_LLM_MODEL", "").strip()
-        or os.environ.get("COMPOSE_MODEL", "").strip()
-        or "gpt-4o-mini"
-    )
-    key = os.environ.get("OPENAI_API_KEY", "").strip()
-    client = make_openai_client(
-        api_key=key,
-        base_url=os.environ.get("OPENAI_BASE_URL", "").strip() or None,
+    model = resolve_nav_model(
+        model_env="NAV_PROBE_SCORE_MODEL",
+        fallback_envs=("NAV_PLANNER_MODEL", "NAV_LLM_MODEL", "COMPOSE_MODEL"),
     )
     system = (
         "You score a retrieval answer against a checklist of reference facts.\n"
@@ -166,8 +154,7 @@ def score_answer_against_facts(
         + f"=== Answer ===\n{text[:8000]}\n=== End answer ===\n"
     )
     try:
-        cached = cached_chat_completion(
-            client,
+        cached = nav_chat(
             purpose=_SCORE_PURPOSE,
             model=model,
             messages=[
@@ -177,8 +164,11 @@ def score_answer_against_facts(
             temperature=0.0,
             max_tokens=512,
             response_format={"type": "json_object"},
+            context="Nav Probe Reference Score",
+            api_key_env="NAV_PLANNER_API_KEY",
+            base_url_env="NAV_PLANNER_BASE_URL",
+            usage_tag="nav_probe_score",
         )
-        record_usage("nav_probe_score", cached.get("usage"))
         raw = str(cached.get("content") or "").strip()
         obj = json.loads(raw) if raw.startswith("{") else {}
         grades = parse_grade_payload(obj if isinstance(obj, dict) else {}, fact_list)

@@ -42,7 +42,7 @@
   "enable_per_subgoal_illumination": false,
   "enable_goal_conditioned_folding": false,
   "enable_plan_orchestration": false,
-  "enable_contract_verify": false,
+  "enable_slot_extract": false,
   "subgoal_max_attempts": 2,
   "max_replans": 0,
   "max_waves": 0,

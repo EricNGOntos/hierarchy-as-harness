@@ -1,14 +1,8 @@
 """Merged check authority (PLAN×NAV fusion): one planner decision per wave.
 
-Before this module, four independent "is it enough?" judges disagreed without
-talking to each other (NAV FINISH, depth-0 group_rank, free-text subagent
-reports, PLAN contract verify — see docs/audit_plan_nav_overlap.md §1.6).
-``plan_control`` is the single authority left standing: it reviews every
-subgoal's own newly-collected evidence for the current wave (never the
-global pool — see the ``collected_before`` fix in ``nav_orchestrate``) plus a
-zero-cost rule signal from ``nav_verify.verify_contract``, and returns one
-decision per subgoal plus one global decision. ``REPLAN`` can only originate
-here — the old "retries exhausted -> escalate" path is not used on this path.
+``plan_control`` is the single authority that reconciles each wave's new
+evidence against the plan's coverage checklist. It returns one decision per
+subgoal plus one global decision. ``REPLAN`` can only originate here.
 """
 
 from __future__ import annotations
@@ -69,13 +63,12 @@ def _wave_subgoal_block(
     contract_line = f"{subgoal.contract.kind}" + (
         f" cardinality={card}" if card is not None else ""
     )
+    chars = int(getattr(signal, "chars_used", 0) or 0)
     lines = [
         f"[{subgoal.id}] need: {subgoal.need}",
         f"  contract: {contract_line}",
         "  search_space: shared (no per-subgoal scope/anchor)",
-        f"  rule_signal: verdict={getattr(signal, 'verdict', '')} "
-        f"gap={getattr(signal, 'gap', '') or '-'} "
-        f"satisfied={bool(getattr(signal, 'satisfied', False))}",
+        f"  wave_evidence_chars: {chars}",
         f"  attempt: {attempt_count}",
     ]
     if harvest_meta:
@@ -118,7 +111,7 @@ def _control_system_prompt() -> str:
         "per-region stop/retry judgments with one decision.\n\n"
         "The plan has a global coverage_checklist (facts that must appear in "
         "episode evidence) and one shared search space. For each subgoal in "
-        "this wave you are shown: its need/contract, a zero-cost rule signal, "
+        "this wave you are shown: its need/contract, wave_evidence_chars, "
         "the harvester's own explanation (harvest_reason), and the evidence "
         "collected THIS wave only (never older evidence from other subgoals).\n\n"
         "=== Per-subgoal decisions ===\n"
@@ -186,16 +179,18 @@ def _fallback_decision(
 ) -> PlanControlDecision:
     """Deterministic fallback when the LLM call fails or returns malformed JSON.
 
-    Mirrors the pre-fusion rule: satisfied -> accept, retry-family -> widen
-    (broaden rather than blindly repeat the same failing anchor).
+    Only mechanical signal left: this wave collected evidence → accept,
+    otherwise widen. Checklist judgment is not attempted offline.
     """
     per_subgoal: Dict[str, SubgoalDecision] = {}
     for sid in subgoal_ids:
         sig = signals.get(sid)
-        satisfied = bool(getattr(sig, "satisfied", False)) if sig is not None else False
+        has_evidence = (
+            int(getattr(sig, "chars_used", 0) or 0) > 0 if sig is not None else False
+        )
         per_subgoal[sid] = SubgoalDecision(
             subgoal_id=sid,
-            decision="accept" if satisfied else "widen",
+            decision="accept" if has_evidence else "widen",
         )
     return PlanControlDecision(per_subgoal=per_subgoal, global_action="continue", reason="fallback")
 
@@ -249,31 +244,30 @@ def plan_control(
     )
 
     try:
-        from agent_delivery.code.llm_api_cache import cached_chat_completion  # type: ignore
-        from agent_delivery.code.llm_config import make_openai_client, require_llm_env  # type: ignore
-        from agent_delivery.code.llm_usage import record_usage  # type: ignore
+        from nav_llm import (  # type: ignore
+            nav_chat,
+            planner_output_max_tokens,
+            resolve_nav_model,
+            resolve_nav_thinking_mode,
+        )
 
-        require_llm_env(context="Nav Plan Control")
-        model = (
-            os.environ.get(config.planner_model_env, "").strip()
-            or os.environ.get(config.llm_model_env, "").strip()
-            or os.environ.get("COMPOSE_MODEL", "").strip()
-            or "gpt-4o-mini"
+        model = resolve_nav_model(
+            model_env=config.planner_model_env,
+            fallback_envs=(config.llm_model_env, "COMPOSE_MODEL"),
         )
-        key = os.environ.get("OPENAI_API_KEY", "").strip()
-        client = make_openai_client(
-            api_key=key, base_url=os.environ.get("OPENAI_BASE_URL", "").strip() or None
-        )
-        # Planner-class call: reuse planner_llm_max_tokens (not navigate's 256).
-        # Reasoning models may spend the whole budget on reasoning_content and
-        # leave content empty — same recovery path as nav_plan.plan_query.
-        max_tokens = max(
-            256,
+        # Same thinking + max_tokens policy as plan_query (NAV_PLANNER_*).
+        max_tokens = planner_output_max_tokens(
             int(getattr(config, "planner_llm_max_tokens", 0) or 0)
-            or int(config.llm_max_tokens or 256),
+            or int(config.llm_max_tokens or 256)
         )
-        cached = cached_chat_completion(
-            client,
+        timeout_s = float(os.environ.get("NAV_PLANNER_TIMEOUT_SECONDS", "").strip() or "0")
+        if timeout_s <= 0:
+            timeout_s = (
+                300.0
+                if resolve_nav_thinking_mode(role="planner") == "enabled"
+                else 90.0
+            )
+        cached = nav_chat(
             purpose=_CONTROL_PURPOSE,
             model=model,
             messages=[
@@ -283,8 +277,13 @@ def plan_control(
             temperature=float(config.llm_temperature),
             max_tokens=max_tokens,
             response_format={"type": "json_object"},
+            thinking_role="planner",
+            context="Nav Plan Control",
+            api_key_env="NAV_PLANNER_API_KEY",
+            base_url_env="NAV_PLANNER_BASE_URL",
+            timeout=timeout_s,
+            usage_tag="nav_plan_control",
         )
-        record_usage("nav_plan_control", cached.get("usage"))
         text = str(cached.get("content") or "").strip()
         if not text:
             reasoning = str(cached.get("reasoning_content") or "").strip()
@@ -297,9 +296,13 @@ def plan_control(
         for sid in subgoal_ids:
             if sid not in decision.per_subgoal:
                 sig = signals.get(sid)
-                satisfied = bool(getattr(sig, "satisfied", False)) if sig is not None else False
+                has_evidence = (
+                    int(getattr(sig, "chars_used", 0) or 0) > 0
+                    if sig is not None
+                    else False
+                )
                 decision.per_subgoal[sid] = SubgoalDecision(
-                    subgoal_id=sid, decision="accept" if satisfied else "widen"
+                    subgoal_id=sid, decision="accept" if has_evidence else "widen"
                 )
         return decision
     except Exception:

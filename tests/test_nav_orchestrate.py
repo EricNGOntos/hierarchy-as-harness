@@ -1,4 +1,4 @@
-"""Unit tests for M4/M5 orchestration + verify (no LLM navigate)."""
+"""Unit tests for M4/M5 orchestration + slot binding (no LLM navigate)."""
 
 from __future__ import annotations
 
@@ -17,104 +17,46 @@ for source_dir in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
 from nav_control import PlanControlDecision, SubgoalDecision  # noqa: E402
 from nav_hierarchy import InMemoryHierarchyProvider, InMemoryNode, ProviderToolSpace  # noqa: E402
 from nav_orchestrate import ready_subgoal_ids  # noqa: E402
-from nav_plan import Activation, Contract, RetrievalPlan, Subgoal  # noqa: E402
+from nav_plan import Contract, RetrievalPlan, Subgoal  # noqa: E402
 from nav_types import NavConfig, NavState  # noqa: E402
 from nav_verify import (  # noqa: E402
-    activation_when_holds,
     apply_bindings_from_result,
+    demanded_slot_names,
     extract_slots_heuristic,
-    verify_contract,
 )
 
 
-class TestNavVerify(unittest.TestCase):
+class TestNavSlots(unittest.TestCase):
     def test_heuristic_extract_prefers_must_mention(self) -> None:
-        sg = Subgoal(
-            id="s1",
-            need="seal",
-            retrieval_query="印章类型",
-            produces=["seal_type"],
-            contract=Contract(kind="single_fact", must_mention=["法人章"]),
-        )
         evidence = "本章规定对外重大合同应使用法人章办理用印。"
-        slots = extract_slots_heuristic(sg, evidence, retrieval_query=sg.retrieval_query)
+        slots = extract_slots_heuristic(
+            ["seal_type"],
+            evidence,
+            retrieval_query="印章类型",
+            need="seal",
+            must_mention=["法人章"],
+        )
         self.assertEqual(slots.get("seal_type"), "法人章")
 
-    def test_verify_missing_slot_is_rebind(self) -> None:
-        sg = Subgoal(
-            id="s1",
-            need="a",
-            retrieval_query="a",
-            produces=["entity"],
-            contract=Contract(kind="single_fact"),
+    def test_demanded_slots_only_when_downstream_refs(self) -> None:
+        plan = RetrievalPlan(
+            subgoals=[
+                Subgoal(
+                    id="s1",
+                    need="type",
+                    retrieval_query="印章类型",
+                    produces=["seal_type", "unused"],
+                ),
+                Subgoal(
+                    id="s2",
+                    need="proc",
+                    retrieval_query="{{s1.seal_type}} 审批",
+                    depends_on=["s1"],
+                ),
+            ]
         )
-        out = verify_contract(
-            sg, extracted={}, evidence_text="some evidence without extract", confidence=0.0
-        )
-        self.assertEqual(out.verdict, "REBIND")
-        self.assertFalse(out.result.satisfied)
-
-    def test_verify_is_mechanical_not_a_contract_judge(self) -> None:
-        """Cardinality / must_mention are plan_control's call, not the rule signal's."""
-        sg = Subgoal(
-            id="s1",
-            need="list",
-            retrieval_query="duties",
-            produces=["items"],
-            contract=Contract(
-                kind="enumeration", cardinality=3, must_mention=["法人章"]
-            ),
-        )
-        out = verify_contract(
-            sg,
-            extracted={"items": "a、b"},
-            evidence_text="a、b",
-            confidence=1.0,
-        )
-        self.assertEqual(out.verdict, "SATISFIED")
-        empty = verify_contract(
-            sg, extracted={"items": "a"}, evidence_text="", confidence=1.0
-        )
-        self.assertEqual(empty.verdict, "RETRY_SAME_REGION")
-        self.assertEqual(empty.gap, "empty_evidence")
-
-    def test_activation_when_substring_and_empty(self) -> None:
-        self.assertTrue(
-            activation_when_holds(
-                "",
-                parent_extracted={"seal_type": "法人章"},
-                parent_satisfied=True,
-            )
-        )
-        self.assertTrue(
-            activation_when_holds(
-                "seal is 财务专用章",
-                parent_extracted={"seal_type": "财务专用章"},
-                parent_satisfied=True,
-            )
-        )
-        self.assertFalse(
-            activation_when_holds(
-                "seal is 财务专用章",
-                parent_extracted={"seal_type": "法人章"},
-                parent_satisfied=True,
-            )
-        )
-        # No token-bag overlap: shared English chrome alone must not activate.
-        self.assertFalse(
-            activation_when_holds(
-                "seal type is financial",
-                parent_extracted={"seal_type": "法人章 corporate seal"},
-                parent_satisfied=True,
-            )
-        )
-        self.assertFalse(
-            activation_when_holds(
-                "anything",
-                parent_extracted={"seal_type": "法人章"},
-                parent_satisfied=False,
-            )
-        )
+        self.assertEqual(demanded_slot_names(plan, plan.subgoals[0]), ["seal_type"])
+        self.assertEqual(demanded_slot_names(plan, plan.subgoals[1]), [])
 
     def test_prefer_after_orders_ready(self) -> None:
         from nav_orchestrate import order_ready_by_prefer_after
@@ -135,7 +77,7 @@ class TestNavVerify(unittest.TestCase):
             ["s1", "s2"],
         )
 
-    def test_retry_then_satisfied_marks_attempted(self) -> None:
+    def test_empty_evidence_retries_then_marks_satisfied(self) -> None:
         from nav_orchestrate import execute_plan
 
         plan = RetrievalPlan(
@@ -166,7 +108,6 @@ class TestNavVerify(unittest.TestCase):
         def fake_nav(ts, *, state, scope, query, config, depth=0, budget=None, steps_out=None):
             calls["n"] += 1
             if calls["n"] == 1:
-                # First pass collects nothing → mechanical empty_evidence retry.
                 pass
             else:
                 state.collected.append((_Chunk("对外重大合同应使用法人章。"), 1.0))
@@ -186,7 +127,7 @@ class TestNavVerify(unittest.TestCase):
 
 
 class TestNavOrchestrate(unittest.TestCase):
-    def test_ready_respects_deps_activation_and_slots(self) -> None:
+    def test_ready_respects_deps_only(self) -> None:
         plan = RetrievalPlan(
             subgoals=[
                 Subgoal(id="s1", need="a", retrieval_query="印章类型", produces=["seal_type"]),
@@ -201,16 +142,13 @@ class TestNavOrchestrate(unittest.TestCase):
                     id="s3",
                     need="c",
                     retrieval_query="财务专用章",
-                    activation=Activation(mode="on", on="s1", when="财务专用章"),
                 ),
             ]
         )
         ready0 = ready_subgoal_ids(plan, satisfied=set(), activated=set())
-        self.assertEqual(ready0, ["s1"])
+        self.assertEqual(ready0, ["s1", "s3"])
         ready1 = ready_subgoal_ids(plan, satisfied={"s1"}, activated=set())
-        self.assertEqual(ready1, ["s2"])
-        ready2 = ready_subgoal_ids(plan, satisfied={"s1"}, activated={"s3"})
-        self.assertEqual(ready2, ["s2", "s3"])
+        self.assertEqual(ready1, ["s2", "s3"])
 
     def test_dropped_precursor_settles_deps_like_satisfied(self) -> None:
         """F1: a dropped precursor must not starve a downstream subgoal forever."""
@@ -230,7 +168,7 @@ class TestNavOrchestrate(unittest.TestCase):
         self.assertEqual(unblocked, ["s2"])
 
     def test_same_wave_subgoals_run_own_queries(self) -> None:
-        """Independent subgoals never share one navigate call or one verdict."""
+        """Independent subgoals never share one navigate call or one result."""
         from nav_orchestrate import execute_plan
 
         plan = RetrievalPlan(
@@ -263,7 +201,6 @@ class TestNavOrchestrate(unittest.TestCase):
 
         def fake_nav(ts, *, state, scope, query, config, depth=0, budget=None, steps_out=None):
             calls.append(query)
-            # Only s1's region exists; s2 must not inherit its evidence.
             if "法人章" in query:
                 state.collected.append((_Chunk("对外重大合同应使用法人章。"), 1.0))
                 state.collected_section_ids.add("doc:L1")
@@ -271,7 +208,6 @@ class TestNavOrchestrate(unittest.TestCase):
         with patch("nav_orchestrate.navigate", side_effect=fake_nav):
             execute_plan(MagicMock(), state, cfg, steps_out=[], episode_query="q")
 
-        # Each subgoal issued its own query; none is a concatenation of both.
         self.assertTrue(any("法人章" in c and "档案保管" not in c for c in calls))
         self.assertTrue(any("档案保管" in c and "法人章" not in c for c in calls))
         self.assertIn("s1", state.satisfied_subgoal_ids)
@@ -280,7 +216,7 @@ class TestNavOrchestrate(unittest.TestCase):
     def test_config_flags_default_off(self) -> None:
         cfg = NavConfig.from_dict({})
         self.assertFalse(cfg.enable_plan_orchestration)
-        self.assertFalse(cfg.enable_contract_verify)
+        self.assertFalse(cfg.enable_slot_extract)
         self.assertEqual(cfg.max_replans, 0)
         self.assertEqual(cfg.max_waves, 0)
 
@@ -337,6 +273,53 @@ class TestNavOrchestrate(unittest.TestCase):
         self.assertEqual(state.slot_bindings.get("seal_type"), "法人章")
         self.assertGreaterEqual(detail.get("n_waves", 0), 2)
 
+    def test_no_slot_extract_when_nobody_consumes(self) -> None:
+        from nav_orchestrate import execute_plan
+        from nav_verify import extract_slots
+
+        plan = RetrievalPlan(
+            subgoals=[
+                Subgoal(
+                    id="s1",
+                    need="type",
+                    retrieval_query="印章类型",
+                    produces=["seal_type"],
+                    contract=Contract(kind="single_fact", must_mention=["法人章"]),
+                ),
+            ]
+        )
+        # Leaf subgoal: produces declared but no downstream consumer.
+        extracted, _ = extract_slots(
+            plan,
+            plan.subgoals[0],
+            "对外重大合同应使用法人章。",
+            NavConfig(),
+            use_llm=True,
+        )
+        self.assertEqual(extracted, {})
+
+        state = NavState(doc_id="doc", query="q", retrieval_plan=plan)
+        cfg = NavConfig(
+            enable_plan_orchestration=True,
+            enable_slot_extract=True,
+            map_char_limit=5000,
+        )
+
+        class _Chunk:
+            def __init__(self, text: str) -> None:
+                self.text = text
+
+        def fake_nav(ts, *, state, scope, query, config, depth=0, budget=None, steps_out=None):
+            state.collected.append((_Chunk("对外重大合同应使用法人章。"), 1.0))
+            state.collected_section_ids.add("doc:L1")
+
+        with patch("nav_orchestrate.navigate", side_effect=fake_nav), patch(
+            "nav_verify.extract_slots_llm"
+        ) as llm:
+            execute_plan(MagicMock(), state, cfg, steps_out=[], episode_query="q")
+        llm.assert_not_called()
+        self.assertEqual(state.slot_bindings, {})
+
     def test_widen_moves_anchor_to_parent_then_drops_at_root(self) -> None:
         """F2 fix: widen is deterministic move-to-parent; exhausting the
         document with nowhere coarser to go degrades to drop, never an
@@ -361,7 +344,7 @@ class TestNavOrchestrate(unittest.TestCase):
         outputs = [
             {
                 "subgoal_id": "s1",
-                "result": SimpleNamespace(satisfied=False, verdict="", gap=""),
+                "result": SimpleNamespace(satisfied=False, chars_used=0, gap="empty_evidence"),
                 "new_chunks": [],
             }
         ]

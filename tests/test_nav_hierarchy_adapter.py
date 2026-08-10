@@ -28,7 +28,7 @@ from nav_harvest import harvest  # noqa: E402
 from nav_hierarchy import InMemoryHierarchyProvider, InMemoryNode, ProviderToolSpace  # noqa: E402
 from nav_plan import Contract, RetrievalPlan, Subgoal  # noqa: E402
 from nav_types import NavConfig, NavState  # noqa: E402
-from nav_verify import build_evidence_text_from_chunks, extract_slots, verify_contract  # noqa: E402
+from nav_verify import build_subgoal_result  # noqa: E402
 
 
 def _build_ts() -> ProviderToolSpace:
@@ -141,27 +141,26 @@ class HierarchyAdapterPortSeamTests(unittest.TestCase):
             )
 
         new_chunks = list(self.state.collected)
-        evidence_text = build_evidence_text_from_chunks(new_chunks)
-        extracted, confidence = extract_slots(
-            self.subgoal, evidence_text, self.config, use_llm=False
-        )
-        outcome = verify_contract(
+        signal = build_subgoal_result(
+            self.plan,
+            self.state.collected_section_ids,
+            self.config,
             self.subgoal,
-            extracted=extracted,
-            evidence_text=evidence_text,
-            confidence=confidence,
+            retrieval_query=self.subgoal.retrieval_query,
+            new_chunks=new_chunks,
+            collected_before=set(),
+            use_llm_extract=False,
         )
-        signal = outcome.result
 
-        def fake_cached_chat_completion(*args, **kwargs):
-            return {"content": '{"subgoals": {"s1": {"decision": "accept"}}, "global": "done", "reason": "ok"}'}
+        def fake_nav_chat(**kwargs):
+            return {
+                "content": (
+                    '{"subgoals": {"s1": {"decision": "accept"}}, '
+                    '"global": "done", "reason": "ok"}'
+                )
+            }
 
-        with patch(
-            "agent_delivery.code.llm_api_cache.cached_chat_completion",
-            side_effect=fake_cached_chat_completion,
-        ), patch("agent_delivery.code.llm_config.require_llm_env", return_value=None), patch(
-            "agent_delivery.code.llm_config.make_openai_client", return_value=object()
-        ), patch("agent_delivery.code.llm_usage.record_usage", return_value=None):
+        with patch("nav_llm.nav_chat", side_effect=fake_nav_chat):
             decision = plan_control(
                 self.ts,
                 self.state,

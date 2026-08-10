@@ -23,8 +23,8 @@ def _chunk(text: str) -> Chunk:
     return Chunk(node_id="doc:L1__path", doc_id="doc", text=text, line_ids=(1,), section_id="doc:L1")
 
 
-def _signal(*, satisfied: bool, verdict: str = "", gap: str = "") -> SimpleNamespace:
-    return SimpleNamespace(satisfied=satisfied, verdict=verdict, gap=gap)
+def _signal(*, chars_used: int = 0, gap: str = "") -> SimpleNamespace:
+    return SimpleNamespace(chars_used=chars_used, gap=gap, satisfied=chars_used > 0)
 
 
 def _plan_two() -> RetrievalPlan:
@@ -66,10 +66,10 @@ class PlanControlTests(unittest.TestCase):
         self.assertEqual(decision.global_action, "continue")
         self.assertEqual(decision.per_subgoal, {})
 
-    def test_fallback_on_llm_failure_maps_satisfied_to_accept_else_widen(self) -> None:
+    def test_fallback_on_llm_failure_maps_evidence_to_accept_else_widen(self) -> None:
         wave_outputs = [
-            {"subgoal_id": "s1", "result": _signal(satisfied=True), "new_chunks": [(_chunk("ok"), 1.0)]},
-            {"subgoal_id": "s2", "result": _signal(satisfied=False), "new_chunks": [(_chunk("gap"), 1.0)]},
+            {"subgoal_id": "s1", "result": _signal(chars_used=12), "new_chunks": [(_chunk("ok"), 1.0)]},
+            {"subgoal_id": "s2", "result": _signal(chars_used=0), "new_chunks": []},
         ]
         with patch(
             "agent_delivery.code.llm_config.require_llm_env",
@@ -86,28 +86,19 @@ class PlanControlTests(unittest.TestCase):
     def test_parses_llm_decision_and_fills_missing_subgoal(self) -> None:
         """LLM only mentions s1; s2 must still get an explicit accept/widen fallback."""
         wave_outputs = [
-            {"subgoal_id": "s1", "result": _signal(satisfied=True), "new_chunks": [(_chunk("ok"), 1.0)]},
-            {"subgoal_id": "s2", "result": _signal(satisfied=False), "new_chunks": [(_chunk("gap"), 1.0)]},
+            {"subgoal_id": "s1", "result": _signal(chars_used=12), "new_chunks": [(_chunk("ok"), 1.0)]},
+            {"subgoal_id": "s2", "result": _signal(chars_used=0), "new_chunks": []},
         ]
 
-        def fake_cached_chat_completion(*args, **kwargs):
+        def fake_nav_chat(**kwargs):
             return {
                 "content": (
                     '{"subgoals": {"s1": {"decision": "accept", "note": "done"}}, '
-                    '"global": "continue", "reason": "s1 satisfied, s2 pending"}'
+                    '"global": "continue", "reason": "s1 has evidence, s2 empty"}'
                 )
             }
 
-        with patch(
-            "agent_delivery.code.llm_api_cache.cached_chat_completion",
-            side_effect=fake_cached_chat_completion,
-        ), patch(
-            "agent_delivery.code.llm_config.require_llm_env", return_value=None
-        ), patch(
-            "agent_delivery.code.llm_config.make_openai_client", return_value=object()
-        ), patch(
-            "agent_delivery.code.llm_usage.record_usage", return_value=None
-        ):
+        with patch("nav_llm.nav_chat", side_effect=fake_nav_chat):
             decision = plan_control(
                 None, self.state, self.config, plan=self.plan, wave_outputs=wave_outputs
             )
@@ -121,10 +112,10 @@ class PlanControlTests(unittest.TestCase):
 
     def test_invalid_decision_and_global_values_fall_back_to_defaults(self) -> None:
         wave_outputs = [
-            {"subgoal_id": "s1", "result": _signal(satisfied=False), "new_chunks": []},
+            {"subgoal_id": "s1", "result": _signal(chars_used=0), "new_chunks": []},
         ]
 
-        def fake_cached_chat_completion(*args, **kwargs):
+        def fake_nav_chat(**kwargs):
             return {
                 "content": (
                     '{"subgoals": {"s1": {"decision": "not_a_real_decision"}}, '
@@ -132,21 +123,13 @@ class PlanControlTests(unittest.TestCase):
                 )
             }
 
-        with patch(
-            "agent_delivery.code.llm_api_cache.cached_chat_completion",
-            side_effect=fake_cached_chat_completion,
-        ), patch(
-            "agent_delivery.code.llm_config.require_llm_env", return_value=None
-        ), patch(
-            "agent_delivery.code.llm_config.make_openai_client", return_value=object()
-        ), patch(
-            "agent_delivery.code.llm_usage.record_usage", return_value=None
-        ):
+        with patch("nav_llm.nav_chat", side_effect=fake_nav_chat):
             decision = plan_control(
                 None, self.state, self.config, plan=self.plan, wave_outputs=wave_outputs
             )
 
         self.assertEqual(decision.global_action, "continue")
+        # Unknown per-subgoal decision token still defaults to accept in the parser.
         self.assertEqual(decision.per_subgoal["s1"].decision, "accept")
 
 
