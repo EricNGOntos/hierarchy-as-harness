@@ -15,7 +15,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
 for _p in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
@@ -35,21 +35,76 @@ from agent_delivery.code.llm_usage import reset_usage, snapshot_usage  # noqa: E
 from nav_agent import run_nav_episode  # noqa: E402
 from nav_compose import evidence_owner_section_id  # noqa: E402
 from nav_hierarchy import ProviderToolSpace  # noqa: E402
-from nav_knowhere import KnowhereProvider, load_debug_parse  # noqa: E402
+from nav_knowhere import (  # noqa: E402
+    KnowhereProvider,
+    NamespaceKnowhereProvider,
+    load_debug_parse,
+)
+from nav_map_scores import (  # noqa: E402
+    compute_corpus_map_and_unit_scores,
+    compute_map_and_unit_scores,
+    select_map_highlights,
+)
+from nav_projection import build_map  # noqa: E402
 from nav_types import NavConfig  # noqa: E402
 import section_summary_store  # noqa: E402
 
 
-def export_summaries(provider: KnowhereProvider, dest_dir: Path) -> int:
+def export_summaries(provider: Any, dest_dir: Path) -> int:
     """Write provider summaries where ``section_summary_store`` reads them."""
     dest_dir.mkdir(parents=True, exist_ok=True)
     summaries = provider.summaries()
+    if isinstance(provider, NamespaceKnowhereProvider):
+        n = 0
+        for doc_id in provider.document_ids():
+            owned = {
+                sid: text
+                for sid, text in summaries.items()
+                if provider.owner_document(sid) == doc_id
+            }
+            payload = {
+                "sections": {sid: {"summary": text} for sid, text in owned.items()}
+            }
+            (dest_dir / f"{doc_id}.json").write_text(
+                json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8"
+            )
+            n += len(owned)
+        section_summary_store.clear_cache()
+        return n
+    doc_id = str(getattr(provider, "doc_id", "") or "doc")
     payload = {"sections": {sid: {"summary": text} for sid, text in summaries.items()}}
-    (dest_dir / f"{provider.doc_id}.json").write_text(
+    (dest_dir / f"{doc_id}.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8"
     )
     section_summary_store.clear_cache()
     return len(summaries)
+
+
+def load_probe_toolspace(probe: dict) -> Tuple[Any, List[str], Any]:
+    """Single-doc ``doc`` or multi-doc ``docs`` → toolspace + corpus ids + provider."""
+    docs = list(probe.get("docs") or ())
+    if not docs and probe.get("doc"):
+        docs = [probe["doc"]]
+    if not docs:
+        raise ValueError("probe requires doc or docs")
+
+    providers: List[KnowhereProvider] = []
+    titles: Dict[str, str] = {}
+    for spec in docs:
+        provider = load_debug_parse(
+            spec["track_dir"], doc_id=spec.get("doc_id") or None
+        )
+        providers.append(provider)
+        title = str(spec.get("title") or "").strip()
+        if title:
+            titles[provider.doc_id] = title
+
+    if len(providers) == 1:
+        provider = providers[0]
+        return ProviderToolSpace(provider), [], provider
+
+    ns = NamespaceKnowhereProvider(providers, titles=titles or None)
+    return ProviderToolSpace(ns), list(ns.document_ids()), ns
 
 
 def cfg_baseline() -> NavConfig:
@@ -149,18 +204,29 @@ def summarize_steps(episode: Any) -> dict:
     }
 
 
-def run_case(case: dict, doc_id: str, toolspace: Any, arm: str, budget: int) -> dict:
-    gold = [f"{doc_id}:{p}" for p in case.get("gold_paths") or ()]
+def run_case(
+    case: dict,
+    *,
+    toolspace: Any,
+    arm: str,
+    budget: int,
+    corpus_doc_ids: Optional[Sequence[str]] = None,
+    default_doc_id: str = "",
+) -> dict:
+    gold_doc = str(case.get("doc_id") or default_doc_id or "").strip()
+    gold = [f"{gold_doc}:{p}" for p in case.get("gold_paths") or ()] if gold_doc else []
     reset_usage()
     before = snapshot_usage()
     started = time.perf_counter()
     episode = None
     error = None
     try:
+        corpus_ids = [str(d).strip() for d in (corpus_doc_ids or []) if str(d).strip()]
         episode = run_nav_episode(
             None,
             case["query"],
-            doc_id=doc_id,
+            doc_id=None if corpus_ids else (default_doc_id or None),
+            corpus_doc_ids=corpus_ids or None,
             budget_chars=budget,
             task_type=str(case.get("task_type") or "unknown"),
             compose_answer=True,
@@ -223,29 +289,86 @@ def main() -> None:
     args = parser.parse_args()
 
     probe = json.loads(Path(args.probe).read_text(encoding="utf-8"))
-    provider = load_debug_parse(
-        probe["doc"]["track_dir"], doc_id=probe["doc"].get("doc_id") or None
-    )
-    toolspace = ProviderToolSpace(provider)
+    toolspace, corpus_doc_ids, provider = load_probe_toolspace(probe)
     n_summaries = export_summaries(provider, OUT / "section_summaries")
-
-    roots = provider.roots(provider.doc_id)
-    all_units = sum(len(provider.self_units(sid)) for sid in provider.all_section_ids())
-    print(
-        f"[knowhere] doc_id={provider.doc_id} sections={len(provider.all_section_ids())} "
-        f"roots={len(roots)} units={all_units} summaries={n_summaries}",
-        flush=True,
+    default_doc_id = (
+        ""
+        if corpus_doc_ids
+        else str(getattr(provider, "doc_id", "") or "")
     )
+
+    if corpus_doc_ids:
+        n_sections = len(provider.all_section_ids())
+        n_roots = len(toolspace.sections_for_doc(""))
+        n_units = sum(
+            len(provider.self_units(sid)) for sid in provider.all_section_ids()
+        )
+        print(
+            f"[knowhere] namespace docs={corpus_doc_ids} sections={n_sections} "
+            f"doc_nodes={n_roots} units={n_units} summaries={n_summaries}",
+            flush=True,
+        )
+    else:
+        roots = provider.roots(provider.doc_id)
+        all_units = sum(
+            len(provider.self_units(sid)) for sid in provider.all_section_ids()
+        )
+        print(
+            f"[knowhere] doc_id={provider.doc_id} sections={len(provider.all_section_ids())} "
+            f"roots={len(roots)} units={all_units} summaries={n_summaries}",
+            flush=True,
+        )
 
     if args.dry_run:
+        cfg = cfg_baseline()
         for case in probe["cases"]:
-            gold = [f"{provider.doc_id}:{p}" for p in case.get("gold_paths") or ()]
-            missing = [g for g in gold if g not in set(provider.all_section_ids())]
+            if args.case and case["id"] != args.case:
+                continue
+            gold_doc = str(case.get("doc_id") or default_doc_id or "").strip()
+            gold = (
+                [f"{gold_doc}:{p}" for p in case.get("gold_paths") or ()]
+                if gold_doc
+                else []
+            )
+            known = set(provider.all_section_ids())
+            missing = [g for g in gold if g not in known]
             print(f"\n[case] {case['id']}  gold={len(gold)} missing_gold={missing}")
             for g in gold:
                 units = provider.self_units(g)
                 text = "\n".join(provider.unit_text(u) for u in units)
                 print(f"  - {g}\n    units={len(units)} chars={len(text)}")
+            query = str(case["query"])
+            if corpus_doc_ids:
+                map_scores, unit_scores = compute_corpus_map_and_unit_scores(
+                    toolspace, doc_ids=corpus_doc_ids, query=query
+                )
+                episode_doc = ""
+            else:
+                roots = list(toolspace.sections_for_doc(default_doc_id))
+                map_scores, unit_scores = compute_map_and_unit_scores(
+                    toolspace,
+                    doc_id=default_doc_id,
+                    query=query,
+                    root_ids=roots,
+                )
+                episode_doc = default_doc_id
+            highlights = select_map_highlights(unit_scores, k=int(cfg.collect_top_k))
+            proj = build_map(
+                toolspace,
+                doc_id=episode_doc,
+                query=query,
+                scope=None,
+                config=cfg,
+                map_scores=map_scores,
+                highlight_ids=highlights,
+            )
+            print(
+                f"  map_chars={len(proj.text)} hits={len(proj.highlight_ids)} "
+                f"visible={len(proj.tree_sections)}"
+            )
+            print(proj.text[:2500])
+            if len(proj.text) > 2500:
+                print("  ... [map truncated for dry-run stdout]")
         return
 
     rows: List[dict] = []
@@ -254,7 +377,14 @@ def main() -> None:
             if args.case and case["id"] != args.case:
                 continue
             print(f"\n=== {arm} :: {case['id']} ===", flush=True)
-            row = run_case(case, provider.doc_id, toolspace, arm, args.budget_chars)
+            row = run_case(
+                case,
+                toolspace=toolspace,
+                arm=arm,
+                budget=args.budget_chars,
+                corpus_doc_ids=corpus_doc_ids or None,
+                default_doc_id=default_doc_id,
+            )
             rows.append(row)
             (OUT / f"{arm}__{case['id']}.json").write_text(
                 json.dumps(row, ensure_ascii=False, indent=2), encoding="utf-8"

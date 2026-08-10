@@ -208,6 +208,7 @@ def resolve_harvest_anchor(
     subgoal: Subgoal,
     state: NavState,
     config: NavConfig,
+    ts: Any = None,
 ) -> Optional[str]:
     """Per-subgoal harvest entry scope, sticky across waves.
 
@@ -225,7 +226,7 @@ def resolve_harvest_anchor(
     if subgoal.id in state.subgoal_anchor:
         return state.subgoal_anchor[subgoal.id]
 
-    from path_ledger import doc_id_for
+    from nav_address import owner_document
 
     dismissed = state.subgoal_dismissed_section_ids.get(subgoal.id, set())
     allowed_docs = {d for d in (subgoal.scope_filter.doc_ids or []) if str(d).strip()}
@@ -235,8 +236,8 @@ def resolve_harvest_anchor(
         if not sid or sid in state.collected_section_ids or sid in dismissed:
             continue
         if allowed_docs:
-            doc = doc_id_for(sid)
-            if doc and doc not in allowed_docs:
+            doc = owner_document(ts, sid, "") if ts is not None else ""
+            if doc not in allowed_docs:
                 continue
         anchor = sid
         break
@@ -275,9 +276,22 @@ def harvest(
 ) -> HarvestResult:
     """Anchor-entry, single-decision-per-node evidence harvest for one subgoal."""
     result = HarvestResult(subgoal_id=subgoal.id)
-    from agent_delivery.code.tool_space import is_doc_root_section  # type: ignore
+    from nav_address import NavLevel, address_level
 
-    initial_depth = 0 if (entry_scope is None or is_doc_root_section(entry_scope)) else 1
+    if entry_scope is None:
+        initial_depth = 0
+    else:
+        level = address_level(ts, entry_scope)
+        if level in (NavLevel.NAMESPACE, NavLevel.DOCUMENT):
+            initial_depth = 0
+        elif level is None:
+            try:
+                from agent_delivery.code.tool_space import is_doc_root_section
+            except Exception:  # pragma: no cover
+                is_doc_root_section = lambda _sid: False  # type: ignore
+            initial_depth = 0 if is_doc_root_section(entry_scope) else 1
+        else:
+            initial_depth = 1
     _harvest_node(
         ts,
         state,
@@ -322,7 +336,9 @@ def _harvest_node(
         hit_sources=state.hit_sources or None,
         harvested_section_ids=state.harvested_owner_subgoal if show_harvested else None,
     )
-    actions = build_legal_actions(state, projection, step_idx=0, config=config, depth=depth)
+    actions = build_legal_actions(
+        state, projection, step_idx=0, config=config, depth=depth, ts=ts
+    )
     actionable = [a for a in actions if a.kind != ActionKind.FINISH]
     if not actionable:
         result.reason = result.reason or "no_legal_actions"

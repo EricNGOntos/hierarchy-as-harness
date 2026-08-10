@@ -332,17 +332,18 @@ def compute_corpus_map_and_unit_scores(
     query: str,
     namespace: Optional[str] = None,
 ) -> Tuple[Dict[str, float], Dict[str, float]]:
-    """Globally score every unit in the corpus-root navigation space.
+    """Globally score every unit across documents, then MAX-pool onto the tree.
 
     All documents share one BM25 corpus, path/content normalization, channel
-    ranking, and RRF pass. Dense vectors are only loaded through per-doc cache
-    partitions; their raw cosine scores join the same global fusion. Synthetic
-    document and corpus roots are then MAX-pooled from those global unit scores.
+    ranking, and RRF pass. Document-level scores are keyed by ``document_id``
+    when the toolspace exposes document nodes; the legacy ToolSpace path still
+    keys synthetic ``{doc}:__doc_root`` / ``__corpus__:__root`` until retired.
     """
     from agent_delivery.code.tool_space import (  # late import
         CORPUS_ROOT_SECTION_ID,
         is_corpus_doc_id,
     )
+    from nav_address import uses_document_nodes
 
     valid_doc_ids: List[str] = []
     seen_doc_ids: Set[str] = set()
@@ -391,6 +392,7 @@ def compute_corpus_map_and_unit_scores(
 
     map_scores: Dict[str, float] = {}
     doc_root_scores: Dict[str, float] = {}
+    document_nodes = uses_document_nodes(ts)
     for doc_id in valid_doc_ids:
         children_map, leaves = tree_by_doc[doc_id]
         doc_map_scores = _pool_unit_scores_to_tree(
@@ -401,13 +403,14 @@ def compute_corpus_map_and_unit_scores(
             (float(value) for value in doc_map_scores.values()),
             default=0.0,
         )
-        root_id = f"{doc_id}:__doc_root"
+        root_id = doc_id if document_nodes else f"{doc_id}:__doc_root"
         map_scores[root_id] = doc_max
         doc_root_scores[root_id] = doc_max
-    map_scores[CORPUS_ROOT_SECTION_ID] = max(
-        doc_root_scores.values(),
-        default=0.0,
-    )
+    if not document_nodes:
+        map_scores[CORPUS_ROOT_SECTION_ID] = max(
+            doc_root_scores.values(),
+            default=0.0,
+        )
     return map_scores, unit_scores
 
 

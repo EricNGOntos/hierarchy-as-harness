@@ -39,7 +39,6 @@ from nav_types import (  # noqa: E402
     RegionReport,
     SectionView,
 )
-from path_ledger import doc_id_for  # noqa: E402
 
 
 def _bundle(doc_id: str, lines: List[Tuple[int, int, str]]) -> DocBundle:
@@ -80,13 +79,6 @@ def _tiny_index() -> CorpusIndex:
     return CorpusIndex.from_bundles(
         bundles, tree_mode="hierarchical", retrieval_backend="dense", embedding_model=None
     )
-
-
-class PathLedgerCorpusTests(unittest.TestCase):
-    def test_doc_id_for_synthetic(self) -> None:
-        self.assertEqual(doc_id_for("docA:L2"), "docA")
-        self.assertEqual(doc_id_for("docA:__doc_root"), "docA")
-        self.assertEqual(doc_id_for(CORPUS_ROOT_SECTION_ID), CORPUS_DOC_ID)
 
 
 class ToolSpaceCorpusRootTests(unittest.TestCase):

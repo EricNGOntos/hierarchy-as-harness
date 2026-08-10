@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 from agent_delivery.code.index_retrieval import Chunk
 from agent_delivery.code.load_data import line_node_id
 from agent_delivery.code.tool_space import ToolSpace, is_corpus_doc_id
-from path_ledger import doc_id_for
+from nav_address import NavLevel, address_level, owner_document
 
 from nav_types import NavConfig, NavState
 
@@ -42,23 +42,13 @@ def _clamp01(x: float) -> float:
 
 
 def _section_doc_id(ts: ToolSpace, section_id: str, fallback_doc_id: str = "") -> str:
-    """Resolve owning doc for a section (chunk owner / synthetic / episode fallback)."""
+    """Resolve owning document_id (registry first; never parse id strings)."""
     sid = str(section_id or "").strip()
     if not sid:
         return str(fallback_doc_id or "")
-    idx = getattr(ts, "_idx", None)
-    if idx is not None:
-        loc = getattr(idx, "_node_to_doc_line", {}).get(sid)
-        if loc:
-            return str(loc[0])
-        synth = getattr(ts, "_synthetic_doc_id", None)
-        if callable(synth):
-            did = synth(sid)
-            if did and not is_corpus_doc_id(did):
-                return str(did)
-    parsed = doc_id_for(sid)
-    if parsed and not is_corpus_doc_id(parsed):
-        return parsed
+    resolved = owner_document(ts, sid, "")
+    if resolved and not is_corpus_doc_id(resolved):
+        return resolved
     fb = str(fallback_doc_id or "")
     return "" if is_corpus_doc_id(fb) else fb
 
@@ -125,8 +115,12 @@ def _section_title(ts: ToolSpace, section_id: str, doc_id: str, *, max_chars: in
     loc = getattr(idx, "_node_to_doc_line", {}).get(sid)
     b = getattr(idx, "_bundles", {}).get(resolved) if loc and resolved and loc[0] == resolved else None
     if not b:
-        # Document synthetic root → first-line title.
-        if sid.endswith(":__doc_root") and resolved:
+        # Document node (level=document) or legacy synthetic doc root → first-line title.
+        level = address_level(ts, sid)
+        if (
+            (level == NavLevel.DOCUMENT or sid.endswith(":__doc_root"))
+            and resolved
+        ):
             bb = getattr(idx, "_bundles", {}).get(resolved)
             if bb and bb.lines:
                 title = (bb.lines[0].content or "").strip()

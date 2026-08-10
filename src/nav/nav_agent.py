@@ -14,10 +14,12 @@ from agent_delivery.code.tool_space import (
     Refusal,
     ToolSpace,
     is_corpus_doc_id,
-    is_synthetic_dispatch_only,
 )
-from path_ledger import doc_id_for
-
+from nav_address import (
+    is_dispatch_only_node,
+    owner_document,
+    uses_document_nodes,
+)
 from nav_compose import (
     evidence_owner_section_id,
     pack_nav_evidence,
@@ -43,14 +45,17 @@ _unit_score_for_evidence_chunk = unit_score_for_evidence_chunk
 
 
 def _chunks_to_retrieved_nodes(chunks: List[Chunk]) -> List[str]:
+    """Stable unit ids: prefer chunk/node id (Knowhere ``chunk_id``)."""
     seen: set[str] = set()
     out: List[str] = []
     for c in chunks:
-        for lid in c.line_ids:
-            node = f"{c.doc_id}:L{lid}"
-            if node not in seen:
-                seen.add(node)
-                out.append(node)
+        node = str(getattr(c, "node_id", "") or "").strip()
+        if not node:
+            node = str(getattr(c, "section_id", "") or "").strip()
+        if not node or node in seen:
+            continue
+        seen.add(node)
+        out.append(node)
     return out
 
 
@@ -71,13 +76,17 @@ def _add_scored(state: NavState, scored: List[Tuple[Chunk, float]]) -> int:
     return added
 
 
-def _resolve_action_doc_id(action_or_sid: Any, state: NavState) -> str:
-    """Prefer section_id prefix; fall back to episode doc_id (never corpus for hydrate)."""
+def _resolve_action_doc_id(
+    action_or_sid: Any,
+    state: NavState,
+    ts: Any = None,
+) -> str:
+    """Owning document_id for hydrate; never a corpus/namespace sentinel."""
     if hasattr(action_or_sid, "section_id"):
         sid = str(getattr(action_or_sid, "section_id", "") or "").strip()
     else:
         sid = str(action_or_sid or "").strip()
-    resolved = doc_id_for(sid)
+    resolved = owner_document(ts, sid, "") if ts is not None else ""
     if resolved and not is_corpus_doc_id(resolved):
         return resolved
     if state.doc_id and not is_corpus_doc_id(state.doc_id):
@@ -98,7 +107,7 @@ def _purge_descendant_evidence(
     sid = str(parent_sid or "").strip()
     if not sid:
         return 0
-    doc = _resolve_action_doc_id(sid, state)
+    doc = _resolve_action_doc_id(sid, state, ts)
     relations = getattr(ts, "section_relation_ids", None)
     if callable(relations):
         _anc, descendants = relations(sid, doc)
@@ -158,9 +167,9 @@ def _collect_subtree(ts: ToolSpace, action: LegalAction, state: NavState, config
     sid = action.section_id
     if not sid:
         return []
-    if is_synthetic_dispatch_only(sid):
+    if is_dispatch_only_node(ts, sid):
         return []
-    doc = _resolve_action_doc_id(action, state)
+    doc = _resolve_action_doc_id(action, state, ts)
     if not doc or is_corpus_doc_id(doc):
         return []
     materialize = getattr(ts, "_materialize_leaf_path_chunks", None)
@@ -208,7 +217,7 @@ def _mark_collected_branch(
     sid = str(action.section_id or "").strip()
     if not sid or not _env_enabled("NAV_FILTER_COLLECTED_SECTIONS"):
         return {}
-    doc = _resolve_action_doc_id(action, state)
+    doc = _resolve_action_doc_id(action, state, ts)
     materialize = getattr(ts, "_materialize_leaf_path_chunks", None)
     relations = getattr(ts, "section_relation_ids", None)
     pool = list(materialize(sid, doc)) if callable(materialize) and doc else []
@@ -321,9 +330,7 @@ def run_nav_episode(
         if str(d).strip() and not is_corpus_doc_id(str(d).strip())
     ]
     episode_doc = str(doc_id or "").strip()
-    if corpus_ids:
-        episode_doc = CORPUS_DOC_ID
-    elif not episode_doc:
+    if not episode_doc and not corpus_ids:
         raise ValueError(
             "Nav Agent requires doc_id or non-empty corpus_doc_ids "
             "(eval entry points always pass corpus_doc_ids for task_corpus)"
@@ -361,9 +368,25 @@ def run_nav_episode(
         ts = ToolSpace(tools, corpus_doc_ids=corpus_ids or None)
     else:
         raise ValueError("Nav Agent requires either tools or an injected toolspace")
+
+    # Namespace / multi-doc: document ids are map nodes; empty scope is the root.
+    # Legacy ToolSpace still uses the CORPUS_DOC_ID sentinel until that path is retired.
+    namespace_mode = bool(corpus_ids) and uses_document_nodes(ts)
+    if namespace_mode:
+        if not corpus_ids:
+            corpus_ids = list(ts.document_ids())
+        episode_doc = ""
+    elif corpus_ids:
+        episode_doc = CORPUS_DOC_ID
+
     state = NavState(doc_id=episode_doc, query=query, task_type=task_type)
     steps: List[AgentStep] = []
-    if is_corpus_doc_id(episode_doc):
+    if namespace_mode:
+        section_ids = list(ts.sections_for_doc(""))
+        state.map_scores, state.unit_scores = compute_corpus_map_and_unit_scores(
+            ts, doc_ids=corpus_ids, query=query
+        )
+    elif is_corpus_doc_id(episode_doc):
         section_ids = ts.sections_for_doc(CORPUS_DOC_ID)
         state.map_scores, state.unit_scores = compute_corpus_map_and_unit_scores(
             ts, doc_ids=ts.corpus_doc_ids, query=query

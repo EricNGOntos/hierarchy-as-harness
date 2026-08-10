@@ -220,7 +220,10 @@ class ResolveParentSectionIdTests(unittest.TestCase):
             route_hints=["doc2:B1", "doc1:A1"],
             scope_filter=ScopeFilter(doc_ids=["doc1"]),
         )
-        self.assertEqual(resolve_harvest_anchor(subgoal, state, config), "doc1:A1")
+        self.assertEqual(
+            resolve_harvest_anchor(subgoal, state, config, ts=_build_ts()),
+            "doc1:A1",
+        )
 
     def test_no_usable_hint_returns_none(self) -> None:
         state = NavState(doc_id="doc1", query="A")

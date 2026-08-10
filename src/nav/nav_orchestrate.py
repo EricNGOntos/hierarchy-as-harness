@@ -338,7 +338,7 @@ def _execute_subgoal_harvest_once(
         # the unresolved {{...}} braces stripped rather than stalling.
         rq = _unbound_retrieval_query(subgoal)
     _set_focus(state, subgoal, rq)
-    anchor = resolve_harvest_anchor(subgoal, state, config)
+    anchor = resolve_harvest_anchor(subgoal, state, config, ts=ts)
     before_sections = set(state.collected_section_ids)
     before_len = len(state.collected)
     harvest_result = harvest(

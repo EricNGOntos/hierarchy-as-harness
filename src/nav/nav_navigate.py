@@ -11,8 +11,7 @@ from agent_delivery.code.tool_space import (
     is_doc_root_section,
 )
 from agent_delivery.code.index_retrieval import Chunk
-from path_ledger import doc_id_for
-
+from nav_address import NavLevel, address_level, owner_document, uses_document_nodes
 from nav_actions import build_legal_actions, format_actionable_map_observation
 from nav_policy import choose_llm_action, choose_rule_action
 from nav_projection import build_projection
@@ -107,7 +106,7 @@ def _split_oversize_collect_actions(
         sid = str(act.section_id or "").strip()
         if not sid:
             continue
-        act_doc = doc_id_for(sid) or (
+        act_doc = owner_document(ts, sid, "") or (
             state.doc_id if not is_corpus_doc_id(state.doc_id) else ""
         )
         chars = _estimate_branch_chars(ts, sid, act_doc) if act_doc else 0
@@ -322,11 +321,11 @@ def dispatch(
     budget: int,
     steps_out: Optional[List[Any]] = None,
 ) -> List[RegionReport]:
-    """Concurrently run navigate() on each region id (fork/merge state).
+    """Run navigate() on each region id (fork/merge state).
 
-    Corpus→synthetic-document-root DISPATCH is depth-neutral: the document
-    episode starts at depth 0. A direct corpus→real-section DISPATCH already
-    descends one in-document level, so it starts at depth 1.
+    Namespace→document DISPATCH is depth-neutral (document episode starts at
+    depth 0). Namespace→section DISPATCH starts at depth 1. Legacy ToolSpace
+    corpus→``{doc}:__doc_root`` keeps the same depth rules until retired.
     """
     scope_now = str(state.current_scope or "").strip()
     region_ids = [
@@ -342,26 +341,35 @@ def dispatch(
     child_budget = max(500, int(budget * 0.85))
     merge_lock = threading.Lock()
     corpus_parent = is_corpus_doc_id(state.doc_id)
+    namespace_parent = uses_document_nodes(ts) and not str(state.doc_id or "").strip()
 
     def _run_one(rid: str) -> RegionReport:
-        child_doc = doc_id_for(rid)
-        # Leaving the corpus sentinel switches to the real document state.
-        # Only the virtual document root is depth-neutral. Entering a real
-        # section directly is equivalent to entering the document and then
-        # dispatching that section in single-document mode.
-        enter_doc = (
-            corpus_parent
-            and bool(child_doc)
-            and not is_corpus_doc_id(child_doc)
-            and child_doc != CORPUS_DOC_ID
-        )
-        with merge_lock:
+        level = address_level(ts, rid)
+        child_doc = owner_document(ts, rid, "")
+        # Namespace / corpus parent: switch episode doc_id to the real document.
+        enter_doc = False
+        child_depth = depth + 1
+        if namespace_parent and level == NavLevel.DOCUMENT:
+            enter_doc = True
+            child_doc = rid
+            child_depth = 0
+        elif namespace_parent and child_doc:
+            enter_doc = True
+            child_depth = 1
+        elif corpus_parent:
+            legacy_doc = child_doc
+            enter_doc = (
+                bool(legacy_doc)
+                and not is_corpus_doc_id(legacy_doc)
+                and legacy_doc != CORPUS_DOC_ID
+            )
             if enter_doc:
-                child_state = _fork_nav_state(state, doc_id=str(child_doc))
                 child_depth = 0 if is_doc_root_section(rid) else 1
+        with merge_lock:
+            if enter_doc and child_doc:
+                child_state = _fork_nav_state(state, doc_id=str(child_doc))
             else:
                 child_state = _fork_nav_state(state)
-                child_depth = depth + 1
         try:
             report = navigate(
                 ts,
@@ -487,6 +495,7 @@ def navigate(
                 config=config,
                 depth=depth,
                 max_steps=max_steps,
+                ts=ts,
             )
             if not actions:
                 report.reason = "no_legal_actions"

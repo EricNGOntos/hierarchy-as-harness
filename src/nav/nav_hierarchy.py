@@ -89,6 +89,24 @@ class ProviderToolSpace:
     def __init__(self, provider: HierarchyProvider) -> None:
         self._provider = provider
 
+    def address_level(self, node_id: str):
+        fn = getattr(self._provider, "address_level", None)
+        return fn(node_id) if callable(fn) else None
+
+    def owner_document(self, node_id: str) -> Optional[str]:
+        fn = getattr(self._provider, "owner_document", None)
+        if not callable(fn):
+            return None
+        got = fn(node_id)
+        return str(got) if got else None
+
+    def document_ids(self) -> List[str]:
+        """Forward only when the provider is namespace-mode (has ``document_ids``)."""
+        fn = getattr(self._provider, "document_ids", None)
+        if not callable(fn):
+            return []
+        return [str(x) for x in (fn() or ()) if str(x).strip()]
+
     def sections_for_doc(self, doc_id: str) -> List[str]:
         return [str(s) for s in self._provider.roots(doc_id)]
 
@@ -243,6 +261,20 @@ class InMemoryHierarchyProvider:
         for node in self._nodes.values():
             for child_id in node.children:
                 self._parent[child_id] = node.section_id
+        self._owner: Dict[str, str] = {}
+        for doc_id, root_ids in self._roots_by_doc.items():
+            stack = list(root_ids)
+            while stack:
+                sid = stack.pop()
+                if sid in self._owner:
+                    continue
+                self._owner[sid] = doc_id
+                node = self._nodes.get(sid)
+                if node:
+                    stack.extend(node.children)
+
+    def owner_document(self, node_id: str) -> Optional[str]:
+        return self._owner.get(str(node_id or "").strip())
 
     def roots(self, doc_id: str) -> Sequence[str]:
         return list(self._roots_by_doc.get(doc_id, ()))

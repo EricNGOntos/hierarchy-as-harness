@@ -12,17 +12,32 @@ for _p in (ROOT / "src" / "realdata", ROOT / "src" / "nav"):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
+from nav_actions import build_legal_actions  # noqa: E402
+from nav_address import NavLevel, uses_document_nodes  # noqa: E402
 from nav_hierarchy import ProviderToolSpace  # noqa: E402
-from nav_knowhere import load_debug_parse  # noqa: E402
+from nav_knowhere import NamespaceKnowhereProvider, load_debug_parse  # noqa: E402
+from nav_map_scores import (  # noqa: E402
+    compute_corpus_map_and_unit_scores,
+    select_map_highlights,
+)
+from nav_projection import build_map  # noqa: E402
+from nav_types import ActionKind, NavConfig, NavState  # noqa: E402
 
 
-def _write_track(base: Path) -> Path:
+def _write_track(
+    base: Path,
+    *,
+    name: str = "probe",
+    body_a: str = "A body [tables/t1.html]",
+    body_a1: str = "A1 body",
+    body_b: str = "B body",
+) -> Path:
     """A track whose doc_nav is wrapped in two filesystem levels, as on disk."""
-    track = base / "probe.pdf" / "text_track"
+    track = base / f"{name}.pdf" / "text_track"
     track.mkdir(parents=True)
     anchor = str(track).strip("/")
     wrapper_outer = str(base).strip("/")
-    wrapper_inner = str(base / "probe.pdf").strip("/")
+    wrapper_inner = str(base / f"{name}.pdf").strip("/")
 
     def node(title, path, level, summary, children, chunk_count=1):
         return {
@@ -35,7 +50,7 @@ def _write_track(base: Path) -> Path:
         }
 
     nav = {
-        "file_name": "probe.pdf",
+        "file_name": f"{name}.pdf",
         "sections": [
             node(
                 base.name,
@@ -44,7 +59,7 @@ def _write_track(base: Path) -> Path:
                 "",
                 [
                     node(
-                        "probe.pdf",
+                        f"{name}.pdf",
                         wrapper_inner,
                         2,
                         "",
@@ -74,15 +89,15 @@ def _write_track(base: Path) -> Path:
     chunks = {
         "chunks": [
             {
-                "chunk_id": "u-a",
+                "chunk_id": f"{name}-u-a",
                 "type": "text",
-                "content": "A body [tables/t1.html]",
+                "content": body_a,
                 "path": f"/{anchor}/A",
                 "metadata": {},
                 "order": 1,
             },
             {
-                "chunk_id": "u-t1",
+                "chunk_id": f"{name}-u-t1",
                 "type": "table",
                 "content": "tables/t1.html",
                 "path": "tables/t1.html",
@@ -90,23 +105,23 @@ def _write_track(base: Path) -> Path:
                 "order": 2,
             },
             {
-                "chunk_id": "u-a1",
+                "chunk_id": f"{name}-u-a1",
                 "type": "text",
-                "content": "A1 body",
+                "content": body_a1,
                 "path": f"/{anchor}/A/A1",
                 "metadata": {},
                 "order": 3,
             },
             {
-                "chunk_id": "u-b",
+                "chunk_id": f"{name}-u-b",
                 "type": "text",
-                "content": "B body",
+                "content": body_b,
                 "path": f"/{anchor}/B",
                 "metadata": {},
                 "order": 4,
             },
             {
-                "chunk_id": "u-orphan",
+                "chunk_id": f"{name}-u-orphan",
                 "type": "table",
                 "content": "tables/zz.html",
                 "path": "tables/zz.html",
@@ -150,13 +165,16 @@ class KnowhereProviderTests(unittest.TestCase):
 
     def test_asset_attaches_to_referencing_section_and_orphan_is_dropped(self) -> None:
         units = self.provider.self_units(f"{self.doc_id}:A")
-        self.assertEqual([u.chunk_id for u in units], ["u-a", "u-t1"])
+        self.assertEqual(
+            [u.chunk_id for u in units],
+            [f"{self.doc_id}-u-a", f"{self.doc_id}-u-t1"],
+        )
         every = {
             u.chunk_id
             for sid in self.provider.all_section_ids()
             for u in self.provider.self_units(sid)
         }
-        self.assertNotIn("u-orphan", every)
+        self.assertNotIn(f"{self.doc_id}-u-orphan", every)
 
     def test_content_is_subtree_in_document_order_with_asset_summary(self) -> None:
         # Ordering is strictly sort_order, so an asset owned by A interleaves
@@ -192,6 +210,80 @@ class KnowhereProviderTests(unittest.TestCase):
             [f"{self.doc_id}:A__self", f"{self.doc_id}:A/A1"],
         )
         self.assertEqual([min(c.line_ids) for c in chunks], [1, 3])
+
+
+class NamespaceKnowhereProviderTests(unittest.TestCase):
+    """P0.2: namespace root + document DISPATCH-only nodes + fold/[Hit]."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        base = Path(self._tmp.name)
+        track_a = _write_track(
+            base / "a",
+            name="doc_a",
+            body_a="hydrology rainfall station upstream",
+            body_a1="hydrology detail",
+            body_b="misc note",
+        )
+        track_b = _write_track(
+            base / "b",
+            name="doc_b",
+            body_a="geology rock foundation",
+            body_a1="geology detail",
+            body_b="misc note",
+        )
+        self.p_a = load_debug_parse(track_a, doc_id="doc_a")
+        self.p_b = load_debug_parse(track_b, doc_id="doc_b")
+        self.ns = NamespaceKnowhereProvider(
+            [self.p_a, self.p_b],
+            titles={"doc_a": "Report A", "doc_b": "Report B"},
+        )
+        self.ts = ProviderToolSpace(self.ns)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_namespace_root_lists_document_nodes(self) -> None:
+        self.assertTrue(uses_document_nodes(self.ts))
+        self.assertEqual(self.ts.sections_for_doc(""), ["doc_a", "doc_b"])
+        self.assertEqual(self.ns.address_level("doc_a"), NavLevel.DOCUMENT)
+        self.assertEqual(self.ns.address_level("doc_a:A"), NavLevel.SECTION)
+        self.assertEqual(self.ns.owner_document("doc_a:A/A1"), "doc_a")
+        self.assertEqual(list(self.ns.children("doc_a")), ["doc_a:A", "doc_a:B"])
+
+    def test_document_nodes_are_dispatch_only(self) -> None:
+        map_scores, unit_scores = compute_corpus_map_and_unit_scores(
+            self.ts, doc_ids=["doc_a", "doc_b"], query="hydrology"
+        )
+        highlights = select_map_highlights(unit_scores, k=3)
+        proj = build_map(
+            self.ts,
+            doc_id="",
+            query="hydrology",
+            scope=None,
+            config=NavConfig(map_mode=True, map_char_limit=4000, collect_top_k=3),
+            map_scores=map_scores,
+            highlight_ids=highlights,
+        )
+        self.assertIn("[Hit]", proj.text)
+        self.assertIn("doc_a", map_scores)
+        self.assertIn("doc_b", map_scores)
+        self.assertGreater(map_scores["doc_a"], map_scores["doc_b"])
+
+        state = NavState(doc_id="", query="hydrology")
+        state.map_scores = map_scores
+        state.unit_scores = unit_scores
+        state.highlight_ids = highlights
+        actions = build_legal_actions(
+            state, proj, step_idx=0, config=NavConfig(map_mode=True), ts=self.ts
+        )
+        by_sid = {}
+        for act in actions:
+            by_sid.setdefault(act.section_id, set()).add(act.kind)
+        self.assertIn(ActionKind.DISPATCH, by_sid.get("doc_a", set()))
+        self.assertNotIn(ActionKind.COLLECT, by_sid.get("doc_a", set()))
+        self.assertIn(ActionKind.DISPATCH, by_sid.get("doc_b", set()))
+        self.assertNotIn(ActionKind.COLLECT, by_sid.get("doc_b", set()))
 
 
 if __name__ == "__main__":

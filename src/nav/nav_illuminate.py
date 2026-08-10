@@ -239,10 +239,14 @@ def illuminate_from_plan(
     # Score every bindable query (including inactive conditionals) so activation
     # can reuse BM25 later; fold/Hit use participants only — never fall back to
     # unactivated conditionals stealing display budget.
+    from nav_address import uses_document_nodes
+
     doc_id = state.doc_id
     corpus_ids = None
     root_ids = None
-    if is_corpus_doc_id(doc_id):
+    if uses_document_nodes(ts) and not str(doc_id or "").strip():
+        corpus_ids = list(ts.document_ids())
+    elif is_corpus_doc_id(doc_id):
         corpus_ids = list(getattr(ts, "corpus_doc_ids", None) or [])
     else:
         root_ids = list(ts.sections_for_doc(doc_id))

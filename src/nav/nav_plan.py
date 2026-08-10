@@ -683,6 +683,7 @@ def build_planning_observation(
         step_idx=0,
         config=plan_cfg,
         depth=0,
+        ts=ts,
     )
     obs = format_actionable_map_observation(
         projection,

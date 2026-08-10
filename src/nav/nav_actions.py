@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import os
-from typing import List, Optional
+from typing import Any, List, Optional
 
+from nav_address import is_dispatch_only_node
 from nav_projection import format_harvested_tag, format_hit_tag
 from nav_types import (
     ActionKind,
@@ -12,13 +13,6 @@ from nav_types import (
     Projection,
     SectionView,
 )
-
-try:
-    from agent_delivery.code.tool_space import is_synthetic_dispatch_only
-except Exception:  # pragma: no cover - nav path may put tool_space on sys.path later
-    def is_synthetic_dispatch_only(section_id: Optional[str]) -> bool:
-        sid = str(section_id or "").strip()
-        return sid.endswith(":__doc_root") or sid == "__corpus__:__root"
 
 
 def _env_enabled(name: str, default: str = "1") -> bool:
@@ -43,12 +37,14 @@ def build_legal_actions(
     config: NavConfig,
     depth: int = 0,
     max_steps: Optional[int] = None,
+    ts: Any = None,
 ) -> List[LegalAction]:
     """Every visible node is actionable: COLLECT + DISPATCH (when allowed) + FINISH.
 
     No action-space top-K: visibility is governed only by map display budget folding.
     FINISH is always available; the LLM decides when to exit the current scope.
     DISPATCH never targets the current scope root (no self-dispatch loop).
+    Document / namespace nodes are DISPATCH-only (level registry via ``ts``).
     """
     episode_steps = int(max_steps if max_steps is not None else config.max_steps)
     mode = _budget_mode(step_idx, config, max_steps=episode_steps)
@@ -94,8 +90,7 @@ def build_legal_actions(
         collect_blocked = filter_collected and sid in (
             collected_sids | blocked
         )
-        # Corpus / document synthetic roots: DISPATCH-only (select doc / enter doc).
-        if is_synthetic_dispatch_only(sid):
+        if is_dispatch_only_node(ts, sid):
             collect_blocked = True
         if not collect_blocked:
             actions.append(
